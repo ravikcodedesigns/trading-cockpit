@@ -1,0 +1,21 @@
+{
+  "_comment": "Update this file each morning before the open. The aggregator file-watches it and reloads automatically. ts is auto-set on load.",
+  "levels": [
+    {
+      "symbol": "NQ",
+      "bullZone": { "low": 21450, "high": 21475 },
+      "bearZone": { "low": 21380, "high": 21400 },
+      "ddBands": { "upper": 21520, "lower": 21340 },
+      "hedgePressure": 21425,
+      "notes": "Sample levels - replace with today's RocketScooter values"
+    },
+    {
+      "symbol": "ES",
+      "bullZone": { "low": 6080, "high": 6088 },
+      "bearZone": { "low": 6055, "high": 6062 },
+      "ddBands": { "upper": 6105, "lower": 6035 },
+      "hedgePressure": 6072,
+      "notes": "Sample levels - replace with today's RocketScooter values"
+    }
+  ]
+}
