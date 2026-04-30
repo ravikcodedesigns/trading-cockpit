@@ -32,6 +32,17 @@ const icebergSchema = baseEventSchema.extend({
 
 const heartbeatSchema = baseEventSchema.extend({ type: z.literal('heartbeat') });
 
+const sweepSchema = baseEventSchema.extend({
+  type: z.literal('sweep'),
+  symbol: symbolSchema,
+  direction: z.enum(['long', 'short']),
+  levels: z.number().int().nonnegative(),
+  volume: z.number().nonnegative(),
+  durationMs: z.number().nonnegative(),
+  startPrice: z.number(),
+  endPrice: z.number(),
+});
+
 const barSchema = baseEventSchema.extend({
   type: z.literal('bar'),
   symbol: symbolSchema,
@@ -66,7 +77,7 @@ const flashAlphaSchema = baseEventSchema.extend({
 });
 
 const SCHEMAS_BY_SOURCE: Record<string, z.ZodTypeAny> = {
-  bookmap: z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema]),
+  bookmap: z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema, sweepSchema]),
   tradovate: tickSchema,
   flashalpha: flashAlphaSchema,
 };

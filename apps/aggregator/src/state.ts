@@ -95,6 +95,11 @@ class State {
     return () => { this.bus.off('event', fn); };
   }
 
+  onSignal(fn: (s: ConfluenceSignal) => void): () => void {
+    this.bus.on('signal', fn);
+    return () => { this.bus.off('signal', fn); };
+  }
+
   onConnection(fn: (m: { source: SourceName; status: ConnectionStatus }) => void): () => void {
     this.bus.on('connection', fn);
     return () => { this.bus.off('connection', fn); };

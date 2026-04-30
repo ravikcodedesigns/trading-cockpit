@@ -18,18 +18,15 @@ export function Chart() {
   const priceLinesRef = useRef<IPriceLine[]>([]);
 
   // Per-symbol bar history kept in a ref so it survives re-renders.
-  // Map: bar timestamp (sec) -> { o,h,l,c }
   const barHistoryRef = useRef<Record<string, Map<number, {
     open: number; high: number; low: number; close: number;
   }>>>({ NQ: new Map(), ES: new Map() });
-
-  // Track last event index processed per symbol so we don't reapply old events.
-  const lastSeenIndexRef = useRef<Record<string, number>>({ NQ: 0, ES: 0 });
 
   const selectedSymbol = useStore((s) => s.selectedSymbol);
   const levels = useStore((s) => s.levels[s.selectedSymbol]);
   const flashAlpha = useStore((s) => s.flashAlpha[s.selectedSymbol]);
   const recentEvents = useStore((s) => s.recentEvents);
+  const recentSignals = useStore((s) => s.recentSignals);
 
   // Init chart once
   useEffect(() => {
@@ -48,7 +45,35 @@ export function Chart() {
       timeScale: {
         borderColor: '#28282f',
         timeVisible: true,
-        secondsVisible: false,
+        secondsVisible: true,
+        // Fixed candle width - prevents stretched rectangles when the chart
+        // has few bars. Default is 6 (extremely tight); 12 gives breathing room.
+        barSpacing: 12,
+        // Display all chart times in America/New_York timezone (handles EST/EDT auto)
+        tickMarkFormatter: (time: number) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('en-US', {
+            timeZone: 'America/New_York',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
+      },
+      localization: {
+        // Crosshair tooltip on hover also uses NY time
+        timeFormatter: (time: number) => {
+          const date = new Date(time * 1000);
+          return date.toLocaleString('en-US', {
+            timeZone: 'America/New_York',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          });
+        },
       },
       rightPriceScale: { borderColor: '#28282f' },
       crosshair: { mode: CrosshairMode.Normal },
@@ -83,9 +108,7 @@ export function Chart() {
     };
   }, []);
 
-  // Apply incoming bar events (both partial and sealed).
-  // We use series.update() per-bar, which is fast and lets the chart's
-  // current candle "tick" live as partial updates arrive.
+  // When recentEvents updates, push new bar events for the selected symbol into the chart.
   useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
@@ -93,59 +116,29 @@ export function Chart() {
     const history = barHistoryRef.current[selectedSymbol] ?? new Map();
     barHistoryRef.current[selectedSymbol] = history;
 
-    let didInitialLoad = history.size > 0;
-
+    let updated = false;
     for (const ev of recentEvents) {
       if (ev.source !== 'bookmap' || ev.type !== 'bar') continue;
       if (ev.symbol !== selectedSymbol) continue;
       const t = Math.floor(ev.ts / 1000);
-      const bar = { open: ev.open, high: ev.high, low: ev.low, close: ev.close };
-      history.set(t, bar);
-
-      // If this is the first time we're populating the chart, do a bulk setData
-      // at the end. Otherwise update incrementally.
-      if (didInitialLoad) {
-        try {
-          series.update({
-            time: t as UTCTimestamp,
-            open: bar.open, high: bar.high, low: bar.low, close: bar.close,
-          });
-        } catch {
-          // update() throws if the bar's time is older than the latest bar.
-          // Fall through to a full setData below in that case.
-          didInitialLoad = false;
-        }
-      }
+      history.set(t, { open: ev.open, high: ev.high, low: ev.low, close: ev.close });
+      updated = true;
     }
+    if (!updated) return;
 
-    // Initial population (or recovery from out-of-order update)
-    if (!didInitialLoad) {
-      const data = Array.from(history.entries())
-        .sort((a, b) => a[0] - b[0])
-        .slice(-360)   // last 6 hours of 1-min bars
-        .map(([t, b]) => ({
-          time: t as UTCTimestamp,
-          open: b.open, high: b.high, low: b.low, close: b.close,
-        }));
-      if (data.length > 0) series.setData(data);
-    }
-  }, [recentEvents, selectedSymbol]);
-
-  // Reset visible series when symbol changes
-  useEffect(() => {
-    const series = seriesRef.current;
-    if (!series) return;
-    const history = barHistoryRef.current[selectedSymbol] ?? new Map();
-    barHistoryRef.current[selectedSymbol] = history;
     const data = Array.from(history.entries())
       .sort((a, b) => a[0] - b[0])
-      .slice(-360)
+      .slice(-1800)
       .map(([t, b]) => ({
         time: t as UTCTimestamp,
         open: b.open, high: b.high, low: b.low, close: b.close,
       }));
+
     series.setData(data);
-  }, [selectedSymbol]);
+
+    // No auto-fit. With fixed barSpacing the chart naturally shows the most
+    // recent bars at a sensible width and the user can scroll/zoom freely.
+  }, [recentEvents, selectedSymbol]);
 
   // Sync price lines when levels or FA change
   useEffect(() => {
@@ -181,6 +174,50 @@ export function Chart() {
       flashAlpha.putWalls.slice(0, 2).forEach((p, i) => add(p, '#d6454588', `PW${i + 1}`));
     }
   }, [levels, flashAlpha]);
+
+  // Render signal markers on the chart (arrows below/above candles).
+  // Reactive on signals, symbol, AND the bar history we have, so markers
+  // re-render when new bars come in or new signals fire.
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+
+    // We must only show markers whose time matches a bar we actually have on
+    // the chart, otherwise lightweight-charts places them at the leftmost edge.
+    const history = barHistoryRef.current[selectedSymbol];
+    if (!history || history.size === 0) {
+      series.setMarkers([]);
+      return;
+    }
+
+    // Bucket sig.ts (ms since epoch) -> seconds at the start of the minute.
+    // Bars are stored with the same key, so a match means the marker lands on
+    // that exact candle.
+    const bucketSecs = (tsMs: number) => Math.floor(tsMs / 60000) * 60;
+
+    const symbolSignals = recentSignals.filter((s) => s.symbol === selectedSymbol);
+
+    // No dedup: every signal becomes a marker. Multiple markers at the same
+    // time will stack vertically on the candle automatically.
+    const markers = symbolSignals
+      .map((sig) => {
+        const bucket = bucketSecs(sig.ts);
+        // Skip signals whose time isn't in our visible bar history
+        if (!history.has(bucket)) return null;
+        const isLong = sig.direction === 'long';
+        return {
+          time: bucket as UTCTimestamp,
+          position: (isLong ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar',
+          color: isLong ? '#2bb673' : '#d64545',
+          shape: (isLong ? 'arrowUp' : 'arrowDown') as 'arrowUp' | 'arrowDown',
+          text: `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}`,
+        };
+      })
+      .filter((m): m is NonNullable<typeof m> => m !== null)
+      .sort((a, b) => (a.time as number) - (b.time as number));
+
+    series.setMarkers(markers);
+  }, [recentSignals, recentSignals.length, recentEvents, selectedSymbol]);
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />

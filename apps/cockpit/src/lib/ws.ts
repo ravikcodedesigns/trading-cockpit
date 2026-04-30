@@ -65,6 +65,10 @@ function applyMessage(msg: CockpitMessage) {
       }
       return updates;
     });
+  } else if (msg.type === 'signal') {
+    useStore.setState((s) => ({
+      recentSignals: [msg.signal, ...s.recentSignals].slice(0, 50),
+    }));
   } else if (msg.type === 'connection') {
     useStore.setState((s) => ({
       connections: { ...s.connections, [msg.source]: msg.status },

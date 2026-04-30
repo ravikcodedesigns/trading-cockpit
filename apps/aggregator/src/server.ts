@@ -12,9 +12,7 @@ const VALID_SOURCES: SourceName[] = ['bookmap', 'flashalpha', 'tradovate'];
 export async function startServer(): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
   await app.register(websocket, {
-    options: {
-      maxPayload: 1024 * 64,
-    },
+    options: { maxPayload: 1024 * 64 },
   });
 
   app.get('/health', async () => ({
@@ -25,10 +23,8 @@ export async function startServer(): Promise<FastifyInstance> {
   }));
 
   // --- Source ingest endpoint ---
-  // Expects: ws://host/ws/sources?source=bookmap
-  // Note: We deliberately do NOT use WebSocket-protocol ping/pong here.
-  // Sources publish application-level "heartbeat" messages instead, which is
-  // simpler for Python clients (websocket-client doesn't auto-pong).
+  // We deliberately do NOT use WS-protocol ping/pong; sources publish
+  // application-level "heartbeat" messages instead.
   app.register(async (scope) => {
     scope.get('/ws/sources', { websocket: true }, (socket, req) => {
       const sourceParam = (req.query as { source?: string }).source;
@@ -62,6 +58,7 @@ export async function startServer(): Promise<FastifyInstance> {
   });
 
   // --- Cockpit subscriber endpoint ---
+  // Sends initial snapshot, then live event/signal/connection updates.
   app.register(async (scope) => {
     scope.get('/ws/cockpit', { websocket: true }, (socket) => {
       logger.info('cockpit connected');
@@ -76,12 +73,16 @@ export async function startServer(): Promise<FastifyInstance> {
       const unsubEvent = state.onEvent((event) => {
         send({ type: 'event', event });
       });
+      const unsubSignal = state.onSignal((signal) => {
+        send({ type: 'signal', signal });
+      });
       const unsubConn = state.onConnection(({ source, status }) => {
         send({ type: 'connection', source, status });
       });
 
       socket.on('close', () => {
         unsubEvent();
+        unsubSignal();
         unsubConn();
         logger.info('cockpit disconnected');
       });

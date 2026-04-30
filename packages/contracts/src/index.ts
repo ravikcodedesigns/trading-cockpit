@@ -55,7 +55,19 @@ export interface BarEvent extends BaseEvent {
   sellVolume: number;
 }
 
-export type BookmapEvent = HeartbeatEvent | AbsorptionEvent | IcebergEvent | BarEvent;
+export interface SweepEvent extends BaseEvent {
+  source: 'bookmap';
+  type: 'sweep';
+  symbol: Symbol;
+  direction: Direction;
+  levels: number;
+  volume: number;
+  durationMs: number;
+  startPrice: number;
+  endPrice: number;
+}
+
+export type BookmapEvent = HeartbeatEvent | AbsorptionEvent | IcebergEvent | BarEvent | SweepEvent;
 
 // --- FlashAlpha (polled snapshots) ---
 
@@ -145,10 +157,15 @@ export interface CockpitEventPush {
   event: AggregatorEvent;
 }
 
+export interface CockpitSignalPush {
+  type: 'signal';
+  signal: ConfluenceSignal;
+}
+
 export interface CockpitConnectionPush {
   type: 'connection';
   source: SourceName;
   status: ConnectionStatus;
 }
 
-export type CockpitMessage = CockpitSnapshot | CockpitEventPush | CockpitConnectionPush;
+export type CockpitMessage = CockpitSnapshot | CockpitEventPush | CockpitSignalPush | CockpitConnectionPush;

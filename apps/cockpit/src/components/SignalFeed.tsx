@@ -25,6 +25,21 @@ function eventLabel(e: AggregatorEvent): { tag: string; detail: string; tone: st
   if (e.source === 'bookmap' && e.type === 'heartbeat') {
     return { tag: 'HB', detail: 'bookmap', tone: 'var(--text-2)' };
   }
+  if (e.source === 'bookmap' && e.type === 'bar') {
+    return {
+      tag: 'BAR',
+      detail: `${e.symbol} ${e.close} · vol ${e.volume}`,
+      tone: 'var(--text-2)',
+    };
+  }
+  if (e.source === 'bookmap' && e.type === 'sweep') {
+    const arrow = e.direction === 'long' ? '↑' : '↓';
+    return {
+      tag: `SWEEP ${arrow}`,
+      detail: `${e.symbol} · ${e.levels} lvls · ${e.volume} ct · ${e.durationMs}ms · ${e.startPrice}→${e.endPrice}`,
+      tone: e.direction === 'long' ? 'var(--long)' : 'var(--short)',
+    };
+  }
   if (e.source === 'flashalpha' && e.type === 'snapshot') {
     return {
       tag: 'GEX',

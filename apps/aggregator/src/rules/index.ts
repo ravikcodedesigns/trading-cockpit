@@ -6,6 +6,7 @@ import type {
   ConfluenceSignal,
   DailyLevels,
   FlashAlphaSnapshot,
+  SweepEvent,
   Symbol,
 } from '@trading/contracts';
 
@@ -90,6 +91,82 @@ function ruleAbsorptionAtZone(
   };
 }
 
+// --- Rule: sweep with optional zone confluence ---
+//
+// You asked to surface ALL sweeps (not pre-filtered by zone). So we always
+// emit a signal for any sweep that arrives. Zone proximity becomes a SCORE
+// adjustment rather than a gate.
+
+function ruleSweep(
+  event: SweepEvent,
+  ctx: RuleContext,
+  getLevels: (s: Symbol) => DailyLevels | undefined,
+  getFlashAlpha: (s: Symbol) => FlashAlphaSnapshot | undefined
+): ConfluenceSignal | null {
+  const levels = getLevels(event.symbol);
+  const fa = getFlashAlpha(event.symbol);
+
+  // Base score reflects raw sweep magnitude.
+  let score = 40;
+  if (event.volume >= 100) score += 15;
+  if (event.volume >= 200) score += 10;
+  if (event.levels >= 5) score += 10;
+  if (event.durationMs <= 200) score += 5;  // very fast sweep = more aggressive
+
+  // Zone confluence boost (where the sweep ENDED matters)
+  let zoneNote = '';
+  if (levels) {
+    const padPct = 0.0005;
+    const padding = event.endPrice * padPct;
+    const inBull = inZone(event.endPrice, levels.bullZone, padding);
+    const inBear = inZone(event.endPrice, levels.bearZone, padding);
+    if (inBull) {
+      score += 15;
+      zoneNote = event.direction === 'long' ? ' INTO bull zone (breakout candidate)' : ' INTO bull zone (rejection candidate)';
+    } else if (inBear) {
+      score += 15;
+      zoneNote = event.direction === 'short' ? ' INTO bear zone (breakdown candidate)' : ' INTO bear zone (rejection candidate)';
+    }
+  }
+
+  // Gamma regime alignment (if FA available)
+  if (fa) {
+    const aligned =
+      (event.direction === 'long' && fa.gammaRegime !== 'negative') ||
+      (event.direction === 'short' && fa.gammaRegime !== 'positive');
+    if (aligned) score += 5;
+  }
+
+  score = Math.min(100, score);
+
+  // Dedup: same direction within 60s of last sweep alert
+  const dedupKey = `sweep:${event.symbol}:${event.direction}`;
+  const last = ctx.recentSignalKeys.get(dedupKey);
+  if (last && Date.now() - last < DEDUP_WINDOW_MS) return null;
+  ctx.recentSignalKeys.set(dedupKey, Date.now());
+
+  const moveTicks = Math.abs(event.endPrice - event.startPrice);
+  const rationale =
+    `${event.direction.toUpperCase()} sweep: ${event.volume} contracts across ` +
+    `${event.levels} levels in ${event.durationMs}ms ` +
+    `(${event.startPrice} -> ${event.endPrice}, ${moveTicks.toFixed(2)} pts).` +
+    zoneNote +
+    (fa ? ` Regime: ${fa.gammaRegime}.` : '');
+
+  return {
+    ts: event.ts,
+    source: 'rules',
+    type: 'confluence',
+    symbol: event.symbol,
+    ruleId: 'sweep',
+    score,
+    direction: event.direction,
+    contextEventIds: [],
+    rationale,
+    observeOnly: true,
+  };
+}
+
 // --- Engine ---
 
 export function startRulesEngine(
@@ -104,6 +181,13 @@ export function startRulesEngine(
         const sig = ruleAbsorptionAtZone(event, ctx, getLevels, getFlashAlpha);
         if (sig) {
           logger.info({ ruleId: sig.ruleId, score: sig.score, direction: sig.direction }, 'signal fired');
+          state.applySignal(sig);
+        }
+      }
+      if (event.source === 'bookmap' && event.type === 'sweep') {
+        const sig = ruleSweep(event, ctx, getLevels, getFlashAlpha);
+        if (sig) {
+          logger.info({ ruleId: sig.ruleId, score: sig.score, direction: sig.direction, levels: event.levels, volume: event.volume }, 'signal fired');
           state.applySignal(sig);
         }
       }
