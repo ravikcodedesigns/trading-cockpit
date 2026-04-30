@@ -194,7 +194,7 @@ export function Chart() {
     let cancelled = false;
     (async () => {
       try {
-        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=60`;
+        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=1440`;
         const res = await fetch(url);
         if (!res.ok) return;
         const data = (await res.json()) as {
