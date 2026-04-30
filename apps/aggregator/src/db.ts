@@ -55,6 +55,21 @@ const stmtRecentEvents = _db.prepare(
   'SELECT payload FROM events ORDER BY ts DESC LIMIT ?'
 );
 
+// Returns final bars for a symbol, deduplicated by bar-start timestamp.
+// The addon emits partial bars every second AND a final bar at minute close.
+// We pick MAX(ts) per bucket which prefers the LAST emit per bar (the most
+// complete version). Since both partial and final bars share the same
+// bucket-start in their payload, but different ts values, we use payload's
+// open timestamp as the bucket key.
+const stmtRecentBars = _db.prepare(`
+  SELECT payload FROM events
+  WHERE source = 'bookmap'
+    AND type = 'bar'
+    AND symbol = ?
+    AND ts >= ?
+  ORDER BY ts ASC
+`);
+
 export const db = {
   logEvent(evt: AggregatorEvent): number {
     const result = stmtInsertEvent.run(
@@ -93,6 +108,24 @@ export const db = {
     return stmtRecentEvents
       .all(n)
       .map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
+  // Returns one bar per minute-bucket for the given symbol, deduplicated
+  // by the bar's own ts (bucket start) field. When the addon emits both
+  // partial and final bars for the same minute, the most recently inserted
+  // wins (which will be the final/most-complete bar).
+  recentBars(symbol: string, sinceMs: number): unknown[] {
+    const rows = stmtRecentBars.all(symbol, sinceMs) as { payload: string }[];
+    const byBucket = new Map<number, unknown>();
+    for (const r of rows) {
+      const bar = JSON.parse(r.payload) as { ts: number };
+      // ts on the bar IS the bucket-start; later inserts overwrite earlier
+      // ones, leaving us with the most recent payload per bucket.
+      byBucket.set(bar.ts, bar);
+    }
+    return Array.from(byBucket.values()).sort(
+      (a, b) => (a as { ts: number }).ts - (b as { ts: number }).ts
+    );
   },
 
   close() {

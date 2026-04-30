@@ -12,7 +12,24 @@ const VALID_SOURCES: SourceName[] = ['bookmap', 'flashalpha', 'tradovate'];
 export async function startServer(): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
   await app.register(websocket, {
-    options: { maxPayload: 1024 * 64 },
+    options: {
+      maxPayload: 1024 * 64,
+      // Heartbeat handled per-connection below
+    },
+  });
+
+  // CORS for the cockpit (Vite dev server on port 5173 calling aggregator
+  // on port 8787 = cross-origin). Without this, browsers silently drop
+  // fetch responses even when the server returns 200. Permissive policy
+  // is fine here because the aggregator only binds to 127.0.0.1; nothing
+  // outside the local machine can reach it.
+  app.addHook('onRequest', async (req, reply) => {
+    reply.header('Access-Control-Allow-Origin', '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') {
+      reply.code(204).send();
+    }
   });
 
   app.get('/health', async () => ({
@@ -22,9 +39,21 @@ export async function startServer(): Promise<FastifyInstance> {
     connections: state.connectionStatus(),
   }));
 
+  // Returns deduplicated bar history for a symbol. Used by the cockpit
+  // chart on initial mount to populate historical bars before live WS
+  // updates start streaming. Without this, a browser refresh wipes the
+  // chart and bars only repopulate from current minute onward.
+  app.get('/history/bars', async (req) => {
+    const q = req.query as { symbol?: string; minutes?: string };
+    const symbol = q.symbol ?? 'NQ';
+    const minutes = Math.max(1, Math.min(720, parseInt(q.minutes ?? '60', 10) || 60));
+    const sinceMs = Date.now() - minutes * 60 * 1000;
+    const bars = db.recentBars(symbol, sinceMs);
+    return { symbol, minutes, count: bars.length, bars };
+  });
+
   // --- Source ingest endpoint ---
-  // We deliberately do NOT use WS-protocol ping/pong; sources publish
-  // application-level "heartbeat" messages instead.
+  // Expects: ws://host/ws/sources?source=bookmap
   app.register(async (scope) => {
     scope.get('/ws/sources', { websocket: true }, (socket, req) => {
       const sourceParam = (req.query as { source?: string }).source;
@@ -37,6 +66,19 @@ export async function startServer(): Promise<FastifyInstance> {
       logger.info({ source }, 'source connected');
       state.setConnection(source, 'connected');
 
+      // Per-connection ping/pong heartbeat
+      let alive = true;
+      socket.on('pong', () => { alive = true; });
+      const heartbeat = setInterval(() => {
+        if (!alive) {
+          logger.warn({ source }, 'source heartbeat timeout, terminating');
+          socket.terminate();
+          return;
+        }
+        alive = false;
+        try { socket.ping(); } catch { /* socket closing */ }
+      }, 30_000);
+
       socket.on('message', (raw: Buffer) => {
         try {
           const msg = JSON.parse(raw.toString());
@@ -47,6 +89,7 @@ export async function startServer(): Promise<FastifyInstance> {
       });
 
       socket.on('close', () => {
+        clearInterval(heartbeat);
         logger.info({ source }, 'source disconnected');
         state.setConnection(source, 'disconnected');
       });
@@ -58,7 +101,7 @@ export async function startServer(): Promise<FastifyInstance> {
   });
 
   // --- Cockpit subscriber endpoint ---
-  // Sends initial snapshot, then live event/signal/connection updates.
+  // Pushes initial snapshot, then live event/connection updates.
   app.register(async (scope) => {
     scope.get('/ws/cockpit', { websocket: true }, (socket) => {
       logger.info('cockpit connected');
@@ -73,16 +116,12 @@ export async function startServer(): Promise<FastifyInstance> {
       const unsubEvent = state.onEvent((event) => {
         send({ type: 'event', event });
       });
-      const unsubSignal = state.onSignal((signal) => {
-        send({ type: 'signal', signal });
-      });
       const unsubConn = state.onConnection(({ source, status }) => {
         send({ type: 'connection', source, status });
       });
 
       socket.on('close', () => {
         unsubEvent();
-        unsubSignal();
         unsubConn();
         logger.info('cockpit disconnected');
       });

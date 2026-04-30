@@ -75,7 +75,11 @@ export function Chart() {
           });
         },
       },
-      rightPriceScale: { borderColor: '#28282f' },
+      rightPriceScale: {
+        borderColor: '#28282f',
+        // Keep tight margins so price action fills the chart vertically.
+        scaleMargins: { top: 0.05, bottom: 0.05 },
+      },
       crosshair: { mode: CrosshairMode.Normal },
     });
     chartRef.current = chart;
@@ -99,14 +103,103 @@ export function Chart() {
     onResize();
     window.addEventListener('resize', onResize);
 
+    // Mousewheel zoom on the price axis. Lightweight-charts' default
+    // axis-drag is a pan (shifts the visible range without resizing it),
+    // not a zoom. To get TradingView-style "drag/scroll on axis to zoom
+    // price" behavior, we intercept wheel events over the price-axis area
+    // and adjust scaleMargins.
+    //
+    // scaleMargins.top + scaleMargins.bottom must stay < 1.0 (sum of
+    // margins). Increasing them shrinks the data area, making candles
+    // smaller (more price range visible). Decreasing zooms in.
+    const priceAxisMargins = { top: 0.05, bottom: 0.05 };
+    const onWheelOverAxis = (e: WheelEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      // Price axis is on the right side; assume rightmost ~64px is axis area.
+      // Lightweight-charts default right-axis width is ~64px depending on font.
+      const axisStartX = rect.right - 80;
+      if (e.clientX < axisStartX) return; // not over the axis
+      e.preventDefault();
+
+      const delta = e.deltaY;
+      // Scroll down = expand range (candles smaller), scroll up = compress
+      // range (candles bigger). Step size is 0.02 per wheel notch.
+      const step = delta > 0 ? 0.02 : -0.02;
+      let nextTop = priceAxisMargins.top + step;
+      let nextBottom = priceAxisMargins.bottom + step;
+      // Clamp so the data area never disappears or inverts.
+      nextTop = Math.max(0.0, Math.min(0.45, nextTop));
+      nextBottom = Math.max(0.0, Math.min(0.45, nextBottom));
+      priceAxisMargins.top = nextTop;
+      priceAxisMargins.bottom = nextBottom;
+      chart.priceScale('right').applyOptions({
+        scaleMargins: { top: nextTop, bottom: nextBottom },
+      });
+    };
+    containerRef.current.addEventListener('wheel', onWheelOverAxis, { passive: false });
+
     return () => {
       window.removeEventListener('resize', onResize);
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('wheel', onWheelOverAxis);
+      }
       chart.remove();
       chartRef.current = null;
       seriesRef.current = null;
       priceLinesRef.current = [];
     };
   }, []);
+
+  // Fetch historical bars from the aggregator on mount or symbol change.
+  // The cockpit's in-memory bar history is wiped on browser refresh, but
+  // the aggregator's SQLite has all bars persisted. This call rehydrates
+  // the chart so users don't lose context after every reload.
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=60`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          bars: { ts: number; open: number; high: number; low: number; close: number }[];
+        };
+        if (cancelled) return;
+
+        const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+        barHistoryRef.current[selectedSymbol] = history;
+
+        for (const bar of data.bars) {
+          const t = Math.floor(bar.ts / 1000);
+          // Only set if not already present, so we don't clobber more-recent
+          // live bars that may have arrived between mount and fetch return.
+          if (!history.has(t)) {
+            history.set(t, {
+              open: bar.open,
+              high: bar.high,
+              low: bar.low,
+              close: bar.close,
+            });
+          }
+        }
+
+        const seriesData = Array.from(history.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([time, ohlc]) => ({ time: time as UTCTimestamp, ...ohlc }));
+        series.setData(seriesData);
+      } catch {
+        // History fetch is best-effort; live WS updates will still work.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSymbol]);
 
   // When recentEvents updates, push new bar events for the selected symbol into the chart.
   useEffect(() => {

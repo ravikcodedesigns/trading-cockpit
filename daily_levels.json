@@ -1,21 +1,12 @@
 {
-  "_comment": "Update this file each morning before the open. The aggregator file-watches it and reloads automatically. ts is auto-set on load.",
   "levels": [
     {
       "symbol": "NQ",
-      "bullZone": { "low": 21450, "high": 21475 },
-      "bearZone": { "low": 21380, "high": 21400 },
-      "ddBands": { "upper": 21520, "lower": 21340 },
-      "hedgePressure": 21425,
-      "notes": "Sample levels - replace with today's RocketScooter values"
-    },
-    {
-      "symbol": "ES",
-      "bullZone": { "low": 6080, "high": 6088 },
-      "bearZone": { "low": 6055, "high": 6062 },
-      "ddBands": { "upper": 6105, "lower": 6035 },
-      "hedgePressure": 6072,
-      "notes": "Sample levels - replace with today's RocketScooter values"
+      "bullZone": { "low": 27235.00, "high": 28928.00 },
+      "bearZone": { "low": 27185.40, "high": 27193.70 },
+      "ddBands": { "upper": 27400.15, "lower": 26897.35 },
+      "hedgePressure": 27069.70,
+      "notes": "Apr 30 2026 RTH. Bull zone immediate support at 27235. Upper bear zone 27185-27193. Reference: QQQ Open 27491.25, QQQ Close 27336.50, HG 27413.88, HP 27069.70, MHP 26945.70, lower bear zone top 26863.10, overnight MHP 26875."
     }
   ]
 }
