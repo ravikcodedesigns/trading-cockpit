@@ -10,7 +10,7 @@ const dot = (status: ConnectionStatus | undefined) => {
 };
 
 export function StatusBar() {
-  const { wsStatus, connections, eventsLogged, uptimeSec, selectedSymbol, setSymbol } = useStore();
+  const { wsStatus, isStale, connections, eventsLogged, uptimeSec, selectedSymbol, setSymbol } = useStore();
 
   const formatUptime = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -37,6 +37,17 @@ export function StatusBar() {
         }} />
         COCKPIT
       </div>
+
+      {isStale && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '2px 8px', borderRadius: 3,
+          background: '#3d2c10', border: '1px solid #f2a633',
+          color: '#f2a633', fontWeight: 600, fontSize: 11, letterSpacing: 0.5,
+        }}>
+          ⚠ STALE
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 4 }}>
         {(['NQ', 'ES'] as const).map((s) => (

@@ -107,7 +107,7 @@ export async function startServer(): Promise<FastifyInstance> {
     scope.get('/ws/cockpit', { websocket: true }, (socket) => {
       logger.info('cockpit connected');
 
-      const send = (msg: CockpitMessage) => {
+      const send = (msg: object) => {
         try { socket.send(JSON.stringify(msg)); } catch { /* socket closing */ }
       };
 
@@ -117,12 +117,33 @@ export async function startServer(): Promise<FastifyInstance> {
       const unsubEvent = state.onEvent((event) => {
         send({ type: 'event', event });
       });
+      // Live signals: separate broadcast path for confluence signals.
+      // Without this subscription, signals only appear in the cockpit after
+      // a page refresh (loaded from snapshot) — they never push live.
+      const unsubSignal = state.onSignal((signal) => {
+        send({ type: 'signal', signal });
+      });
       const unsubConn = state.onConnection(({ source, status }) => {
         send({ type: 'connection', source, status });
       });
 
+      // App-level ping/pong for cockpit liveness. Browser may not fire
+      // onclose when the WS dies silently (throttled tab, Wi-Fi flicker);
+      // pong responses give the cockpit a positive liveness signal.
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string };
+          if (msg.type === 'ping') {
+            send({ type: 'pong' });
+          }
+        } catch {
+          // ignore malformed
+        }
+      });
+
       socket.on('close', () => {
         unsubEvent();
+        unsubSignal();
         unsubConn();
         logger.info('cockpit disconnected');
       });
