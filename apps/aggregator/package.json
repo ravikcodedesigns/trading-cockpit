@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsc -p .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "score": "tsx scripts/score_outcomes.ts",
+    "score:report": "tsx scripts/score_report.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^10.0.1",
