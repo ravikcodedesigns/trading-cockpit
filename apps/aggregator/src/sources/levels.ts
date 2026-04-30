@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { config } from '../config.js';
 import { state } from '../state.js';
 import { logger } from '../logger.js';
-import type { DailyLevels, Symbol } from '@trading/contracts';
+import type { AdditionalLevel, DailyLevels, Symbol } from '@trading/contracts';
 
 interface RawLevel {
   symbol: Symbol;
@@ -10,6 +10,7 @@ interface RawLevel {
   bearZone: { low: number; high: number };
   ddBands: { upper: number; lower: number };
   hedgePressure: number;
+  additionalLevels?: AdditionalLevel[];
   notes?: string;
 }
 
@@ -48,6 +49,7 @@ function loadAndApply(): void {
         bearZone: lv.bearZone,
         ddBands: lv.ddBands,
         hedgePressure: lv.hedgePressure,
+        additionalLevels: lv.additionalLevels,
         notes: lv.notes,
       };
       state.applyEvent(event);

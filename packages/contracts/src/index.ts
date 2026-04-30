@@ -103,6 +103,14 @@ export interface FlashAlphaSnapshot extends BaseEvent {
 
 export interface ZoneRange { low: number; high: number; }
 
+export interface AdditionalLevel {
+  price: number;
+  label: string;                       // short label shown in axis (<=12 chars renders best)
+  color?: string;                      // hex e.g. '#5a9bff'; defaults applied client-side
+  style?: 'solid' | 'dashed' | 'dotted' | 'large-dashed' | 'sparse-dotted';  // defaults to 'dashed'
+  width?: 1 | 2 | 3 | 4;               // defaults to 1; 2 = bold
+}
+
 export interface DailyLevels extends BaseEvent {
   source: 'levels';
   type: 'daily';
@@ -111,6 +119,7 @@ export interface DailyLevels extends BaseEvent {
   bearZone: ZoneRange;
   ddBands: { upper: number; lower: number };
   hedgePressure: number;
+  additionalLevels?: AdditionalLevel[];  // RS reference lines (QQQ Open/Close, HG, MHP, etc.)
   notes?: string;
 }
 

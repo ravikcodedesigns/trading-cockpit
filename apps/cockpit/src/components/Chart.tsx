@@ -44,8 +44,20 @@ export function Chart() {
       },
       timeScale: {
         borderColor: '#28282f',
+        visible: true,
         timeVisible: true,
         secondsVisible: true,
+        // Don't auto-shift the visible range when new bars arrive — user
+        // owns the view position. Without this, every new live bar yanks
+        // the chart right and re-centers, breaking your scroll position.
+        shiftVisibleRangeOnNewBar: false,
+        // Reserve a fixed strip of space for the time axis at the bottom.
+        // Without this, the row can compress into nothing on tight layouts.
+        rightOffset: 5,
+        // Floor on candle width. Without this, narrow chart widths can
+        // over-compress bars to where no tick-mark anchor lands in view
+        // and the time axis row appears empty after resize.
+        minBarSpacing: 4,
         // Fixed candle width - prevents stretched rectangles when the chart
         // has few bars. Default is 6 (extremely tight); 12 gives breathing room.
         barSpacing: 12,
@@ -94,10 +106,30 @@ export function Chart() {
 
     const onResize = () => {
       if (containerRef.current && chart) {
+        // Capture the current visible logical range BEFORE resizing.
+        // Without this, resize causes the chart to re-fit content based on
+        // new dimensions, which can balloon a few bars to fill the chart
+        // (when scrolled back) or compress everything beyond readability.
+        const ts = chart.timeScale();
+        const visibleRange = ts.getVisibleLogicalRange();
+
         chart.applyOptions({
           width: containerRef.current.clientWidth,
           height: containerRef.current.clientHeight,
         });
+
+        // Restore the visible range so user's scroll/zoom position is
+        // preserved across window resize. Done in a microtask so the
+        // resize layout settles first.
+        if (visibleRange) {
+          queueMicrotask(() => {
+            try {
+              ts.setVisibleLogicalRange(visibleRange);
+            } catch {
+              // Chart may have been disposed during async resize
+            }
+          });
+        }
       }
     };
     onResize();
@@ -242,18 +274,39 @@ export function Chart() {
     priceLinesRef.current = [];
 
     if (levels) {
-      const add = (price: number, color: string, title: string, style = LineStyle.Solid) => {
+      const add = (price: number, color: string, title: string, style = LineStyle.Solid, width: 1 | 2 | 3 | 4 = 1) => {
         priceLinesRef.current.push(
-          series.createPriceLine({ price, color, lineWidth: 1, lineStyle: style, axisLabelVisible: true, title })
+          series.createPriceLine({ price, color, lineWidth: width, lineStyle: style, axisLabelVisible: true, title })
         );
       };
-      add(levels.bullZone.high, '#2bb673', 'Bull H');
-      add(levels.bullZone.low, '#2bb673', 'Bull L');
-      add(levels.bearZone.high, '#d64545', 'Bear H');
-      add(levels.bearZone.low, '#d64545', 'Bear L');
-      add(levels.ddBands.upper, '#6e6e78', 'DD↑', LineStyle.Dashed);
-      add(levels.ddBands.lower, '#6e6e78', 'DD↓', LineStyle.Dashed);
-      add(levels.hedgePressure, '#f2a633', 'HP', LineStyle.Dotted);
+      // Primary RS levels — colors and weights matched to RocketScooter platform.
+      add(levels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
+      add(levels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+      add(levels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
+      add(levels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+      add(levels.ddBands.upper, '#9ee04a', 'DD↑',    LineStyle.Solid, 2);  // lime
+      add(levels.ddBands.lower, '#9ee04a', 'DD↓',    LineStyle.Solid, 2);  // lime
+      add(levels.hedgePressure, '#4a8fdc', 'HP',     LineStyle.Solid, 2);  // blue
+
+      // Additional RS reference levels (QQQ Open/Close, HG, MHP, etc.)
+      const styleMap: Record<string, LineStyle> = {
+        solid: LineStyle.Solid,
+        dashed: LineStyle.Dashed,
+        dotted: LineStyle.Dotted,
+        'large-dashed': LineStyle.LargeDashed,
+        'sparse-dotted': LineStyle.SparseDotted,
+      };
+      if (levels.additionalLevels) {
+        for (const al of levels.additionalLevels) {
+          add(
+            al.price,
+            al.color ?? '#5a9bff',
+            al.label,
+            styleMap[al.style ?? 'dashed'] ?? LineStyle.Dashed,
+            (al as { width?: 1 | 2 | 3 | 4 }).width ?? 1
+          );
+        }
+      }
     }
     if (flashAlpha) {
       const add = (price: number, color: string, title: string) => {

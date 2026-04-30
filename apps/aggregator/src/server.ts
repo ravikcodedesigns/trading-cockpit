@@ -66,20 +66,21 @@ export async function startServer(): Promise<FastifyInstance> {
       logger.info({ source }, 'source connected');
       state.setConnection(source, 'connected');
 
-      // Per-connection ping/pong heartbeat
-      let alive = true;
-      socket.on('pong', () => { alive = true; });
-      const heartbeat = setInterval(() => {
-        if (!alive) {
-          logger.warn({ source }, 'source heartbeat timeout, terminating');
-          socket.terminate();
-          return;
+      // App-level liveness: the source is expected to send {"type":"heartbeat"}
+      // every 5s. If we haven't received any message at all for 30s, we
+      // declare the connection dead. This replaces the previous WS-protocol
+      // ping/pong which Python's websocket-client doesn't auto-pong, causing
+      // false-positive terminations every 30-60s.
+      let lastSeen = Date.now();
+      const liveness = setInterval(() => {
+        if (Date.now() - lastSeen > 30_000) {
+          logger.warn({ source, idleMs: Date.now() - lastSeen }, 'source idle timeout, terminating');
+          try { socket.terminate(); } catch { /* socket closing */ }
         }
-        alive = false;
-        try { socket.ping(); } catch { /* socket closing */ }
-      }, 30_000);
+      }, 10_000);
 
       socket.on('message', (raw: Buffer) => {
+        lastSeen = Date.now();
         try {
           const msg = JSON.parse(raw.toString());
           ingest(source, msg);
@@ -89,7 +90,7 @@ export async function startServer(): Promise<FastifyInstance> {
       });
 
       socket.on('close', () => {
-        clearInterval(heartbeat);
+        clearInterval(liveness);
         logger.info({ source }, 'source disconnected');
         state.setConnection(source, 'disconnected');
       });

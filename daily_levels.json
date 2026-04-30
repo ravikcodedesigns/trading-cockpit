@@ -6,7 +6,16 @@
       "bearZone": { "low": 27185.40, "high": 27193.70 },
       "ddBands": { "upper": 27400.15, "lower": 26897.35 },
       "hedgePressure": 27069.70,
-      "notes": "Apr 30 2026 RTH. Bull zone immediate support at 27235. Upper bear zone 27185-27193. Reference: QQQ Open 27491.25, QQQ Close 27336.50, HG 27413.88, HP 27069.70, MHP 26945.70, lower bear zone top 26863.10, overnight MHP 26875."
+      "additionalLevels": [
+        { "price": 27491.25, "label": "QQQ Open",  "color": "#ffffff", "style": "solid",        "width": 2 },
+        { "price": 27413.88, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
+        { "price": 27336.50, "label": "QQQ Close", "color": "#ffffff", "style": "solid",        "width": 2 },
+        { "price": 26945.70, "label": "MHP",       "color": "#f2a633", "style": "solid",        "width": 2 },
+        { "price": 26875.00, "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
+        { "price": 26863.10, "label": "Bear2 Top", "color": "#d64545", "style": "solid",        "width": 2 },
+        { "price": 24785.00, "label": "Bear2 Bot", "color": "#d64545", "style": "solid",        "width": 2 }
+      ],
+      "notes": "Apr 30 2026 RTH levels"
     }
   ]
 }
