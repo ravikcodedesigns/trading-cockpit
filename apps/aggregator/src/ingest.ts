@@ -43,6 +43,19 @@ const sweepSchema = baseEventSchema.extend({
   endPrice: z.number(),
 });
 
+const deltaDivergenceSchema = baseEventSchema.extend({
+  type: z.literal('delta_divergence'),
+  symbol: symbolSchema,
+  direction: z.enum(['bullish', 'bearish']),
+  currentPrice: z.number(),
+  currentDelta: z.number(),
+  priorPrice: z.number(),
+  priorDelta: z.number(),
+  deltaDiff: z.number(),
+  magnitude: z.number().int().min(0).max(100),
+  windowSec: z.number().int().positive(),
+});
+
 const barSchema = baseEventSchema.extend({
   type: z.literal('bar'),
   symbol: symbolSchema,
@@ -77,7 +90,7 @@ const flashAlphaSchema = baseEventSchema.extend({
 });
 
 const SCHEMAS_BY_SOURCE: Record<string, z.ZodTypeAny> = {
-  bookmap: z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema, sweepSchema]),
+  bookmap: z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema, sweepSchema, deltaDivergenceSchema]),
   tradovate: tickSchema,
   flashalpha: flashAlphaSchema,
 };

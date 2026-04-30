@@ -1,10 +1,12 @@
 import { state } from '../state.js';
 import { logger } from '../logger.js';
+import { currentSweepThresholds, currentDivergenceThresholds } from './thresholds.js';
 import type {
   AbsorptionEvent,
   AggregatorEvent,
   ConfluenceSignal,
   DailyLevels,
+  DeltaDivergenceEvent,
   FlashAlphaSnapshot,
   SweepEvent,
   Symbol,
@@ -91,11 +93,12 @@ function ruleAbsorptionAtZone(
   };
 }
 
-// --- Rule: sweep with optional zone confluence ---
+// --- Rule: sweep, gated by session-aware percentile thresholds ---
 //
-// You asked to surface ALL sweeps (not pre-filtered by zone). So we always
-// emit a signal for any sweep that arrives. Zone proximity becomes a SCORE
-// adjustment rather than a gate.
+// Bursts below the session's threshold are still logged to SQLite by the
+// addon (raw data preserved for backtesting) but produce no signal here.
+// Bursts above threshold get scored by magnitude, zone proximity, and
+// (if available) gamma regime.
 
 function ruleSweep(
   event: SweepEvent,
@@ -103,17 +106,26 @@ function ruleSweep(
   getLevels: (s: Symbol) => DailyLevels | undefined,
   getFlashAlpha: (s: Symbol) => FlashAlphaSnapshot | undefined
 ): ConfluenceSignal | null {
+  // Session-aware gate. If the burst doesn't meet thresholds for the
+  // current session, no signal — but the raw event is still logged.
+  const { session, thresholds } = currentSweepThresholds(event.ts);
+  if (event.volume < thresholds.minVolume) return null;
+  if (event.levels < thresholds.minLevels) return null;
+
   const levels = getLevels(event.symbol);
   const fa = getFlashAlpha(event.symbol);
 
-  // Base score reflects raw sweep magnitude.
-  let score = 40;
-  if (event.volume >= 100) score += 15;
-  if (event.volume >= 200) score += 10;
-  if (event.levels >= 5) score += 10;
-  if (event.durationMs <= 200) score += 5;  // very fast sweep = more aggressive
+  // Base score reflects raw sweep magnitude RELATIVE to threshold.
+  // A burst exactly at threshold scores 50; significantly above scores higher.
+  const volumeRatio = event.volume / thresholds.minVolume;
+  const levelsRatio = event.levels / thresholds.minLevels;
+  let score = 50;
+  if (volumeRatio >= 1.5) score += 10;
+  if (volumeRatio >= 2.0) score += 10;
+  if (levelsRatio >= 1.5) score += 5;
+  if (event.durationMs <= 100) score += 5;  // very fast sweep = more aggressive
 
-  // Zone confluence boost (where the sweep ENDED matters)
+  // Zone confluence boost
   let zoneNote = '';
   if (levels) {
     const padPct = 0.0005;
@@ -147,7 +159,7 @@ function ruleSweep(
 
   const moveTicks = Math.abs(event.endPrice - event.startPrice);
   const rationale =
-    `${event.direction.toUpperCase()} sweep: ${event.volume} contracts across ` +
+    `${event.direction.toUpperCase()} sweep [${session.toUpperCase()}]: ${event.volume} contracts across ` +
     `${event.levels} levels in ${event.durationMs}ms ` +
     `(${event.startPrice} -> ${event.endPrice}, ${moveTicks.toFixed(2)} pts).` +
     zoneNote +
@@ -161,6 +173,88 @@ function ruleSweep(
     ruleId: 'sweep',
     score,
     direction: event.direction,
+    contextEventIds: [],
+    rationale,
+    observeOnly: true,
+  };
+}
+
+// --- Rule: delta divergence, gated by session-aware magnitude/diff thresholds ---
+//
+// Same architectural pattern as ruleSweep. Addon emits all divergence events
+// at deltaDiff >= 100 (raw); the rule layer decides which deserve confluence
+// signals based on session and additional context.
+
+function ruleDeltaDivergence(
+  event: DeltaDivergenceEvent,
+  ctx: RuleContext,
+  getLevels: (s: Symbol) => DailyLevels | undefined,
+  getFlashAlpha: (s: Symbol) => FlashAlphaSnapshot | undefined
+): ConfluenceSignal | null {
+  const { session, thresholds } = currentDivergenceThresholds(event.ts);
+  if (event.magnitude < thresholds.minMagnitude) return null;
+  if (event.deltaDiff < thresholds.minDeltaDiff) return null;
+
+  const levels = getLevels(event.symbol);
+  const fa = getFlashAlpha(event.symbol);
+
+  // Bullish divergence -> long signal; bearish -> short.
+  const direction: 'long' | 'short' = event.direction === 'bullish' ? 'long' : 'short';
+
+  // Base score from magnitude (which the addon already scaled 0-100).
+  let score = event.magnitude;
+
+  // Zone confluence boost - divergence AT a zone is much higher conviction.
+  let zoneNote = '';
+  if (levels) {
+    const padPct = 0.0005;
+    const padding = event.currentPrice * padPct;
+    const inBull = inZone(event.currentPrice, levels.bullZone, padding);
+    const inBear = inZone(event.currentPrice, levels.bearZone, padding);
+    if (inBull && direction === 'long') {
+      score += 20;
+      zoneNote = ' AT bull zone (defended low setup)';
+    } else if (inBear && direction === 'short') {
+      score += 20;
+      zoneNote = ' AT bear zone (defended high setup)';
+    } else if (inBull || inBear) {
+      score += 10;
+      zoneNote = ' near zone';
+    }
+  }
+
+  // Gamma regime alignment (if FA available)
+  if (fa) {
+    const aligned =
+      (direction === 'long' && fa.gammaRegime !== 'negative') ||
+      (direction === 'short' && fa.gammaRegime !== 'positive');
+    if (aligned) score += 5;
+  }
+
+  score = Math.min(100, score);
+
+  // Dedup: same direction within DEDUP_WINDOW_MS
+  const dedupKey = `divergence:${event.symbol}:${direction}`;
+  const last = ctx.recentSignalKeys.get(dedupKey);
+  if (last && Date.now() - last < DEDUP_WINDOW_MS) return null;
+  ctx.recentSignalKeys.set(dedupKey, Date.now());
+
+  const priceMove = (event.currentPrice - event.priorPrice).toFixed(2);
+  const rationale =
+    `${event.direction.toUpperCase()} divergence [${session.toUpperCase()}]: ` +
+    `price ${event.priorPrice} -> ${event.currentPrice} (${priceMove > '0' ? '+' : ''}${priceMove}), ` +
+    `delta ${event.priorDelta} -> ${event.currentDelta} (diff ${event.deltaDiff}).` +
+    zoneNote +
+    (fa ? ` Regime: ${fa.gammaRegime}.` : '');
+
+  return {
+    ts: event.ts,
+    source: 'rules',
+    type: 'confluence',
+    symbol: event.symbol,
+    ruleId: 'delta-divergence',
+    score,
+    direction,
     contextEventIds: [],
     rationale,
     observeOnly: true,
@@ -188,6 +282,13 @@ export function startRulesEngine(
         const sig = ruleSweep(event, ctx, getLevels, getFlashAlpha);
         if (sig) {
           logger.info({ ruleId: sig.ruleId, score: sig.score, direction: sig.direction, levels: event.levels, volume: event.volume }, 'signal fired');
+          state.applySignal(sig);
+        }
+      }
+      if (event.source === 'bookmap' && event.type === 'delta_divergence') {
+        const sig = ruleDeltaDivergence(event, ctx, getLevels, getFlashAlpha);
+        if (sig) {
+          logger.info({ ruleId: sig.ruleId, score: sig.score, direction: sig.direction, deltaDiff: event.deltaDiff }, 'signal fired');
           state.applySignal(sig);
         }
       }

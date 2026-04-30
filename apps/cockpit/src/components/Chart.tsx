@@ -199,18 +199,33 @@ export function Chart() {
 
     // No dedup: every signal becomes a marker. Multiple markers at the same
     // time will stack vertically on the candle automatically.
+    // Visual differentiation by ruleId:
+    //   - sweep -> arrow (existing behavior)
+    //   - delta-divergence -> circle (different shape so they're not confused)
     const markers = symbolSignals
       .map((sig) => {
         const bucket = bucketSecs(sig.ts);
-        // Skip signals whose time isn't in our visible bar history
         if (!history.has(bucket)) return null;
         const isLong = sig.direction === 'long';
+        const color = isLong ? '#2bb673' : '#d64545';
+        const position = (isLong ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar';
+
+        let shape: 'arrowUp' | 'arrowDown' | 'circle';
+        let label: string;
+        if (sig.ruleId === 'delta-divergence') {
+          shape = 'circle';
+          label = `DIV·${sig.score}`;
+        } else {
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          label = `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}`;
+        }
+
         return {
           time: bucket as UTCTimestamp,
-          position: (isLong ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar',
-          color: isLong ? '#2bb673' : '#d64545',
-          shape: (isLong ? 'arrowUp' : 'arrowDown') as 'arrowUp' | 'arrowDown',
-          text: `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}`,
+          position,
+          color,
+          shape,
+          text: label,
         };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)

@@ -67,7 +67,21 @@ export interface SweepEvent extends BaseEvent {
   endPrice: number;
 }
 
-export type BookmapEvent = HeartbeatEvent | AbsorptionEvent | IcebergEvent | BarEvent | SweepEvent;
+export interface DeltaDivergenceEvent extends BaseEvent {
+  source: 'bookmap';
+  type: 'delta_divergence';
+  symbol: Symbol;
+  direction: 'bullish' | 'bearish';
+  currentPrice: number;
+  currentDelta: number;
+  priorPrice: number;
+  priorDelta: number;
+  deltaDiff: number;
+  magnitude: number;
+  windowSec: number;
+}
+
+export type BookmapEvent = HeartbeatEvent | AbsorptionEvent | IcebergEvent | BarEvent | SweepEvent | DeltaDivergenceEvent;
 
 // --- FlashAlpha (polled snapshots) ---
 

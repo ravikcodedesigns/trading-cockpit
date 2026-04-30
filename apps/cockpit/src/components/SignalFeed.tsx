@@ -40,6 +40,14 @@ function eventLabel(e: AggregatorEvent): { tag: string; detail: string; tone: st
       tone: e.direction === 'long' ? 'var(--long)' : 'var(--short)',
     };
   }
+  if (e.source === 'bookmap' && e.type === 'delta_divergence') {
+    const arrow = e.direction === 'bullish' ? '↑' : '↓';
+    return {
+      tag: `DIV ${arrow}`,
+      detail: `${e.symbol} · ${e.priorPrice}→${e.currentPrice} · Δ ${e.priorDelta}→${e.currentDelta} (diff ${e.deltaDiff}) · mag ${e.magnitude}`,
+      tone: e.direction === 'bullish' ? 'var(--long)' : 'var(--short)',
+    };
+  }
   if (e.source === 'flashalpha' && e.type === 'snapshot') {
     return {
       tag: 'GEX',
