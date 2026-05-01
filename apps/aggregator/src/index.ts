@@ -7,10 +7,17 @@ import { logger } from './logger.js';
 import { discord } from './discord.js';
 import { db } from './db.js';
 import type { Symbol, DailyLevels, FlashAlphaSnapshot } from '@trading/contracts';
+import { tradingDayFor } from '@trading/contracts';
 
 // Accessors for rules engine to read current materialized state
 const snapshot = () => state.snapshot();
-const getLevels = (s: Symbol): DailyLevels | undefined => snapshot().levels[s];
+const getLevels = (s: Symbol): DailyLevels | undefined => {
+  // Look up the trading day for "now" and return that day's levels for the
+  // symbol. After the per-day levels refactor, state holds a date-keyed
+  // map instead of a single levels object.
+  const today = tradingDayFor(Date.now());
+  return state.levelsForDay(today)?.[s];
+};
 const getFlashAlpha = (s: Symbol): FlashAlphaSnapshot | undefined => snapshot().flashAlpha[s];
 
 async function main() {

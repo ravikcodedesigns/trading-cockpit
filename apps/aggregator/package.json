@@ -11,7 +11,9 @@
     "score": "tsx scripts/score_outcomes.ts",
     "score:report": "tsx scripts/score_report.ts",
     "levels:add": "tsx scripts/levels_cli.ts",
-    "rescore": "tsx scripts/rescore_signals.ts"
+    "rescore": "tsx scripts/rescore_signals.ts",
+    "backfill": "tsx scripts/backfill_signals.ts",
+    "migrate:rename-outcome-columns": "tsx scripts/migrate_rename_columns.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^10.0.1",

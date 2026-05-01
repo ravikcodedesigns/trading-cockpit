@@ -66,10 +66,10 @@ interface MaturedRow {
   score: number;
   direction: 'long' | 'short';
   signal_price: number;
-  w5_mfe: number; w5_mae: number; w5_net: number; w5_hit20: number; w5_hit30: number; w5_hit40: number; w5_clean20: number; w5_clean30: number; w5_clean40: number;
-  w15_mfe: number; w15_mae: number; w15_net: number; w15_hit20: number; w15_hit30: number; w15_hit40: number; w15_clean20: number; w15_clean30: number; w15_clean40: number;
-  w30_mfe: number; w30_mae: number; w30_net: number; w30_hit20: number; w30_hit30: number; w30_hit40: number; w30_clean20: number; w30_clean30: number; w30_clean40: number;
-  w60_mfe: number; w60_mae: number; w60_net: number; w60_hit20: number; w60_hit30: number; w60_hit40: number; w60_clean20: number; w60_clean30: number; w60_clean40: number;
+  w5_max_gain: number; w5_max_drawdown: number; w5_net: number; w5_hit20: number; w5_hit30: number; w5_hit40: number; w5_clean20: number; w5_clean30: number; w5_clean40: number;
+  w15_max_gain: number; w15_max_drawdown: number; w15_net: number; w15_hit20: number; w15_hit30: number; w15_hit40: number; w15_clean20: number; w15_clean30: number; w15_clean40: number;
+  w30_max_gain: number; w30_max_drawdown: number; w30_net: number; w30_hit20: number; w30_hit30: number; w30_hit40: number; w30_clean20: number; w30_clean30: number; w30_clean40: number;
+  w60_max_gain: number; w60_max_drawdown: number; w60_net: number; w60_hit20: number; w60_hit30: number; w60_hit40: number; w60_clean20: number; w60_clean30: number; w60_clean40: number;
 }
 
 const all = db.prepare('SELECT * FROM signal_outcomes_matured ORDER BY signal_ts').all() as MaturedRow[];
@@ -90,8 +90,8 @@ if (all.length === 0) {
 // Group by rule + session + score band
 type Bucket = {
   count: number;
-  totalMfe5: number; totalMfe15: number; totalMfe30: number; totalMfe60: number;
-  totalMae5: number; totalMae15: number; totalMae30: number; totalMae60: number;
+  totalGain5: number; totalGain15: number; totalGain30: number; totalGain60: number;
+  totalDrawdown5: number; totalDrawdown15: number; totalDrawdown30: number; totalDrawdown60: number;
   hit20_5: number; hit20_15: number; hit20_30: number; hit20_60: number;
   hit30_5: number; hit30_15: number; hit30_30: number; hit30_60: number;
   hit40_5: number; hit40_15: number; hit40_30: number; hit40_60: number;
@@ -103,8 +103,8 @@ const groups = new Map<string, Bucket>();
 function emptyBucket(): Bucket {
   return {
     count: 0,
-    totalMfe5: 0, totalMfe15: 0, totalMfe30: 0, totalMfe60: 0,
-    totalMae5: 0, totalMae15: 0, totalMae30: 0, totalMae60: 0,
+    totalGain5: 0, totalGain15: 0, totalGain30: 0, totalGain60: 0,
+    totalDrawdown5: 0, totalDrawdown15: 0, totalDrawdown30: 0, totalDrawdown60: 0,
     hit20_5: 0, hit20_15: 0, hit20_30: 0, hit20_60: 0,
     hit30_5: 0, hit30_15: 0, hit30_30: 0, hit30_60: 0,
     hit40_5: 0, hit40_15: 0, hit40_30: 0, hit40_60: 0,
@@ -118,8 +118,8 @@ for (const r of all) {
   const key = `${r.rule_id}|${session}|${band}`;
   const b = groups.get(key) ?? emptyBucket();
   b.count++;
-  b.totalMfe5 += r.w5_mfe; b.totalMfe15 += r.w15_mfe; b.totalMfe30 += r.w30_mfe; b.totalMfe60 += r.w60_mfe;
-  b.totalMae5 += r.w5_mae; b.totalMae15 += r.w15_mae; b.totalMae30 += r.w30_mae; b.totalMae60 += r.w60_mae;
+  b.totalGain5 += r.w5_max_gain; b.totalGain15 += r.w15_max_gain; b.totalGain30 += r.w30_max_gain; b.totalGain60 += r.w60_max_gain;
+  b.totalDrawdown5 += r.w5_max_drawdown; b.totalDrawdown15 += r.w15_max_drawdown; b.totalDrawdown30 += r.w30_max_drawdown; b.totalDrawdown60 += r.w60_max_drawdown;
   b.hit20_5 += r.w5_hit20; b.hit20_15 += r.w15_hit20; b.hit20_30 += r.w30_hit20; b.hit20_60 += r.w60_hit20;
   b.hit30_5 += r.w5_hit30; b.hit30_15 += r.w15_hit30; b.hit30_30 += r.w30_hit30; b.hit30_60 += r.w60_hit30;
   b.hit40_5 += r.w5_hit40; b.hit40_15 += r.w15_hit40; b.hit40_30 += r.w30_hit40; b.hit40_60 += r.w60_hit40;
@@ -146,23 +146,25 @@ for (const rule of rules) {
     if (sessionTotal === 0) continue;
 
     console.log(`\n  ${session.toUpperCase()} (n=${sessionTotal})`);
-    console.log(`  ${pad('score', 8)} ${pad('n', 5)} ${pad('avgMFE60', 10)} ${pad('avgMAE60', 10)} ${pad('hit20@15', 9)} ${pad('hit20@60', 9)} ${pad('hit30@60', 9)} ${pad('hit40@60', 9)} ${pad('clean30@60', 11)}`);
+    console.log(`  ${pad('score', 8)} ${pad('n', 5)} ${pad('avgGain60', 10)} ${pad('avgDrawdown60', 14)} ${pad('hit20@15', 9)} ${pad('hit20@60', 9)} ${pad('hit30@60', 9)} ${pad('hit40@60', 9)} ${pad('clean30@60', 11)}`);
 
     for (const band of bands) {
       const b = groups.get(`${rule}|${session}|${band}`);
       if (!b || b.count === 0) continue;
-      const avgMfe60 = (b.totalMfe60 / b.count).toFixed(1);
-      const avgMae60 = (b.totalMae60 / b.count).toFixed(1);
-      console.log(`  ${pad(band, 8)} ${pad(b.count, 5)} ${pad(avgMfe60, 10)} ${pad(avgMae60, 10)} ${pad(pct(b.hit20_15, b.count), 9)} ${pad(pct(b.hit20_60, b.count), 9)} ${pad(pct(b.hit30_60, b.count), 9)} ${pad(pct(b.hit40_60, b.count), 9)} ${pad(pct(b.clean30_60, b.count), 11)}`);
+      const avgGain60 = (b.totalGain60 / b.count).toFixed(1);
+      const avgDrawdown60 = (b.totalDrawdown60 / b.count).toFixed(1);
+      console.log(`  ${pad(band, 8)} ${pad(b.count, 5)} ${pad(avgGain60, 10)} ${pad(avgDrawdown60, 14)} ${pad(pct(b.hit20_15, b.count), 9)} ${pad(pct(b.hit20_60, b.count), 9)} ${pad(pct(b.hit30_60, b.count), 9)} ${pad(pct(b.hit40_60, b.count), 9)} ${pad(pct(b.clean30_60, b.count), 11)}`);
     }
   }
 }
 
 console.log('\n========================================');
 console.log('Legend:');
-console.log('  hit20@15  = % of signals where MFE >= 20 pts within 15 min');
-console.log('  hit20@60  = % where MFE >= 20 pts within 60 min');
-console.log('  clean30@60= % where MFE >= 30 AND MAE < 5 within 60 min (clean win)');
+console.log('  avgGain60   = avg peak gain (in signal direction) within 60 min');
+console.log('  avgDrawdown60     = avg peak drawdown (against signal) within 60 min');
+console.log('  hit20@15    = % of signals where peak gain >= 20 pts within 15 min');
+console.log('  hit20@60    = % where peak gain >= 20 pts within 60 min');
+console.log('  clean30@60  = % where peak gain >= 30 AND drawdown < 5 within 60 min (clean win)');
 console.log('========================================');
 
 db.close();
