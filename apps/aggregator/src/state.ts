@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { db } from './db.js';
 import { discord } from './discord.js';
 import { logger } from './logger.js';
+import { classifySignalQuality } from './quality.js';
 import type {
   AggregatorEvent,
   ConfluenceSignal,
@@ -72,9 +73,24 @@ class State {
   }
 
   applySignal(signal: ConfluenceSignal): number {
+    // DB log is unconditional — even silenced signals get persisted so the
+    // outcome tracker can keep validating their quality. We need this data
+    // to know when (or whether) to revisit the gold-tier thresholds.
     const id = db.logSignal(signal);
-    this.bus.emit('signal', signal);
-    discord.signal(signal);
+
+    // Quality gate for broadcast paths (Discord + cockpit). Only gold-tier
+    // signals reach the human attention layer. See quality.ts for current
+    // tier definitions; thresholds are calibrated against outcome data.
+    const decision = classifySignalQuality(signal);
+    if (decision.tier === 'gold') {
+      this.bus.emit('signal', signal);
+      discord.signal(signal);
+      logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                  'gold-tier signal broadcast');
+    } else {
+      logger.debug({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                   'silenced signal (DB only)');
+    }
     return id;
   }
 
@@ -103,13 +119,22 @@ class State {
   // --- Snapshot for cockpit on connect ---
 
   snapshot(): CockpitSnapshot['state'] {
+    // For recentSignals, fetch a wider net (500) and filter to gold tier
+    // before returning. The cockpit should only see what passes Discord;
+    // silenced signals stay in the DB for outcome analysis but aren't
+    // shown in the right panel or as chart markers.
+    const allRecent = db.recentSignals(500);
+    const goldOnly = allRecent
+      .filter(s => classifySignalQuality(s).tier === 'gold')
+      .slice(0, 50);
+
     return {
       ts: Date.now(),
       connections: this.connectionStatus(),
       levelsByDay: this.allLevelsByDay(),
       flashAlpha: this.flashAlpha,
       recentEvents: db.recentEvents(50).reverse(),
-      recentSignals: db.recentSignals(50),
+      recentSignals: goldOnly,
       eventsLogged: db.eventCount(),
       uptimeSec: Math.floor((Date.now() - startTime) / 1000),
     };

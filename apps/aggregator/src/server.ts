@@ -46,7 +46,10 @@ export async function startServer(): Promise<FastifyInstance> {
   app.get('/history/bars', async (req) => {
     const q = req.query as { symbol?: string; minutes?: string };
     const symbol = q.symbol ?? 'NQ';
-    const minutes = Math.max(1, Math.min(720, parseInt(q.minutes ?? '60', 10) || 60));
+    // Cap at 30 days (43200 minutes). The standing default is 1 week
+    // (10080 min) per project preference. Cap exists to prevent runaway
+    // queries; bump higher if you need longer windows.
+    const minutes = Math.max(1, Math.min(43200, parseInt(q.minutes ?? '60', 10) || 60));
     const sinceMs = Date.now() - minutes * 60 * 1000;
     const bars = db.recentBars(symbol, sinceMs);
     return { symbol, minutes, count: bars.length, bars };
