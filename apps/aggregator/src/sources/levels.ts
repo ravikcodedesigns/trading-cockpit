@@ -14,6 +14,17 @@ interface RawLevel {
   notes?: string;
 }
 
+interface DayEntry {
+  levels: RawLevel[];
+}
+
+interface FileShape {
+  // New shape: date-keyed map of trading-day -> levels
+  days?: Record<string, DayEntry>;
+  // Legacy shape: single levels array (treated as "today's" trading day)
+  levels?: RawLevel[];
+}
+
 let lastMtime = 0;
 
 function loadAndApply(): void {
@@ -29,46 +40,83 @@ function loadAndApply(): void {
     lastMtime = stat.mtimeMs;
 
     const raw = fs.readFileSync(config.levelsPath, 'utf-8');
-    const data = JSON.parse(raw) as { levels?: RawLevel[] };
+    const data = JSON.parse(raw) as FileShape;
 
-    if (!Array.isArray(data.levels)) {
-      logger.warn('levels file missing levels[] array');
+    // Build a unified map of date -> levels.
+    const byDate: Record<string, RawLevel[]> = {};
+
+    if (data.days && typeof data.days === 'object') {
+      for (const [date, entry] of Object.entries(data.days)) {
+        if (entry && Array.isArray(entry.levels)) {
+          byDate[date] = entry.levels;
+        }
+      }
+    }
+
+    // Backward-compat: if file uses old shape (just `levels` array), treat
+    // it as today's trading day. This lets existing files keep working.
+    if (data.levels && Array.isArray(data.levels)) {
+      const todayKey = todayInNY();
+      if (!byDate[todayKey]) {
+        byDate[todayKey] = data.levels;
+      }
+    }
+
+    if (Object.keys(byDate).length === 0) {
+      logger.warn('levels file has no recognized days[] or levels[]');
       return;
     }
 
     const ts = Date.now();
-    let count = 0;
-    for (const lv of data.levels) {
-      if (!lv.symbol) continue;
-      const event: DailyLevels = {
-        ts,
-        source: 'levels',
-        type: 'daily',
-        symbol: lv.symbol,
-        bullZone: lv.bullZone,
-        bearZone: lv.bearZone,
-        ddBands: lv.ddBands,
-        hedgePressure: lv.hedgePressure,
-        additionalLevels: lv.additionalLevels,
-        notes: lv.notes,
-      };
-      state.applyEvent(event);
-      count++;
+    let totalLevels = 0;
+    const days: Record<string, DailyLevels[]> = {};
+
+    for (const [tradingDay, levelsArr] of Object.entries(byDate)) {
+      const dayLevels: DailyLevels[] = [];
+      for (const lv of levelsArr) {
+        if (!lv.symbol) continue;
+        const event: DailyLevels = {
+          ts,
+          source: 'levels',
+          type: 'daily',
+          symbol: lv.symbol,
+          tradingDay,
+          bullZone: lv.bullZone,
+          bearZone: lv.bearZone,
+          ddBands: lv.ddBands,
+          hedgePressure: lv.hedgePressure,
+          additionalLevels: lv.additionalLevels,
+          notes: lv.notes,
+        };
+        dayLevels.push(event);
+        totalLevels++;
+      }
+      days[tradingDay] = dayLevels;
     }
 
+    state.applyAllLevels(days);
     state.setConnection('levels', 'connected');
-    logger.info({ count }, 'levels loaded');
+    logger.info({ days: Object.keys(days).length, totalLevels }, 'levels loaded');
   } catch (err) {
     logger.warn({ err }, 'failed to load levels');
     state.setConnection('levels', 'disconnected');
   }
 }
 
+function todayInNY(): string {
+  const d = new Date();
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  return fmt.format(d);
+}
+
 export function startLevelsWatcher(): void {
   loadAndApply();
 
-  // fs.watch can fire multiple times for one save; debounce via mtime check above.
-  // Also poll every 5s as a safety net (some editors do atomic-rename which fs.watch misses).
+  // fs.watch can fire multiple times for one save; debounce via mtime check.
+  // Also poll every 5s as a safety net (some editors do atomic-rename).
   if (fs.existsSync(config.levelsPath)) {
     try {
       fs.watch(config.levelsPath, { persistent: false }, () => {

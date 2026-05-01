@@ -3,19 +3,23 @@ import {
   createChart,
   type IChartApi,
   type ISeriesApi,
-  type IPriceLine,
   type UTCTimestamp,
   ColorType,
   LineStyle,
   CrosshairMode,
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
+import { tradingDayFor } from '@trading/contracts';
 
 export function Chart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-  const priceLinesRef = useRef<IPriceLine[]>([]);
+  // Line-series objects representing per-day RS levels. Each level on each
+  // day is its own short line series confined to that day's bar range.
+  // We track them so we can clean up on level updates / symbol switches.
+  const levelLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
+  const flashAlphaLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
 
   // Per-symbol bar history kept in a ref so it survives re-renders.
   const barHistoryRef = useRef<Record<string, Map<number, {
@@ -23,7 +27,7 @@ export function Chart() {
   }>>>({ NQ: new Map(), ES: new Map() });
 
   const selectedSymbol = useStore((s) => s.selectedSymbol);
-  const levels = useStore((s) => s.levels[s.selectedSymbol]);
+  const levelsByDay = useStore((s) => s.levelsByDay);
   const flashAlpha = useStore((s) => s.flashAlpha[s.selectedSymbol]);
   const recentEvents = useStore((s) => s.recentEvents);
   const recentSignals = useStore((s) => s.recentSignals);
@@ -179,7 +183,8 @@ export function Chart() {
       chart.remove();
       chartRef.current = null;
       seriesRef.current = null;
-      priceLinesRef.current = [];
+      levelLinesRef.current = [];
+      flashAlphaLinesRef.current = [];
     };
   }, []);
 
@@ -194,7 +199,9 @@ export function Chart() {
     let cancelled = false;
     (async () => {
       try {
-        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=1440`;
+        // Default chart history: 1 week (10080 minutes). User confirmed
+        // this is the standing preference. Don't change without asking.
+        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=10080`;
         const res = await fetch(url);
         if (!res.ok) return;
         const data = (await res.json()) as {
@@ -265,61 +272,151 @@ export function Chart() {
     // recent bars at a sensible width and the user can scroll/zoom freely.
   }, [recentEvents, selectedSymbol]);
 
-  // Sync price lines when levels or FA change
+  // Sync per-day level lines when levelsByDay or FA changes.
+  // Each level on each day is rendered as a tiny LineSeries with two data
+  // points (start = trading-day 09:30 ET, end = next trading-day 09:30 ET).
+  // This gives us line segments that only span their own day's bars.
   useEffect(() => {
-    const series = seriesRef.current;
-    if (!series) return;
+    const chart = chartRef.current;
+    if (!chart) return;
 
-    for (const line of priceLinesRef.current) series.removePriceLine(line);
-    priceLinesRef.current = [];
+    // Tear down all existing level lines + flashAlpha lines
+    for (const ls of levelLinesRef.current) {
+      try { chart.removeSeries(ls); } catch { /* may already be gone */ }
+    }
+    levelLinesRef.current = [];
+    for (const ls of flashAlphaLinesRef.current) {
+      try { chart.removeSeries(ls); } catch { /* may already be gone */ }
+    }
+    flashAlphaLinesRef.current = [];
 
-    if (levels) {
-      const add = (price: number, color: string, title: string, style = LineStyle.Solid, width: 1 | 2 | 3 | 4 = 1) => {
-        priceLinesRef.current.push(
-          series.createPriceLine({ price, color, lineWidth: width, lineStyle: style, axisLabelVisible: true, title })
-        );
+    // Helper: compute the [start, end] timestamps for a trading day in
+    // seconds since epoch, suitable for lightweight-charts UTCTimestamp.
+    // Trading day = 09:30 ET on Day N -> 09:30 ET on Day N+1 (with weekend
+    // gap handling: Friday's day extends to Monday 09:30).
+    const dayBoundsSeconds = (tradingDay: string): { start: number; end: number } => {
+      // Parse YYYY-MM-DD as a Date in NY timezone.
+      // We construct an ISO string in UTC that represents 09:30 NY time on
+      // that date. NY is UTC-4 (EDT) or UTC-5 (EST); use a heuristic by
+      // building a Date and asking what offset NY had then.
+      const [y, m, d] = tradingDay.split('-').map(Number);
+      const naiveLocal = new Date(Date.UTC(y, m - 1, d, 13, 30, 0)); // 13:30 UTC ~= 09:30 EDT
+      // Cross-check by formatting back; if the resulting NY hour isn't 9
+      // we're off by an hour (DST), shift accordingly.
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', hour: '2-digit', hour12: false,
+      });
+      const nyHour = parseInt(fmt.format(naiveLocal), 10);
+      const offsetCorrection = (9 - nyHour) * 60 * 60 * 1000;
+      const start = naiveLocal.getTime() + offsetCorrection;
+
+      // End = 09:30 ET on next trading day.
+      // For Friday's trading day, end = Monday 09:30 ET.
+      const dt = new Date(start);
+      const startWeekday = dt.getUTCDay(); // 0=Sun .. 6=Sat
+      let daysForward = 1;
+      if (startWeekday === 5) daysForward = 3; // Fri -> Mon
+      const end = start + daysForward * 24 * 60 * 60 * 1000;
+
+      return { start: Math.floor(start / 1000), end: Math.floor(end / 1000) };
+    };
+
+    const styleMap: Record<string, LineStyle> = {
+      solid: LineStyle.Solid,
+      dashed: LineStyle.Dashed,
+      dotted: LineStyle.Dotted,
+      'large-dashed': LineStyle.LargeDashed,
+      'sparse-dotted': LineStyle.SparseDotted,
+    };
+
+    // For each day, render all of that day's levels as line segments.
+    // Today's levels show clean labels on the price axis (no date suffix).
+    // Past days' levels are visible on the chart but their labels are
+    // hidden, so the right-side price axis stays clean.
+    const today = tradingDayFor(Date.now());
+
+    for (const [tradingDay, bySymbol] of Object.entries(levelsByDay)) {
+      const dayLevels = bySymbol[selectedSymbol];
+      if (!dayLevels) continue;
+      const { start, end } = dayBoundsSeconds(tradingDay);
+      const isToday = tradingDay === today;
+
+      const addLevelLine = (price: number, color: string, title: string, style: LineStyle, width: 1 | 2 | 3 | 4) => {
+        const ls = chart.addLineSeries({
+          color,
+          lineWidth: width,
+          lineStyle: style,
+          priceLineVisible: false,
+          // Show the last-value label (which lightweight-charts puts on
+          // the price axis) ONLY for today's levels. Past days' lines
+          // remain visible on the chart but don't clutter the price axis.
+          lastValueVisible: isToday,
+          crosshairMarkerVisible: false,
+          title: isToday ? title : '',  // hover tooltip; only meaningful for today
+        });
+        ls.setData([
+          { time: start as UTCTimestamp, value: price },
+          { time: end as UTCTimestamp, value: price },
+        ]);
+        levelLinesRef.current.push(ls);
       };
-      // Primary RS levels — colors and weights matched to RocketScooter platform.
-      add(levels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
-      add(levels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
-      add(levels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
-      add(levels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
-      add(levels.ddBands.upper, '#9ee04a', 'DD↑',    LineStyle.Solid, 2);  // lime
-      add(levels.ddBands.lower, '#9ee04a', 'DD↓',    LineStyle.Solid, 2);  // lime
-      add(levels.hedgePressure, '#4a8fdc', 'HP',     LineStyle.Solid, 2);  // blue
 
-      // Additional RS reference levels (QQQ Open/Close, HG, MHP, etc.)
-      const styleMap: Record<string, LineStyle> = {
-        solid: LineStyle.Solid,
-        dashed: LineStyle.Dashed,
-        dotted: LineStyle.Dotted,
-        'large-dashed': LineStyle.LargeDashed,
-        'sparse-dotted': LineStyle.SparseDotted,
-      };
-      if (levels.additionalLevels) {
-        for (const al of levels.additionalLevels) {
-          add(
+      // Pass clean labels (no date suffix). Title only appears on the price
+      // axis for today's lines (per isToday gate above).
+      addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
+      addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+      addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
+      addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+      addLevelLine(dayLevels.ddBands.upper, '#9ee04a', 'DD↑',    LineStyle.Solid, 2);
+      addLevelLine(dayLevels.ddBands.lower, '#9ee04a', 'DD↓',    LineStyle.Solid, 2);
+      addLevelLine(dayLevels.hedgePressure, '#4a8fdc', 'HP',     LineStyle.Solid, 2);
+
+      if (dayLevels.additionalLevels) {
+        for (const al of dayLevels.additionalLevels) {
+          addLevelLine(
             al.price,
             al.color ?? '#5a9bff',
             al.label,
             styleMap[al.style ?? 'dashed'] ?? LineStyle.Dashed,
-            (al as { width?: 1 | 2 | 3 | 4 }).width ?? 1
+            (al as { width?: 1 | 2 | 3 | 4 }).width ?? 1,
           );
         }
       }
     }
+
+    // FlashAlpha lines: still treated as "always live" (single-day model).
+    // These are short-lived and update frequently, so chart-wide is fine.
     if (flashAlpha) {
-      const add = (price: number, color: string, title: string) => {
-        priceLinesRef.current.push(
-          series.createPriceLine({ price, color, lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title })
-        );
-      };
-      add(flashAlpha.zeroGamma, '#4a8fdc', '0γ');
-      add(flashAlpha.dealerFlip, '#4a8fdc', 'flip');
-      flashAlpha.callWalls.slice(0, 2).forEach((p, i) => add(p, '#2bb67388', `CW${i + 1}`));
-      flashAlpha.putWalls.slice(0, 2).forEach((p, i) => add(p, '#d6454588', `PW${i + 1}`));
+      const series = seriesRef.current;
+      if (series) {
+        const addFa = (price: number, color: string, title: string) => {
+          // For FA, fall back to chart-wide LineSeries spanning all bars.
+          // Without a meaningful date scope, we just paint them across the
+          // visible range using a zero-history series with priceLineSource.
+          const ls = chart.addLineSeries({
+            color,
+            lineWidth: 1,
+            lineStyle: LineStyle.Dotted,
+            priceLineVisible: false,
+            lastValueVisible: false,
+            crosshairMarkerVisible: false,
+            title,
+          });
+          // Anchor to a wide range so the line covers most of the chart.
+          const now = Math.floor(Date.now() / 1000);
+          ls.setData([
+            { time: (now - 30 * 24 * 60 * 60) as UTCTimestamp, value: price },
+            { time: (now + 24 * 60 * 60) as UTCTimestamp, value: price },
+          ]);
+          flashAlphaLinesRef.current.push(ls);
+        };
+        addFa(flashAlpha.zeroGamma, '#4a8fdc', '0γ');
+        addFa(flashAlpha.dealerFlip, '#4a8fdc', 'flip');
+        flashAlpha.callWalls.slice(0, 2).forEach((p, i) => addFa(p, '#2bb67388', `CW${i + 1}`));
+        flashAlpha.putWalls.slice(0, 2).forEach((p, i) => addFa(p, '#d6454588', `PW${i + 1}`));
+      }
     }
-  }, [levels, flashAlpha]);
+  }, [levelsByDay, flashAlpha, selectedSymbol]);
 
   // Render signal markers on the chart (arrows below/above candles).
   // Reactive on signals, symbol, AND the bar history we have, so markers

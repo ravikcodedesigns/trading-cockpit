@@ -115,6 +115,10 @@ export interface DailyLevels extends BaseEvent {
   source: 'levels';
   type: 'daily';
   symbol: Symbol;
+  // The trading day these levels are active for, formatted as YYYY-MM-DD
+  // in NY time. Trading day = 09:30 ET on Day N -> 09:30 ET on Day N+1.
+  // Friday's trading day extends across the weekend gap to Monday 09:30.
+  tradingDay: string;
   bullZone: ZoneRange;
   bearZone: ZoneRange;
   ddBands: { upper: number; lower: number };
@@ -166,7 +170,10 @@ export interface CockpitSnapshot {
   state: {
     ts: number;
     connections: Partial<Record<SourceName, ConnectionStatus>>;
-    levels: Partial<Record<Symbol, DailyLevels>>;
+    // Date-keyed map: trading-day "YYYY-MM-DD" -> symbol -> DailyLevels.
+    // Multiple days held concurrently so cockpit can render historical bars
+    // with the levels that were active on that day.
+    levelsByDay: Record<string, Partial<Record<Symbol, DailyLevels>>>;
     flashAlpha: Partial<Record<Symbol, FlashAlphaSnapshot>>;
     recentEvents: AggregatorEvent[];
     recentSignals: ConfluenceSignal[];
@@ -192,3 +199,66 @@ export interface CockpitConnectionPush {
 }
 
 export type CockpitMessage = CockpitSnapshot | CockpitEventPush | CockpitSignalPush | CockpitConnectionPush;
+
+// --- Trading day helper ---
+// Trading day boundary is 09:30 ET on Day N -> 09:30 ET on Day N+1.
+// Friday's trading day extends through the weekend (Sat closed, Sun 18:00
+// reopen still belongs to Friday until Monday 09:30 RTH open).
+//
+// Returns YYYY-MM-DD for the trading day that contains the given timestamp.
+// Returns null if the timestamp is before any 09:30 boundary on a weekday.
+export function tradingDayFor(tsMs: number): string {
+  const d = new Date(tsMs);
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+  const parts = fmt.formatToParts(d);
+  const get = (t: string): string => parts.find(p => p.type === t)?.value ?? '';
+  const year = get('year');
+  const month = get('month');
+  const day = get('day');
+  const weekday = get('weekday');
+  const hour = parseInt(get('hour'), 10);
+  const minute = parseInt(get('minute'), 10);
+  const minutesOfDay = hour * 60 + minute;
+
+  const today = `${year}-${month}-${day}`;
+  const RTH_OPEN = 9 * 60 + 30; // 09:30 ET in minutes
+
+  // Helper to subtract days from a YYYY-MM-DD string.
+  const minusDays = (dateStr: string, days: number): string => {
+    const dt = new Date(dateStr + 'T12:00:00Z'); // noon UTC to avoid TZ edge cases
+    dt.setUTCDate(dt.getUTCDate() - days);
+    return dt.toISOString().slice(0, 10);
+  };
+
+  // Determine prior trading day based on current weekday.
+  // After 09:30 ET on a weekday: today's trading day = today.
+  // Before 09:30 ET on a weekday: today's trading day = previous weekday.
+  // Saturday/Sunday/before-Sunday-18:00: trading day = previous Friday.
+
+  if (weekday === 'Sat') {
+    // Always Friday's trading day
+    return minusDays(today, 1);
+  }
+  if (weekday === 'Sun') {
+    // Always Friday's trading day (regardless of time, since Sun 18:00 reopen
+    // is still part of Friday's day until Mon 09:30)
+    return minusDays(today, 2);
+  }
+  if (weekday === 'Mon') {
+    if (minutesOfDay < RTH_OPEN) {
+      // Pre-market Monday = still Friday's trading day
+      return minusDays(today, 3);
+    }
+    return today;
+  }
+  // Tue-Fri
+  if (minutesOfDay < RTH_OPEN) {
+    // Pre-market = previous weekday's trading day
+    return minusDays(today, 1);
+  }
+  return today;
+}

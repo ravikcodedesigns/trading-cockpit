@@ -9,7 +9,8 @@
     "build": "tsc -p .",
     "typecheck": "tsc --noEmit",
     "score": "tsx scripts/score_outcomes.ts",
-    "score:report": "tsx scripts/score_report.ts"
+    "score:report": "tsx scripts/score_report.ts",
+    "levels:add": "tsx scripts/levels_cli.ts"
   },
   "dependencies": {
     "@fastify/websocket": "^10.0.1",

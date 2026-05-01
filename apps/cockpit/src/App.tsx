@@ -3,14 +3,18 @@ import { connect, useStore } from './lib/ws';
 import { StatusBar } from './components/StatusBar';
 import { Chart } from './components/Chart';
 import { SignalFeed } from './components/SignalFeed';
+import { tradingDayFor } from '@trading/contracts';
 
 export function App() {
   useEffect(() => { connect(); }, []);
 
   const wsStatus = useStore((s) => s.wsStatus);
   const selectedSymbol = useStore((s) => s.selectedSymbol);
-  const levels = useStore((s) => s.levels[s.selectedSymbol]);
+  const levelsByDay = useStore((s) => s.levelsByDay);
   const flashAlpha = useStore((s) => s.flashAlpha[s.selectedSymbol]);
+  // Pick the levels for the current trading day to surface in the context strip.
+  const today = tradingDayFor(Date.now());
+  const levels = levelsByDay[today]?.[selectedSymbol];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
@@ -44,7 +48,7 @@ function ContextStrip({
   flashAlpha,
   symbol,
 }: {
-  levels: ReturnType<typeof useStore.getState>['levels'][keyof ReturnType<typeof useStore.getState>['levels']];
+  levels: ReturnType<typeof useStore.getState>['levelsByDay'][string][keyof ReturnType<typeof useStore.getState>['levelsByDay'][string]];
   flashAlpha: ReturnType<typeof useStore.getState>['flashAlpha'][keyof ReturnType<typeof useStore.getState>['flashAlpha']];
   symbol: string;
 }) {

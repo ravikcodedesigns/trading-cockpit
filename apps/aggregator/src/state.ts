@@ -19,7 +19,10 @@ const startTime = Date.now();
 class State {
   private bus = new EventEmitter();
   private connections = new Map<SourceName, ConnectionStatus>();
-  private levels: Partial<Record<Symbol, DailyLevels>> = {};
+  // levels keyed by tradingDay date string -> symbol -> DailyLevels.
+  // Multiple trading days held concurrently so the cockpit can render past
+  // days' levels on past bars.
+  private levelsByDay: Map<string, Partial<Record<Symbol, DailyLevels>>> = new Map();
   private flashAlpha: Partial<Record<Symbol, FlashAlphaSnapshot>> = {};
   private recentEvents: AggregatorEvent[] = [];
 
@@ -57,7 +60,9 @@ class State {
 
     // Update materialized state for known event types
     if (event.source === 'levels' && event.type === 'daily') {
-      this.levels[event.symbol] = event;
+      const dayMap = this.levelsByDay.get(event.tradingDay) ?? {};
+      dayMap[event.symbol] = event;
+      this.levelsByDay.set(event.tradingDay, dayMap);
     } else if (event.source === 'flashalpha' && event.type === 'snapshot') {
       this.flashAlpha[event.symbol] = event;
     }
@@ -73,13 +78,35 @@ class State {
     return id;
   }
 
+  // Bulk-replace all levels with a fresh set from the levels file.
+  // Wipes the in-memory map and reapplies. Logs each as a 'levels' event so
+  // it gets persisted to SQLite and broadcast to the cockpit normally.
+  applyAllLevels(daysMap: Record<string, DailyLevels[]>): void {
+    this.levelsByDay.clear();
+    for (const dayLevels of Object.values(daysMap)) {
+      for (const event of dayLevels) {
+        this.applyEvent(event);
+      }
+    }
+  }
+
+  // Look up levels for a specific trading day.
+  levelsForDay(date: string): Partial<Record<Symbol, DailyLevels>> | undefined {
+    return this.levelsByDay.get(date);
+  }
+
+  // Return all loaded days for snapshot delivery.
+  allLevelsByDay(): Record<string, Partial<Record<Symbol, DailyLevels>>> {
+    return Object.fromEntries(this.levelsByDay);
+  }
+
   // --- Snapshot for cockpit on connect ---
 
   snapshot(): CockpitSnapshot['state'] {
     return {
       ts: Date.now(),
       connections: this.connectionStatus(),
-      levels: this.levels,
+      levelsByDay: this.allLevelsByDay(),
       flashAlpha: this.flashAlpha,
       recentEvents: db.recentEvents(50).reverse(),
       recentSignals: db.recentSignals(50),

@@ -1,21 +1,148 @@
 {
-  "levels": [
-    {
-      "symbol": "NQ",
-      "bullZone": { "low": 27235.00, "high": 28928.00 },
-      "bearZone": { "low": 27185.40, "high": 27193.70 },
-      "ddBands": { "upper": 27400.15, "lower": 26897.35 },
-      "hedgePressure": 27069.70,
-      "additionalLevels": [
-        { "price": 27491.25, "label": "QQQ Open",  "color": "#ffffff", "style": "solid",        "width": 2 },
-        { "price": 27413.88, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
-        { "price": 27336.50, "label": "QQQ Close", "color": "#ffffff", "style": "solid",        "width": 2 },
-        { "price": 26945.70, "label": "MHP",       "color": "#f2a633", "style": "solid",        "width": 2 },
-        { "price": 26875.00, "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
-        { "price": 26863.10, "label": "Bear2 Top", "color": "#d64545", "style": "solid",        "width": 2 },
-        { "price": 24785.00, "label": "Bear2 Bot", "color": "#d64545", "style": "solid",        "width": 2 }
-      ],
-      "notes": "Apr 30 2026 RTH levels"
+  "days": {
+    "2026-04-30": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 27235,
+            "high": 28928
+          },
+          "bearZone": {
+            "low": 27185.4,
+            "high": 27193.7
+          },
+          "ddBands": {
+            "upper": 27849,
+            "lower": 27347
+          },
+          "hedgePressure": 27069.7,
+          "additionalLevels": [
+            {
+              "price": 27577,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27491.25,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27444.97,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27413.88,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 27404.86,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 26945.7,
+              "label": "MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 26863.1,
+              "label": "Bear2 Top",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 24785,
+              "label": "Bear2 Bot",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "notes": "Apr 30 2026 RTH levels"
+        }
+      ]
+    },
+    "2026-05-01": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 26842.4,
+            "high": 28289
+          },
+          "bearZone": {
+            "low": 24975,
+            "high": 26635.9
+          },
+          "ddBands": {
+            "upper": 27849.78,
+            "lower": 27347.22
+          },
+          "hedgePressure": 27048.9,
+          "additionalLevels": [
+            {
+              "price": 27632,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27604.5,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 27577,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27444,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27404,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 27048.9,
+              "label": "MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "notes": "2026-05-01 levels"
+        }
+      ]
     }
-  ]
+  }
 }
