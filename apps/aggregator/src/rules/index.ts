@@ -112,7 +112,9 @@ function ruleSweep(
   if (event.volume < thresholds.minVolume) return null;
   if (event.levels < thresholds.minLevels) return null;
 
-  const levels = getLevels(event.symbol);
+  // levels is not consumed right now (zone bonus disabled, see below),
+  // but kept around so re-enabling doesn't require restoring this call.
+  const _levels = getLevels(event.symbol);
   const fa = getFlashAlpha(event.symbol);
 
   // Base score reflects raw sweep magnitude RELATIVE to threshold.
@@ -125,21 +127,27 @@ function ruleSweep(
   if (levelsRatio >= 1.5) score += 5;
   if (event.durationMs <= 100) score += 5;  // very fast sweep = more aggressive
 
-  // Zone confluence boost
-  let zoneNote = '';
-  if (levels) {
-    const padPct = 0.0005;
-    const padding = event.endPrice * padPct;
-    const inBull = inZone(event.endPrice, levels.bullZone, padding);
-    const inBear = inZone(event.endPrice, levels.bearZone, padding);
-    if (inBull) {
-      score += 15;
-      zoneNote = event.direction === 'long' ? ' INTO bull zone (breakout candidate)' : ' INTO bull zone (rejection candidate)';
-    } else if (inBear) {
-      score += 15;
-      zoneNote = event.direction === 'short' ? ' INTO bear zone (breakdown candidate)' : ' INTO bear zone (rejection candidate)';
-    }
-  }
+  // Zone confluence boost — TEMPORARILY DISABLED (2026-05-01) per user choice
+  // to validate price-action-only edge first. The bull/bear zones from RS are
+  // currently very wide (1500+ points), making the +15 bonus near-trivial to
+  // earn, which dilutes its meaning in the score. Once we have empirical
+  // outcome data showing which zone proximities actually predict moves, we'll
+  // re-enable with calibrated thresholds (e.g., proximity-scaled bonus,
+  // tighter padding, or zone-edge-only credit).
+  const zoneNote = '';
+  // if (levels) {
+  //   const padPct = 0.0005;
+  //   const padding = event.endPrice * padPct;
+  //   const inBull = inZone(event.endPrice, levels.bullZone, padding);
+  //   const inBear = inZone(event.endPrice, levels.bearZone, padding);
+  //   if (inBull) {
+  //     score += 15;
+  //     zoneNote = event.direction === 'long' ? ' INTO bull zone (breakout candidate)' : ' INTO bull zone (rejection candidate)';
+  //   } else if (inBear) {
+  //     score += 15;
+  //     zoneNote = event.direction === 'short' ? ' INTO bear zone (breakdown candidate)' : ' INTO bear zone (rejection candidate)';
+  //   }
+  // }
 
   // Gamma regime alignment (if FA available)
   if (fa) {
@@ -195,7 +203,8 @@ function ruleDeltaDivergence(
   if (event.magnitude < thresholds.minMagnitude) return null;
   if (event.deltaDiff < thresholds.minDeltaDiff) return null;
 
-  const levels = getLevels(event.symbol);
+  // levels is not consumed right now (zone bonus disabled, see below).
+  const _levels = getLevels(event.symbol);
   const fa = getFlashAlpha(event.symbol);
 
   // Bullish divergence -> long signal; bearish -> short.
@@ -204,24 +213,25 @@ function ruleDeltaDivergence(
   // Base score from magnitude (which the addon already scaled 0-100).
   let score = event.magnitude;
 
-  // Zone confluence boost - divergence AT a zone is much higher conviction.
-  let zoneNote = '';
-  if (levels) {
-    const padPct = 0.0005;
-    const padding = event.currentPrice * padPct;
-    const inBull = inZone(event.currentPrice, levels.bullZone, padding);
-    const inBear = inZone(event.currentPrice, levels.bearZone, padding);
-    if (inBull && direction === 'long') {
-      score += 20;
-      zoneNote = ' AT bull zone (defended low setup)';
-    } else if (inBear && direction === 'short') {
-      score += 20;
-      zoneNote = ' AT bear zone (defended high setup)';
-    } else if (inBull || inBear) {
-      score += 10;
-      zoneNote = ' near zone';
-    }
-  }
+  // Zone confluence boost — TEMPORARILY DISABLED (2026-05-01) per user choice
+  // to validate price-action-only edge first. See ruleSweep above for context.
+  const zoneNote = '';
+  // if (levels) {
+  //   const padPct = 0.0005;
+  //   const padding = event.currentPrice * padPct;
+  //   const inBull = inZone(event.currentPrice, levels.bullZone, padding);
+  //   const inBear = inZone(event.currentPrice, levels.bearZone, padding);
+  //   if (inBull && direction === 'long') {
+  //     score += 20;
+  //     zoneNote = ' AT bull zone (defended low setup)';
+  //   } else if (inBear && direction === 'short') {
+  //     score += 20;
+  //     zoneNote = ' AT bear zone (defended high setup)';
+  //   } else if (inBull || inBear) {
+  //     score += 10;
+  //     zoneNote = ' near zone';
+  //   }
+  // }
 
   // Gamma regime alignment (if FA available)
   if (fa) {

@@ -30,19 +30,21 @@ const LEVELS_PATH = path.resolve(__dirname, '../../../daily_levels.json');
 
 const args = process.argv.slice(2);
 const sinceFlagIdx = args.indexOf('--since');
-if (sinceFlagIdx === -1 || !args[sinceFlagIdx + 1]) {
-  console.error('Missing --since "YYYY-MM-DD HH:MM" (NY time)');
-  console.error('Example: --since "2026-05-01 09:30"');
-  process.exit(1);
-}
-const sinceStr = args[sinceFlagIdx + 1];
 const skipOutcome = args.includes('--skip-outcome');
+
+let sinceMs = 0;  // 0 = rescore all signals from epoch
+let sinceLabel = 'all time';
+if (sinceFlagIdx !== -1 && args[sinceFlagIdx + 1] && args[sinceFlagIdx + 1] !== 'all') {
+  const sinceStr = args[sinceFlagIdx + 1];
+  sinceMs = parseSinceNY(sinceStr);
+  sinceLabel = sinceStr + ' NY';
+}
 
 // Parse "YYYY-MM-DD HH:MM" as NY time -> Unix ms.
 function parseSinceNY(s: string): number {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$/);
   if (!m) {
-    console.error(`Invalid --since format: ${s}. Expected YYYY-MM-DD HH:MM`);
+    console.error(`Invalid --since format: ${s}. Expected YYYY-MM-DD HH:MM, or "all"`);
     process.exit(1);
   }
   const [, y, mo, d, h, mi] = m;
@@ -56,8 +58,7 @@ function parseSinceNY(s: string): number {
   return probe.getTime() + offsetCorrection;
 }
 
-const sinceMs = parseSinceNY(sinceStr);
-console.log(`Rescoring signals since ${sinceStr} NY (ts >= ${sinceMs})`);
+console.log(`Rescoring signals since ${sinceLabel} (ts >= ${sinceMs})`);
 
 // --- Load levels file (current state, mirrors what aggregator has) ---
 
@@ -190,9 +191,6 @@ function rescoreSweep(ts: number, sourcePayload: SweepPayload): { score: number;
   if (sourcePayload.volume < thresholds.minVolume) return null;
   if (sourcePayload.levels < thresholds.minLevels) return null;
 
-  const day = tradingDayFor(ts);
-  const lv = levelsByDay[day]?.[sourcePayload.symbol];
-
   const volumeRatio = sourcePayload.volume / thresholds.minVolume;
   const levelsRatio = sourcePayload.levels / thresholds.minLevels;
   let score = 50;
@@ -201,23 +199,27 @@ function rescoreSweep(ts: number, sourcePayload: SweepPayload): { score: number;
   if (levelsRatio >= 1.5) score += 5;
   if (sourcePayload.durationMs <= 100) score += 5;
 
-  let zoneNote = '';
-  if (lv) {
-    const padding = sourcePayload.endPrice * 0.0005;
-    const inBull = inZone(sourcePayload.endPrice, lv.bullZone, padding);
-    const inBear = inZone(sourcePayload.endPrice, lv.bearZone, padding);
-    if (inBull) {
-      score += 15;
-      zoneNote = sourcePayload.direction === 'long'
-        ? ' INTO bull zone (breakout candidate)'
-        : ' INTO bull zone (rejection candidate)';
-    } else if (inBear) {
-      score += 15;
-      zoneNote = sourcePayload.direction === 'short'
-        ? ' INTO bear zone (breakdown candidate)'
-        : ' INTO bear zone (rejection candidate)';
-    }
-  }
+  // Zone confluence — DISABLED (matches live rule). Kept commented for
+  // future re-enable once we have empirical zone-proximity vs outcome data.
+  const zoneNote = '';
+  // const day = tradingDayFor(ts);
+  // const lv = levelsByDay[day]?.[sourcePayload.symbol];
+  // if (lv) {
+  //   const padding = sourcePayload.endPrice * 0.0005;
+  //   const inBull = inZone(sourcePayload.endPrice, lv.bullZone, padding);
+  //   const inBear = inZone(sourcePayload.endPrice, lv.bearZone, padding);
+  //   if (inBull) {
+  //     score += 15;
+  //     zoneNote = sourcePayload.direction === 'long'
+  //       ? ' INTO bull zone (breakout candidate)'
+  //       : ' INTO bull zone (rejection candidate)';
+  //   } else if (inBear) {
+  //     score += 15;
+  //     zoneNote = sourcePayload.direction === 'short'
+  //       ? ' INTO bear zone (breakdown candidate)'
+  //       : ' INTO bear zone (rejection candidate)';
+  //   }
+  // }
 
   score = Math.min(100, score);
   const moveTicks = Math.abs(sourcePayload.endPrice - sourcePayload.startPrice);
@@ -236,29 +238,31 @@ function rescoreDivergence(ts: number, sourcePayload: DivergencePayload): { scor
   if (sourcePayload.magnitude < thresholds.minMagnitude) return null;
   if (sourcePayload.deltaDiff < thresholds.minDeltaDiff) return null;
 
-  const day = tradingDayFor(ts);
-  const lv = levelsByDay[day]?.[sourcePayload.symbol];
   const direction: 'long' | 'short' = sourcePayload.direction === 'bullish' ? 'long' : 'short';
 
-  let score = sourcePayload.magnitude;
-  let zoneNote = '';
-  if (lv) {
-    const padding = sourcePayload.currentPrice * 0.0005;
-    const inBull = inZone(sourcePayload.currentPrice, lv.bullZone, padding);
-    const inBear = inZone(sourcePayload.currentPrice, lv.bearZone, padding);
-    if (inBull && direction === 'long') {
-      score += 20;
-      zoneNote = ' AT bull zone (defended low setup)';
-    } else if (inBear && direction === 'short') {
-      score += 20;
-      zoneNote = ' AT bear zone (defended high setup)';
-    } else if (inBull || inBear) {
-      score += 10;
-      zoneNote = ' near zone';
-    }
-  }
+  const score = Math.min(100, sourcePayload.magnitude);
 
-  score = Math.min(100, score);
+  // Zone confluence — DISABLED (matches live rule). Kept commented for
+  // future re-enable once we have empirical zone-proximity vs outcome data.
+  const zoneNote = '';
+  // const day = tradingDayFor(ts);
+  // const lv = levelsByDay[day]?.[sourcePayload.symbol];
+  // if (lv) {
+  //   const padding = sourcePayload.currentPrice * 0.0005;
+  //   const inBull = inZone(sourcePayload.currentPrice, lv.bullZone, padding);
+  //   const inBear = inZone(sourcePayload.currentPrice, lv.bearZone, padding);
+  //   if (inBull && direction === 'long') {
+  //     score += 20;
+  //     zoneNote = ' AT bull zone (defended low setup)';
+  //   } else if (inBear && direction === 'short') {
+  //     score += 20;
+  //     zoneNote = ' AT bear zone (defended high setup)';
+  //   } else if (inBull || inBear) {
+  //     score += 10;
+  //     zoneNote = ' near zone';
+  //   }
+  // }
+
   const priceMove = (sourcePayload.currentPrice - sourcePayload.priorPrice).toFixed(2);
   const rationale =
     `${sourcePayload.direction.toUpperCase()} divergence [${session.toUpperCase()}]: ` +
@@ -291,7 +295,7 @@ const signals = db.prepare(`
   ORDER BY ts ASC
 `).all(sinceMs) as SignalRow[];
 
-console.log(`Found ${signals.length} signal(s) since ${sinceStr}`);
+console.log(`Found ${signals.length} signal(s) since ${sinceLabel}`);
 
 const updateStmt = db.prepare(`
   UPDATE signals SET score = ?, payload = ? WHERE id = ?
@@ -370,7 +374,14 @@ db.close();
 
 if (!skipOutcome) {
   console.log('');
-  console.log('Re-running outcome scorer to refresh matured table...');
+  console.log('Wiping matured outcomes table (old scores stale after rescore)...');
+  // Open in a fresh connection because db was closed above
+  const db2 = new Database(DB_PATH);
+  db2.exec('DELETE FROM signal_outcomes_matured');
+  db2.exec('DELETE FROM signal_outcomes_partial');
+  db2.close();
+
+  console.log('Re-running outcome scorer...');
   const result = spawnSync('tsx', [path.resolve(__dirname, 'score_outcomes.ts')], {
     stdio: 'inherit',
   });
