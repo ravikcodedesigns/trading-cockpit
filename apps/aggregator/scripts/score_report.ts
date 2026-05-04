@@ -72,8 +72,14 @@ interface MaturedRow {
   w60_max_gain: number; w60_max_drawdown: number; w60_net: number; w60_hit20: number; w60_hit30: number; w60_hit40: number; w60_clean20: number; w60_clean30: number; w60_clean40: number;
 }
 
-const all = db.prepare('SELECT * FROM signal_outcomes_matured ORDER BY signal_ts').all() as MaturedRow[];
-const partialCount = (db.prepare('SELECT COUNT(*) AS c FROM signal_outcomes_partial').get() as { c: number }).c;
+// Optional --strategy A|B|BOTH filter (default BOTH = all signals)
+const strategyArg = args[args.indexOf('--strategy') + 1] ?? 'BOTH';
+const strategyFilter = strategyArg === 'BOTH'
+  ? ''
+  : `WHERE strategy_version = '${strategyArg === 'A' ? 'A' : 'B'}'`;
+
+const all = db.prepare(`SELECT * FROM signal_outcomes_matured ${strategyFilter} ORDER BY signal_ts`).all() as MaturedRow[];
+const partialCount = (db.prepare(`SELECT COUNT(*) AS c FROM signal_outcomes_partial ${strategyFilter}`).get() as { c: number }).c;
 
 console.log('========================================');
 console.log('   SIGNAL OUTCOMES REPORT');

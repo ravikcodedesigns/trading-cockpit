@@ -90,6 +90,7 @@ function ruleAbsorptionAtZone(
     contextEventIds: [],
     rationale,
     observeOnly: true,
+    strategyVersion: 'A' as const,
   };
 }
 
@@ -184,6 +185,7 @@ function ruleSweep(
     contextEventIds: [],
     rationale,
     observeOnly: true,
+    strategyVersion: 'A' as const,
   };
 }
 
@@ -268,6 +270,7 @@ function ruleDeltaDivergence(
     contextEventIds: [],
     rationale,
     observeOnly: true,
+    strategyVersion: 'A' as const,
   };
 }
 

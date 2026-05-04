@@ -13,7 +13,11 @@
     "levels:add": "tsx scripts/levels_cli.ts",
     "rescore": "tsx scripts/rescore_signals.ts",
     "backfill": "tsx scripts/backfill_signals.ts",
-    "migrate:rename-outcome-columns": "tsx scripts/migrate_rename_columns.ts"
+    "migrate:rename-outcome-columns": "tsx scripts/migrate_rename_columns.ts",
+    "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
+    "compare": "tsx scripts/compare_strategies.ts",
+    "score:report:a": "tsx scripts/score_report.ts --strategy A",
+    "score:report:b": "tsx scripts/score_report.ts --strategy B"
   },
   "dependencies": {
     "@fastify/websocket": "^10.0.1",

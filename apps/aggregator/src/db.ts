@@ -45,7 +45,7 @@ const stmtInsertEvent = _db.prepare(
   'INSERT INTO events (ts, source, type, symbol, payload) VALUES (?, ?, ?, ?, ?)'
 );
 const stmtInsertSignal = _db.prepare(
-  'INSERT INTO signals (ts, symbol, rule_id, score, direction, payload) VALUES (?, ?, ?, ?, ?, ?)'
+  'INSERT INTO signals (ts, symbol, rule_id, score, direction, strategy_version, rule_version, payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 );
 const stmtCountEvents = _db.prepare('SELECT COUNT(*) AS c FROM events');
 const stmtRecentSignals = _db.prepare(
@@ -89,6 +89,8 @@ export const db = {
       sig.ruleId,
       sig.score,
       sig.direction,
+      sig.strategyVersion ?? 'A',
+      sig.ruleVersion ?? (sig.ruleId + '-v1'),
       JSON.stringify(sig)
     );
     return Number(result.lastInsertRowid);

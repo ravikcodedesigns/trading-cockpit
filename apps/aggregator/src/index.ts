@@ -2,10 +2,12 @@ import { startServer } from './server.js';
 import { startLevelsWatcher } from './sources/levels.js';
 import { startFlashAlphaPoller } from './sources/flashalpha.js';
 import { startRulesEngine } from './rules/index.js';
+import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
 import { state } from './state.js';
 import { logger } from './logger.js';
 import { discord } from './discord.js';
 import { db } from './db.js';
+import { config } from './config.js';
 import type { Symbol, DailyLevels, FlashAlphaSnapshot } from '@trading/contracts';
 import { tradingDayFor } from '@trading/contracts';
 
@@ -21,12 +23,25 @@ const getLevels = (s: Symbol): DailyLevels | undefined => {
 const getFlashAlpha = (s: Symbol): FlashAlphaSnapshot | undefined => snapshot().flashAlpha[s];
 
 async function main() {
-  logger.info('booting aggregator');
+  logger.info({ activeStrategy: config.activeStrategy }, 'booting aggregator');
 
   // Start sources first so they can begin populating state immediately
   startLevelsWatcher();
   startFlashAlphaPoller();
-  startRulesEngine(getLevels, getFlashAlpha);
+
+  // Strategy A: bar-based rules (sweep + divergence)
+  // Always starts unless explicitly set to B-only
+  if (config.activeStrategy === 'A' || config.activeStrategy === 'BOTH') {
+    startRulesEngine(getLevels, getFlashAlpha);
+    logger.info('strategy-A started (bar-based: sweep + divergence)');
+  }
+
+  // Strategy B: tick-based rules (absorption + sub-second patterns)
+  // Reads from tick-store HTTP API on a polling loop
+  if (config.activeStrategy === 'B' || config.activeStrategy === 'BOTH') {
+    startStrategyB();
+    logger.info('strategy-B started (tick-based: absorption)');
+  }
 
   // Then the server (sources and cockpit can connect)
   const app = await startServer();
@@ -38,6 +53,9 @@ async function main() {
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'shutting down');
     try {
+      if (config.activeStrategy === 'B' || config.activeStrategy === 'BOTH') {
+        stopStrategyB();
+      }
       await app.close();
       db.close();
     } catch (err) {

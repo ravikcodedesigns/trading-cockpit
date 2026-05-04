@@ -141,15 +141,17 @@ export interface PriceTick extends BaseEvent {
 // --- Confluence signals (output of rules engine) ---
 
 export interface ConfluenceSignal extends BaseEvent {
-  source: 'rules';
+  source: 'rules' | 'rules-v2';
   type: 'confluence';
   symbol: Symbol;
   ruleId: string;
   score: number;          // 0-100
   direction: Direction;
-  contextEventIds: number[];
+  contextEventIds?: number[];
   rationale: string;
-  observeOnly: boolean;   // v1: always true
+  observeOnly?: boolean;  // v1: always true
+  strategyVersion: 'A' | 'B';  // A=bar-based, B=tick-based
+  ruleVersion?: string;         // e.g. 'sweep-v1', 'absorption-v1'
 }
 
 // --- Union of everything that flows through the aggregator ---
