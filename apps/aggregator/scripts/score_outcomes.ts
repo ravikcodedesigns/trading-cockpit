@@ -2,7 +2,7 @@
  * Outcome Scorer
  *
  * Walks the signals table, computes price-movement outcomes for each signal
- * (MFE, MAE, close, net move at 5/15/30/60 minute windows), and writes to
+ * (peak gain, peak drawdown, close, net move at 5/15/30/60 minute windows), and writes to
  * two tables:
  *   - signal_outcomes_matured: finalized scores for signals 60+ min old
  *   - signal_outcomes_partial: in-progress scores for signals < 60 min old
@@ -11,8 +11,8 @@
  * on each run. When a partial signal ages past 60 min, it gets promoted to
  * matured (deleted from partial, inserted into matured).
  *
- * MFE = Max Favorable Excursion (peak move IN signal direction)
- * MAE = Max Adverse Excursion (peak move AGAINST signal direction)
+ * peak_gain = max gain in signal direction during window
+ * peak_drawdown = max drawdown against signal direction during window
  *
  * Run: pnpm --filter aggregator score
  */
@@ -29,7 +29,7 @@ const DB_PATH = path.resolve(__dirname, '../../../data/trading.db');
 
 const WINDOWS_MIN = [5, 15, 30, 60] as const;
 const MATURITY_MIN = 60;            // signal must be this old before "matured"
-const MFE_BANDS = [20, 30, 40] as const;  // NQ-point thresholds for "win"
+const GAIN_BANDS = [20, 30, 40] as const;  // NQ-point thresholds for "win"
 
 type WindowMin = (typeof WINDOWS_MIN)[number];
 
@@ -69,13 +69,13 @@ interface WindowOutcome {
   windowMin: WindowMin;
   signalPrice: number;
   endPrice: number;
-  mfe: number;          // max favorable excursion (positive = good for signal direction)
-  mae: number;          // max adverse excursion (positive = bad)
+  maxGain: number;          // peak gain in the signal direction (positive = good)
+  maxDrawdown: number;          // peak drawdown against signal direction (positive = pain)
   netMove: number;      // close - signalPrice, signed by direction
   hit20: boolean;
   hit30: boolean;
   hit40: boolean;
-  cleanHit20: boolean;  // hit20 AND mae < 5
+  cleanHit20: boolean;  // hit20 AND maxDrawdown < 5
   cleanHit30: boolean;
   cleanHit40: boolean;
   bars: number;         // how many bars contributed (for diagnostics)
@@ -98,22 +98,22 @@ CREATE TABLE IF NOT EXISTS ${name} (
   direction     TEXT NOT NULL,
   signal_price  REAL NOT NULL,
   -- 5min window
-  w5_end        REAL, w5_mfe REAL, w5_mae REAL, w5_net REAL,
+  w5_end        REAL, w5_max_gain REAL, w5_max_drawdown REAL, w5_net REAL,
   w5_hit20 INTEGER, w5_hit30 INTEGER, w5_hit40 INTEGER,
   w5_clean20 INTEGER, w5_clean30 INTEGER, w5_clean40 INTEGER,
   w5_bars  INTEGER,
   -- 15min window
-  w15_end       REAL, w15_mfe REAL, w15_mae REAL, w15_net REAL,
+  w15_end       REAL, w15_max_gain REAL, w15_max_drawdown REAL, w15_net REAL,
   w15_hit20 INTEGER, w15_hit30 INTEGER, w15_hit40 INTEGER,
   w15_clean20 INTEGER, w15_clean30 INTEGER, w15_clean40 INTEGER,
   w15_bars INTEGER,
   -- 30min window
-  w30_end       REAL, w30_mfe REAL, w30_mae REAL, w30_net REAL,
+  w30_end       REAL, w30_max_gain REAL, w30_max_drawdown REAL, w30_net REAL,
   w30_hit20 INTEGER, w30_hit30 INTEGER, w30_hit40 INTEGER,
   w30_clean20 INTEGER, w30_clean30 INTEGER, w30_clean40 INTEGER,
   w30_bars INTEGER,
   -- 60min window
-  w60_end       REAL, w60_mfe REAL, w60_mae REAL, w60_net REAL,
+  w60_end       REAL, w60_max_gain REAL, w60_max_drawdown REAL, w60_net REAL,
   w60_hit20 INTEGER, w60_hit30 INTEGER, w60_hit40 INTEGER,
   w60_clean20 INTEGER, w60_clean30 INTEGER, w60_clean40 INTEGER,
   w60_bars INTEGER,
@@ -175,10 +175,10 @@ function getBars(symbol: string, tsStart: number, tsEnd: number): BarRow[] {
   return Array.from(byBucket.values()).sort((a, b) => a.ts - b.ts);
 }
 
-/** Compute MFE/MAE/close for a long signal across the given bars. */
+/** Compute peak gain/drawdown/close for a long signal across the given bars. */
 function computeWindowLong(signalPrice: number, bars: BarRow[]): Omit<WindowOutcome, 'windowMin' | 'signalPrice' | 'hit20' | 'hit30' | 'hit40' | 'cleanHit20' | 'cleanHit30' | 'cleanHit40'> {
   if (bars.length === 0) {
-    return { endPrice: signalPrice, mfe: 0, mae: 0, netMove: 0, bars: 0 };
+    return { endPrice: signalPrice, maxGain: 0, maxDrawdown: 0, netMove: 0, bars: 0 };
   }
   let maxHigh = bars[0].high;
   let minLow = bars[0].low;
@@ -189,17 +189,17 @@ function computeWindowLong(signalPrice: number, bars: BarRow[]): Omit<WindowOutc
   const endPrice = bars[bars.length - 1].close;
   return {
     endPrice,
-    mfe: Math.max(0, maxHigh - signalPrice),
-    mae: Math.max(0, signalPrice - minLow),
+    maxGain: Math.max(0, maxHigh - signalPrice),
+    maxDrawdown: Math.max(0, signalPrice - minLow),
     netMove: endPrice - signalPrice,
     bars: bars.length,
   };
 }
 
-/** Compute MFE/MAE/close for a short signal. */
+/** Compute peak gain/drawdown/close for a short signal. */
 function computeWindowShort(signalPrice: number, bars: BarRow[]): Omit<WindowOutcome, 'windowMin' | 'signalPrice' | 'hit20' | 'hit30' | 'hit40' | 'cleanHit20' | 'cleanHit30' | 'cleanHit40'> {
   if (bars.length === 0) {
-    return { endPrice: signalPrice, mfe: 0, mae: 0, netMove: 0, bars: 0 };
+    return { endPrice: signalPrice, maxGain: 0, maxDrawdown: 0, netMove: 0, bars: 0 };
   }
   let maxHigh = bars[0].high;
   let minLow = bars[0].low;
@@ -211,9 +211,9 @@ function computeWindowShort(signalPrice: number, bars: BarRow[]): Omit<WindowOut
   return {
     endPrice,
     // For shorts, favorable = price went DOWN (signalPrice - low)
-    mfe: Math.max(0, signalPrice - minLow),
+    maxGain: Math.max(0, signalPrice - minLow),
     // Adverse = price went UP against us (high - signalPrice)
-    mae: Math.max(0, maxHigh - signalPrice),
+    maxDrawdown: Math.max(0, maxHigh - signalPrice),
     netMove: signalPrice - endPrice,  // positive = good for short
     bars: bars.length,
   };
@@ -221,18 +221,18 @@ function computeWindowShort(signalPrice: number, bars: BarRow[]): Omit<WindowOut
 
 /** Add hit/clean flags to a window result. */
 function decorateWindow(windowMin: WindowMin, signalPrice: number, raw: ReturnType<typeof computeWindowLong>): WindowOutcome {
-  const mfe = raw.mfe;
-  const mae = raw.mae;
+  const maxGain = raw.maxGain;
+  const maxDrawdown = raw.maxDrawdown;
   return {
     ...raw,
     windowMin,
     signalPrice,
-    hit20: mfe >= 20,
-    hit30: mfe >= 30,
-    hit40: mfe >= 40,
-    cleanHit20: mfe >= 20 && mae < 5,
-    cleanHit30: mfe >= 30 && mae < 5,
-    cleanHit40: mfe >= 40 && mae < 5,
+    hit20: maxGain >= 20,
+    hit30: maxGain >= 30,
+    hit40: maxGain >= 40,
+    cleanHit20: maxGain >= 20 && maxDrawdown < 5,
+    cleanHit30: maxGain >= 30 && maxDrawdown < 5,
+    cleanHit40: maxGain >= 40 && maxDrawdown < 5,
   };
 }
 
@@ -241,10 +241,10 @@ function decorateWindow(windowMin: WindowMin, signalPrice: number, raw: ReturnTy
 const insertMatured = db.prepare(`
   INSERT OR REPLACE INTO signal_outcomes_matured (
     signal_id, signal_ts, symbol, rule_id, score, direction, signal_price,
-    w5_end,  w5_mfe,  w5_mae,  w5_net,  w5_hit20,  w5_hit30,  w5_hit40,  w5_clean20,  w5_clean30,  w5_clean40,  w5_bars,
-    w15_end, w15_mfe, w15_mae, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
-    w30_end, w30_mfe, w30_mae, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
-    w60_end, w60_mfe, w60_mae, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
+    w5_end,  w5_max_gain,  w5_max_drawdown,  w5_net,  w5_hit20,  w5_hit30,  w5_hit40,  w5_clean20,  w5_clean30,  w5_clean40,  w5_bars,
+    w15_end, w15_max_gain, w15_max_drawdown, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
+    w30_end, w30_max_gain, w30_max_drawdown, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
+    w60_end, w60_max_gain, w60_max_drawdown, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
     last_scored_at
   ) VALUES (
     ?,?,?,?,?,?,?,
@@ -259,10 +259,10 @@ const insertMatured = db.prepare(`
 const insertPartial = db.prepare(`
   INSERT OR REPLACE INTO signal_outcomes_partial (
     signal_id, signal_ts, symbol, rule_id, score, direction, signal_price,
-    w5_end,  w5_mfe,  w5_mae,  w5_net,  w5_hit20,  w5_hit30,  w5_hit40,  w5_clean20,  w5_clean30,  w5_clean40,  w5_bars,
-    w15_end, w15_mfe, w15_mae, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
-    w30_end, w30_mfe, w30_mae, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
-    w60_end, w60_mfe, w60_mae, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
+    w5_end,  w5_max_gain,  w5_max_drawdown,  w5_net,  w5_hit20,  w5_hit30,  w5_hit40,  w5_clean20,  w5_clean30,  w5_clean40,  w5_bars,
+    w15_end, w15_max_gain, w15_max_drawdown, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
+    w30_end, w30_max_gain, w30_max_drawdown, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
+    w60_end, w60_max_gain, w60_max_drawdown, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
     last_scored_at
   ) VALUES (
     ?,?,?,?,?,?,?,
@@ -303,7 +303,7 @@ function scoreSignal(sig: SignalRow): { status: 'matured' | 'partial' | 'skipped
     if (tsEnd > now) {
       // Window not yet complete — fill with a stub (zeros + 0 bars)
       outcomes[wMin] = decorateWindow(wMin, signalPrice, {
-        endPrice: signalPrice, mfe: 0, mae: 0, netMove: 0, bars: 0,
+        endPrice: signalPrice, maxGain: 0, maxDrawdown: 0, netMove: 0, bars: 0,
       });
       continue;
     }
@@ -315,7 +315,7 @@ function scoreSignal(sig: SignalRow): { status: 'matured' | 'partial' | 'skipped
   // Pack into the prepared-statement param order.
   const w = (m: WindowMin) => {
     const o = outcomes[m];
-    return [o.endPrice, o.mfe, o.mae, o.netMove,
+    return [o.endPrice, o.maxGain, o.maxDrawdown, o.netMove,
             o.hit20 ? 1 : 0, o.hit30 ? 1 : 0, o.hit40 ? 1 : 0,
             o.cleanHit20 ? 1 : 0, o.cleanHit30 ? 1 : 0, o.cleanHit40 ? 1 : 0,
             o.bars];
