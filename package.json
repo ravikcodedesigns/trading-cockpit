@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "concurrently -n agg,ui,bm,ticks -c blue,green,magenta,cyan \"pnpm --filter @trading/aggregator dev\" \"pnpm --filter @trading/cockpit dev\" \"python3 addons/bookmap/addon.py\" \"pnpm --filter @trading/tick-store dev\"",
+    "dev": "concurrently -n agg,ui,bm,ticks,deploy -c blue,green,magenta,cyan,yellow \"pnpm --filter @trading/aggregator dev\" \"pnpm --filter @trading/cockpit dev\" \"python3 addons/bookmap/addon.py\" \"pnpm --filter @trading/tick-store dev\" \"bash ~/auto_deploy_tick_addon.sh\"",
     "build": "pnpm -r run build",
     "aggregator": "pnpm --filter @trading/aggregator run dev",
     "cockpit": "pnpm --filter @trading/cockpit run dev",
