@@ -745,7 +745,7 @@ def on_interval(addon, alias):
 # =========================================================================
 
 def main():
-    print("[cockpit] addon starting (v1.6 - sweeps + delta divergence)")
+    print("[cockpit] addon starting (v1.10 - sweeps + delta divergence + tick capture)")
 
     addon = bm.create_addon()
 
