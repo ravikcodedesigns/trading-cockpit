@@ -262,3 +262,33 @@ export function tradingDayFor(tsMs: number): string {
   }
   return today;
 }
+
+// --- Tick stream types (Phase 1: tick-store) ---
+
+export interface TickTrade {
+  type: 'trade';
+  ts: number;          // milliseconds since epoch
+  symbol: Symbol;
+  price: number;
+  size: number;
+  isBidAggressor: boolean;  // true = seller hit bid (sell aggression); false = buyer lifted ask (buy aggression)
+}
+
+export interface TickDepth {
+  type: 'depth';
+  ts: number;
+  symbol: Symbol;
+  side: 'bid' | 'ask';
+  price: number;
+  size: number;        // 0 means level removed/cancelled
+  isReplace: boolean;  // true if this replaces existing size at this price (vs add/remove)
+}
+
+export type TickEvent = TickTrade | TickDepth;
+
+// Batched payload sent from addon to tick-store
+export interface TickBatch {
+  type: 'batch';
+  ts: number;          // batch creation timestamp (server-side ordering)
+  events: TickEvent[];
+}
