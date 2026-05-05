@@ -42,6 +42,7 @@ interface SignalRow {
   rule_id: string;
   score: number;
   direction: 'long' | 'short';
+  strategy_version: string;
   payload: string;
 }
 
@@ -245,14 +246,14 @@ const insertMatured = db.prepare(`
     w15_end, w15_max_gain, w15_max_drawdown, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
     w30_end, w30_max_gain, w30_max_drawdown, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
     w60_end, w60_max_gain, w60_max_drawdown, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
-    last_scored_at
+    last_scored_at, strategy_version
   ) VALUES (
     ?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
-    ?
+    ?,?
   )
 `);
 
@@ -263,14 +264,14 @@ const insertPartial = db.prepare(`
     w15_end, w15_max_gain, w15_max_drawdown, w15_net, w15_hit20, w15_hit30, w15_hit40, w15_clean20, w15_clean30, w15_clean40, w15_bars,
     w30_end, w30_max_gain, w30_max_drawdown, w30_net, w30_hit20, w30_hit30, w30_hit40, w30_clean20, w30_clean30, w30_clean40, w30_bars,
     w60_end, w60_max_gain, w60_max_drawdown, w60_net, w60_hit20, w60_hit30, w60_hit40, w60_clean20, w60_clean30, w60_clean40, w60_bars,
-    last_scored_at
+    last_scored_at, strategy_version
   ) VALUES (
     ?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
     ?,?,?,?,?,?,?,?,?,?,?,
-    ?
+    ?,?
   )
 `);
 
@@ -325,6 +326,7 @@ function scoreSignal(sig: SignalRow): { status: 'matured' | 'partial' | 'skipped
     sig.id, sig.ts, sig.symbol, sig.rule_id, sig.score, sig.direction, signalPrice,
     ...w(5), ...w(15), ...w(30), ...w(60),
     now,
+    sig.strategy_version ?? 'A',
   ];
 
   if (isMatured) {
@@ -342,7 +344,7 @@ function main() {
   console.log(`DB: ${DB_PATH}`);
 
   const signals = db.prepare(`
-    SELECT id, ts, symbol, rule_id, score, direction, payload
+    SELECT id, ts, symbol, rule_id, score, direction, strategy_version, payload
     FROM signals
     ORDER BY ts ASC
   `).all() as SignalRow[];

@@ -153,55 +153,54 @@ export async function detectAbsorption(
   const trades = await getRecentTrades(symbol, thresholds.windowMs);
   if (trades.length === 0) return null;
 
-  // Group trades by price level (rounded to tick)
-  const byPrice = new Map<number, { buyVol: number; sellVol: number; times: number[] }>();
+  // Group trades by price level (rounded to tick).
+  // Track prices within each bucket for per-level range computation.
+  const byPrice = new Map<number, { buyVol: number; sellVol: number; times: number[]; prices: number[] }>();
 
   for (const trade of trades) {
-    // Round to nearest tick to group adjacent prints
     const tickPrice = Math.round(trade.price / TICK_SIZE) * TICK_SIZE;
     if (!byPrice.has(tickPrice)) {
-      byPrice.set(tickPrice, { buyVol: 0, sellVol: 0, times: [] });
+      byPrice.set(tickPrice, { buyVol: 0, sellVol: 0, times: [], prices: [] });
     }
     const entry = byPrice.get(tickPrice)!;
     entry.times.push(trade.ts);
+    entry.prices.push(trade.price);
     if (trade.isBidAggressor) {
-      // Buyer aggressor = sell aggression (hitting the bid)
       entry.sellVol += trade.size;
     } else {
-      // Seller aggressor = buy aggression (lifting the ask)
       entry.buyVol += trade.size;
     }
   }
 
-  // Overall price range of all trades in window
-  const allPrices = trades.map(t => t.price);
-  const minPrice = Math.min(...allPrices);
-  const maxPrice = Math.max(...allPrices);
-  const priceRangeTicks = Math.round((maxPrice - minPrice) / TICK_SIZE);
-
-  // Price range must be tight — absorption means price isn't moving
-  if (priceRangeTicks > thresholds.maxPriceRangeTicks) return null;
-
-  // Find the price level with the most concentrated volume
+  // Find the highest-volume bucket that passes the price-range check.
+  // Check range PER BUCKET not globally: absorption at 27850 is valid
+  // even if other trades happened at 27846 in the same window.
   let bestPrice = 0;
   let bestTotalVol = 0;
   let bestBuyVol = 0;
   let bestSellVol = 0;
   let bestTimes: number[] = [];
+  let bestPriceRangeTicks = 0;
 
   for (const [price, entry] of byPrice.entries()) {
     const total = entry.buyVol + entry.sellVol;
-    if (total > bestTotalVol) {
-      bestTotalVol = total;
-      bestPrice = price;
-      bestBuyVol = entry.buyVol;
-      bestSellVol = entry.sellVol;
-      bestTimes = entry.times;
-    }
+    if (total <= bestTotalVol) continue;
+    const minP = Math.min(...entry.prices);
+    const maxP = Math.max(...entry.prices);
+    const rangeTicks = Math.round((maxP - minP) / TICK_SIZE);
+    if (rangeTicks > thresholds.maxPriceRangeTicks) continue;
+    bestTotalVol = total;
+    bestPrice = price;
+    bestBuyVol = entry.buyVol;
+    bestSellVol = entry.sellVol;
+    bestTimes = entry.times;
+    bestPriceRangeTicks = rangeTicks;
   }
 
   // Must meet minimum volume
   if (bestTotalVol < thresholds.minVolume) return null;
+
+  const priceRangeTicks = bestPriceRangeTicks;
 
   // Must be one-sided aggression
   const dominantVol = Math.max(bestBuyVol, bestSellVol);

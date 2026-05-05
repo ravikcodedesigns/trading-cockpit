@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.resolve(__dirname, '../../../data/trading.db');
 
+const args = process.argv.slice(2);
 const db = new Database(DB_PATH, { readonly: true });
 
 // --- Helpers ---

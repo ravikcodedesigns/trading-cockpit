@@ -16,6 +16,7 @@
     "migrate:rename-outcome-columns": "tsx scripts/migrate_rename_columns.ts",
     "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
     "compare": "tsx scripts/compare_strategies.ts",
+    "backfill:absorption": "tsx scripts/backfill_absorption.ts",
     "score:report:a": "tsx scripts/score_report.ts --strategy A",
     "score:report:b": "tsx scripts/score_report.ts --strategy B"
   },
