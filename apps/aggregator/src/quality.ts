@@ -73,14 +73,32 @@ function classifyStrategyA(rule: string, session: Session, score: number): Quali
 }
 
 // Strategy B thresholds (tick-based rules)
-// Conservative initially — tighten or loosen based on outcome data after 2 weeks.
+// Conservative initially -- tighten or loosen based on outcome data after 2 weeks.
 function classifyStrategyB(rule: string, session: Session, score: number): QualityDecision {
+  // Absorption: validated overnight, conservative RTH threshold pending data
   if (rule === 'absorption' && session === 'rth' && score >= 60) {
     return { tier: 'gold', reason: 'B: RTH absorption >=60' };
   }
   if (rule === 'absorption' && session === 'overnight' && score >= 70) {
     return { tier: 'gold', reason: 'B: ON absorption >=70' };
   }
+
+  // Tape speed: higher bar since unvalidated -- only very strong urgency signals
+  if (rule === 'tape-speed' && session === 'rth' && score >= 70) {
+    return { tier: 'gold', reason: 'B: RTH tape-speed >=70' };
+  }
+  if (rule === 'tape-speed' && session === 'overnight' && score >= 75) {
+    return { tier: 'gold', reason: 'B: ON tape-speed >=75' };
+  }
+
+  // Large print: high bar since single-print signals need confirmation
+  if (rule === 'large-print' && session === 'rth' && score >= 70) {
+    return { tier: 'gold', reason: 'B: RTH large-print >=70' };
+  }
+  if (rule === 'large-print' && session === 'overnight' && score >= 75) {
+    return { tier: 'gold', reason: 'B: ON large-print >=75' };
+  }
+
   return { tier: 'silenced', reason: `B: ${rule} ${session} score=${score} below threshold` };
 }
 

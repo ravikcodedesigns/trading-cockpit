@@ -19,15 +19,17 @@ import { state } from '../state.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import { detectAbsorption } from './absorption.js';
+import { detectTapeSpeed } from './tape-speed.js';
+import { detectLargePrint } from './large-print.js';
 import type { Symbol } from '@trading/contracts';
 
 const POLL_MS = config.tickStore.pollMs;
 
-// Symbols to evaluate. Matches what the Bookmap addon tracks.
+// Symbols to evaluate
 const SYMBOLS: Symbol[] = ['NQ', 'ES'];
 
-// Rule registry. Each entry is an async function that takes a symbol
-// and current timestamp and returns a signal or null.
+// Rule registry. Each rule is independently enabled/disabled.
+// Add new rules here — no other changes needed.
 type RuleFn = (symbol: Symbol, nowMs: number) => Promise<{ signal: Parameters<typeof state.applySignal>[0] } | null>;
 
 const RULES: Array<{ id: string; fn: RuleFn; enabled: boolean }> = [
@@ -36,9 +38,20 @@ const RULES: Array<{ id: string; fn: RuleFn; enabled: boolean }> = [
     fn: detectAbsorption,
     enabled: true,
   },
-  // Future rules added here:
-  // { id: 'aggression-imbalance', fn: detectAggressionImbalance, enabled: true },
-  // { id: 'large-print', fn: detectLargePrint, enabled: true },
+  {
+    id: 'tape-speed',
+    fn: detectTapeSpeed,
+    enabled: true,
+  },
+  {
+    id: 'large-print',
+    fn: detectLargePrint,
+    enabled: true,
+  },
+  // Future rules:
+  // { id: 'iceberg', fn: detectIceberg, enabled: true },
+  // { id: 'footprint-imbalance', fn: detectFootprintImbalance, enabled: true },
+  // { id: 'liquidity-vacuum', fn: detectLiquidityVacuum, enabled: true },
 ];
 
 let _running = false;
