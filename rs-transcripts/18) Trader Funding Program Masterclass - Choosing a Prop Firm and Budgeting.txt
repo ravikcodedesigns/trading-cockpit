@@ -1,0 +1,1707 @@
+So today's class is the first in a series of videos that we're going to be called the
+Trader Funding Program Masterclass.
+This is a brand new series that we're doing to go over everything you need to know about
+what a trader funding program is, the opportunities that are there, how we work with them, how
+you can get funded as a trader, different types of accounts, how they try to game you,
+how you can try to game them, how to plan around, you know, the different scenarios you
+need to plan for when trading, you know, how to learn to wait to strike, like when is a
+good time to trade to up your probability of winning, and, you know, essentially in general
+how to take advantage of all the different angles of a trader funding program where things
+you don't even think of like clever ways.
+And we'll talk about all of those today.
+Okay, now, what is a trader funding program, otherwise known in 2025, the date of this
+video, as a prop firm.
+Now, a prop firm is sort of a, an institution that's been around for the longest time.
+Traditional prop firm is a place where you can go and trade, you prove yourself going through
+a series of steps.
+And once you pass certain criteria, they test you, as soon as you pass, they give you money
+to trade with, you know, here's some real money, here's X amount of hundreds of thousands
+or millions of dollars of capital, or sometimes you put in capital, and then they match you.
+And then you've got leverage to trade with after you proved yourself as being a good trader.
+Now, that institution, you know, they're all over Wall Street, and they've been around for
+a while, totally illegal thing to do, has sort of like evolved in the modern day in the last
+three to five years into this, you know, what they call the prop firm explosion of the 2020s.
+You know, since COVID, this whole thing took off, and futures sort of like became the hot
+thing for new traders.
+Now, everybody's a futures trader.
+Now, the prop firm explosion that we are referring to in trader funding programs is what people
+collectively call prop firms.
+Now, it's kind of a modified version of prop firm.
+The modern day trader funding program is slightly different.
+Currently, as of 2025, what you're allowed to do is you'll go to one of these firms, you'll
+sign up, which usually has a fee, like a monthly fee, and you're going to pay something per month
+or something per account, usually one or the other, and you're going to pay, you're going
+to go through a series of steps to pass some kind of evaluation challenge, sim trading,
+you know, make a certain profit, win a certain number of days, et cetera, some criteria.
+And then once you make it to the end, then you go to the next step, which is called funded.
+Funded.
+It's supposed to be an F. It's the worst looking F I've ever seen in my life.
+And when you're funded, then the whole process starts all over, except in this account, whatever
+you make, you get paid out of.
+Now, the modern prop firm is actually a trader funding program.
+That's the more appropriate word to call them because the prop firm is sort of like you pay
+a fee or you put something in, you pass a test.
+And then normally when you pass, you get to what's called a live account.
+You get real money.
+And I'm just put the word live here, right?
+I pay.
+I go through the courses.
+You go through the training.
+I put in the money, whatever.
+And then I pass a test and you give me money to trade with.
+And it's a real live account.
+It's real futures.
+You get like your 1256 at the end of it or a K1.
+I don't know how they sound.
+Some set up differently.
+You get your futures return, your tax return.
+You put your futures gains on it from the year from your 1256.
+And then it's taxed like 60-40 rule, just like futures.
+Real money, real futures, real everything.
+But the current prop firm structure that you'll hear people talking about,
+this trader funding programs, actually have this SIM funded step,
+SIM defunded or whatever step.
+SIM funded is a middle step.
+You're not necessarily trading a real account.
+This is just pure SIM right here.
+So step one is you're trading a SIM account.
+SIM funded is you're trading a SIM account,
+but for some reason you get paid what your gains are in a paper trading account.
+It's very interesting.
+And then once you pass that and get some money at a certain period of time,
+then they move you to live.
+So modern quote-unquote prop firms, I'm going to call them prop firms now,
+I'm speaking of these SIM funded trader funding programs
+that have a prop firm framework, which is this part and this part,
+but with the SIM funded step for payouts in the middle.
+No modern prop firm has these, like a real prop firm.
+Only the SIM funded firms.
+When I say SIM funded firms, they're talking about like, you know,
+my funded future, top step, elite trader funding, funded next, et cetera.
+All the ones you hear about on the streams and all the social media outlets, right?
+For some reason, currently now, it's allowed for you to make money paper trading,
+which is crazy.
+It doesn't sound legal, right?
+But it is.
+How is it legal?
+Well, there's a loophole that's being exploited.
+And as of 2025, the loophole is still open.
+As of 2020, whatever, regulators may change the rules or whatever.
+And it might end up being like a real prop firm where they get rid of the SIM funded step
+where you basically just go from SIM and then you make money.
+And then once you make money in SIM and pass the test,
+then they just give you the live account to go forward with,
+which is really what prop firms are.
+But the SIM funded step in the middle is what currently we can all exploit
+and go and trade for profit.
+Now, why would we want to do this, right?
+What are the pros and cons of a modern day SIM funded prop firm?
+And the pros are very simple.
+Very low capital entry, barrier of entry is very low.
+And the return can be near infinite.
+You can make money putting very little in.
+The risk is on the firm.
+The downside to that is they're very hard to pass.
+And when you do pass, you get paid wage money.
+It's $10.99.
+So the SIM funded step is not real futures, it's SIM.
+So whatever money you make is like a paycheck.
+It adds on top of your income.
+If you're at the upper tax bracket, your prop gains are taxed at 37%
+as opposed to 60-40 rule, which effectively is the low 20s%.
+So Uncle Sam takes a huge chunk of your SIM funded payouts.
+Now, again, how is this legal, right?
+Getting paid to paper trade sounds highly illegal.
+Well, here's the loophole.
+When you're trading and you are now SIM funded, you're trading a SIM account.
+Whatever gains that you make trading, the prop firm assumes that that's
+quote unquote market research.
+They're doing market research and paying you for it.
+Your trades are their research.
+And then they're paying you equally whatever you made in a paycheck, which is $10.99.
+You're considered kind of like an employee or a contractor of the firm.
+Thank you for doing $110,000 of profits.
+Here's $110,000 for the research data that we now acquired from your trading.
+Thank you.
+They're paying you for your data.
+And that's the loophole.
+That's how it's technically allowed.
+If they're like, we're just going to pay you to paper trade, that's technically called
+a bucket shop.
+And that's quite not legal.
+So the loophole is certainly there.
+And the question becomes how long until regulators say, you guys can't do this anymore.
+You got to get rid of the SIM funded step.
+If they do, and at the time you watch this video, the SIM funded step has been removed
+from modern day prop firms.
+It's likely to be the same thing without it, a traditional prop firm.
+You're going to pay something that passed the SIM environment, getting paid nothing.
+You're going to accrue some kind of balance.
+And then they're going to put that balance to a real account.
+And then that real account, you'll make whatever gains off of that.
+Either way, all the things I'm going to teach you in this webinar series apply.
+Now, if you have any questions during the course of this video, you guys are welcome to type
+anything and ask.
+And I can answer them live, but keep that to a minimum because we are recording this.
+Okay.
+Now, what are the pros, right?
+Let's talk about SIM trading in general.
+You want to go out there and practice trading in a paper trade.
+SIM trading literally is the most wasteful use of your time.
+And I know it sounds very sort of counterintuitive to what you've been taught.
+This is a master level class.
+Even as a beginner, you want to learn this stuff.
+SIM trading has the following.
+Risk, zero.
+Reward, zero.
+Emotion, right?
+Zero.
+There's no emotion.
+Education.
+What you gain out of it overall?
+Minimal.
+Really nothing, right?
+You're just pushing buttons.
+It's fake money, fake reward, fake profit.
+You take no emotions, no fear, no risk, no nothing.
+And you're going to get nothing out of it.
+It's a complete waste of time.
+You gain nothing from SIM trading.
+You should probably SIM trade for a day or so for a couple of reasons.
+To get used to a trading platform.
+Wait, which button do I click to long or short?
+Which is the button?
+Oh, there it is.
+And get used to how the platform works, where to line up your charts.
+And practice, you know, using the platform in real time.
+Yeah, SIM trading is good.
+Go for a practice day or two to get used to, like, where are the buttons?
+You're not fumbling on the technical part of a trading platform while you're trying to trade.
+Holy crap.
+Oh, how do I do a stop loss?
+Oh, wait.
+Was it right click, left click?
+You don't want to deal with that.
+Like, practice that part, yes.
+But not the trading part.
+Now, the strategy that you might be testing, practice your execution on a strategy as well
+for a day or two to get used to the strategy.
+But note that the longer you practice without emotion in a trading strategy, you're removing
+the most important part of a trading strategy is the emotions you have while using it.
+So even a SIM practice trial on a new strategy, like, I'm going to try something new like Rocket
+Scooter and you're going to go out there and trade in SIM.
+It's not really helping you.
+Once you learn, like, the entries and you're practicing, memorizing what you're supposed
+to do, okay, that makes sense.
+But then also, your SIM results will never mirror your real results because the emotional
+part is a big part of why you do lose as a trader, okay?
+So SIM trading as a way for people to practice is a complete waste of time.
+You should spend very little time in a SIM environment.
+Now, real environment, right?
+You put your real money in the pot.
+There's real risk.
+There's, like, what's your risk?
+All.
+All of what you have.
+As a matter of fact, you can actually lose more than what you have in futures.
+I've taught that in a previous class.
+You can actually go in debt trading futures.
+You can actually lose more than you started with.
+So you can lose greater than all.
+Reward?
+Well, infinite.
+You can make infinity dollars.
+Emotion?
+You get the full spectrum of emotion.
+You get everything from greed to fear to whatever.
+Education?
+Maximum.
+You get the maximum of everything.
+You got the max of all of these different areas.
+This is all zero, so it's minimum.
+This is all max, max, max, so you're max, right?
+The problem with the real environment is the cost.
+Your education here is free, but you get very little out of it.
+Your education here is very costly, right?
+Whenever I was trading, I had to learn in this real environment.
+Put in 10K, blow it up.
+Put in 5K, blow it up.
+Put in 20K, blow it up.
+This is what it's like when you're getting started trading in the early 2010s, where there
+weren't trader funding programs and YouTube people to watch and a bunch of people selling
+trading education.
+You were basically on your own.
+There weren't even micro futures at that time, believe it or not.
+You had to trade minis.
+So you're at thousands of dollars of risk every minute you're trading because you didn't
+have micro futures invented at the time I started.
+So very costly to learn the struggle.
+Now, when you're learning as a trader, I always like to do this exercise, is that whenever
+you, here's a graph, here's your net lick.
+This is the amount of money in your account, and this is zero.
+And when you're learning trading, in reality, the real education comes from a couple of things.
+It's how you handle yourself under pressure.
+When your net lick is going up, you're not learning anything, especially when you're first
+starting out.
+You get false confidence, and you're not really feeling any burn.
+But the real education comes from when you're watching yourself, like, make money, make money,
+make money, and then you take a big dive, and you're starting to struggle, and you're
+like, oh, my God, what's going on?
+I'm losing money.
+Okay, things are good.
+Okay, I'm better.
+I'm better.
+Oh, my God, there it all goes again.
+Oh, my God, there it goes again.
+Okay, whoa.
+Oh, all right.
+Whoa, I blew up.
+Wow.
+Okay, so in this couple of days, you know, you learned a lot.
+You felt a whole bunch of stress.
+Then the next time you come around, you trade again, and it's like, okay, I learned from
+my mistake.
+I'm doing better.
+I'm doing better.
+I'm doing better.
+Still gaining a little.
+And then you lose.
+But then you remember what you did last time, and you got a little smarter, and you did something
+different.
+Then all of a sudden, weird stuff happens, and the market does another curveball, and you're
+like this, and you're like this, and it's like this.
+You're almost at zero.
+And then for those days, you're like, okay, oh, my God.
+Oh, I'm about to lose.
+I'll do anything if I can win.
+Oh, he's like, please, God, please help me.
+You know, I'll give more to charity.
+Just let me win.
+And then, okay.
+And then you're like, okay, I'm in the clear.
+And then all of a sudden, you're like, oh, my God, I'm freaking out again.
+I'm freaking out again.
+It's this part right here that you're actually paying for.
+Your education that you're gaining is what you're paying for that.
+What happens at the end?
+This is where you really realize what you're made of.
+This is where you sort of get boastful and think you're going to quit your job and tell
+your boss to F off because you made all this money.
+Oh, I made my salary in a week.
+I'm totally going to become a trader.
+You're not learning anything there.
+Forget about that.
+This is where you're learning.
+Now, when it's free, you're not learning any of that because you're not on your knees praying
+to your God of choice when your paper accounts at zero.
+You just push a button and reset it.
+So you're basically gaining nothing from it.
+And this is a great experience to get that because you're feeling it really hard because
+that's your hard-earned money.
+That could be a whole paycheck for you.
+Your life savings, whatever you've invested in could be what's at stake.
+So the more you're invested and the more that money means something to you, the harder
+that education is, the better it is, right?
+But not everybody in 2025 should be out there risking their life savings to become a trader
+because the trader funding program now exists in the middle as the perfect educational tool
+for new traders.
+You guys are lucky that you have something like this because in a trader funding program,
+as an example, I'll show you an example of one.
+FundinX.
+FundinX is one that we work with.
+And here, let me talk about some of the plans.
+Let me click on futures.
+And let me just clean the chart up really quick.
+Oops, let me clear this out.
+So here's how it works.
+I can get a 100K SIM account for $249.
+If I make $6,000 before I lose $3,000, then the account goes live or the account goes funded.
+And then I trade that funded account.
+And then if I make money after a certain amount of time, I get a payout.
+I get money back.
+And so I pay a little bit of money for a potential return.
+And that's what you're doing.
+And there's all kinds of rules that go with them.
+And this masterclass will cover them.
+But that's basically what it is.
+It's almost the same thing as you had before.
+You're paying risk.
+Yeah, some.
+What was it?
+Like, what was it?
+$249?
+Is that what it said?
+Some kind of small number.
+So there is some risk.
+You're putting some money on the table, right?
+$250.
+Well, that's not a lot, right?
+For some people, for most people, I'd say it's better than putting $10,000 into the market, right?
+You're putting some kind of money in and you're getting some kind of reward out.
+Pretty much infinite.
+You can infinitely make money in some of these firms.
+So it's a nerfed down version of this where you're putting some in and getting some out.
+That way, when you go through your, you know, you're praying to, you know, whatever deity you want to pray to, you're still kind of praying a little bit because you put in a lot of work and you paid some money for it, right?
+And so you're actually getting some emotion out of it.
+Maybe not the full gamut of emotion, but some.
+You've got risk and reward.
+You've got greed and fear.
+They go hand in hand, right?
+We understand this so far, everybody.
+The fact that you put some money on the table, you're going to get some emotion back, which means your education is decent, right?
+So trader funding programs is a cheap, effective, or costly, or cost-effective, decent education.
+That's why I got into the prop scene and got behind it.
+It's a place for you guys to practice trading by setting yourself a budget of how much you're going to spend per month and be in full control of everything and learn along the way.
+You may not be getting big, fat payouts for the first couple of months or first years or whatever, but hey, welcome to trading, right?
+It takes a lot of people many years to become profitable.
+If you're less than five years in the game and you're not profitable, don't sweat it.
+That's common, okay?
+Five years on average is what a lot of people, three to five years, at minimum three, is where I've seen people say they've found their stride.
+So again, imagine chunking 15, 20K at the market every couple of months and blowing it up versus 1,000 bucks every couple of months.
+You've got all the gambit of what a real account has, real risk, real reward, real emotions, decent education, right, with something left over.
+Now, the way that this works is, again, you buy the account and you go through the parameters and then you can get paid out over whatever the course may be.
+Now, current status quo as of 2025, most accounts from start to finish usually are seven to eight days of trading on average.
+Some of the quicker ones are four days.
+FundedX is a four-day plan.
+FundedX is an eight-day plan.
+Top Step is seven days.
+My Funded Future is seven days.
+Tradeify is five days.
+They're all different, right?
+But around that time, which basically means once you pass, typically from start to finish, it's roughly seven-ish days to where you can get money back.
+It's just a week of trading.
+So the investment is small and the time investment is also small.
+You can get to your goal very quick.
+Now, it sounds too good to be true, right?
+Putting in 250 bucks and getting 50K in your pocket.
+These things are hard as crap.
+I mean, really hard.
+They're designed to be hard, just like the basketball game at a carnival, right?
+The rim is bent.
+It's 11 feet off the ground instead of 10.
+You're used to shooting at a 10-foot-tall circular, that's supposed to be a circle rim, and the rim is bent a little bit to where the ball barely fits in without space.
+And so the game is harder for that to happen.
+And the house has odds, right?
+There is a risk model to these things where almost like a casino, they squeeze out a lot of players so that way not everybody's getting payouts.
+And the way these prop firms quote-unquote work, the sim-funded side is A, they sell these evals and a lot of people fail, and then the money they make, they pay out the winners, which is a casino model, right?
+The live account is totally different.
+If you make it to live with a prop firm that does have live, you will be given real money to trade with, and then you and that prop firm will split the proceeds.
+Pretty typical.
+Now, what makes these kind of hard, right?
+Well, profit target, minimal, drawdown right here, right?
+6,000 profit, 3,000 drawdown.
+If you lose 3,000, you're done.
+If you make 6,000, you're done.
+But some of the things is you can't just make it all in one day.
+Some of them will have things like consistency rules, which means if it says 40%, this means that no single trade can be more than 40% of the total, which means I can't make the 6,000 in a single trade, which means I have to make it in chunks.
+40% of 6,000 is $2,400, which means that if any of my trades are more than $2,400, or any of my days are bigger than $2,400, then I got to trade longer for a higher target.
+They'll raise this target to keep going.
+That's to keep you from just full porting into a news event at $250 and getting thousands of payout.
+They make you trade multiple days.
+If you do the math on coin flipping, if you consider every day a unique event of could I lose or could I win that day, and you're betting everything, pretend you're YOLOing full port, and every day is a total win or a total loss,
+it means as the days go by, every day you have, the probability of you passing is 1 over 2 to the N, N is the number of days.
+So example, if it's one day of passing, you have a 1 over 2 day, 1 over 2, which is a 50% chance of winning, right?
+Either L or UW.
+50% if N is 1, if N is 2, it's 25, if N is 3, it's 12 and a half, et cetera.
+You keep dividing in half, 6 and a quarter, and onward.
+Every day that you're trading, if you contemplate the mathematics of this, every extra day you're trading, the probability of you passing gets smaller and smaller and smaller.
+So it's not really a 1 over 2 to the N, but if you assume that you're going to lose it all and win it all in a single day, then you can use this because it's just a coin flip.
+Did you make it out alive or did you lose it all?
+So as you see, the odds diminish on this dependency, and as you go to 6, 7, 8 days, the probability becomes less than 1% almost.
+It gets really small, right?
+5 is 3, you know, 3, 1, 2, 5, and then you can go in 1 point something and then point, you know, it's less than 1, but you get to 6, 7, 8 days.
+So essentially, just on the coin flip math, 99% of people fail around day 7 or 8.
+They keep you in the game long enough so the failure rate's high enough that most people should lose these things.
+Now, some of the value in this is the faster you can get the payout.
+That is one thing that's useful.
+Some of the firms like Fundanext have a rapid account, which is 4 days to payout.
+The faster you get the payout, the higher probability you have of getting a payout.
+To me, that's one of the most important rules you have, the time to payout.
+And a lot of times with these firms, the quicker it is to payout, the more expensive they will be.
+So Fundanext is weird because they have a very cheap, quick payout.
+It's one of these ones that stands out from the rest.
+You can get a payout in 4 days for less than $100 for the fee, which is interesting.
+So keep that in mind when you're doing the Trader Funding Program analysis and comparing them.
+There's important rules that matter.
+So time and market is what I like to call it, TIM, or days to payout.
+Time and market is one of the biggest factors you're going to look for when comparing firms.
+Okay, so usually as the time and market goes up, the price, actually let's do, let's just do this.
+As the time and market goes up, the price usually goes down.
+Okay, so when you have, when you're comparing firms and what the differences are, these are the main parameters you're going to care about.
+So if you want to pay more money for less time, that's pretty much what you can do.
+Now, what I have, another thing that they have of these rules that kind of squeeze you out, I call it the triumvirate.
+There's three different parts to it.
+They're going to have, each firm in the world is going to have one, if not two, if not all three of these rules, and they are as follows.
+There's a consistency rule, which I briefly touched on a second ago.
+A consistency rule, which limits how much you can make in a single day towards the total.
+You have a daily loss limit, which basically means if you lose a small amount, they stop you trading for the day.
+Account's still alive, but you soft, it's called a soft breach, you end for the day.
+DLL limits your scaling, I'll cover that in a minute, or you have profit caps.
+So you're not allowed to make infinity profit.
+You can only make so much and then they end the program and you got to start over.
+So payout cap.
+Every firm is going to have one to three of these rules.
+If consistency goes up, it's easier to pass.
+The price usually goes up.
+If the DLL goes up, the price also goes up.
+It's easier to pass.
+If the payout cap goes up, the price usually goes up.
+You notice the trend?
+And so as people, I'm sorry, if the consistency goes up, yeah, so the consistency goes up, it takes fewer days to pass.
+So fewer days to pass is a higher price, typically.
+All right.
+So the higher the cap, the more expensive the payout is, the cost is to trade them as well.
+That's the cost of going in.
+Certain firms typically will have at least one of the three rules.
+There's zero firm in existence that has all three of these rules gone.
+The closest thing is my funded futures.
+So let me talk about why that is.
+Let me give you a rule down each one of them.
+Consistency is something that limits how much you can make in a single trade.
+If you're supposed to go from your starting point to some profit target, let's put PT here.
+You can't just get there in a single day.
+If it's 40% consistency, then you're going to have to take every trade, can be no more than 40% of the total, every day, sorry.
+It can't be more than 20% of the total, which means 100% is the total divided by 40 is 2.5, which means at minimum you have to trade 2.5 or three days.
+If you make 2,400, in this example, 40% of 6,000 is 2,400, then your trade plan is usually going to look like this.
+You're going to make 2,400 the first day and then 2,400 the second day, and then you're going to get the rest of it.
+It has to be less than 2,400 each day.
+And then the last one, if they're 24, it's 48, then the last one you make 12, and then you're in.
+And that satisfies the criteria of this.
+What the consistency rule does is it forces you to stair-step your account.
+It has an upper boundary of what you can do.
+So I'm going to draw this with a line.
+I'm going to do the word consistency.
+So whatever your real P&L curve looks like, consistency is your upper boundary.
+Now, daily loss limit is how much you can lose before they cut you off for the day.
+FundedX doesn't have one for the legacy plan anymore.
+They just got rid of it.
+But used to, there would be one.
+And let's just make up a number.
+I think it was 2,400.
+I think that was what it was.
+So basically what it means is, you know, essentially as you're stair-stepping your account forward to get to pay out,
+the daily loss limit is how much you can lose before you stop.
+Now, an example would be if the market is selling off and you hit a target and stop out,
+and then it falls against your next target, and then you stop out.
+And then it falls against your next target, and then you can long and make some money.
+In a real trading account, you have infinite flexibility to do that.
+But if you lose too much in a trader funding program, it cuts you off for the day,
+and then you can't take any more trades.
+So what that does is it limits your ability to just basically martingale into a trade.
+Long and long and long and long and long and long and long, and then let it go.
+They have a small shutdown where you're done for the day at a smaller balance than the total.
+That way you can't just infinitely scale in and pass the account.
+So what that does is it sets kind of a floor as to where you stop.
+So DLL has two functions.
+Number one is your P&L curve, you will actually, let me draw a little bit better.
+Your P&L curve only lets you, if you're losing, you can only lose so much per day if you're losing.
+Because the kind of lower boundary there is what the DLL sets.
+You can only lose 2,400 and lose 2,400 and lose 2,400.
+So essentially, your actual P&L curve is like this kind of funnel,
+where you can only like stair-step up so much, and you can only stair-step down so much.
+You're kind of operating between these boundaries.
+Notice how you can't just go to zero in a single day,
+and you also can't go to infinity in a single day.
+It's sort of like tailoring your approach to kind of keep you confined,
+to keep their risk lower, right, and make it harder for you to pass.
+If you had infinite money, you could just infinitely long this as it's falling
+and eventually make it all back and make some money.
+So you're going to have those guidelines on both sides of you for consistency in DLL.
+DLL is another limiting step because a lot of people trade on multiples of their risk.
+For example, if you make two-hour trades, people sometimes write it like this,
+which just means two to one.
+I like to say it.
+I'm going to reward of two for risk of one.
+Then risk is how much you're going to lose, right?
+If the DLL sets how much you're going to lose, then whatever the DLL is,
+if it's 2,400, then the max I can make is 4,800, right?
+Because I'm only trading a multiple of two.
+So say that you have a risk and reward of one to one,
+then your DLL is how much you're going to make per day or per trade.
+So DLL has another type of profit-limiting step,
+like the consistency is limiting you at the ceiling.
+DLL, if you go over consistency, that's absolutely fine.
+You just have to trade longer.
+But DLL also adds another layer of boundary,
+meaning that you can only scale as fast as your DLL allows.
+If, again, you're trading DLL as 1,000, you're trading 2 to 1,
+you can only make $2,000 a day.
+So the prop firm is limiting how much you can make per day
+by giving you a daily loss limit.
+Consistency is limiting how much you can make in a single day,
+not just per day total.
+So both of those together are rate-limiting steps
+to keep you from infinitely making money in a single day
+without risking blowing up.
+If you breach your consistency,
+they make this profit target bigger to satisfy this role.
+You have to trade more days in market,
+which we talked about every day in the market
+is another coin flip you lose.
+So if I accidentally trade bigger than 2,400 in this account,
+say I accidentally trade 3,000 at 40%.
+Dang.
+Okay, so what does that mean?
+Well, now at 3,000 has to be the new profit target,
+40% of that has to be 3,000, right?
+So 40% of X is 3,000.
+3,000 divided by 40% is what, 7250?
+Let me do the math there.
+Why is this?
+Oh, hold on.
+Um, dang it, come on.
+Um, or sorry, 7,500, 7,500.
+Then now your profit target changes to 7,500.
+So therefore you have to trade a whole extra day
+if you breach the consistency,
+which again is one more day
+you can possibly fail the whole thing.
+So consistency will add days to the profit,
+to the time in market.
+It'll add that to your journey.
+Um, if you, if DLL will limit how much you can make in total,
+despite consistency, both of these are designed to keep you from making a lot very fast.
+And payout cap is a design to limit how much you can take out.
+Despite what your balance is and how you get there, it doesn't matter.
+The ultimate takeaway is they can have a payout cap, which limits what you can take out.
+It doesn't matter if you stair-stepped up, rocketed up, went sideways, went back in time.
+I don't know.
+It doesn't matter what you do.
+If some of these firms have a payout cap,
+congratulations for making 25,000 in profit.
+You're allowed to take out $3,000 every five days.
+Like trade a five is 3,000 every five days.
+It's a payout cap and they're direct to funded.
+So you can make all this money by getting there,
+but then they throttle how much you can take out again
+to entice you to keep trading further.
+And ultimately you can blow up the entire thing that's sitting there in reserve.
+As you guys remember earlier in the year,
+I was trading trade a five straight to fundance.
+I was, I had, um, at, um, at that time,
+I mean, I'm still trading them at this time,
+but at the, at, as I was doing it on YouTube,
+you can see that I built $200,000 a buffer between the five accounts
+and I'm only taking out money at $3,000 chunks.
+They still force you to trade five days.
+At that time it was, it was 10 and then it became seven.
+Now it's five.
+Um, you could trade 10 days, get 3,000, 10 days, get 3,000,
+get 10 days, get 3,000, no matter what the balance is.
+You only let you take a little bit out.
+So these are the things that like, aha,
+I thought it was too good to be true.
+Well, now you see, it's pretty realistic, right?
+You can't just make infinity dollars,
+but you can make a pretty healthy return on your investment.
+If you're pretty good at this, you know?
+Um, so I'm using fund index as an example.
+Cause one of the easiest ones to understand the,
+there's a bunch of really good firms out there.
+And let me talk about why my fund and futures is really good.
+Uh, because if we go back to the rules that I wrote,
+I'm going to list them for you.
+Sorry, I'm going to talk about the free consistency, DLL and cap.
+No firm has all three of these gone.
+The firm would have complete like risk at the time.
+Certain firms like fund and next, which we just showed, um,
+fund and next has, um, no cap.
+So fund and next has no cap and no DLL.
+You have two of the rules gone, which is great.
+That's fantastic.
+Um, my funded futures has, once you're funded, no, no cap.
+I'm sorry.
+No DLL, no consistency.
+And they have a payout cap, but it's 80,000 bucks.
+So for most people, that's pretty much uncapped.
+If you haven't taken 80 K out, that's a pretty big target.
+It's not like a rinky dink 3000 or 5,000 cap every five days.
+It's trade for the full lot, which I think is 14 days right now, 14, 15 days, something
+like that.
+And you can get 80 K and payout.
+But as you see with the higher payout, it's more time in market to get there.
+Typically with bigger payout caps, it's more time you have to trade.
+There's always a push and pull.
+At least we all see this so far that when it comes to these rules, do y'all understand?
+It's rock, paper, scissors.
+There's really no winning firm, right?
+You give one, you take one, you take one, you give one.
+And they all like to compete.
+Like we're the best, we're the best, we're the best.
+But the risk model is the same.
+It's rock, paper, scissors.
+So it would, no matter what you can say, it's very rare that you're going to find a firm
+that's too good to be true right now, but a next is too good to be true.
+Like they're working themselves in bankruptcy.
+I don't even know because they have no cap, no DLL and the plans are dirt cheap and it's
+seven days to pay out.
+Uncapped with my funded is like two weeks to pay out.
+So it's kind of interesting how some firms decide to take a little risk or not.
+Now let me tell you about that.
+When firms are taking abnormal amount of risks compared to this, this is where my masterclass
+will help you.
+This is where you do your due diligence.
+Very much investigate these new firms.
+All the ones I've mentioned that we work with as of this date, Funded Next, My Funded Futures,
+Aletra Funding, Tradeify, Apex, and Take Profit.
+These are the ones we work with.
+We're all vetted by multiple customers, multiple payouts.
+They have a general good reputation in the community.
+There's millions of these prop firms out there though.
+So when it starts to sound good to be true, you need to go make sure they're actually paying
+people off.
+Don't ever discount the fact that one of them can be scamming.
+We recently had one called Fast Track that went under because they ran out of money because
+they took too much risk.
+And so when you start to see firms that have two or three of these rules gone with a quick
+time and market, be hesitant and make sure you do your research that they don't have
+some other weird rule like subjective payouts or they deny payouts and stuff like that.
+Any firm that's denying payouts, try to avoid it in general for your own sake.
+This is teaching you how to see risk in this stuff.
+Now again, with anything in Wall Street, there's always people trying to get people's money.
+So this is just a cautionary thing to take.
+The ones we work with, we don't have the problems with usually.
+But keep in mind, that's what you're looking for.
+Now, when do you decide what's a better firm or what's a better one to trade?
+Well, that's up to you to decide what you want.
+For the most part, you guys, I'm going to tell you the best thing that you can ever do
+is time and market.
+The quickest path to payout is your biggest handle.
+Every day that you trade is a coin flip that you blow the whole thing up, right?
+So quicker time and market, the better.
+Some of the plans though, like essentially my funded futures has a plan that's like a,
+you know, takes two weeks to get your payout.
+And another plan they have has five days of payout.
+They have both options for you to determine longer time in market for uncap or shorter
+time in market for a cap.
+And you get to choose which path you want to gamble on.
+Do I want to trade for longer for bigger payout or trade for shorter for smaller payout?
+It does make sense in a risk sense.
+And so firms like my funded give you really good options for you to choose which one.
+They have cheap plans and I'll give you some examples of some of those really quick.
+Let's not take profit.
+My funded.
+So my funded, for example, has three different types of plans as a state.
+The core, which is cheap for the 50K account, 77 a month.
+And the scale is 127 and the pro is 227.
+They're more expensive.
+The core, you get $1,000 payouts every five days after you pass the eval.
+There's a consistency rule on the eval side of 50%, which means two days to pass the eval.
+50% is two days to pass and five days to pay out for $1,000 per payout.
+That's why it's 77.
+The scale plan is much bigger.
+It's like $1,500 and then $2,000.
+Each time you get a payout, it's slightly bigger and bigger and bigger and bigger.
+They scale it up each time for the same five days in market once funded.
+And it's slightly more expensive.
+Bigger payouts, more expensive, same time frame.
+The pro, big, fat, 80% of $100,000, I think is the most expensive one, but longer time
+in market.
+So some firms like my fund, it'd give you a pretty easy, the rules are the same as you
+see the X's and checks of what they do and a half are pretty much identical.
+The only difference is you pay more for different payout structure.
+And that's really where the trend is going.
+And then of course, when you're shopping around, you're going to see all these rules written
+on these websites just in this particular way.
+Time and market.
+It's not necessarily stated in here what time and market is.
+You usually have to go read the FAQs to start to see like payout rules and they'll tell you
+payout rules.
+I'll just pull up another one as an example.
+Let's go to here.
+Every prop firm is going to have a sort of like help center.
+They're going to be very similar at the top.
+And you can say like, okay, payouts.
+Here we go.
+There's a payout section.
+Understanding payout requirements.
+There you go.
+Perfect.
+Here's the payout policy.
+Let's go there.
+You can have a total of five accounts total and 20% consistency.
+There's that rule.
+Okay.
+So that's five days to payout.
+Perfect.
+And then you can see if there's any more windows or rules or whatever.
+Unless it specifically says you need to trade a certain amount of days.
+The consistency will tell you the number of days.
+So this one doesn't necessarily say the number of days.
+I don't see it.
+So it's five.
+And we all know it's five.
+And each one of these firms, you can kind of do the same thing with, you know,
+Elite Trader Funding.
+He's got a cool website.
+And then they tell you minimum days to pass the eval side.
+Perfect.
+Five days for this plan.
+Diamond hands, five days, five days, five days, et cetera.
+And you can click show more.
+And it tells you once you're funded, eight days to payout, eight days to payout,
+eight days to payout, et cetera.
+You can see this all across the board, right?
+And so you get your time and market listed here.
+You get your consistency listed here.
+You get your daily loss limit listed here, right?
+And caps, right?
+What are your payouts?
+Maybe they list their caps.
+They're not here.
+A maximum withdrawal.
+There's your cap, right?
+So this structure is very common in all crop firms.
+And when you're shopping around, it really comes down to what's the most important.
+And as I said, for most of you, time and market's probably one of the better things to look at.
+The quicker, the better.
+Now, competition has recently brought most of these to have seven to eight-day payout windows now.
+That's pretty much where competition has landed.
+Some of them, like Tradeify, Straight Defunded, now went to five.
+And Funded Next has gone down to four.
+Now, I think that five and four is about the lower limit you're going to get.
+But for time and market, you really can't beat Funded Next rapid as the day of this video.
+Again, this might be dated by the time you watch the video, but time and market's a big deal.
+Now, for all of this, what you're really looking for is for the price you pay,
+because you're going to set a budget, the price you pay, what has the rules that you want?
+Now, what I hate the most is DLL.
+This is my least favorite rule of all of them.
+DLL, I hate because you know me.
+I trade every single time.
+We talk about that.
+If I have a liquidity pocket, I'm going to trade over and over and over and over again.
+What happens if I have a day where the pocket fails once, fails twice, and fails three times,
+and then wins and wins and wins and goes, right?
+If I don't plan it right, DLL can stop me out of the trade,
+and I can't attack it eight or nine times like I normally do.
+I can't use my blind monkey strats to go in my favor to keep attacking it every time.
+Once I lose a certain amount, I'm out of the game for the day, and I hate that.
+So when I trade, I personally don't like DLL.
+That's a Matt thing, though.
+Now, you decide what you don't like.
+Consistency forces you to trade consistent, the same size every day, and that may be too
+hard for you.
+Trade a five straight to funded, 20% consistency, and top step was like 50% on the eval, right,
+side, and then fund the next 40%.
+40% is three days to payout.
+Consistency affects your time in market.
+Sometimes time in market, they'll give you like, you have to trade five days no matter
+what, despite the consistency.
+Funded Next, for example, has a five days of trading to payout despite the consistency.
+So for the legacy, for example, you have to trade five days, and then you can request
+five calendar days no matter what your profit is.
+You still got to make it to five days.
+So some of them, days are throttled by the lesser of these two, right?
+Or actually, I guess the greater of these two.
+Consistency can put you over the time in market.
+You may make it to day five, but consistency makes you trade two more days.
+So these two together affect your time in market.
+I'm a very good trader, and I'm a very talented trader, and I do very well over time.
+I'm a person that over time, I make money.
+So therefore, for me, you can understand, everybody, why time is not an enemy of mine.
+Do we all understand that?
+Yes, no?
+Somebody like me who makes money over time, over long periods of time?
+Three or four extra days in the market doesn't really have a high loss rate towards me because
+I am consistent, and I go.
+DLL doesn't let me scale the way I want to and kicks me out too early.
+That's why I don't like it.
+Those of you who may not be at your goals yet, you know, time is probably your enemy.
+You want to get a payout as quick as you can before you blow up.
+Then you want to squeeze out a payout with a low time in market, high consistency.
+You could care less about the DLL or the cap.
+Payout cap is not really going to be a big deciding factor for most people, but like
+for example, with MyFundedFutures, they have Core and Scale, which both have caps, and Pro,
+which kind of has a big fat cap.
+It's almost somewhat uncapped in a way.
+You may choose between products once you've selected a firm that has the rules based on,
+okay, do I want to pay more for a bigger cap or not?
+Funded Next has a Rapid plan, which takes smaller tiered payouts in four days versus
+the seven-day payout of Infinity, basically uncapped, the Legacy.
+Legacy will cost more.
+So again, Rapids cost half as much as the Legacy's because you get uncapped payout.
+This is just going to affect the final price.
+Not really your trading rules.
+These are mostly your trading rules.
+So when I'm shopping around, I want to make sure it has the trading rules I have for the
+price I want to pay.
+Now it comes down to the next thing, the price you want to pay.
+How much do you pay?
+And this is going to be lesson one, and that's it.
+We're going to get to the end of this, and that's it.
+Payment.
+When you're trading props, just like when you're trading, you have income to apply to this.
+You're going to set a budget.
+You don't go to the casino and just say, well, I'm just going to gamble.
+Whatever.
+I'm going to keep going.
+If I lose money, I'm going to get some more.
+You're going to basically gamble yourself into a hole and then mortgage your house and
+then run out of money and then put yourself in the poor house if you don't think it through.
+Now, let me tell you a proper way to trade.
+Say that you make, I don't know, $12,000 a month after tax.
+I'm just making up a number after taxes.
+And you have $8,000 a month in bills.
+Okay.
+And then you've got $4,000 left over.
+Of that $4,000, you and your spouse agree that you're going to be allowed to chase your dreams
+and practice trading, but you're only going to be allowed to spend $2,000 a month because
+that's what you guys agreed to.
+Out the door, this is the first thing you do before you go to any of these websites.
+You guys got it?
+Y'all are going to learn how to balance a checkbook because if you can't do this, if
+you can't manage money, you can't trade because you know what trading is?
+Managing money.
+Okay.
+So do this.
+Trading is the art form of managing money under stress in a random environment you can't
+control.
+So we're going to start by controlling some of it.
+I have a budget.
+This is my B, $2,000 a month.
+Same thing.
+If trainer funding programs weren't around, I would take $2,000 and put it in a trading
+account and trade micros and then practice trading that oh shit moment.
+I'm about to blow up the account with that and gain my education this way.
+But instead, $2,000 allows me to trade this much money per month within budget.
+If I lose it all, my family still gets to eat.
+Great.
+If I lose it all, the wife is still happy because we agreed on this.
+Make sure that this budget is something that everybody who relies on you to provide agrees
+with.
+Do you all agree with me now so far in this class?
+Trading is the easiest way to lose everything you own and I'm not just talking money.
+It's house and it's to lose everyone you love because you're a gambling addict and you can't
+freaking control yourself.
+Okay.
+You're going to set a budget because Matt told you set a budget and everyone's going to agree
+that way when you're trading, you don't get a partner aggro or they come up on you and
+they're mad at you because you're not providing.
+You're like, but you keep losing money and, uh, you know, and they just start their opinion
+of you sort of like goes down over time because you're not producing up front.
+You're going to tell your partner, whoever relies on you, Hey, I'm committing to this
+for like two years of my life.
+Why?
+Because I want a better life for you guys.
+And I think I can do it.
+I've budgeted it to where it won't affect their cost of living.
+I'm going to be stressed out for a while.
+I'm going to be doing extra work for a while.
+I'm not gonna be available, but I'm investing in my future.
+I hope you're all okay with this.
+And you get everyone in your family to sign off on it.
+That way you don't get the aggro where people are like, their opinion of you is making is
+worse and worse.
+You know why?
+Because your trading is going to get worse and worse.
+That pressure is going to start to add up.
+So out the door, you get rid of all of that.
+You get a budget.
+Everybody to sign off and you tell them the amount of time usually takes two to five years
+to be a good trader.
+I'm going to do it in my spare time.
+I'm still going to take you out on dates, honey.
+I'm still going to play at the kids.
+I'm still going to visit our parents or, you know, your parents, my parents, but I'm going
+to do some extra work because I see a better future for myself.
+You guys got it?
+Make a budget, make a plan, and then trade aggro free with nobody breathing down your neck.
+Like, where's the money from this?
+You say, I'm going to spend $2,000 a month for two years.
+What are you going to get out of it?
+And you say, probably nothing but an education.
+But that's about what our budget is.
+And that's the same as a tuition.
+And there's no college degree for day trading.
+I'm going to learn it this way and spend a little bit per month.
+And that's like a tuition.
+And assume that what's the budget for?
+Paying for tuition.
+It's all gone.
+And your partner's like, are you going to make any money out of this?
+Like, hopefully at the end of the day.
+But think of it like college.
+Four years of paying for something to get a job at the end.
+It's just like going to school.
+And now people will take you seriously, will they?
+What do people normally say when you're like, I want to go be a day trader?
+What do they do when you say that?
+How do they look at you?
+Tell me in chat.
+What's everybody's first impression when you're like, hey, I'm going to be a day trader?
+They think you're dumb.
+They think you're a gambler.
+They think you're a joke.
+They don't take it seriously.
+So nobody will take it seriously unless you take it seriously and you present it like
+the opportunity that is.
+This is an educational budget to learn something.
+And after two years, if I'm not doing well or I'm not improving, I'll quit and I'll know
+that I'm not doing well.
+But I'm going to take it seriously.
+I'm going to budget it.
+And this is your budgeting plan.
+I get $2,000 a month to spend and that's it.
+So here's some rules of thumb with your budgeting plan.
+Let's go choose.
+Again, I'm going to use FundedX as an example because it's one that I'm very familiar with.
+Okay.
+I'm going to say $249.
+Let's run that up to $250.
+Let's say that this is the plan that meets all your criteria.
+That's the one I trade.
+That's why I keep using it.
+It's no DLL.
+It's my favorite.
+Again, that's just me.
+$250.
+Okay.
+So these things cost me $250.
+And let's just say that I want to only trade one at a time.
+And you could trade multiple at a time.
+You can buy many of them at once.
+But at $250, now this budget tells you how many you can buy, right?
+That's eight.
+You get eight of those accounts total.
+Per month to blow up.
+I buy eight.
+I spend $2,000.
+Now, if I want to spread that risk out over the course of the month, a trading month has 20 days, right?
+And then so how can I make those eight accounts stretch over 20 days?
+Well, if I pretend or I make a limit of if I just lose the account trading, I want to stretch the eight accounts as much as I can.
+Then each account needs to last 2.5 days, right?
+That's how eight days stretches to 20.
+So let's just round this up to be more conservative.
+Each account needs to last three days, okay?
+Three days to blow up.
+And that'll put me under budget, right?
+So actually, I'll actually have seven accounts in three days.
+But let's just keep it simple.
+Three days.
+I trade an account and I plan to blow up in three days.
+So with that example, how do I set my limits there?
+Well, if you look back at the website, you see that they have a maximum loss limit of $3,000 total, right?
+So the math there is simple.
+To make the eight accounts last the entire month, trading 20 trading days, I have to make this account last three days.
+So every day, if I lose $3,000, I've lost the game.
+And that way, the three days has anchored my loss to be $1,000 a day.
+I've set my own loss limit at $1,000 a day total.
+Simple as that.
+So now I have a trade plan.
+Hey, honey, I'm going to spend $2,000.
+I'm going to buy eight accounts.
+I'm going to plan to blow up three days.
+If I do better, then I don't spend the whole $2,000.
+If I do exactly as bad as I can, lose every day, every day, every day to max, I only spend $2,000.
+So this is set $1,000 per day to meet all the criteria.
+Do you all understand the math there?
+That's pretty easy to think.
+I can lose $1,000 a day over three.
+And there's the $3,000.
+And then I'm in budget.
+I never spent more than $2,000 a month.
+That's the whole point of this.
+All right.
+So now I can set some parameters.
+And again, in the Discord, there is a link to the spreadsheet, which allows you to program
+some of these parameters in that helps you with position sizing.
+We talked about that.
+But you can utilize some of this spreadsheet to start to do some of these calculations to
+make it simple for you.
+And that's kind of helpful.
+And then I'm going to start building this out a little further.
+But I'm going to have a tab for each different type of account, which we'll talk about a
+little bit as well, to go with it to help you calculate how many days to blow up and how
+many trades per day, et cetera, to really micromanage your finances with this.
+So the idea is it's just making sure that you're not gambling outside of control.
+Once you start losing more money than you've planned to lose, and you've psychologically anchored
+yourself to lose, you start to trade worse because you're outside of your budget.
+If you're trading along this plan, you're never going to feel bad because you already
+assumed it's going to be gone and you're comfortable with it.
+So, so far, we understand this, right?
+This is something you're comfortable with losing.
+And when you lose it all and tell yourself, I'm going to lose it all, you're like, that's
+cool.
+I expected it.
+You're never surprised.
+You don't walk in Monday feeling panicked or rushed.
+You're within target, okay?
+This is very important in your trading education to do this.
+This will keep your emotions in check.
+You won't be stupid as you're losing.
+You're losing on pace, which is what you assumed, okay?
+So with that particular example, eight accounts, $3,000 of loss means that I can lose $1,000
+a day, which is how you determine how much you're going to allow yourself to lose per day
+to keep yourself under budget.
+If you lose any more than that $1,000 a day, you're going to burn these faster.
+So set your limit and that'll keep you in check.
+Another thing that you can do is, and again, my rule of thumb is I give myself usually three
+days to blow up anyways.
+That's kind of, if I don't have any kind of limits or anything, I give myself three days
+as a general rule of thumb.
+Three days to blow up usually, and then two trades per day.
+So how many trades is this?
+Well, you know, we taught you guys, you know, maybe I'll long into hedge pressure or something
+and maybe make a trade, maybe take a stop, okay?
+That's one trade.
+My 10-point S&P, 40-point NASDAQ, that's my loss.
+$500 a contract S&P on a normal non-volatile day.
+$800 a contract NASDAQ.
+And my budget is if I'm losing $1,000 per day, I give myself three days to blow up and
+I give myself two trades per day.
+Why two trades per day?
+Well, because a lot of my setups are 80%, 90% are ideal conditions.
+So it's very rare they're going to fail twice.
+It happens, happens fairly often, but it's rarer than not happening.
+More often than not, I'm going to need a second trade to take a stab at it.
+We hit liquidity pocket, then it falls through.
+We bounce on liquidity pocket again, and then it rolls.
+I lost, then I won.
+I need to give myself a second trade to win.
+I can't just lose $1,000 in a single gulp.
+You can choose how many trades you want to do.
+You can make it three.
+You can make it five.
+I'm more aggressive and I have more money to spend, so I'm going to be more aggressive.
+I'm going to give myself two.
+And if I blow up faster, I blow up faster.
+I don't care.
+You may not have that mentality.
+It's up to you to decide.
+My rule of thumb is three days to pass, two trades per day.
+So the $1,000 means I've lost $500 per trade, right?
+So with S&P, that's great.
+That lines up exactly.
+Now that sets my contract size.
+If I'm losing $500 per trade, then my contract size is one contract.
+One E-mini S&P is $500 per trade on loss.
+Perfect.
+And non-volatile environment.
+Remember your volatility class.
+You're going to adjust how much stop loss you're going to have based on volatility.
+The biggest one-minute candle.
+You guys remember all that?
+So that might adjust your position size to make it smaller when it's volatile.
+At $500, for NASDAQ being $800 per mini, you're going to have to trade.
+This is what?
+1.6.
+So one of the three is five eights, right?
+So five eights of a NASDAQ.
+That's the math there, I think.
+So that's roughly what?
+Like five, six micros, right?
+We'll put you on your budget as well.
+I'll do the math for you really quick.
+That's about six microns.
+6.25 micros.
+Six micros as you lose, 6.25 times eight is your 500.
+So that's how you do that.
+Now I have position sizes per trade.
+I've taken my budget that my family agreed to and all the balancing act, the commotional check, everything.
+And I've turned this and I've chosen the prop firm I like based on the parameters and all this stuff.
+And one other thing I'll discuss in a second.
+I've chosen the prop firm.
+I've chosen the account.
+I have the budget.
+I've worked it out.
+Now I've got my position size.
+Then I got a rocket scooter.
+Then I'm ready to go.
+Now I'm ready to do this.
+You've just made a business plan.
+You didn't even know it.
+Prop for masterclass.
+We're going to cover a lot of stuff in this.
+But the first part of it is a business plan.
+And we're all on the same page here, right?
+If you haven't thought this much about your trading, this is why you're not doing that well.
+I think about this constantly.
+Like when I'm streaming, I might be twiddling my thumbs.
+I might be singing songs, goofing off.
+My brain's never not aware of where I'm at with all of this, right?
+And you got to make sure you're doing this as well.
+Everybody's happy in this equation, which is why I ended this math with a smiley face.
+Your wife or husband is happy or are happy.
+Your kids are happy.
+Your family's happy.
+People are still eating.
+You're not gambling their money away.
+You're in perfect control.
+So even when you lose, you don't give a crap because you expected that's the normal loss.
+$500 a trade?
+Well, that's why you assume to lose.
+You're not feeling the burn.
+Now, the burn you might feel over time is that after a year or so, your family might
+get impatient of you not making progress.
+But your job is like anybody in student.
+If you were married in college and you're trying to go through medical school or something,
+it's like you have to say, you know, this is for the greater good.
+We agreed to this time and this is what we're doing.
+So hopefully you don't feel that pressure as time goes by.
+Or else the smiley face turns to a frown.
+So keep your family in check.
+Keep your budget in check.
+Keep your expenses in check.
+And use this entire thing to decide what your position size is.
+And then everyone will be happy, including you.
+Now, one final thing before I close out this class is the three different account types.
+You see some of them down here.
+There's static, end of the day drawdown, and trailing drawdown.
+These are the different flavors of the accounts.
+And again, they're going to affect the price.
+It's static, trailing.
+Actually, let me do this really good.
+Let me do it like this.
+Trailing, drawdown.
+So the drawdown type.
+And this is the hardest part to understand, especially if you're new to trader funding programs.
+There's trailing, there's end of the day drawdown, and there's static.
+So whenever you're researching like which firms you want to try, they're all different.
+They all have different types of rules and the whole rock, paper, scissors.
+But they also have these three things.
+It's the drawdown type.
+And just like, you know, you can click on any of the ones.
+Let's pull up, take profit.
+You can go down to the bottom.
+And it will tell you usually the drawdown type in here as well.
+Actually, it's probably here.
+Here's your, again, there's your daily loss limit, none.
+Consistency rule, yes.
+Drawdown type, end of the day.
+See how it says end of the day, intraday, end of the day.
+So this is also important to understand.
+Another thing that I didn't mention earlier, which may factor in to your tiebreaking of which
+firm to go with is going to be a profit split.
+As you see, when you're paid out at a take profit in the pro, they're going to take 20%
+of your profit from you.
+And when you're pro plus, they'll take 10%.
+When you have two equal choices with equal price, profit split is a great tiebreaker.
+Firms like MyFundedFutures, 80-20.
+Take profit, 80-20.
+When you go live, it's 90-10.
+Usually live programs are much better, like 90-10.
+Tradeify, straight to funded, 90-10.
+Funded next, 100-0.
+They don't take anything from you.
+So when you're comparing, you're going to look at that as well.
+Usually a higher profit split is a cheaper account as well.
+Up to you to decide how important that is to you.
+Now, drawdown is your biggest decision we haven't talked about yet, which is the account
+type and how you trade it.
+This is massive.
+There's a massive difference between them.
+You're going to trade them completely differently.
+In this masterclass, we'll go through how to master trailings, how to master end of the
+days, and how to master static.
+Now, you guys watch me on my stream.
+Currently, at this moment in time, I'm trading Tradeify straight to funded, which is end of
+the day.
+I'm trading Funded Next Legacy, end of the day.
+I'm also trading MyFundedFutures live account, end of the day.
+That's it.
+Now, let's talk about them.
+Remember that rule when I said drawdown maximum loss limit of $3,000?
+How this $3,000 is applied is the drawdown type.
+Let's put the word type here.
+$3,000.
+Trailing, or static, let's start there.
+It's easy to understand.
+Static, you start at zero, okay?
+And if you lose $3,000, you're out.
+So if your balance ever goes to minus $3,000, you've blown up.
+And so no matter what you do, as long as you stay above this line, you're still in the
+game.
+Okay, now you blew up.
+Trailing has this weird effect that it's intraday trailing.
+So you start at zero, and you're down $3,000, then you've lost.
+But the intraday trailing is interesting because what happens is as you're making money, this
+target moves with you.
+It's $3,000 off the high at any given point.
+So like it gets higher and higher and higher, you go higher and higher, and then you fall
+to here.
+You're still greater than zero.
+You've still made money in the account, but you've breached the account because you trailed
+$3,000.
+You're not allowed to fall any more than your trailing amount.
+You have to basically stay above that amount that's always trailing you.
+So like, that kind of sucks, right?
+Why would you choose this one over that one?
+Well, this one usually costs two to three times as much as that one, and that's why.
+You'll pay a lot less for that extra headache.
+And that's up to you to decide what the cost is.
+The cost of a good trailing drawdown, usually the firms that have trailing drawdowns are going
+to be firms that are like, you know, $100 to $200 accounts, but have 90% off sales.
+Apex has one.
+ETF has their one step and their fast track, which are all trailing.
+And the trailing drawdown goes with it.
+But you can pick up those accounts for basically nothing price, $10 to $15 per account when they
+have a sale.
+And then once you finally pass and you pay a big activation fee, and then you pay your
+quote unquote, $200 total.
+Most of these accounts are going to cost $100 to $200 a piece, no matter how they frame
+it.
+So trailing drawdowns, again, your 90% off sales are very common.
+Statics usually don't go on really big sales.
+And when they do, they're great.
+Static, lead trader funding, as of today, has the best static account in the business.
+There's not even a close second place.
+Static account, they give you a big, fat buffer to play with that doesn't move.
+Now, comparing different static accounts, Apex has one that has about $625.
+$5 a buffer.
+Statics characteristically have smaller drawdowns as well.
+They don't give you a lot of room to play because they want to bust you.
+So normally, comparing similar price, an end of the day drawdown of $3,000, a similarly
+priced static might only have $625 a drawdown.
+It's a tighter limit, but it doesn't move.
+See, it's again, rock, paper, scissors, push and pull.
+ETF is very cheap and very fat.
+That's why I recommend if you like static.
+Static is the easiest account to pass, all things being equal, okay?
+Trailing is the hardest to pass because here you blow up even if you make money the wrong
+way and it trails off the high.
+So example is you have an account and all of a sudden news happens and you made $10,000
+and then it pulled back a little bit and then you lost $3,000 of that $10,000.
+You're still up $7,000.
+Guess what?
+You blew up the account.
+It goes off of the high.
+It's unrealized trail.
+So that's making it hard, but these accounts are dirt cheap.
+So you get the option to choose where you want to go.
+If you're having a hard time passing, I tell you guys left and right, nobody pays me to say
+this.
+I'm telling you from my heart, static, pay the extra money, do the statics.
+That's the easiest way to get a payout.
+It's just more expensive.
+So I'm going to put $3 signs for cost.
+They're usually the most expensive, but this is a huge headache for most people.
+Normally, you just have a nice buffer and you're good.
+Now, trailing does give you a buffer at some point.
+Normally, once you get past a certain point, usually make your initial drawdown and profit
+$3,000, then your trail becomes static, which is good.
+A lot of the firms don't trail forever.
+They trail to a certain point above zero and then they become static.
+So with trailing drawdown, you're basically like cheaper for that initial hurdle and then
+you earn a static through your trading.
+Like you basically converts it once you hit a buffer.
+This example of this account, as soon as I make what my loss limit is in profit, then
+the account stays static here.
+So most trailings are only trailing for a little bit.
+Do we all understand this so far?
+You earn a static.
+It becomes static at some point, which is what you want.
+You don't want it to move.
+It's easier once it fixes.
+Okay.
+So hardest, but cheapest, easiest, but most expensive.
+If you're trying to get your first payout for confidence boost or just return on investment,
+this is the easiest path to pay out.
+All things being equal.
+If you compare all things and they're all equal, this is easier than this.
+End of the day drawdown is interesting because it's a hybrid of the two.
+End of the day drawdown is a fixed static drawdown.
+Same, same, use the same example here.
+That stays like a static.
+And no matter what you do throughout the day, it stays the same.
+And at the end of the day, it's recalculated for the next day.
+And then it stair steps up to where it's $3,000 off of the close every time.
+It's always $3,000 off of the close, no matter what the day is.
+So it doesn't trail intraday, but it trails once a day in a stair step.
+So while your drawdown on a trailing is going to look like this over time,
+it's going to be trailing with you and then stop.
+Static is going to be fixed forever.
+End of the day is going to stair step before it becomes a static.
+So all of these are going to dictate different trading styles.
+And we're going to have each class that we're going to have on these
+are going to tell you which trading style is best for each one.
+Now, Matt, me personally, at the end of the day, is why I like to trade those.
+Statics are perfect, but you don't have a lot of them out there.
+And of course, a lot of times, because of the simplicity of the static,
+they're more expensive and usually have payout caps.
+End of the day, being kind of in the middle, it's mostly a static.
+And the drawdown doesn't trail intraday, which is good, which I hate.
+And usually, these end-of-the-day accounts have better payout rules
+because it's riskier for you because the drawdown trails, riskier for the firm.
+If it doesn't trail, static is the riskiest one.
+It's going to cost the most.
+End of the day, being in the middle of the two, is the moderately priced one.
+It's one priced in the middle, but it has the best of both worlds.
+Pretty much static throughout the day and cheaper than a static.
+Perfect, perfect, that's all I need.
+Cost-effective, static is short of an account.
+So, that's how I, right.
+Somebody said, if you lost $1,500, the next day you would have $1,500 left.
+Correct, right.
+It trails off, it doesn't ever, they never give you more of it back.
+It always just trails up with you and doesn't stop.
+Good question, yeah.
+So, this is correct.
+You wish they give some of that.
+If you lost money, you wish they would give you more of that back, huh?
+Wouldn't that be great?
+Unfortunately, no.
+All right.
+So, when you're trading between the three, trailing is like one of the more attractive
+ones for a lot of people because it's cheap and you may not have thousands to commit a
+month.
+You may only have a couple hundred to commit a month.
+An ETF has a 90% off sale and you can get the account for $20 or less.
+That might be well within your budget.
+You may be younger, may not have an income, whatever the case may be.
+Trailing may be all you can do because of the financial limits.
+Static sounds easy, right?
+But you may not have the money to afford it.
+End of the day is usually right in the middle and current competition has brought end of
+the day drawdown accounts to be very affordable, as I've shown.
+You know, end of the day drawdown, rapid account is less than 100 bucks.
+Legacy is 79 bucks.
+So, they're becoming very cheap compared to the trailing drawdown, which is, you know,
+$200 at 90% off and then becomes 20 bucks.
+Clearly, that's much cheaper than this, but they're all getting close to being like less
+than the 200 bucks each.
+So, competition is really start to bring platform prices down a whole lot.
+But you're kind of splitting hairs, comparing prices.
+On average, you know, relatively speaking, if an end of the day drawdown is 100 bucks,
+your trailing drawdown when there's a 90% off sale will be like 10, and your static will
+be like 200.
+That's about the rough, you know, estimate of the prices.
+One of them is one-tenth, one of them is double.
+And you'll start to see that trend as kind of normal as well.
+So, you'll probably pay like twice as much for a static as you would at the end of the
+day, all things being equal.
+As a couple other things, somebody mentioned in chat, there's a couple other things to
+consider when choosing a prop firm is, is the fee monthly or one time?
+Some of these firms might say you pay $79 or $80 a month to trade them, which means if
+you hold on to that account, it takes you more than a month to get to your target.
+They charge you a fee every month.
+Some of them are monthly fees, like top step.
+And this is a very archaic model to have monthly fees.
+Not a lot of people do that anymore, but some of them still do.
+As I keep bringing fun to the next step, they have no monthly fee.
+Whatever you see $80 is a fixed price, no matter what.
+Another thing is once you pass the eval side and go to funded, sometimes it's called an
+activation fee.
+Remember, there's all kind of little gimmicks they do to lower their risk.
+Activation fee plus monthly fee is the actual cost of the account.
+Apex is a good example of hiding the real costs of their plan.
+Let me bring it up and show you.
+Here's Apex Trader Funding.
+And you may see this advertised, right?
+Okay, let's talk about, let's do an example.
+$100,000, $300 a month.
+Let's just put this down.
+$100,000 for $300 a month, right?
+And they have a 90% off sale.
+Okay, so 90% off of that, that's great.
+When they have it, 90% off, makes the account $30.
+Perfect.
+I'm paying $30 for this.
+Well, if you go in there and I forget what Apex's current activation fee is, somebody
+in chat might be able to tell me I haven't touched them in a very long time, but I think
+it's like $125 or something, right?
+Can you guys tell me what their current fee is, $100 and something?
+Am I right?
+Something like that.
+It says click here.
+Oh, click here.
+There we go.
+That's the one.
+Ah, here it is.
+Okay, cool.
+So here's the fee for activation.
+So that $300 account that we looked at is a $220 activation fee.
+So in reality, you just paid $250 for that account.
+It's only $30 for the evals.
+So the evals are dirt cheap, but once you pass, you got to fork up the money for the funded,
+right?
+So you're paying the full amount.
+Yeah, so again, keep in mind that activation fee is another portion of your account.
+You want to add up fee for eval plus activation fee once you pass.
+Apex has an activation fee.
+ETF has an activation fee, et cetera.
+Some of the firms don't have activation fees.
+Some of the plans are like, and we'll talk about the different plans, static, end of the
+day, draw it on, et cetera.
+Some of them are structured different, but a next also has no activation fee.
+So some of them will also say no activation fee on there, and it's a fixed price.
+That's why I trade these guys because, again, not trying to sway you one way or the other.
+They're all different.
+Personally, for me, it has the plan I want, uncapped payout, and there's no activation
+fee.
+Once you pass, you just move straight over.
+It's pretty simple at that point.
+Whereas, you know, you might go on social media and, you know, the top step folks might
+be like, you know, we're the best out there.
+Our plans are the cheapest, but then you go, wait, well, what's your activation fee though?
+Oh, when you add that up, it's not really that cheap.
+So in reality, they call this all-in cost.
+You'll hear traders and influencers say all-in cost.
+All-in cost means your total fee, including activation fee, and sometimes data is going to cost you
+as well, but that's usually universal between all the firms.
+Now, with that being said, these are pretty much all the parameters you need to know when
+choosing a firm.
+It doesn't matter where you go, you're going to see pretty much the same parameters anywhere,
+depending on what the account type.
+And now you know, now you can shop for prop firms side by side and really just have like
+an easy way of understanding what's going on.
+Aha, here is a, I'm just going to choose something random, Tradify growth account.
+Okay, it is a end-of-the-day drawdown, great, the stair step I love.
+It is one day to pass the eval, great.
+It has an activation fee, none.
+Oh, that's cool, no activation fee, I like that.
+Has a trailing end-of-the-day drawdown, a stair step of 2,000, perfect.
+Daily loss limit, Matt hates daily loss limit, that's why I don't trade that.
+I actually trade the Lightning Fundance, which also has DLL, but eh, you know, not my favorite,
+but I still love the DLLs, I still love the Lightning Funded account.
+This is your max contracts you can do, this is your profit target, this is your end-of-the-day drawdown,
+you lose this, you're done, and that's it with your daily loss limit.
+So all the parameters there, you can read this like a book, now you're an expert at reading this.
+Lightning Funded is cool, and ETF has a direct-to-funded as well, they call it a direct-to-funded,
+this is called straight-to-funded.
+It's an account that doesn't have an eval.
+This is the last part to say, some firms, actually like when it all started, all firms
+have what we call the eval phase, which is just sim trading, as I talked about that earlier
+graph, then you pass, then you go sim-funded, right?
+And then you get your sim-funded payouts, and then at some point you go live.
+Live is real money, this is sim money, but you get paid real money for sim.
+New products have emerged in the last couple years that have removed the eval altogether.
+Now remember, eval is time and market, you know, two to three extra days of trading,
+and then you go to the funded, right?
+Two or three days of trading, maybe five days unfunded to get payout.
+But Tradeify combined the two and straight to funded, where all of it's combined into one.
+It used to be 10 days to payout, and then it was changed to seven, and now it's five.
+Straight to funded is you skip the eval altogether.
+You're immediately funded when you start, and now you're just trading to get your payout.
+As you see, they're somewhat expensive to get rid of the eval, and that goes with the
+same trend I drew earlier.
+Higher time and market, lower price.
+Lower time and market, higher price.
+So again, it's still the paper, rock, scissors thing.
+This is what you see me trading on stream as of this point in time.
+Straight to funded account.
+I'm currently in the middle of a challenge to get to my destination of like trying to
+go live with these guys.
+It's a great, well-rounded account.
+The eval is a whole different thing you can consider straight to funded programs.
+And what makes eval, straight to funded great, is when you get rid of the eval, you get rid
+of that psychological barrier step, and you get rid of the activation fee, because there's
+no activation.
+You're activated from day one.
+So it's actually built into the price.
+Usually when you're doing like, you know, past the eval, it's like two or three days of
+struggling.
+Phew, I finally passed.
+And then you get the live account, and then you're nervous because you're like, okay, now
+I'm live.
+This is real now.
+I'm live.
+Okay, what?
+I got to make a trade, make some money.
+And then you kind of get nervous, right?
+You fidget or you fudge it because you're nervous because none of this counted, and finally
+the pressure's on.
+So if you get rid of the, there's like a psychological barrier that you have to get over to go funded.
+Pass the eval.
+Say if you like, go to eval, blow up.
+Go to eval, blow up.
+Go to eval, blow up.
+Go to eval, finally pass.
+Okay, phew.
+Pressure's on.
+All of those past blowups are going to be in your head when you finally start trading
+live.
+So straight to funded, you're paying a little extra money to get rid of the eval, and you're
+really removing that huge psychological barrier, not only reducing your time in market, but
+actually removing that, okay, finally I passed the eval.
+Let's get it going.
+This is real now.
+This, you're just real out the door.
+Pressure's off.
+That's why I like these guys.
+Okay, so going through a few more examples.
+You're not going to be an expert at reading this.
+Okay.
+Take profit.
+Okay.
+End of the day drawdown on the eval side.
+This is the SIM funded side.
+This is the live side.
+They all call them different things, but it's all the same.
+End of the day.
+Oh, it goes to intraday once you get funded.
+Ugh.
+I don't like that.
+But then it goes end of the day once live.
+So you got to be like, okay, but anyways, take profit.
+I didn't say, ugh, because it's bad.
+This is actually one of the most popular prop firms in the world.
+And this is a great, great prop firm, by the way.
+It has that hard step in the middle, but it also, like I said, after a certain amount
+of point, does turn into a static, which is good.
+This is a prop firm that gives daily payouts every day.
+And it is one of our most used codes out there.
+And people love it.
+It's one of the best ones.
+But just teaching you how to guys to read it.
+You can say, okay, is there a daily loss limit?
+Looks like there's none in any of the steps.
+Is there consistency?
+Yes, none and none.
+Okay, well, how much?
+I'll just pull my mouse over here and say, well, 50% off.
+Cool.
+Two days to pass the eval and no consistency when funded.
+That's why people like this.
+No consistency when funded is kind of nice.
+You can basically YOLO your trade in a single day with the trailing drawdown.
+So while this sucks, that's amazing.
+And now you can see how the balancing act is there.
+I hate that it trails, but man, I love gambling on news and I like getting it all in a single
+bite.
+Perfect.
+You might blow up more, but you can scale much better.
+Right.
+Remember, it's all rock, paper, scissors.
+It's all about personal taste.
+That's why people like these.
+You can trade these mofos pretty big with no consistency once funded.
+Right.
+And you have all, again, all the rules.
+Everything you want is all here.
+You know, withdrawals.
+You can take withdrawals from day one.
+That's what people like.
+So that's why they like this firm.
+And with that being said, now you've learned how to read all of them.
+ETF has a bunch of different rules.
+They have a static.
+They have an end of the day.
+They have a trailing drawdown.
+They're just named different things.
+This is a trailing drawdown.
+If you read this, this is a trailing drawdown just with the clock.
+It's cheaper than this one, but you have to pass it within a certain amount of days.
+And so they speed you up, speed you through it for cheaper.
+This is like a swing trading plan.
+It's print.
+And you can read all the parameters there.
+Like I said, you just get used to reading all these and, you know, rapid fund and next.
+You have to make $3,000.
+You can lose $2,000 if you're wrong.
+No daily loss limit.
+40% consistency.
+It doesn't say on here.
+Oh, yeah, it does.
+End of the day drawdown.
+Loss limit.
+So as you see, now that you guys have learned how to read them, they're all pretty much the same.
+You're going to go out there and compare parameters.
+Now, some of the parameters that are useful are cost.
+For example, like if something costs $100 for two days versus $150 for two days, this one is clearly better cost per day.
+And you can do the fraction every month.
+This is $50.
+This one is $75, right?
+The lower, the better.
+So the cost you pay per day is that you're trading.
+Another parameter, all things being equal, again, comparing cost per day, time and market.
+If that's equal, the other thing you want to compare is cost or drawdown to cost.
+So in reality, when you have a prop firm, they say like, here's $100K account, $50K account, $50K account.
+It's all SIM.
+That's not really the balance.
+If you have an account where your maximum loss limit is $2,500, then it's a $2,500 account.
+That's really what you're playing with.
+$2,500, and when you lose it and you're at zero, the account is dead.
+Forget that it says you have a million-dollar account or a billion-dollar account with a $2,500.
+So no matter how many zeros and ones you put above that, if you lose $2,500, you blow up.
+So in reality, the difference is $2,500.
+In any prop account, in SIM account, your maximum loss limit, your MLL, is your account size.
+So what you want to compare is your account size per cost.
+So in this example, $2,500 on a rapid compared to the other rapid.
+Let's actually do the legacies together.
+Let me compare which one of these three accounts I want to trade with.
+Okay.
+This is $3,000 for $250, right?
+For $250.
+And this is $25 for $150 and $1,250 for $80.
+So we can do a quickie little thing, $250, $160, and $80, okay?
+$250, $160, and $80.
+And I can do my actual drawdowns from that, which are $3,25, and $12,500.
+Oops.
+Okay.
+And if I do the ratio of the three, I can see that...
+Oops.
+Oops.
+Wait, oh.
+Yeah.
+As you see, 12, 15, these are the same, right?
+12, 15.65, 15.625.
+So this is a 12.
+This is a 15.625, and this is a 15.625.
+End of the day drawdown accounts, anything above nine is great.
+Anything above 10 is off the charts.
+And actually, FundedX just changed their plans, and these are all 12s and 15s.
+You get so much drawdown for price.
+It's crazy.
+My Funded Futures is probably the next best one in the ones we work with that I've mentioned
+on drawdown to price.
+They're roughly like 10, slightly like 10 plus, around the 10 range.
+And they were best in class until FundedX changed their prices.
+So the cost of drawdown or drawdown to cost is you get a lot of account for what you pay.
+All things being equal.
+So currently, the end of the day world, my Funded Futures and FundedX are like tied for
+the kings of the castle there.
+There's nothing at the end of the day that comes close as far as value goes.
+All right.
+So when you're comparing the two, for some reason, this one is the best value.
+Well, both of these are the best value.
+They're better than this one.
+And you can see that for an extra $100, you only get $500 extra of account size.
+That doesn't scale too well.
+But here, for an extra $80, you get double.
+Right?
+100, you get very little.
+80, you get a whole lot.
+So you can see how these are really great on the ratio.
+Now, as a matter of fact, the legacy 50K is widely considered right now, as of September
+2025, the best end of the day drawdown account in the business, as far as value goes, all
+things being equal.
+So that being said, your cost and time and market analysis or your loss limit analysis
+is going to give you a lot of information on which firm to pick and which one's good
+for you.
+And again, you're going to try to put this circling all the way back down to the beginning
+with what your budget is.
+Right?
+Whatever your budget is going to allow, find a price, find a drawdown type that you like,
+find rules that you like, and make sure everything lines up with your budget.
+And then pick a firm that matches your trading style.
+And that's it.
+And another thing is, wait for firms that have sales.
+Watch my stream.
+I tell you every day who's having a sale, a lot of times people don't just trade one.
+They'll trade a bunch of them at once or trade a bunch of different firms and just bounce
+where the sale is and know how to adapt to each one of them.
+And you'll be able to as well, if you go through this bootcamp, because it'll tell you, well,
+you know, we'll tell you all the different ways to trade each one of them.
+But you might say, Ooh, this month ETF is a 90% off sale.
+Perfect.
+I'm going to go grab a bunch of their statics.
+Boom.
+I'm going to trade statics for a while.
+Ooh, next month, Apex having a sale.
+Okay.
+Let me trade their trailings.
+Right.
+And when the sales come, that's when you want to load up because you're getting them for
+cheap.
+You're getting the best value when there's a sale or there's an influencer sale or
+something.
+And we're really good at letting you guys know what's on sale and when.
+That's basically it.
+Okay.
+So this is concluding class one of the trader funding program masterclass, how to choose a
+prop firm and how to budget within it and how to set up your trading style within
+it and basically the different parameters, the basics.
+Tomorrow, we're going to hit a bunch of these account types or in the next class, we'll
+hit a bunch of these account types together and we will explore them together and how to
+trade them.
+All right.

@@ -1,0 +1,832 @@
+today's class is over liquidity maps this is our main technique that we use here at rocket scooter
+it's also going to be about entries how to get into positions and how to manage positions around
+it as a as you may or may not be using the rocket scooter tool set we find volume pivots and they
+all have meaning and you can trade using a volume pivot and any pivot that you use from any other
+style the same principles will apply now if you remember the last class we told you that i wanted
+you to learn that in a non-volatile environment we'll determine this later in the boot camp but
+in a non-volatile environment we use a one strike distance between strikes as a stop loss in your
+your etfs that correspond with the futures you're trading so example s&p corresponds with spy and
+spy moves on one point increments the easiest way to think about it and that's 10 points s&p for a
+stop nasdaq is 40 so 10 and 40 if i enter in on a trade i'll have a 10 point stop on s&p a 40 point
+stop on nasdaq below my last point of entry so an example is this is the strongest bull setup so i'll
+have a whole class on this but i want you to get familiar with it because this is the notation that
+we use inside of the platform and of course in general when i draw an arrow the tail the arrow
+is where you enter a trade the tip of the arrow is where you exit a trade now this just shows where
+the entries are but on the platform it'll give you some exit targets as well so enter exit enter exit
+two arrows two trades two lines and an arrow means if it breaks so what this means is the market opens
+below this level and then it breaks through the level and then taps on it and then i take the trade
+there do we all understand if it breaks when we break into a pivot that can be bullish there's a rule
+here and the rule is as follows if you open below a certain level that is a resistance target and you break
+through the resistance it needs to test as support before you take the long never do i chase a bull
+break from a bear position into bull territory ever i always wait for the retest there's one exception
+to this which is one of these things i'll talk about today is this bear zone top anytime i'm approaching
+a bear zone top i always jump in at the edge no matter what that's the one example that is is um not like
+the rest another thing is if the market is a bull pivot and i or to buy at the pivot and then it
+breaks and then i stop if it reclaims the same pivot i don't wait for it to break and bounce if it's back
+to where it started for the day i also chase into the long at the pivot so today uh as with the date of
+this video there were some trades that took place and this was a great example of it now let's just look
+at the chart really quickly first of all at the start of the day we had the market nosedive on a news
+event that later on turned out to be fake news right and and little would you expect right like that
+this market would fall exactly one risk interval before it bounces to the t right we just had this class
+over this yesterday the risk interval is how far futures likes to deviate to where it finds it searches
+for its next liquidity point in a large event where futures don't know where everything's going to land
+and it was perfect right it fell exactly to point now s&p on the chart you can see that i had it marked
+but s&p's was way down here s&p didn't make it there well why was that right why did nasaq fall this far
+and s&p didn't well this was a catalyst on microsoft and right now in this environment time this video
+being filmed there's a big sort of scare in the tech space because there's you know rumors of a
+tech bubble i don't believe it's true but there's rumors of that and people are very sensitive to
+anything tech so nasaq is very heavily weighted by tech and so nasaq responded to that full distance
+because of that and we fell to the risk interval and little would you think that it would break right
+but microsoft is just one company it didn't really represent everything and s&p didn't turn into a
+catalyst and market was fine the whole class on catalyst but it's just neat to see that we fell
+a risk interval and there so happened to be that testing volume to support the market really neat
+right and remember we taught in that class if you happen to be in a long and you forget to use your
+40 point stop and nasaq and you fall asleep and then the market falls then i tell you you usually get
+a little bit of a breather at that risk interval and then you make sure that your trade isn't so big
+that you lose more than 12 and a half percent on that accidental forgetting of using a stop
+technically you should be losing like three percent or so portrayed if you're using the equation method
+but had you fell asleep at the wheel you wouldn't have taken more than taken more than 12 drawdown
+which is pretty nice we all follow this yes everyone make sure you're good just neat to see that
+your position size was the right amount that at any given time your risk interval doesn't squeeze you more
+than a big part like that much of the account according to the equation method right and you're not
+going to have a stop it's this far but accidentally you may forget oh crap what's going on right okay
+now here's some examples too and i'm going to show you really quickly earlier i said um whenever we
+uh are in a bull zone where we open a market kind of falls out of a bull zone anytime we reclaim the bull
+zone i'm back in on the trade when we reclaim it now today uh this market actually let me start over
+this actually happened pre-market so what we gauge here is where the market opens the equities market
+forget about futures but equities at 9 30 in the morning there's a reset of everything when the
+market opens at 9 30 eastern and four o'clock eastern when it closes there's a huge burst of
+volume and this is every single day volume at the close and volume at the open there's a whole process
+you learn the resilience class that happens there but this big where we end up starting the day off and
+ending the day is the one of the most liquid spots of the day the highest volume market makers choose
+this level based on where they think the most liquidity is so anytime the market opens at 9 30
+it's a complete reset for everything to happen before as a matter of fact you should never look
+pre-market because it doesn't matter whatever technique you use especially if you're using rocket
+scooters technique pre-market doesn't matter it doesn't matter if it fell a million points two million
+points one point unless there's a catalyst active there's really no reason to care about the
+pre-market so i'm watching this but i don't say the market fell so much i'm a little scared of the
+market we wake up we look at the open price that is the most liquid spot and then we start reading
+the market from there every day now what what this class is going over is liquidity maps which is all
+of this this stuff you see on my charts now i have a split screen chart up right here
+and uh i'll i'll cover that in a second but let me get back to the original trade setup we open in a
+bull zone and right and the market moved and moved and moved and moved and the minute it touches a
+bear zone that's when i take a long and then i'll have my 10 point stop below this and if i stop out
+then i take the loss and then when it jumped back in i got in long again i took the loss again when it
+jumped back in i took the long again and then it took off whenever you break into bull territory
+remember i wait wait wait wait wait let it retest and then i jump into the retest since we open below
+any bull side break i always wait for the retest so bear side is always a test on the claim bull side
+break is always a retest on the reclaim uh i'm sorry on a retest on the claim if you reclaim it
+which means you started here and returned to there then you can just jump in this started here so that
+doesn't count so when you see these kind of way you're going to get used to this sort of setup
+the reasoning for this is that these sort of when you when you when the market opens in a certain
+setup or structure it's very rare to break that structure so and normally in typical trading a lot
+of people will learn you know candles and support resistance and then when previous resistance
+becomes support there's usually like you know traditional techniques tell you okay long when
+previous resistance tests support there's some there's some reasoning there people had stops and
+whatever and you squeeze the stops and then when you fall and there's proven buyers okay well then
+now there's proven buyers that overran the bears that's pretty true so if the market opens bearish
+and it's trying to break bullish that is a rare event so the rare event i want to at least test and
+always get the the bounce on a test that make sense but if the market opens bullish and loses it for a
+split second and jumps back into it i'm going to jump in right there because what you're going to learn in this
+class are the odds at which this structure doesn't break and it's staggering now rocket scooters
+liquidity maps you can add to your chart now first of all i'll show you how the chart works when you
+load up our platform it should come preloaded with everything liquidity map is an indicator that should
+be here you if it isn't there you can click indicators and search for it down here in the list
+and then add it to your chart there's another indicator down here called resilience it's one of our
+confluence indicators we'll cover this in the next class so ignore this for now i'll make it small
+since we're not using it now and on the platform you can open up as many versions of the chart as you
+want in a split screen or a grid type fashion by clicking this button right here and then arranging
+it the way you want to now i trade with nasdaq on the left and sap on the right and that's really all
+that i need the algorithm in rocket scooter prints everything i need automatically when the market opens
+okay off to the right there's a little button called lm liquidity map when i click it it gives
+me the guide for my trade plan for the day it literally tells me what i need to do and if you
+remember from the last class you've got these little also if you click it it opens the full map
+uh whenever you are highlighting whichever window you're in it'll it'll switch this to match whatever
+window you're in like if this is what i'm clicking this is going to be this is the map for s&p if i
+click this it'll show nasdaq they happen to be the same one uh today but they'll switch it'll switch if
+they're different maps now liquidity map i'll go through what all these pieces mean but you can
+basically read it just like this there are places where you can enter a trade exit a trade the arrow goes
+up and it's green enter along exit along enter a short exit a short right uh enter at the tail exit at
+the tip at the top you've got your position sizes from the last class small medium normal sit out
+and these are the conditions that tell you which one's more favorable if we repeat pop quiz
+when you have a long trade you're going to take and you have perfect confluence and all of a sudden you
+lose one thing of confluence do you still take that long type it five four three two one yes do you
+reduce the size yes because of blind monkey right on the short say you have three confluence levels of
+short and all of a sudden one of them shows bullish do you take the short
+not usually right you're usually going to sit out shorting requires full confluence you're more
+likely holding off on the short waiting to see if it breaks bullish because most days try to break
+bullish right shorting needs absolute confluence and you'll see that reflected here in this liquidity
+map summary um this chart is available to you uh in the discord and on the website and uh it's also
+available on the platform so here this would basically read let's let's look at this one blu
+that's the one that we have today i'll cover what these letters mean in a second you don't really need
+to understand it but this is just a quickie little to a little guide for me to understand how
+everything's arranged at a glance so an example 1a and 1b if you look down at the bottom 1a and 1b are
+two legs of the same move so this black dot is the open price at 9 30. so this reads in plain
+english at 9 30 if we support at the open the open price then i long to here this white line is
+next resistance so i find out where my next resistance on the chart is and now i can calculate
+this is going to move 20 something points cool with the 10 points up two to one trade make sense
+okay so 1b the dashed line means you hold through it and add to your position there for an example if
+1a is long to next resistance and 1b is five points below 1a then i can add to a position here
+small if the confluence is there and then add another position to this wall red
+with the medium trade here my stop would be 10 or 40 points below my second entry at this point
+because i know both are possible i'm planning that from the start so if i know that this trade here
+has 20 points let's do es for example 20 points to run and this is five points below here and i know
+that this is possible but before i make this trade i go oh there's another pivot nearby i could possibly
+trade this one and five points lower with a 10 point stop below that which is 15 points off the
+base then i know that 1a's first entry that's small can lose 15 points and 1b's second entry that's
+medium can lose 10 and then i will calculate my overall trade plan by saying okay if i were to do
+one contract there in two contracts there then how much do i lose on the s&p one contract losing 15
+is 750 two contracts losing 10 is a thousand i'll lose 1750 if wrong if i bought if i get this trade
+and it goes up i'm gonna make 1 000 bucks on that one and if these two go up to here
+then two contracts making five is another thousand so if the one takes off i'm gonna make a thousand
+or double down here add two more go to there close out on both of them and make 2 000 with a stop
+loss on the combined trade of 1750 that's greater than one to one every single time i make a trade i
+am doing this kind of analysis in my head always everything is accounted for and therefore i'm already
+planning to add to it within reason with my overall stop and position size set to where i can be
+profitable now how do you make it to where the reward is greater than the risk you just change
+the position size like you know if i were to do a second entry is usually bigger than the first entry
+this will also tell you that and i make sure i can get in and my cost basis allows me to get a good
+trade now if i bought one in this example and bought two more and the market runs to there i'm
+going to close out those two and then i have my original one still in to get that second trade
+these two made a thousand right this one made a thousand
+the idea of doing this shift where i buy one buy two more close out the two that i have
+originally have the one do you all see that that one contract that had a cost basis here
+i enter and i exit now i'm in the trade and now i'm slightly green i have moved my cost basis to
+exactly here does everybody see that i added risk very quickly at a high probable pivot
+and then i took it out very quickly at that exit and now i'm holding that same original one that i
+wanted except at the same place i'm now actually green now you don't always add to losers because that
+ends up expanding your losses why would i do this you're going to learn in this class that under
+ideal conditions this bounces 80 of the time okay this is roughly 60 of the time so higher probability
+i'm going to play both hands it's like getting dealt two different hands at a blackjack table and
+you can play both of them this one's good this one's good i want to play both now the trick with
+entering a second time 1a 1b etc if this and this the distance is less than your stop distance
+then you can hold through it with your normal position if this is less than 10 points i'll
+hold it with my normals or my sorry my my whatever i choose to trade i'll just hold that drawdown and
+it's all part of the plan if it so happens that the drawdown is much bigger than my normal stop
+say that 1a and 1b are 40 points apart on the s&p that's huge then i'll i'll close 1a at 10
+and then let it fall to 1b and then take it as a second trade i won't hold 40 points of drawdown
+however if the market's extremely volatile 40 points of drawdown on s&p may even be small for
+that day s&p could be moving hundreds of points per candle in days of market crashes and say if you
+still wanted to make that trade with 40 points of drawdown unusual that's four times your stop
+what would you do
+to your position a fourth of the position size incredible right so the the flexibility you have
+is sure you know what i'm going to hold through it because the market's extremely volatile it'll fall
+that far in a single minute okay well i'll choose to hold through it so therefore a fourth of the
+position size we all understand it's the same loss one contract on 10 is the same as a fourth of a
+contract on 40 right okay so the times you'll choose to hold through that drawdown extremely
+size down is periods of crazy volatility right periods of no volatility and it's just inching
+lower and inching lower and then maybe it falls like 10 points and 10 points those kind of slow
+moving days you're going to choose to chop it into two trades do we all understand you're not going
+to be like let me hold a quarter of a position for three hours and then double down yeah i can do
+that okay that's a judgment call you'll make and you can gauge how how volatile the market is simply
+by looking at the biggest one minute candle of the hour so let's look at the minute when we were
+crashing here on in this particular example on the s&p you want to gauge how volatile it is go to a
+one minute chart and find the largest candle it's probably this one and that was 53 to 46 that's not
+even 10 points so you're still playing on the 10 point oscillations the largest one minute candle a
+neat little trick is about the size of your expected oscillating noisy range like if it just happened to
+just clear out really quickly a lot of tears on a still off this largest candle here you can kind of
+move this around you can see that when the s&p is sort of just chopping it kind of stays in the same
+distance as the largest one minute candle the reason that largest one minute candle is matching
+that expected range in volatility uh happens just happens to be like that's how far it jumped very
+quickly it always just is a good rule of thumb nasdaqs happen to be 37 down to 92 that's a little bit
+more than 40 points so we'll say it's about 40 right so i would have made any further accommodations
+in my liquidity map i would have done that same consideration if it's within 40 points of it
+along if it's greater than 40 points i probably would have cut it into two trades but again what
+if it's 50 points it's still bigger than your stop but not that much bigger then you can choose the
+size down accordingly all right so an example here which will read 1a i'll long at the open to my next
+resistance and we have a whole class to tell you how you choose those so right now just imagine it's the
+next line you bump into buy here with the small enter this condition then add to it here
+the medium this is missing some data i have to update this i'll have the updated one this will
+have conditions as well medium and normal it's missing the normal here based on some confluence
+off this orange buy small buy bigger exit the second entry here hold the runner back up
+if it breaks down here we take the stop and get out of the way we have a whole class on what happens
+if the expected pivot breaks this states this is if you open above the orange this is if you open
+below the orange you can trade off of that number two don't trade if you don't have the confluence
+trade big if you do and all these things now this one is a little bit different because it has the
+three lines this is stating number three and four number three is long at blue exit at orange
+if we break which means we pop through and retest after opening below just like i said earlier in
+the video then i take the long all the way up the top side we all have it this makes sense how to read
+this you got it
+what happens if there's no arrow there's no trade if you have this configuration and you open below here
+there's no arrow so we don't trade inside of here there's no shorting off a blue no longing into
+it these days sort of flutter brsc sort of like flutter their way down and they're not really strong
+we sit out and if we break the blue pop drop long into there then short it from there if the
+confluence is short and if it falls through it retest it from the bottom jump in on the short
+you guys got it
+these need updating yeah the three is needs updating as well we have since created a new confluence
+indicator for the blue that's not represented on here so this is an older version of this
+you will get the newer version so use the actual handout that you have the one the platform is going
+to be updated this week as the date of this video okay all right when the market opens at 9 30 in the
+morning within 15 to 30 seconds you will see all of this stuff pop up on the chart all these indicators
+start to populate and then the guide will show up it's it actually calculates fairly quickly and what's
+neat is that you don't have to think about the confluences anymore it the algorithm already prints
+them on the chart for you so this is for instance if the trade is here i want to know is this line
+support or resistance well this will tell me it's support and this is the rule of why it support dd is
+greater than half and again you'll have a class on this as well and so as you see for the most part
+uh the zones were support support all through here so once we broke through here it was supporting it
+was supporting and that's pretty much it so this is a guide to let me know what my confluences are
+and it goes hand in hand with this now what is all of this stuff on the chart right uh let me go ahead
+and just since this is everything on it let me open up something that made it be a little more
+simplified here's an apple chart right and so you can see an apple chart at the start of the day it
+says blu over here and then you have a trade plane i can either long at the open next resistance
+or buy the dip at blue with a stop loss below blue so i can either long at the open
+determine is this the second entry i want to take take the second entry and then stop if i'm wrong
+now tech got hammered today as you see this trade made some money this trade lost some right and that
+does happen sometimes not everything is 100 this market is fairly random but let me tell you the odds
+of some of these things really quickly and how we calculate them under ideal condition with full
+confluence under greater market bullish as we talked about this before you'll have a whole class in this
+we talked about it last time greater market is when the dd ratio is greater than half s&p is above its
+monthly hedge pressure and the monthly maps are bullish when all three of those things are bullish
+remember in the times where 70 of the days are green okay under those conditions and the market is not
+irrational if you open in the bull zone 90 of days close in the bull zone it is ridiculously strong under
+perfect conditions 90 uh it's incredible on here you can see that bull zone is a very strong pivot one of our
+strong bull setups is longing in bull zone if the dd ratio is less than half then if you open in a bear
+zone then bear zone is you're going to close below it 90 of the time now what do we mean by that close
+below it open open above it it means that whenever you do open at the start of the day we count how many
+times we count how many day all the days of where it closes so it doesn't matter what it does
+if it ends up here then it's considered same side so it makes its way back to where it started
+90 of the time so like days that just completely die out make their way back 90 of the time under
+greater market conditions which we did have today right greater market bullish those are called ideal
+conditions full confluence is ideal when ideal bull zone is 90 bear zone is 90 while the hedge
+pressure is 90 same side open and close it doesn't mean it bounces 90 of the time it means 90 of days
+end up on the same side so the way that you handle that is you trade it if it's 90 you'll trade it every
+single time you'll hit it and if you fail you're going to take a stop and if you reclaim it you're
+going to get back in because it stays on the same side 90 of the time do we all understand
+quickly okay you're attacking it every time now why every time well the law of large numbers right
+something that happens every time you're going to want to do it every time so that the odds work in
+your favor anything that's that's that's 90 or greater we consider every single time now under
+non-ideal conditions what are the odds now ideal is great when you have it it's not all the time but
+it's great when you have it when it's not ideal what do you do well these are the actual back test
+odds so we when we created this in uh 2020 2019 and 2020 the platform came out in 2022 we hadn't
+really seen a really strong crash market since 2022 we had that baby bear market for that year but it
+wasn't really that bad finally and you know covid was 2020 and we didn't have the data from covid
+we'd have a full understanding of this we were just making this back then so we finally got our market
+crash this year in 2025 trump's tariff war and in trump's tariff war from the start of the year
+through may the market absolutely collapsed now we have our back to state of for what happens in a
+bear market in a bull market these positions are or some of these are ideal 90 percenters in a bear
+market what are the numbers okay so one of our members just like you found out last time our members
+like to take up tasks and do things for the community put together this study that was published
+on april the 18th which is the end of the bear market how good are our pivots that typically work
+most of the time in ideal blue is 80 or just 90 well in a bear market which is the least ideal
+conditions it's all confluences so we didn't even look at confluence we counted all days in the bear
+market in the bear market when you open above blue you either touched it so the way that you read this is
+that um this is three different conditions one of them is we break one of them is we break and reclaim
+the other one is we don't break this one on the left means you either tapped it and went actually
+let me do the one in the middle we use the 10.40 point stop philosophy this one in the middle is if
+you break it or touch it if you go past touching it and then you go down but not enough to stop the trade
+then that's considered this middle so pretend that we have a 10 point stop below all of it
+this one is if you don't touch the line or touch the line without going over this is you break the
+line but don't hit the stop and reclaim this is you break the line and break the stop so this is you're
+going to stop out this is not stop this is no no break okay so closing on the same side when you
+open above it are these two and something that is 80 and ideal is actually 68 non-ideal so even in a
+bear market that's collapsing if you open above blue you close above blue almost 70 of the time
+so do you know when i did that blind monkey challenge and the market's like selling off
+and selling off and selling off and i'm longing every single time this is this is why you still
+get seven out of ten probability right so i'm not really shorting when markets are selling off because
+i didn't have greater market bear conditions i didn't get a lot of short ops so in this stat when
+you open above monthly hedge pressure which i'm going to tell you what each one of these are
+73 of days in a bear market stay on the same side 90 ideal 73 non-ideal so you actually have
+something that statistically holds this value this amount of time so this is why when i trade i have
+a very high win rate because i just wait for setups that make sense and when i lose you guys watch me i
+don't lose my cool i keep attacking keep attacking keep attacking on today's particular day on the stream i
+lost my liquidity pocket trade which is a 90 percent when i deal four times in a row before i finally
+won enough by the end of the day to go green did you guys see me when i traded did i lose my cool and
+get scared to attack it or did i keep attacking it what did you see me doing i kept going at it kept my cool did
+you see me take the crazier bigger desperate positions to make it all back no i hit it with
+the same velocity same velocity same velocity pretty much the same size the last one i hit with five the
+previous ones i hit with three and then i ended up making it all back by the end of the day because
+the odds the law of large numbers states that whenever you have a large set of data in a competitive game
+and somebody is going to win 60 of the time over infinite number of games the actual results
+should be that it takes infinite number of games but if you like lose two or three times and get
+scared to jump in then you're going to miss out on the possible wins that bring the odds closer to
+the mean the law there's number state over infinite iterations the results of a competitive game approach
+the mean of what's expected the average result becomes that the the expected result okay so if
+something's going to work 73 of the time i must trade it every time so that i can get those odds in
+my trading do we understand which means every time i have to attack it no matter what unless there's an
+automatic sit-out rule and therefore i just have to make sure i survive each loss to keep attacking it
+now this is called statistical trading that's what makes rocket scooter unique we have something that
+has a statistical ledge it's not guaranteed it's statistics something that works 90 of the time
+can still fail three or four times in a row like today the bear zone uh 40 points on nasdaq was here
+longed stopped longed stopped longed worked so two times right it can fail a bunch of times before
+it actually does happen but the idea is that i'm betting on something that's going to happen i'll tell
+you all of why these things work at the end of this video but the idea is is i'm not like well
+i took two losses i'm done i try to have a targeted maximum loss per trade and a targeted max loss per
+day but i get the full flexibility to keep attacking something that should work 90 of the time it just so
+happened ultimately it worked right and i got to keep trading something that has high odds so i can realize
+those odds which means every time i lose i can't blow up or else i can't get back in the time uh on the
+time i need to do it okay what does whp opens above 75 mean please clarify okay the way you read this again
+on this one is that if you open if the 9 30 open is above this orange line then 69 of days either don't
+touch it or they touch it and bounce off of it four percent of days will break and not stop and
+reclaim 27 of days will break so under the worst conditions this is what we realized 32 of days will
+break through blue 27 of days will break through orange when you open below on blue 40 of days break to
+the upside that means it's a 60 chance of bounce 40 chance of break and what do we know about the blind
+monkey does it sound really appetizing to take a 60 40 short when the market usually goes up would
+you rather kind of wait on that because 40 of the time it breaks it's slightly better than a coin flip
+right and it was this back test and this realization that led us to modify our liquidity maps it's a very
+scientific process it goes into this there used to be a short right there and right there and then when
+that data was published by one of our members we were like yeah 40 60 let's just get rid of that
+let's not take that short anymore so these actually were removed because of the result of that back
+test which you can trust here rocket scooter is that the this is all data driven we're not making this
+up we used to have we used to try to short when everything is selling off let's chase that short but we
+noticed that uh 40 of the time it would break through and the breakthrough is usually very violent the
+upside is really big so i'd rather just miss out on some baby shorts then and then 40 of the time
+catch the big wave up right this is usually much stronger than this when you break to the bull side
+you can create a squeeze that rockets up so we were like how many times to try to take this short and
+it squeezed us so we modified what we do here and as we learn more and gather more data and have more
+types of markets we're going to continue to evolve this a little bit
+okay now what are these things that we're exploiting right
+this is a process that i created as i was inspired by one of my previous students to
+tell me all about options the first they ever told me about options was something about black
+shoals about how options are priced and i had this eureka moment like literally my jaw dropped when he's
+explaining it to me and i'm looking at the math immediately in that formula i looked at it and said
+i can predict volume in the stock market with this equation and i can use this to find volume
+pivots i saw it immediately and i went to the drawing board and i started experimenting with the
+math that goes into options pricing and what i ended up finding out was a couple of truths all options are
+pretty much hedged the same way and i'll talk about that in a second you don't have to know anything
+about trading options i'm just now telling you the science about what happens all options are
+pretty much hedged the same way universally and a number two truth is that all options data is fully
+transparent to you once a day from opera opra it's a it's a group that publishes all options positions
+and you get your open interest update once a day which is this is how many options are existing
+it's the landscape of where everybody's options are number three is that market maker options
+are hidden inside of that mix of all options if we were able to pluck out the market maker options
+we'd have an even better view of the risk and all the options of price and time that exist where are
+the dealers positioned because a dealer's job is to buy and sell the underlying and mitigate their risk
+on the other side if a dealer were to say you were to long a million shares of apple let's put a
+t here for trader that's you and you longed a million shares of apple okay like you fat finger longed
+clearly a market maker is going to have to take the other side of your trade let's go ahead and put
+market maker here of the stock they're short a million to you right you bought they got to sell
+and they got to go out there and look for another seller to match the order in the meantime
+they're short against the bull market and that kind of sucks for them so to make a few pennies
+they're not going to lose millions of dollars when they're wrong on that trade so offset their
+short trade they're going to long something else to balance it out this way this makes sense everybody
+so an example in this particular instance to the market maker short a million shares of apple every
+hundred shares they can buy a call and fully neutralize it so if they were to buy 10 000 calls
+this is a long bet this is a short bet and when you add them together you can neutralize it to a
+degree pretty much understand market makers get paid by just filling orders they're going to take
+the opposite side of everybody's order most of the time and the opposite side of a strong bear market
+they're the ones that have to buy when everybody's selling but they're also buying and offsetting that
+risk by being short somewhere else and now they're neutral right so in this particular example market
+maker of a stock is just somebody that's forced to buy and sell against the market that way when you
+push by your order gets filled pretty quickly there's not another trade they're not out there like hey
+are there any traders here that are going to sell a million to this guy buying a million the bank just
+goes like here you go i got you and then the bank goes out there and tries to undo that order to
+them they're out there searching for people to sell them so they can get out of the short
+right they're trying to neutralize at all times in the meantime before those additional sellers
+come in they're going to buy some options to hedge yeah delta hedging right as examples delta hedging
+now they don't even necessarily need a thousand calls but delta hedging is a process that tells the
+dealer how many shares they need to be in a trade to offset the amount of calls they have delta hedging
+is what tells you how much you need to buy and sell delta is just a number in that giant black
+shows equation that tells a dealer how much they need to buy as price moves through that option
+now we'll talk about that in a second now in this example you bought from a bank that deals in the
+stock okay but this person bought 10 000 calls from where from somebody else there's a market maker of
+the options right the market maker of the options sold those 10 000 calls to this guy so an example is
+you're along the market they're shorting to you and they bought some insurance on their short from
+this guy and this guy sold the insurance now he's the one that's naked he's uh i need some insurance on my
+short so they're going to be out there buying and selling buying and selling
+the underlying in this case we said apple is an instance as an example
+to hedge that so you're the original buyer of apple they sold to you and now they bought some calls in
+apple this person sold those calls in apple to this guy and now they're buying and selling the underlying
+to delta hedge which is the amount um that they need to buy to offset their risk of those sold options
+and now this market maker has found a seller of apple to match the buyer of apple
+it's connected do we all see that it's kind of hard to understand but just kind of get through it
+watch it a couple times to figure it out the buyer has now found a seller and this is the most
+rudimentary example of what's called a hedging loop okay and hedging loops are freaking monstrously
+complicated in the simplest example it's a three-point triangle right it's the easiest way to
+understand it a buyer has been connected with the seller and now all three of these things imagine
+this triangle the pressure in this triangle is rotating back and forth when one person's winning
+it's tugging on everyone else down the line and this person there's always somebody losing when
+somebody's winning and everyone else that's not a market maker is going to take the full risk and full
+reward market makers are going to try to hedge that risk to where they don't take any loss at
+all and they just get paid to be part of this triangle at no loss to them the hedging principle
+is that they're going to get paid pennies on the dollar for every one of these shares that they sold
+and every one of these options they sold the exchange pays them thank you for your service here's
+some money and they're like well as long as they just neutralize my position i get free money
+by being part of this triangle perfect every trade i make balance balance balance balance balance and
+then the money just comes in and that's basically the most basic understanding of this but the the
+principle or the the postulate here is that all hedging is done the same way every person that has
+risk that's a market maker is likely to hedge which means guaranteed buying and when you know how
+the math works in black shoals you can calculate exactly how much buying they will do
+and if you're able to just identify where these calls are then you can find out where at any price
+on a chart now i'm looking at the chart how many shares are being bought and sold at any given time
+when you add all of them up you now have the net sum of all hedging calls and puts spread out
+everywhere for every dealer side transaction that's on the other side of a real trader now you know
+where everybody's hedging okay the trader to market maker part of the transaction the shares versus
+the guy that bought the options when you're buying from the house the house's options if there are more
+bulls against the house let's just put a bull and if there are more bears against the house
+meaning that this is a market maker shorting to bulls with calls and this is a market maker longing
+to bears with puts when we identify more calls than puts that belong to dealers we now have found
+where the actual bulls are in the market when there's more bulls than bears against the house
+a bull zone is when there's more natural bulls than bears against the house there weren't enough
+bears to facilitate these bulls and the dealer had to offset the position by owning some calls
+a bull zone is just there's more natural bulls than bears
+a bear zone is there's more natural bears than bulls
+that's it and that's what bear zone and bull zone are
+if the market opens in a bull zone when there's more natural bulls than bears
+then 90 of days it ends up in a bull zone because there's more bulls than bears and because almost 70
+percent of days the market goes up when greater market is bullish so what would make all the bulls
+vacate their positions all of a sudden not much sometimes big news it's rare you need a lot of
+bears to step in to kick us out of a bull zone and the same thing when you're in the bear zone there's
+more bears than bulls you're going to need a sentiment change to go the other way and usually that's news
+it's unusual to go to the other side you need all of wall street to change their mind and everybody
+doing the same thing all at once is not usually going to happen unless there's an event a news
+event or something so naturally do we understand that the market opens in a territory where there's
+just more and these bulls could be from anywhere the day before the month before the year before
+do we all understand that it's pretty much stays the same somebody asked does this change throughout
+the day technically yes as the options landscape changes however let me tell you let me break your
+heart a little bit but also let me give you the silver lining see the way that it works is that
+the entire options landscape let me actually finish this all monthly hedge pressure and hedge pressure
+you'll see a blue line and an orange line as bull zone in that hedging triangle of trader market maker
+stock market maker options
+this transaction is bull zone and bear zone this transaction dealer to dealer is hedge pressure
+this is the options dealers delta hedging maximum gamma exposure of the market maker sold options to
+the dealers of the underlying this guy that sold the insurance to that guy his delta hedging is somewhere
+on the map the maximum net delta hedging is here and here delta hedging is just a fancy way of saying
+how many shares you need to buy to offset risk and gamma is the rate of change of delta so gamma is like
+the acceleration of price change of the option relative to the underlying and delta is the velocity
+of that price change maximum gamma just means maximum delta hedging which just means maximum order flow
+at that level which just means maximum volume so when you hear gamma exposure and a lot of people
+throw that word out there you always wonder what gamma exposure means it's a fancy way of saying
+maximum volume of hedging high volume pivot so when you hear gamma exposure you say high volume pivot
+now a lot of gamma exposure software out there exists but the problem is they just look at the
+entirety of options rocket scooter went a step above we don't look at every option that exists we have an
+algorithm that can find dealer options inside the mix there's no data feed that tells you this is
+a market maker option in real time how do we find it we look for those tandem orders we watch all markets at
+once if i see a hundred thousand share purchase of apple and i see a one thousand call purchase
+minus the greek that goes into what the delta hedging would be then i can find out the effective call
+hedging i can now say those are probably tied together in a hedging loop and our algorithm
+takes five computers analyzing options data in real time and looks for hedging loops and ties them
+together to identify this option as a market maker this one's not this one's not this was not this one
+is this one's not this one is and we catalog that in real time and then the very next day we get the
+open interest from opera which i'm going to break your heart opera now this just disappeared because
+of the date of this uh this time this video it's now 5 p.m eastern and we we wipe the uh charts so
+you can reprint them the next day so you're probably not going to have this for the rest of the video
+i'll just have to draw them um but our algorithm takes the server computers pluck out what it thinks
+market maker options are and then maps out the bull and bear zones because we look for we look for the
+evidence of hedging loops we can connect all the dots through auxiliary markets like futures options
+stocks etc now with that being said bull zone bottom bear zone top bzb brzt bears on top are just high
+volume pivots high volume high volume hedge pressure monthly hedge pressure this is the blue which is
+weekly it's based on the weekly options monthly is based on the monthly options we separate them
+they both act as pivots they're just high volume high volume that's it so if there's a high volume of
+mostly bulls inside of this range then it's very you need a whole massive amount of bears to kick it
+out which is rare which is why 90 of the time it stays the same same thing if it's a bear market
+hedge pressure when you get close to hedge pressure it is an insane amount of volume that comes in
+all that hedging starts to pile up pile up pile up and that gamma exposure which is maximized here
+is just huge volume and so because it's volume when markets are falling i don't just long at the
+random spot in the middle i know with 100 certainty when i touch hedge pressure volume is going to spike
+and when you're trading doesn't it make sense that you want volume to come in after you trade
+to push it in the direction you want it to go
+that's why i wait for these levels to trade on if it's maximized hedging volume then i know that
+the dealers are going to start piling in the volume now can i guess which direction it's going
+to go i'm going to break your hearts and say the answer is no unfortunately this stock market is random
+but you have odds weekly hedge pressure it was the blue i covered earlier right was it 68 of the time
+it doesn't break because 68 of the time there's just not enough daily selling volume to offset the
+entirety of wall street that's just hedged up into that nest that they're in it means there's not a lot
+of trading throughout the day relative to how much money is invested in the market 68 of the time
+you just don't get a lot of selling pressure against that massive mountain full of inertia that's
+just sitting there right so that's kind of what we're doing here so my thought was if i can just
+isolate dealer options then i can guarantee that hedging will take place if you go out there and buy
+some 2000 yolo tesla calls today and spend a million bucks on them nobody's hedging against you
+those calls are going to expire worthless no matter what so there's no activity against those calls
+so using those in this formula would be absolutely worthless but if i can calculate options that i know
+dealers will be hedging and that's what rocket scooter does it's the world's first gamma exposure tool
+set that can identify dealers because we have computers watching the order flow in real time
+and mathematically determining them by finding those loops then we can almost guarantee there's a volume spike
+every single time and i mean every single time and it is never wrong can i predict which way it's
+going to go no because the market's random and every day is different and the news could be big
+or not big that day but statistically over time it just means there's not enough news to break through
+that blue hedge pressure more than 68 of the time or 73 on this or when conditions are ideal like a nice
+solid non-volatile greater bull market then 90 of the time hedge pressure monthly doesn't break
+and 80 of the time weekly hedge pressure doesn't break because in a non-volatile bull market that
+news isn't that bad the market absorbs that news very quickly because bull markets are liquid if you
+remember what i told you last class is that liquid markets don't what fill in the blank everybody type
+it in liquid markets don't crash and that's what you're betting on when you're doing this liquid
+markets and this is the illiquid data of crash market liquid markets don't break this more than 10
+of the time perfectly liquid beautiful markets illiquid markets still don't break this but it's 27 of the
+time and this is the crash data from this year right okay so what it basically means is that your
+average day-to-day of buying and selling and market movement is just a fraction of the total
+landscape that's there it's like throwing pebbles at a brick wall you're not normally going to bust
+through it this makes sense these hedge pressures and these bull zones and bear zones are literally
+brick walls okay you're going to need something big to tip over wall street and again markets random
+we can't guess exactly what's going to happen each time but i'm going to take the bulk sense of over
+time it's going to bounce and stay there most of the time okay now let me go ahead and and draw you
+something really neat just to kind of give you something else that's pretty cool and a bull zone
+bottom is all that matters bull zone top is not a pivot the top of the bull zone don't trade it don't use
+it for anything so keep that in mind if a bull zone looks like this assume that the bull zone goes up
+forever until it hits a bear zone so it's only bull zone bottom that's a pivot and bear zone top that's
+a pivot and this is why this is important okay and my charts bear zones are a light gray bull zones are
+a dark gray but you can change them to be whatever you want let me see if uh the liquidity map still
+okay good apple's still here okay good um it's just the futures that reset because the futures market's about
+to open um so you will notice at 5 p.m your futures liquidity maps on the previous day disappear
+the equities ones will will disappear the next morning so apple right bull zone bear zone 90 of
+days apple will stay in the bull zone even though it traded down it stayed in the bull zone check
+uh had apple fallen to here i would have taken a long here i would have taken a long
+here i would have taken a long to bet we went back there and then not take it along there so apple
+opening with all this long pressure options here i can trade each one of these places i can say
+tiny tiny position small position medium position big position i can i can divide this up any way that
+i want or even follow those rules there but i know i got options apple is going to bounce somewhere in
+here and probably make it there 90 of the time so because of that i can choose how i want to trade this
+you can be infinitely creative of this you can just maybe buy one share then three shares and five
+shares then 50 shares now you've got options at each way down right but we don't bet that it
+breaks through all the bull stuff and dies because while apple was selling off it kind of had a hard
+time selling off because it was so bullish over here and when i tell you these things are high volume
+pivots 100 of the time i do not kid you the way that you know that we did our math right is that every
+time you break through hedge pressure there's a volume spike it is never wrong we can predict
+volume with this and what's actually really neat about this let me show you something even cooler
+let me pop up apple on here are you guys familiar with volume profiles volume profiles
+a volume profile is a technique that aggregates volume
+onto the price axis of a chart let's go ahead and show today's volume
+on apple right so let's go to apple let's look at today
+you can see that apple has today's trading apple has high volume here high volume here and high volume
+here right
+this is all the volume that's traded at each price so every time price ticks this just draws the volume
+this way relative to all the other prices now you get a histogram traditionally speaking and volume
+profiles you're taught that these high volume nodes and this uh point of control and value area all this
+stuff but high volume nodes are periods of where volume was the difference is with rocket scooter
+you know where volume will be rather than where volume was okay this at the end of the day is telling you
+right above 284 like this like kind of this area right here is a very important volume
+uh spike right or this volume area this would be considered support tomorrow if i was trading apple
+i would use this area as support using yesterday's data right but do you see that right around 285
+is the high volume of hedge pressure and that just happens to be breaking it is where that
+point of control is see rocket scooter at the start of this day predicts the volume profile that people
+will use tomorrow a whole day in advance that was what i saw when my friend told me about options
+and my brain goes i can predict a volume profile using the options landscape tomorrow people are
+going to be using it's 285 or whatever this is 284.3 because the volume came through on the break so
+it's slightly below tomorrow people are going to be using today's hedge pressure
+here so here you're actually practically mapping out where some of these volume profile pivots points
+will be at the start of the day everything prints out you will learn in tomorrow's class and resilience
+that open and close are high volume nodes that hedge pressure is a high volume node and monthly hedge
+press is a high volume node it just so happens 286.5 is a value area high volume control our high volume pivot
+breaking 285 high volume pivot
+isn't that neat and this just happened to be random this up here do you see that at the start of the day
+i know that there's volume here and volume here and it turned out to be that way so what you're
+using as options to forecast where a volume profile will end up you can't know exactly how the market
+will play out but you know if you pass through here and pass through here your volume is going to spike
+like this and spike like this and it did it's never wrong ever does it mean you can predict the stock
+market i'm going to break your heart unfortunately not but it does mean that if apple's falling
+it's only really interesting to you to take action there or there just like you would trade a volume
+profile trade on the volume nodes just like you're taught but here you've got the nodes before the
+volume is traded because this most of this volume comes from hedging and people didn't know that most of
+the activity in wall street is not just shares changing hands of speculative buyers the huge majority of
+that daily activity is just algorithmic hedging and just the noise of people balancing risk and stuff
+you're not getting millions of traders out there buying selling apple every day and day trading it as
+much as you think you do a lot of this just market making and risk transfer and algorithmic flow
+so the fact is is that we can isolate this to find out that thing right there okay pretty neat now
+for the sake of this video you can go practice this yourself but the idea is is if if apple's trading in
+no man's land i'm going to make decisions just where i know the volume will be so that's called entry
+efficiency i'm not just going to buy here or here or here i'm going to wait for here and then
+i'm going to choose long or short from here the from part is one of the most important parts of a
+trade plan see other people will buy here and then lose a lot you will buy here and you see apple kind
+of bounces a little bit before it gives up then apple sort of bounces a little bit before it gives up
+you will take two tiny losses someone else will buy on this charge up in no man's land and then
+back hold the whole way down entry efficiency is the art form of getting in first and getting out
+first and exit efficiency so an example let's bring up another thing let's let's look at nasdaq for
+example today okay all right we don't have our maps anymore okay let me do um microsoft have the news
+of it tesla okay well tesla didn't wasn't near the pivots let's find one that was near the pivots
+aha google okay google right remember um bear zone top and bull zone bottom are the pivots
+bull zone top and bear zone bottom are not pivots so ignore those okay so inside of here google google
+opens right here hits that blue breaks through the blue and bounces any blue side break that bounces we
+take the long because there's long pressure there this is actually showing you the net sum of hedging
+off of hedge pressure the reason there's a green arrow is because there's more long hedging than
+short hedging and that dealer to dealer transaction that makes hedge pressure happen there's just more
+longs than shorts at that at that point in time so when you approach it from above at this level
+everywhere above this there's going to be more longs calculated than shorts to hedge all those dealer
+options to neutral it's because there's more longing than shorting naturally that's like if
+everyone takes their hand off of the button and it's just algorithms trading to balance risk when
+you approach hedge pressure from the top there's just a flow like a wind sort of pushing it higher
+that's why on the stream you guys see me draw the whoosh fan because that was a joke from our boot
+camps when i said it's like a gentle wind that just sort of blows towards the price and that's why
+people say can i get a whoosh fan that's really what they're talking about i draw it on the stream
+it's just a natural sort of wind that puts puts long long pressure against the market and that's
+really all that it is so when you when the day opens you can find out where all that all those
+pivots are and now you've got your volume profile nodes to play off of and you only have a couple of
+really good places to make decisions from and this particular day apple opens here then i've got a place
+here here here and here to make decisions on i would have we would have broken through and bounced
+i would have taken along with a certain stop and plan to long again here if you happen to break
+through something that happens 90 or 80 of the time and you go to the other side 20 it's probably a good
+idea to stop if the market is being overpowered by something that doesn't normally overpower it
+you want to get out of the way that's called an irrational market if something that shouldn't
+happen is happening there's always a reason for it don't be like maybe it'll bounce back just just cut
+and run let it come back and then just get back in take a little loss get back in i that's all i ever
+do if we break through the 90 percenter and fall to my stop i'm out and i'm done and i don't care what
+it looks like it's doing i need to wait to get back to that level to jump back in with another
+long i avoid avoid avoid avoid avoid if we lose a key level that shouldn't be lost we don't make the
+trade we got it yeah so a liquidity map is just the guide of where pivots can be if you don't use rocket
+scooter you can use any pivots that you use or any technique that you use to get it on an entry whatever
+your case may be but our tool is a volume prediction tool that gives you volume nodes that people will
+be using tomorrow today's volume nodes it's a beautiful setup each one of the lines that our
+algorithm or i draw on my charts is a volume pivot calculated from some different means and the way
+that we do this is that because there's a volume pivot here how do i break that tie do i how do i know
+what it's going to do when it approaches it do i long or do i short well what we did with this
+indicator on resilience which we'll have a class on next resilience is going to give me the answer of
+what the stocks are doing if nasdaq futures pretend this was nasdaq's google if nasdaq futures was
+approaching a key monthly or hedge pressure of its own options then my eyes at that moment in time can go
+all the way down to here and see what are all the stocks doing this blue line is the market cap
+weighted sum of all the stocks in the nasdaq relative to their own blue lines if this blue
+is above this zero line which you'll learn tomorrow then there are more stocks above here than here
+so because more stocks are being hedged gamma positive as we call it or more long than short delta
+hedging then wouldn't you want to bet that the index is also going to bounce that the hedging
+structure of the index equals the net market cap weighted sum of the hedging of the stocks the
+stocks are being hedged bullish don't you think the structure of the index would reflect the same thing
+right does that make sense stocks are bullish index should be bullish so if this if the if the stocks
+are being hedged bullish which is what this blue line is then the blue line on nasdaq would be
+confluence to take along for a lot a bigger position because the stocks are being pushed up so we had a
+high volume pivot we now have a tiebreaker what are the stocks doing at their own pivots that are the
+same we've got one for monthly hedge pressure we've got one for weekly hedge pressure and then the white one
+is for redistribution zone which we'll cover tomorrow the gapping it's a gap fill predictor
+so these are just looking at what the stocks are doing in each index so let me know well let me break
+the tie so now you kind of have a slight edge on that because i used to when i told you earlier when
+you hit these levels can you predict the way it's going to go no because it's random but you can you
+can exploit the tracking algorithm that says well the stocks are still being hedged gamma positive or
+long delta hedging more than short delta hedging so if the index were to approach its blue then it's
+more likely to do this than that because when you break it it's a catastrophic sell-off so why would
+the index somehow topple if the stocks aren't it usually doesn't right the back test that we showed
+you shows that it usually doesn't so the way that everything i do is extremely simple where's the
+volume going to be in that random pivot can i look at the seesaw of short or long and determine is that
+seesaw slightly tilted one way or the other based on what the stocks are doing where's the volume in
+the index what are the stocks doing at that pivot make my decision long if the stocks agree if we
+approach this from the top and it's supposed to bounce and the stocks look good that's very strong
+i'll bet bigger if we approach these pivot and this confluence indicator is negative the stocks don't
+agree do i still take the long pop quiz yeah but smaller any if the index is bullish and the stocks
+aren't well something's bullish i'm going to be bullish right i'll just trade it smaller
+perfect you guys are getting it okay that's fundamentally in a nutshell my entire trading
+strategy it literally is and managing positions around it now there's a bunch of tiny little
+nuances that we're going to learn through the rest of these classes but that's basically it at 9 30
+i look at where we are i can map out all the potentials this is a little cheat sheet it gives me all
+the potentials and then i can kind of calculate here to here here to here here to here and find
+trade plans we're gonna have a whole series of classes that will literally go deep into this
+this is just an intro into the liquidity map principle but the principle is is that stock market
+is random the movement in noise is random trying to find candle patterns and shape patterns in the
+noise you're going to spin your head's going to spin around it's so you're going to drive yourself
+crazy doing it but what not what is not random is volume because hedging is done the same way
+everywhere you can use the options landscape to effectively calculate where volume will be
+every single time you just can't predict who's going to win the battle the way i like to say it is that
+you're you're sitting you're like on a cliff this is a cliff and this is you sitting up here with
+some binoculars and it's like ancient rome and you're these are binoculars you're looking through them
+and you're looking down here and you see like an army of people walking this way you see like an
+army of people walking this way you can say with 100 certainty the battle is going to be there i know
+this trajectory and speed and this trajectory and speed train leaves chicago at 6 a.m train leaves
+in new york at 9 a.m where are they going to meet right you can calculate with 100 certainty where
+the battle is going to be but you can't really tell who's going to win from these conditions in real
+time you can look at this group and say oh they look strong and healthy and well and we look at
+this one and these guys all broken legs they're limping there's a bunch of people straggling this
+army looks weaker i know the battle is going to be here and i'm leaning towards the fact that these
+people are going to win and so in trading this is what you can do this is the best you can do
+is observe how the troops look and know where the battle will be and then make a decision
+you're going to bet pretty big on these guys if half these guys got broken legs right but if they
+both look pretty identical you may not know who to bet for you're going to pick your side and still bet
+small you know what i mean because you don't know the outcome of a random event and upsets can happen
+but you're trying to gauge the risk that you have in doing your best judgment call
+right with that but what you can predict with certainty is where the battle will be every time
+you know your volume nodes and that's what you're trying to do is trade where volume will be and then
+use whatever technique to confirm that volume other people that use other techniques use candle charts and
+candle patterns and chart patterns imagine that you're trading like i think it's called a fair value
+gap or something like ict or something you you break through this is candles and then you break through
+here and then you fall to there and then it holds right now you have whatever they call the gap or
+whatever and it's supporting at hedge pressure now you got two things that lined up and people have said
+rock scooter pivots are the completion to every other candle pattern and chart pattern thing they've ever
+done when you get your um volume node breakouts and your your your consolidation breakouts at one of our
+volume pivots it's double confluence for another strategy okay and so with that being said this is
+what liquidity maps are the interesting thing to answer the question earlier do they change and the
+answer is yes but let me tell you something again break your heart but give me give me the the better
+answer the way that this works is that um after market closes sometime overnight okay we'll just say
+market opens at 9 30 here the options market by the way we take the options and we translate
+everything to future so you have your futures liquidity map when you're trading um based off
+of the equity options it's it's all symmetric so that's how we do it 9 30 the options market opens
+for 15 options market closes 15 minutes after the equities market closes and sometime overnight
+opera gives us the open interest that's the only landscape that we have here and then the overnight
+happens and then at 9 30 the market opens okay what sucks is that options are changing in real time
+okay so at 9 30 so opera gives us the the open interest this is the landscape they give us the map
+right here and we've got the map but the options market is closed we know 100 percent the landscape
+in the middle of the night we know it we know exactly what the landscape is and then the moment
+the market opens we have no clue what the landscape is options trade immediately and therefore the
+landscape changes some mountains get taller some mountains get get smaller also when the options
+market is closed the price and the greeks and all the other things we don't know because the
+the market's closed but at 9 30 in the morning we do have the price and the greeks and everything else
+here so at exactly 9 30 in the morning we know exactly what the open interest is and the moment
+the market opens we have a snapshot of what the greeks are right when trading starts so this is the
+only intercepting point in time where we know all possible landscape price everything that's the only
+point in time we know everything with certainty is exactly at 9 30 so at 9 30 is the best version of
+the snapshot of the market and immediately you're in the dark because the options start trading and
+these can possibly move around a little bit so it sounds kind of crummy because well if it moves
+around is it still any good is that 4 15 or 9 that was 4 15 by the way 9 9 30 we open 4 15 we close in
+options so yes the landscape changes but after years and years and years of doing this and years
+and years and years of backtesting the risk doesn't change that much even though the options change
+drastically this risk is all options at all strikes at all times all piled into one spot
+a lot of options will change and hedge pressure may be here by the end of the day or here by the end
+of the day but what's neat is that nobody knows not even the market makers know not even the exchange knows
+nobody knows the real-time open interest landscape period it is completely unknown by anyone because
+over-the-counter orders and handshake transactions outside the exchange don't aren't even known by
+opera until nighttime the end of the market day and the rest of wall street isn't even given the data
+until the that same point in time and everyone gets the data at the same time including me no one gets
+the data before i do everyone's on a level playing field with that open interest release the thing is is
+that nobody knows what the real truth is but the thing is that what everybody does know is the real
+truth at one point in time and what happens is that everybody is sort of planning that that's it and
+just acting like that's it and then historically it doesn't really change that much because we've noticed
+that the high volume pivot works up until the last moment of the day and it's likely that way because
+everybody's kind of understanding that we're in the dark so we're not going to try to guess where it will go
+and even when i try to do i do have a real-time open interest model which is an attempt to guess
+what it is and my real-time open interest model says that we don't deviate rather than one strike
+distance almost every day so the wobbling of where that balance point is because of things changing
+it's not really that big so therefore hedge pressure from the start of the day even though it technically
+can wiggle around and be somewhere different is rarely anywhere beyond one strike distance away which is
+your 10 and 40 points which is why we make our stop 10 and 40 points of one strike distance because
+that is the random noise you get of where hedge pressure can possibly be moving to you can get
+some overshoots or something you account for that maximum variability and how much hedge pressure can move
+that's why we set our stop distance that much because hedge pressure can move a little tiny bit
+therefore i'm accounting for all possible range of movement if hedge pressure can move 10 points
+in this case scenario like or most scenarios it'll move less than 10 points then as long as my stop is
+at 10 then i'm accounting for the real-time changes without even knowing them by just exploiting that fact
+that's why our stops are set at that most every single day hedge pressure will not move more than 10
+points in s&p and hedge pressure will not move more than 40 points in nasdaq does this make sense why
+that's our stop now it's all starting to click so sometimes you're going to hit it nice and tight
+sometimes you're going to overshoot well why well because the balance was exactly there but rarely is it
+does it move more than the strike and because we can't know we don't try to guess we just assume
+the worst case scenario i'm going to stop at the at the average area where it doesn't break one strike
+distance is it it takes a lot for the balancing part of the market to move more than a strike it really
+does um and so we do account for that the thing is with real-time open interest is that it's it's
+since you don't know um we do have a calculation that guesses the open interest before opera releases
+it and that's these overnight calculations that we do every night after the boot camp
+that is based on my real-time open interest model now it is a guess
+it's a really good guess um and i'll tell you when we get to that class how we do it we're trying to
+get even one step ahead of everyone in wall street by guessing okay so with that being said all
+we're doing is using fancy options calculations to calculate where volume pivots are going to be
+and using the stocks to guess the direction does market volatility affect overshoots it does albin
+yes we have a whole class that tells you how to adjust for the volatility very much right
+the volatility is an increased variant variance of the distribution of that options risk that options
+variance that risk is uh spread widely in a shorter period of time vix goes up so higher vix
+more options are being placed in the market wider apart so therefore
+your levels are expected to move further and you account for that yeah 100 that was a whole
+volatility adjustment class it allows you to fine tune your stop loss rule of thumb largest one minute
+candle and now in the last hour is the amount of overshoot you allow and most every time that's
+perfect enough that's literally that's the trick we'll get there in the whole class though okay all right
+any questions about this one more trivia fact before i get out of here let me pop up apple
+liquid markets don't crash in the middle of a bear zone and bull zone we call this a liquidity pocket
+why because bears and bulls are in the closest proximity to each other right the closer bears
+and bulls are to each other the higher the probability they'll be trading to each other
+now a bull zone is where we identify bulls trading against the house with the lack of bears
+bears and bear zone are bears trading against the house with the lack of bulls
+what do you notice about if you were a bear inside of here
+if price is right here in the most liquid spots of the place of the entire map
+you were shorting here what do you notice about your short right there
+how's your trade doing as a trader
+you're the bear down here in the liquidity pocket you're cooked you're losing right
+so on the bull side same thing the interesting part about the market maker against the stocks and
+that when the market is most liquid is when the when the net sum of all active participants in the market
+against the house
+are net negative to the house the most liquid spot mathematically on the map is when everybody's
+losing to the house at maximum liquidity the house is winning against most of the
+now they're neutral so the house isn't winning anything but the traders are losing to the house
+at the most liquid spot well when the market is very liquid and everyone's upside down but only upside down
+small nobody's rushing the liquidate you're only upside down small but bears a huge sink of bears here and
+sink of bulls there is a very likely place to find buyers and sellers if market makers are oscillating price in
+here but this is a fun trivia fact liquid markets don't crash because they have no desire or need to crash
+market makers got plenty of bears and plenty of bulls to find order matching with that's why
+liquid markets don't crash there's a huge sink of bulls here and sink of bears here
+it's going to take a lot of pressure to really get down in here and get up in here so in liquid markets
+for liquidity pocket why this is one of my favorite trades
+because liquid markets don't crash because blind monkey markets are bullish and if this ratio which
+is the stock ratio is also bullish then i bet that the liquid market doesn't crash
+and supports at the bear's own top it doesn't spontaneously turn bearish which is
+why liquidity pocket is my favorite trade you asked me what my favorite one on the map is it's
+the liquidity pocket bear zone to bull zone tap we call our 90 percenter if you open in the middle
+90 of days don't become bearish so when it hits the bear zone top i'm always betting that it goes to bull
+this is my bread and butter i make this trade all day every day no matter what no matter what no
+matter what i play a song on the stream it's called every single time this is my favorite trade
+bull zone bottom with a good dd ratio is my second favorite trade bull zone bottom very strong bear
+zone top very strong and when we go back to this thing right here
+you'll see that bear zone and bull zone with the confluence is one of our strongest bull setups now after
+going through what we showed earlier mhp bounce is a strong setup if we break through mhp to the top
+side i always take the chase because of blind monkey and you'll get through all these it'll
+all start to make sense as you learn more but essentially high volume nodes high volume high volume
+high volume and i'm using the confluence to decide which way i take the trade or not it starts to become
+very simple once you analyze it like this um there's this other statistic that somebody put together
+uh the same person that did this one that shows each individual setup and how it works
+uh probabilistically based on each individual setup not just hedge pressure itself now the last
+thing is what do these letters mean you since saw automate you don't really have to know but the
+letters are just a quickie way of you seeing what's going on if price is in a bull zone you have three
+letters here the first letter is either a bear or bull br b if price is trading in bull zone it's just
+going to say b so if it's in a bear zone it's going to say br that's it if price is trading above
+blue hedge pressure or below blue hedge pressure above is long below is short so
+this example oops let me go ahead and delete all this so this example apple currently in real time and
+this will update in real time based on the changes to let you know where on the map you are
+currently apple is in a bull zone it's going to say bull
+okay
+apple is below weekly hedge pressure it's going to say s s is more short weekly hedging than long
+so b and s b and s if the blue hedge pressure is above the orange hedge pressure it will say u
+if they're inverted it will say d for up and down this is really meaningless for you now because it's
+it's just helpful for you to understand uh what these letters mean in reality the letters are kind
+of archaic when we used to have to go look it up manually to find out which liquidity map it is now
+we just present it for you on the chart but that's a little trivia is what the letters mean and you can
+start to remember that um they're just gonna you'll you'll have probably this memorized like a blu is
+the most common bull setup that you have bull zone long hedging up orientation of hedge pressure
+it really doesn't mean much to you now but that's what these letters mean you have eight different
+liquidity maps and if you break through one of them like an example is here price is here in a blu
+and if we break through blue the l becomes an s it becomes a bsu so if we're inside of here what do you
+do well you need to go find the su and then there's that leg of bsu in between blue and orange
+in between blue and orange in the bull zone so like if you fall through here and you're like what's
+going on the algo will now switch to the proper bsu for you to show you what happened in this case
+that's exactly what happened with apple it was a blu that broke the bsu at the start of the day apple
+would have been showing you this and when apple broke through this blue it's now showing you this
+aha orange is the new pivot to bounce from make sense so now it's all automated but used to you'd
+have to kind of go look it up but the letters that's what this means you're not gonna have to use them
+anymore okay

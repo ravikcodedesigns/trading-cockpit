@@ -1,0 +1,690 @@
+today's class is over monthly hedge pressure one of the three greater market indicators
+in the rock scooter suite of tools we've already kind of covered it in some of the other class
+we'll go into a little more detail about what it is and you know basically how to use it as we
+talked about in the liquidity maps class monthly hedge pressure is one of the major components of
+a liquidity map as you'll see we have bull zones and air zones i've got a nvidia chart and an amazon
+chart here air zones pull zones monthly hedge pressure hedge pressure weekly nap gap first
+i'll start out the major difference between the blue and the orange according to my
+uh color designations here is monthly hedge pressure is based on monthly options
+weekly hedge pressure is based on weekly options now why the difference and why not lumping them
+all together why we separate them well we found that the traders that are trading both of these
+things are different groups of people the most part monthly options represent essentially who
+owns the majority of shares of stock for quarters if not years at a time and is hedging them are going
+to be the ones piling their options on in the monthly scale why why there well a long time ago and i'm
+talking about before today uh see as of this state in 2025 options especially index options expire very
+frequently they have different schedules right equity options for instance like nvidia on my screen
+expires every friday so you have a friday trade or you can buy options for every friday possible on the
+calendar on an index etf like spy you can buy options for monday tuesday wednesday thursday friday
+for like two weeks out and friday for the next four weeks out and then um monthlies after that before we
+have these what they call weekly options which are options that expire within the month so
+every friday that expires it's not a monthly is called weekly options the monthly options expire
+and equities products on the third friday of the month for etfs and stocks it's the end of the day
+on the third friday of the month for index products cboe products they're in the morning
+um monthly options on vix vix expire wednesday the third wednesday of the month and in the morning as well
+so pretty much everything's in the afternoon except for the index products which in the morning
+um now a long time ago all that existed were monthly options that's how hedge funds and investment firms
+were playing the game they would you know buy stocks to hold forever and then if they needed
+insurance they'd buy monthly options if they needed to get something they get on the monthly scale
+firms sort of built their technology and their style and strategy around this month-to-month sort of
+thing and they still kind of do you know perspectives goes out a quarter at a time so you know a monthly
+option every three months expires around the quarter and so you know you got this nice little even sort
+of like lineup with your investment your hedging over time those that ran the casino realized that
+you'll buy a lot of these options we just stopped make oh and trivia by the way when you hear the word
+weekly option it doesn't just necessarily mean a friday expiring option um spy and qqq have monday
+through friday they're also called weekly expiring options the correct way to say it is weekly expiring
+monday option weekly expiring tuesday option so tuesday monday weeklies tuesday weeklies wednesday
+weeklies or they're all called weeklies if it's not a monthly it's it's called a weekly basically
+and so um before they had all of those the casino was like well if we made options expire not just
+every fourth friday or every every third friday of the month but we started doing them every friday
+we could sell more of these things and then after that turned out to be good they were like hey
+what if we sold monday through friday or actually it was monday wednesday friday spy and qq had monday
+wednesday friday for the longest time and then like a handful of years back it seemed like like three or
+four years ago they created tuesday and thursday options again they keep making more options people
+are going to buy them it's more money more commissions right so they decided to keep making these things
+well previously you know all the funds and firms are acting on longer term all the trillions and
+trillions of dollars that are propping the stock market up all the insurance on the longer term of
+401ks and you know pensions and all that good stuff investment funds we're talking about commitment
+traders all those long traders um are buying monthly options a hedge and so it's good to separate them
+out because that's where the make or break of wall street's long-term holding is and those weekly
+options that expire monday and tuesday and wednesday those are separated here and who is buying those
+options mostly speculative traders short-term traders uh and you and me you know very rarely
+am i going to like day trade an option and then kind of want to grab a monthly out there's a kind of
+reserved for long-term place they're more expensive you're holding them for longer etc and then that's it
+so because your weekly options are like your day-to-day small imbalances imagine that like pretend there's
+10 billion shares of a stock that's out there and you know 8 billion of the 10 are just sort of
+sitting long and the other 2 billion are like floating around throughout the day up and down
+this would represent what floats around day after day up or down and this represents the big chunk of
+it that's just sitting there do we understand it's good to separate them out both of them we theorize
+would create pivots the weekly options by themselves would create some kind of hedging because they're
+designed for like short-term plays anyways and this is the long-term play so we thought it'd be cool if
+we separated them out just to see and just so happens weekly options uh and monthly options both create
+high volume pivots so that was a great choice to just test to see if it happened ideally i originally
+just wanted to create hedge pressure off of all options together and it turned out to create
+one solid pivot that was very close to the monthly uh but the weekly themselves sometimes would be in
+abundance and it would jump all over the place we realized sometimes the weekly is very important
+of knowing isolated where it was so that your quote-unquote original merged hedge pressure wasn't
+flip-flopping all over the time if you separated them two you were you were able to get two pivots out
+of it which turned out to be great because they're both used and they're both really good now monthly
+hedge pressure as you'll see with every monthly hedge pressure i pulled up i said nvidia and amazon
+is a predictable high volume pivot and as you see every time you touch it you will always see
+counter volume to the trend now as you described in liquidity maps class see here's volume and volume
+as you bounce their volume volume volume in the liquidity maps class remember your hedging loop where
+you had a trader trading against a market maker of the stock supposed to be the word market maker of the
+stock the market maker of the stock is the one that's trading the option against the market maker
+of the option right i long they short to me they buy calls to hedge they're short this person sells the
+calls and then they buy or sell the underlying at at the rate of whatever the delta and gamma hedging is
+um to balance their trade so minus calls and plus and minus shares keeping it delta neutral um
+then they have a neutral position so we find all the sold calls between these two market makers and
+sold puts in the other way uh like a trader shorting the market you get those puts over here
+um the net sum of all those options that we identify are just market makers the maximum gamma exposure of
+just a dealer held options sold to other dealers is where hedge pressures calculate it's a beautiful
+calculation and the reason why dealer is important is because if i were to go out there and buy calls that
+are way out of the money that aren't going to expire then or expire in the money then nobody's
+hedging against them they're practically going to be worthless at all times when you run black shoals
+it's an equation that basically creates the price of the option um based on all parameters of like
+what's the likelihood that it goes in the money and how it gets there and the volatility is built into
+it and over a certain amount of time and time is a very important factor so when the market maker
+market maker option you can guarantee that dealers want to be neutral this delta hedging effect is
+them saying we're going to buy and sell the underlying because we don't want any risk on
+this trade to keep us neutral and that buying and selling to create neutrality is that volume that you
+see so we knew that we can use black shoals to reverse engineer um volume pivots by isolating
+market maker options from the lot and that's exactly what we did without fail 100 of the time
+when you get to hedge pressure monthly and weekly but hedge pressure monthly especially
+you will see a volume spike every time you touch it without fail and that's proof that we have the
+exact number correct volume spike volume spike volume spike volume spike amazon bounce volume spike
+right okay and so that's what you're seeing imagine like if i were to like have a tick strike sort of
+sound you know tick strike is that thing that like ticks every time there's an order the price were
+moving close to here you would hear like tick tick tick tick tick tick tick tick tick tick tick tick
+tick tick tick tick that little right there has to do with the largest the gamma maximum of dealer held
+options gamma is um is a number so if you think about like this right in physics you have a position of
+something like a ball is just sitting here in space and if the position changes over time right we call
+it velocity if something's moving position over time you go velocity right and if that uh velocity
+is changing over time we call it acceleration right um as you notice when i did my example that the the
+rate at which the ticking was increasing was also speeding up as well it's almost like an acceleration
+term you have price right and changing change of the price of the option relative to the change and
+price of the underlying is actually equal to delta right so similar to position over time is is a
+velocity price changing relative is is is a delta and delta is the velocity of hedging um it's the speed at
+which hedging takes place and then when you change your price uh uh uh your change in delta
+sorry change in delta or the second derivative of of all of this or the first derivative of the change of
+delta um already price
+and you get gamma so gamma is like an acceleration
+of price change and so when you look at a chart and this is just to tell you briefly about delta hedging
+it actually is um let me let me whip out a um hold on a
+um options ladder for you guys again you don't have to know a lot about options trade futures
+but let me pop something up let's just put spy on here this is just telling you what's going on
+under it because it's very important to understand you know what it is you're learning and learning
+from us my gamma is so important now i can go over here and actually let me let me change some of
+these to show gamma delta there so an option right in the money means the price is trading above the
+option out of the money means it's trading below and all this stuff these prices that the option is
+quoted at is based on equation on the probability which that option expires in the money will change the
+price of this stuff and so all of these things are examining probabilities at which price will go
+somewhere in an amount of time so it was only a matter of time where we figured out what we can
+predict where trading volume would be on this so as you see gamma when you're these are calls so like
+when you're way in the money gamma is going to be zero and as you get closer to where price is
+currently trading we call it at the money the gamma is the highest here so it goes from two to three
+to five then the three to two to one this is that tick tick and then there's all these ones here
+tick tick tick tick tick tick tick tick tick tick twos three little four little five little
+little four tick tick two one one see how there's like a bunch of zeros and ones then a fewer twos and
+fewer threes and fewer fours and fewer fives that gamma is going to be the change of delta and delta is
+the amount of shares that are being bought or need to be bought to hedge at option neutral if delta is 60
+and then i need to hold and then somehow price moves from here to here like we go from
+685 to 683 so say the price moves two points on the spy and delta changes from 73 to 66 that is 100
+shares per contract so this represents multiply this 100 for this is per share so times 100 you go from
+74 to 70 74 to 66 which means eight extra shares
+you will buy per contract the difference in delta is the amount of the amount of extra shares you will
+acquire to hedge neutral gamma is the rate of change at which delta changes so gamma being the highest you
+see the biggest jump from delta to delta this is almost five a piece here when you're out of the money
+it just goes from 95 96 97 so as an option goes further and further in the money you're only
+acquiring like one share every like 10 points of spy but when you're at the money you're acquiring
+five shares per contract every 10 points so this is the fastest acquisition of shares to hedge neutral
+clearly further further in the money you know you're gonna have one it's it's 100 percent and then
+down here um i'm sorry further sorry this is out of the money up this is in the money sorry i had this
+backwards so i'm on the call side so further further in the money um you see that zero right
+hold on wait these are strikes so no sorry this is out of the money i said it right sorry out of the
+money out of the money you're not acquiring any shares because they're not going to spy 860 is going
+to expire worthless do you understand so expiring worthless you're not going to acquire any shares
+but clearly like spy 5 505 is 100 chance it's going to expire in the money by by expiration so
+you're going to have 100 percent of your shares in your pocket because anybody that bought those
+calls from you are likely to exercise them and you owe them 100 shares you might as well have them
+but instead of owning the whole lot of what those options are worth a lot of these hedge funds will
+only own the delta's worth that way they don't have to have all their money tied up in this option
+because there's this whole probability expires out of the money so at the money your delta is going to
+be 0.5 so you don't so when you're trading at the price there's a 50 50 shot it goes above or below
+you'll hold half of the shares pretty much that's it and so when when price is moving through a
+certain space these hedge funds are going to buy more and more and more but the most amount of
+buying takes place right near the middle and as you see nobody's buying anything here and nobody's
+buying anything here since the the rate of change of delta is the gamma then the gamma maximum right here
+is 0.06 is right in the middle at the money so gamma sort of like looks like this and then it like
+spikes out here and it goes like this you'll see that delta is very similar except it's a fatter
+parabola gamma is like a skinnier one so because of that you can guarantee that if an option goes
+near the money there's somebody puts and calls that's loading up on longing and shorting the
+underlying does this make sense i'm just explaining the basics of delta hedging and dealers the only people
+that really care to hedge neutral or people that are you know at risk who sold options so if we can
+isolate those which is what we do from all the options being traded then we can say if this is
+where that maximum gamma of all existing options at all expirations balance for whenever then that's
+where we create these hedge pressures so this is all weekly options together and this is just the next
+monthly option as we don't really care about two months out we care about the really big
+positional holdings for this current month so this being a month-to-month hedging this is almost
+like the line in the sand between where bull hedging and bear hedging is bull hedging is basically where
+when you're in what we call a gamma positive state positive gamma which means the delta is increasing
+above so anytime price is above here all of the all the options that exist at all points you're going to
+just see more longing than shorting if you're just to basically listen to the ticks like
+anywhere above like right here you're gonna have the most discrepancy the most amount of longing
+per shorting and then below here you have the most amount of shorting prolonging so above hedge
+pressure just more people are buying to hedge sold calls than they are selling to hedge sold puts
+that makes sense okay and the other side below um and so because of that as you get close to it
+volume just starts to go higher and higher and higher and higher and higher as you get right on
+the edge because there's dealers and then the probabilities that we stated before is that it's
+very likely it always rejects or sorry not always it's very likely that it rejects more often than it
+doesn't and why is that well if you think about this monthly options scale why is it that with all
+confluences 73 percent of the time it closes on the same site it opens well because there's so much
+trillions upon trillions of dollars invested in wall street this is just where all that investments
+insurance piles up right here you almost need everybody or the majority of people in wall street
+to change their mind about being long to crush two monthly hedge or at least a huge chunk of it
+but there if like 100 firms are long something and one firm decides they they want to sell it's not
+going to overpower the 99 that are still sitting there well that makes sense right so most of the
+time there's just not enough selling in a single day to knock and topple over every major hedge fund
+in wall street holding on to this thing do we understand this so far that's why it doesn't break most of
+the time it takes a tremendous amount of volume to just start squeezing people to bump them out of their
+position that's really all we're exploiting the fact that it's really hard the total amount of value
+sitting in these options is many many many magnitudes higher than the amount of volume traded per day
+when all of the risk of monthly options pile up here the daily volume traded at this level is nowhere close
+to all of the risk everywhere and i can prove that to you right here on it on an options ladder
+if i were to put volume on here in open interest i don't know how do i uh is there a settings that i
+can change this hold on custom okay custom let's add volume and let's add uh open interest right
+volume traded at the money here 27 30 000 okay so like 30 40 000 contracts traded
+around here so this is how much activity you can assume same thing with stock being sold
+is the volume just around that area is nowhere close to the total open interest everywhere adjusted for
+now you can see that the framework of all risk is balanced there's some 10 000 and 20 000 15 000
+there's so much open interest of all options pretend this is monthly it's not but pretend this is
+all options that exist for that monthly expiration are nowhere close to the total amount of volume traded
+at that level so at that level it's going to take a whole lot of volume to offset everybody's risk
+everywhere that's kind of balanced there everybody everywhere hedging everywhere but the most amount of
+hedging is going to take place there which is why it's just so strong and weekly hedge pressure the
+same thing we won't have a class on weekly hedge pressure but it's the same thing it is a weaker
+pivot because it doesn't represent all of wall street's holdings it represents shorter term plays
+so not a lot of people hedging this are like long for the long term right weekly option could be market
+makers buying or selling in these order imbalances at open close and then maybe buying weekly options
+for the next day just to hedge against it there's a you know 200 000 share sell imbalanced the spy that a
+market maker had to buy to cool they're gonna buy um 2 000 weekly puts that expire the next day or something
+like that you know this is like your day-to-day hedging this is like your wall street's line in the sand
+so monthly hedge pressure is very important because it shouldn't break with confluence with the stocks
+themselves also not breaking monthly hedge pressure then we assume that the index itself
+should hold its own monthly hedge pressure and as we see with the dynamics uh last night it currently
+did so why would the index break through and start toppling over itself if the majority of stocks
+aren't doing that right we don't bet on that in this market cap weighted resilience for monthly says that
+same thing majority of stocks are holding monthly hedge pressure in a positive gamma state so when the
+s&p and nasdaq are falling below their monthly hedge pressure the bet is we get back on the same side with
+perfect influence so greater market as we recall are so far you've learned there's three indicators we consider
+one of them is dd ratio right
+two is monthly hedge pressure of the s&p
+um let's buy there for a minute number three is monthly maps we already had the class on monthly maps
+right and then that and so when greater markets bullish and you're analyzing spy itself then you're
+going to check is this one bullish and this one bullish today both of those were so we're above
+monthly hedge pressure all three of these are bullish and we have perfect influence we tell you that 90
+percent of days will not have the volume to break through all of that padded water flow of
+algorithms just neutralizing positions it's automated at that point and as you're oscillating through there
+these these banks are like buy 10 selton buy 10 selton for every single contract they have
+it's all automated they're going to be positioned perfectly so because of that when the natural selling of the
+market happens we just bet that it's not more it's not powerful enough to just kick everyone out of the trade
+in most days without news that's possible 90 percent of days and as as we talk about with this um
+this diagram we gave you with the actual numbers of all confluence means that you don't have full
+confluence we just counted all the days so including days with confluence without confluence all days
+was a 73 chance same side close of monthly hedge and again 73 same side close from the downside
+so with most of the time it rejects then it's the best type of rejection pivot that you have
+one of the best ones and weekly is 68 and 60 on the other side not as strong right 68 and 60 not as
+strong as 73 and 73 and that's because the weekly uh risk is much smaller than people holding for a
+month imagine somebody's holding for a month you've got a lot of money just sitting there is going to be
+so much more than people just holding for a week right and that really becomes why this is a weaker
+position very often or more often you'll have enough volume to topple through that 30 to 40 percent of
+the time whereas here it's about 27 with all conditions and remember with ideal conditions
+with weekly resilience supporting the same side that you're on so if we again if we open above monthly
+then supporting resilience would be that we're above zero if we open above weekly which is here correct
+um supporting resilience would be that it's also above zero that's an 80 percent same side close
+where that being said with with perfect influence as well because of that it's just a high volume
+pivot and high probability that you don't have enough volume to break through it you're going to come
+close to it you're going to see order order order and there's just going to be this all this flurry of
+orders and then when the volume steps up you're going to come in and you're going to trade
+in the same direction there more often than not so why is it important to know where the volume is
+because whenever you buy something you always want a flurry of people to come in and want to buy after
+you that's the trick you want something to go up in value you need a high amount of demand after you
+there's no volume and how can you guarantee people are going to come in and buy it from you to push the
+price up after you do so this is a great guess of where volume will be because it's fully automated
+and it's it's crazy it is to say this never wrong never wrong uh technical analysis is wrong half of
+the time but monthly hedge pressure is almost never wrong when you get to it there's always going to
+be some some amount of volume that's higher than the nearby volume now one thing to note is for rocket
+scooter we buy reference data which is just five percent of the overall market volume so some of your
+candles uh for stocks will be seem what might seem a little wiry like this because this is a cost
+savings method for you guys to get cheap data on the equity side we're mostly a futures platform so
+nobody really uses this other than quick reference but futures we have 100 of the volume but with that
+being said you can still see with the wiry volume that monthly hedge pressure is a spike relative to
+where you are nearby and you're always going to see when you get close to it there's a little bit
+when you get away from it it's down and here when you get close to it there's some volume and away
+from it it's down and you can pick any stock any anything uh and you're always going to see that
+same relationship it's very crazy to say something happens 100 of the time uh but 100 of the time we
+can predict volume without fail every single time it's it's beautiful there's always hedging volume
+that piles up at these levels and you're going to see that it just starts to like and then you
+sometimes it'll be ran like your three taps and the majority of it was there when you touch it
+there's volume so at least you can guarantee that some traders are showing up after you
+and they're going to use your confluence bet to get to guess which way are they trading here for
+example weekly resilience was less than zero and therefore when you approached it it was more
+likely to reject and then it sat here for a little bit right actually this is tesla you want to do this
+um forget that i was thinking this is the index so tesla right you hit it and came down and you hit it
+and broke up as you see whenever tesla breaks through monthly hedge pressure actually weekly
+hedge pressure sorry you can see that weekly resilience is starting to move up right as
+certain stocks break through you get the overall flux being gamma positive on tesla as we talked
+about in the weekly hedge pressure monthly hedge pressure resilience class is that this is monitoring
+all the stocks at once and certainly tesla played into this overall move right there but anyways the
+point i'm saying is that when you get there there's always volume so at least when you're trading
+we're going to bring up a point called entry efficiency entry efficiency is what what makes
+our trading here so good because whenever you're trading and say that market let me just um pull up
+nasdaq for here right had you long if you long or short at the wrong time you're gonna lose a lot
+more trades and also have bad worse fills whenever you for an instance you know there's there's you think
+that like if i i'm gonna long with the stock so one thing can happen either a my trade goes up
+somewhere and i make some money right let's put a win on there okay cool the option here is i buy and
+it goes up to my profit target i win the other option is i buy and it falls to my stop and then i lose
+but i also stopped so i prevented a big loss check we're good but there's one more scenario that people
+don't ever think of and it's that the market falls and then hits your stop and then ultimately
+you were right again okay when this happens you buy here and lose there and you're like oh whatever
+i stopped whatever whatever whatever and then it moves to there almost every time type and chat if
+this is you psychologically you go oh crap i want to get back in and you get back in higher than your
+original bet right this kills something i call entry efficiency see the best part of this trade
+would be for you to be long right there at the bottom so let's go back a step talk about this
+you might think you have a 50 50 shot of getting a trade right just you have a 33 chance of usually
+getting a trade right is you get the trade and it goes most of the time you'll stop and be right
+because you stopped you got out of the way or you'll stop and then jump in at a stupider spot
+and then maybe you know lose again because your entry efficiency was bad this sort of desyncing with
+the actual movement is why you mostly lose trades if this didn't happen and the market just per day
+made one choice let's go up or let's go down and it went to a beeline and you got half of the day's
+right or wrong you'd make a whole lot more money than you do now but the fact is the markets move
+throughout the day and your your nasty horrible efficiency is why you lose more than you don't
+so this an example here is actually you stop but you were right and you jump in later this also has
+a probability that you lose just because your efficiency was bad so this can also be a loss
+even though you were right this is a win because you're right this is a loss because you were wrong
+this is a loss because you were right from the wrong place
+so because of that you don't win as much as you think you will because a lot of times you're going
+to stop out have to get back in and so the key point is that if price moves because people want
+to buy something in abundance then you need people in abundance so you need to find places where volume
+will be that's why volume prediction is so important now we say that price can't be predicted
+technical analysts for the since the beginning of time have tried to draw shapes and colors and
+squares and triangles and all kind of fun stuff on their chart in lines off a price say that price
+inherently predicts itself in some fashion as an engineer i'm not going to kind of spit in the face
+of what most of you have learned before sounds like the most ridiculous thing in the world to me
+if you were to take a technical indicator like a moving average let's say like this move right here
+in the s&p and i had a slow period moving average and that moving average would probably move like
+this right and then sort of like slow down right here and if i had a faster moving average it would
+kind of do this right and i have an even faster moving average it would do this right etc i put as
+many moving averages on the chart as i want and a moving average is just you know a function
+a price it takes price data throws into an equation and then spits out an average
+and if you were to take every technical indicator that takes price data throws into some function
+and creates some output that you can see then all you're doing is taking the current data that's known
+and adjusting it by some math something new and so as an example of moving averages if you were to take
+a slow moving average what you notice is that it kind of moves with the trend but boy it kind of sucks
+because well it only started going up after the move my my crossover signal was here when the when
+the move started there so my move my entry efficiency sucks because of that so boy don't i wish i can have
+an average that smooths out the data but got rid of got rid of the delay so let's put another function
+if i were to take every single average and i were to sum every single average of time period zero to
+infinity over all time periods you can grab and then i added some mystery function that i'm going to
+call like the god function and it's a function of delay and for some reason i created some math
+function that got rid of the delay so i had the perfect series of moving averages that got rid of the
+delay and i took the sum of every moving average that ever existed over the course of zero to
+infinity and i summed them all together and removed the delay you know what i end up with at the end of
+the day if i take the infinite array of all possible technical analysis and adjusted and got the delay out
+you know what i end up with
+i circle back around and land at price again i'm right back at price so it's weird to assume
+that somehow these candles contain hidden information about themselves that i can extract with some kind
+of function it sounds weird to me that a candle somehow can imply
+like the candles themselves and not that good but boy i put it through this equation
+and all of a sudden the equation ripped open this candle here we go let's tear in half right
+and somehow inside this container there was a whole third dimension of extra data wrapped up in that
+dimension we didn't know about so to me moving averages seem like some kind of magic guru sauce
+that somehow can peer into an extra dimension inside of these candles when i explain it that way it
+sounds kind of ridiculous right and it kind of is because price doesn't contain the candle open low
+high and closed does not contain additional data about itself to infer something else inside of it that
+the price itself doesn't already show
+you know what i mean it doesn't have any inside information about itself the price is the best data
+you have about the price there's no 4d trading here right so while technical analysis can help you
+decide certain things it certainly doesn't give you any extra information it just reorganizes the
+current information into a more palatable less noisy way but at the cost of delay in any kind of
+mathematics you study fast Fourier transforms you will learn that when you smooth out choppy data
+the smoother you make something the more lag you have in the system that's the cost of smoothing there's
+like that that principle of that so you're just kind of reorganizing the data to make it easier for
+yourself to see and every stochastic rsi whatever it just takes price and goes in just spits out some
+organized data that the more organized it gets the more the more entropy it has towards the system this is
+there's no free information out there there's the laws of entropy so the more organized something is
+here the less organized it is somewhere else and the overall entropy stays the same this is just
+information thermodynamics information entropy is a thing okay you can't unlock free information
+without a cost somewhere else okay so because of that price action is good enough on its own
+and your technicals are going to be fairly random at predicting what price is going to do there's no
+extra information if you believe price is random which i do buyers and sellers step in at random
+points of the day and do random things then any analysis of price action on its own is also random
+and so the most famous and successful hedge fund manager on the planet jim simons also believed that
+price was random said i think famously that price is nothing but amalgamation of the random noise of
+curious individuals or something like that curious traders so essentially that price is nothing
+but like the sum of everybody's randomness and it seems to have structure because we see the
+world with structure we're designed to see patterns when there's not anything there and he famously
+believes there's no patterns in the market and so do i what is consistent is volume so because black
+shoals prices options a and b everyone uses black shoals or some small variant of it and c everybody hedges
+the same way then there's consistency in the noise that everybody will hedge according to greeks and
+because of that there's consistency and where to find volume at because everybody even with their
+small differences of how they act in the market are mostly acquiring risk at the rate of delta on
+options that are sold because of that volume can be predicted almost 100 of the time there pretty much
+every time which direction we don't know we can't know because price is random but what we do try to
+do is we make that final assumption is that the volume traded is not more than the volume holding this
+up most of the time and because of that you have a statistical advantage in the randomness which is why we
+don't say 60 68 of the trades will work we say 68 of the days ultimately win by getting to the same
+side they were originally balanced on because there's not enough selling volume to overcome it even if you
+overshoot those temporary last actors getting getting stopped squeezed or whatever the market still snaps
+back into place most of the time so because of our style here we're not trading saying that anything is
+predictable in the market as a matter of fact we take a step back from every trading guru out there
+and say the market is unpredictable price action is perfectly random but statistically the random price
+action never has an accumulated pressure of everybody doing the same thing at the same time
+to overcome hedge pressure without a major news event or something to happen it's rare that you break it
+on the index so our advantage becomes statistical and when you're learning from us does this seem like a
+more realistic approach to the market rather than we're going to bet that we can predict the price
+exactly technical analysis requires pinpoint precision if half of the time it's going to be wrong or
+delayed you need pinpoint precision to overcome that half the time you're just wrong because the
+efficiency is crap but if you can predict where volume can be when you stumble across the principle
+that people say they famously quote me is that when you are right from when you are right
+from the right place then you always make money if you were wrong right from the wrong place
+then you will lose a lot before you win and then you get in again at a terrible spot when you're right
+from the right place it's good when you're right from the wrong place it's bad and when you are
+wrong from the right place you are always wrong small because as rare as it is to have that total
+volume toppled over everything in wall street your stops are tight on these pivots that have 70 80
+percent 90 same side close rate so you are right wrong from the right place where you know where the
+battle will be and you're betting where the battle will be every time and then while your odds still
+may be 50 50 on the direction you're going to use confluence to help you tilt the scale based on what
+the stocks are doing to give you a slight edge this way over this way and then bet from here or as
+close to here as possible every time this is called being right or wrong from the right place entry
+efficiency goes through the roof when you're trading where volume will be even if you get the trade wrong
+it doesn't matter you're trading where traders will be and you're the first one into the trade
+as the volume is starting to spike up you're in before other retail nobodies get in there
+there and maybe there people that got in there stopped they got back in there people see the
+trend and jump in there sure they got in there there and there as well but with us you're getting in here
+and getting it right or wrong from your entry the same probability as anyone else random random random
+but at least from here you're right from the wrong place and you're right from the wrong place you
+were always wrong small and you can write that down because you are certain the market's collapsing
+if you break through monthly hedge pressure at least one strike distance in a non-volatile environment
+on S&P just like our normal stop is 10 points NASDAQ is 40 a non-volatile environment when VIX is above
+triple b which we'll cover in another class or we tell you it's volatile or the largest one minute candle
+is greater than 40 points or 10 points on the index that's what S&P over here and we consider it
+volatile you will adjust your confidence to that degree as well if NASDAQ is falling 60 points in
+a candle then I allow 60 points of overshoot before I determine myself to be wrong is volatility
+and again that's a great rule of thumb volatility can overshoot before liquidity sucks it back in
+this could just be stop sweeping or something so because because entry efficiency is so important
+that's how I win most of my trades my I have a win rate that's fairly high right and because of that
+it's not just it's not me guessing the market right or wrong although you may feel like I guess
+the market right or wrong more often than you do I really don't I just have really good entry
+efficiency if I wanted to long right here and be right from the wrong place I have no guarantee
+there's volume right here but I know there's maybe volume right here maybe I can take a maybe trade and
+then an absolute trade where no volume will be because I know there's a big chance of it bouncing there
+more so than there I will long this one small and this one bigger because that makes more sense
+something small that in case I take a loss I don't want to stop on it because that loss is really small
+I'm not going to take my big trade there if I want to trade both instances long from the wrong place
+in case it goes up okay and then long small enough that in case it dips I can still hold on
+and then add where I wanted to trade now I've got the trade in my favor I'm right when I'm right from
+the wrong place I'm right when I'm right from the wrong place because I'm right from the right place
+again I'm trading here and so if it falls in the original uh the original things I told you that if it
+falls you hit your stop you gotta jump in later instead of hitting a stop make sure that the higher
+probability move gets the larger position it tucks your cost basis close to here and then you stop
+out of all of it there and of course you calculate the small position to there and then the bigger
+position that there has a total loss that you fix and don't ever go go above if that loss is too big
+then adjust these to be accordingly I will always enter my second entry two three times bigger sometimes
+even much bigger buy one buy four more buy one buy five cost basis is 20 up from here
+get your cost basis as close to the right place as possible even if you make a mistake
+if I jump in at four contracts here crap I'm way too big shit it's falling okay okay okay get rid of
+three let's hold on to one take a small loss quickly adjust let it fall add my three back there good now
+my new cost basis is close to here your goal as a trader is to move a cost basis as close as you can
+to high volume pivots at all times possible you see me make those micro adjustments all throughout
+the day in my trades and allows my win rate to go up because I don't normally take the loss before I'm
+right I normally add small then add big if it takes off from there I win small if it drops I lose small
+with a chance to win big and it falls through both of them then I lose both of those trades but it's
+planned okay it's completely different than a revenge trade you know why because you planned
+the whole thing before you got into the first one do we all understand this it's not a revenge trade
+if the whole thing is part of the plan that's how I stay calm when I trade I have all of this in my
+mind at the same point okay we're above here with positive res and MHP is there and it is now 120
+point now this is fed so this is a terrible idea forget forget that this is a big stretch but let
+me let me find something that was like pre-fed okay an example perfect example um we're trading here
+positive res cool I went along for the gap field but it was a flat open and res is not really reliable
+as we've taught okay when flat opens happen remember 10 points of difference here less than 40 points of
+difference here and the gap not as reliable as a leading indicator we need it above or below a certain
+distance to really feel confident 50 is that number for me you might think 30 or 40 I think I want it
+to be greater than 50 or less than 50 to ensure direction it's like between negative 30 and 30 not
+strong enough so but I still maybe want to take the long but I know I have an MHP below here with a
+really solid 50 bullish side okay here's some maybes okay I want to take the long here for a gap fill
+okay this is a 50 point run if I fall where will I stop 40 points lower short but whoa MHP is right
+there why don't I plan instead of stopping on this one 40 points lower to trade from here and here and
+stop on all of it 40 points lower the volatility is not more than 40 points good we're not volatile
+environment check so instead I'm going to lose 650 to 560 it might sound weird to take 90 points
+upside down but because it's almost twice the distance of your normal position then you're going
+to trade half the size so if I say my budget is five thousand dollars of loss on this trade I'm
+saying that's what I set for myself I'm comfortable with that then I lose 650 to 550 let's just round it to
+an even 100 okay 100 points if I were to choose one contract at 100 points that's two thousand
+dollars of loss on that one okay cool now this is a bigger risk to the smaller reward which kind of
+sucks but if I get that smaller reward I made some money if I take the draw down to here I can I can
+make some of it back just because it's usually going to bounce off the MHP with that confluence there
+so keeping my five thousand dollar budget a one contract will lose two thousand dollars to that
+overall stop and I always stop below my planned last entry not the first entry the planned last one
+as long as the entries are close enough I'll take both of them say I were to buy now I've got three
+thousand dollars more to work with on 40 points of stock 40 points is eight hundred dollars per contract
+so I can get up to four contracts here to lose the 40 points to lose another 3200 and that's puts me on
+my five thousand dollar budget I can buy one in case it goes to there and four more in case it goes
+somewhere and with a one and a four spread a total position of five it just needs to go there one fifth
+of the way up one out of five to break even my break even point was moved very close to the high
+volume pivot and then I'm gold I buy one I buy four more it moves to break even close out those four
+now I moved my one position to there first in first out so the one contract took a loss
+three of the four took a gain and one of the four is now sitting there at even now I have moved my
+trade of one to there I can do that all the time to adjust my cost basis if you want to be a little
+bit more risky buy four and when you break even goes out three and then hold a position of two
+then you get back to your original position then hold your position of one now you have your
+original runner from here for the original trade that you want does everybody see this cost basis
+management strategy I never went beyond my stop which is what you can fully control the entire time
+when trading and I can just move my cost basis to where I want if I want to get that one contract
+from here to here it'd be nice to have the one contract with the cost basis of here to go from there
+to there and so I'm constantly maneuvering a position throughout the day and that is the
+difference between me and everyone else that's trading who you watch and may not do well most
+people you watch what would you describe they like to do they get it on a trade and then they just hold
+on to it so they either win or they lost they lose you understand that right most people you watch
+kind of like that they pick a side the efficiency is probably bad sometimes good mostly bad and then
+they just hold to see if they win and a lot of times they get chopped before they run because they
+don't know how to manage a position and they don't understand that volume is where you need to
+trade from they're using price action and price action makes the the very bold claim that you are
+very efficient even though it's delayed and it's analysis you have to still be very efficient with
+that delay as an engineer that blew my mind of of peak stupidity how something that expects you to
+be exactly precise where the indicators themselves are delayed how does that even work the more
+smooth they are the worse it is so how are you going to be precise with delayed tools it makes
+no sense but technical analysis requires you to be perfectly accurate on this pivot when your
+signals don't come until after that pivot happens even the most fastest thing will only respond when
+that candle happens however rocket scooter you know that's the point trade from before you even get
+there and as it's falling and falling and falling and falling and hits it now i know i can make the
+trade on the red not with the green to give me the signal on my technicals you are always going to be
+in the trade faster with volume prediction techniques even vwaps even volume pivots on a volume profile
+you will always have better efficiency than somebody using price action technical analysis always you will
+always have an advantage over the next trader even if it's slight even if it's a couple points but it's an
+advantage do we all understand you physically need to stack your edges on top of each other as a
+trader every small advantage you do adds up like owning any business every time you can cost save
+somewhere it adds up so with us we know where the action should be therefore we're trying mostly to
+be right and wrong from the right place so an example here i were to buy at monthly hedge and with a
+with a 40 point stop let's just draw from 600 560 is the stop right here okay here to here
+one time check it worked here to here two times checked it work here to here x didn't work actually
+sorry sorry here here x didn't work hit it again here to here check it worked the trade i took i hit it
+early and it still worked too one two three four one time you lost so when you're trading choppy flat
+days like this it's very important that these high volume pivots you you hit them every time because
+the odds are in your favor most of the time and even if it stops you out don't have horrible efficiency
+by longing right here and then stopping and then longing right there again and then stopping again and
+then it comes back to there and you're too scared to trade it because you took two losses because of
+shitty efficiency right your job is to wait for the volume pivot or be okay with missing out on the
+trend crap i miss out on the upside uh let me get on it no matt says your efficiency is horrible and
+you're gonna get out of sync with the market and you're gonna long at the wrong place and then stop
+and then long there again and stop and long there again and stop and every time you chase especially
+in choppy markets you're gonna lose people who use opening rage breakouts and and ict stuff do fairly
+well in markets that trend for the day yeah you can very well chase a fair value gap or whatever and
+make some money but markets that chop kills strategies that chase kills them strategies that chop you thrive
+in rocket scooter and strategies that rally and you didn't take the chase you just miss out how's that
+sound does that sound better i can't promise you'll thrive but i haven't i can't make the legally make
+that promise you understand the worst with rocket scooter if you don't chase is you just miss out
+you don't lose anything so the idea is this philosophy is completely different when everyone else does
+everyone else is chasing price open for a breakout you are strategically betting that there's just not
+enough volume to topple over the entire juggernaut of brick wall wall street so you're trying to be
+super efficient where volume will be and all day long people are like matt why'd you do this matt why'd you do
+that why'd you short here why'd you long here it doesn't matter as long as i'm doing it from the
+right place it doesn't matter why'd you short there matt why'd you long there as long as i'm playing at
+the right place my efficiency is really good and that's all that matters sometimes the judgment call
+is man indicators are all over the place i don't know what i want to do and let me i just feel let me
+take a short but i'm not just randomly taking a short i'm taking a short from here from that pivot
+because that's the place to do it from even if i don't have the confluence and it still worked
+it's still a one-to-one trade even if i'm wrong with low probability i can still take it because
+it's from the right place my efficiency is pretty good when you start to notice when your efficiency
+is good on trades and as long as you're positioning small enough to not blow up taking multiple trades
+per day most people that i've talked to have found they trade less and only when needed
+they don't feel that fomo of chase anymore and that their win rate goes up ever so slightly if not
+big because they're trading where volume will be it's the days that are choppy that kill momentum
+strategies they kill rsis they kill elliot waves they kill all that stuff they kill ict stuff but
+volume is volume no matter how the price action looks and that's really the bet we're making a
+statistical bet with statistical edge you're going to be wrong a lot of the time so there's
+long as you're wrong small being wrong from the right place then you're more able to survive
+like the blind monkey remember being wrong from the right place you're always wrong small
+and that's really it one more thing
+hold on let me see
+if
+you open above hedge pressure or monthly hedge pressure
+and you break below it something very strange can happen i'll give you an example is let's say that
+i'm long 2000 contracts or 2000 here and all of a sudden market went to there and i'm like oh i
+kind of want to be short the same amount excuse me and i'm going to go from 2000 to minus i want to go
+from a long position to a short position the same amount what might not be obvious on the surface
+is that for you to maneuver from 2000 it's the same size position one way or the other but for me to
+maneuver to here you got to sell 4000 to get there and that's a very key point to what causes gamma
+squeezes just for somebody to flip-flop their bias to the other side of the trade it costs double double
+the position to get there that bombardment of twice the size to flip-flop your polarity is what happens
+what causes markets to get a little choppy and volatile if you break through monthly hedge pressure
+everybody that's longing might be flipping shorting or that net flow flips from long to short
+on that hedging breaking hedge pressure past one strike distance can cause the market becoming
+irrational i have a whole class on this just kind of briefly touch it here
+irrational means structure is broken and one of the easiest ways to tell the structure is broken
+is that the low probability thing has happened it's not the likely thing so when the unlikely thing
+happens you're starting to squeeze people and flip people around so if you expect hedge
+pressure to hold and you break by that whole strike and why is one strike distance important
+what do we mean by that we call it we call it strike distance of qqq and spy it's kind of shortcut
+but one distance between options is that like that 50 delta and that 50 delta and that 50 delta for each
+event of option how do i know if 550 calls or 500 calls are broken on spy or it's just noise well
+if i don't really know if it's just noise or we're actually breaking 500 so the only time i'm
+certain we're breaking 500 is if we're trading at 50 the next strike the next strike is at 50 delta
+i'm probably 100 certain that this strike is broken would we all agree like how do i know that 500.1
+is breaking it or just noise i don't how do i know we've broken through 500 i don't know but
+i'm 100 certain we've lost 500 if we're at 501 doesn't that make sense
+like if we're at 500 here how do i know that this is a break and not just noise well i don't but at
+499 where there's another option strike if we're dancing here i'm fairly sure that's broken right
+that philosophy is what led me to lead myself to take one strike stops because at one strike i'm
+fairly certain that i've lost my pivot and it's no longer in noise and that has worked out fairly
+well for me in my entire trading journey so one strike translates to 40 nasdaq and 10 smp and you
+can do the math for any other index product or whatever but it's one strike distance in the major
+etfs that go with the trade you'll see that that risk lines up fairly well and so if you move beyond
+one strike distance then you're throwing other options in the money that shorts have to rush in
+and also hedge against with that double bombardment pressure so what ends up happening is you can cause
+a chain reaction to sell off we call it irrational markets are irrational then low probability thing
+happens when irrational most of the time you're going to immediately cut or size down
+mostly cut irrational structure is broken irrational resilience may not work anymore
+right you throw out anything that implies the market has structure irrational markets structure is
+broken so why why use heavy confluence that requires structure to bet that the index is still tracking
+the stocks very nicely people are getting squeezed and clawing all over each other to get out of it
+you can assume that the nice gentle structure trade is not going to work out so when irrational or when
+the low probability thing happens we'll have a whole class on this by the way but as a rule of thumb
+wouldn't you agree that the low probability thing is happening you're probably getting out of the way if not
+sizing way down it's kind of common sense right somebody said
+as a rule of thumb so if you break hedge pressure and want to trade other high volume pivots
+the break of hedge pressure will have you reconsider your trade if normally you broke through hedge
+pressure and normally you'd hit this with a normal and you follow the dd band and you also would hit this with a normal
+if the confluence was there if you lose monthly hedge pressure more than a strike then you're not going to trade this with a normal
+you're going to trade that smaller do we understand because you've lost that structure you open up above
+here and you lost that you're going to trade smaller as an adjustment to your other position naturally would
+right the unusual thing is happening let's size our bet down a little bit and that's really kind of the
+takeaway from this class is that if something should happen that's not happening the natural basic principle
+in your brain is i'm on a size down even though i should be hitting that hard normally
+right if we open here and hit this and fall down to there i'll hit this normal it's not being below monthly
+hedge pressure that's the problem it's flipping from one side to the other that causes that bombardment
+that's enough bombardment that can possibly kick all those positions out those monthly you know those people
+stand there for the month and start triggering stops and cause a chain reaction better safe than sorry
+certain breaks of high volume pivots cause irrationality certain some of them don't weekly hedge pressure
+not considered irrational why well because it's fairly common that it breaks it's not as
+structure strong as mhp we don't consider this irrational so if i break weekly hedge pressure
+i'm not sizing down anything else um because it it's it's slightly better than a coin flip 40 60 right
+and then 70 30 or 68 32 breaking monthly hedge pressure will be irrational it'll cause you to size down
+on other trades um okay good points right okay um anything else on mhp that's we're talking about
+one of the things is that when you do break monthly hedge pressure the market can collapse
+and a lot of times that's your earliest oh i have one more thing to talk about it's your earliest
+warning sign of a big reversal as you talk about in monthly maps when you were to fall from bull
+zone to bear zone and that's uncommon when will you ever lose all that bull zone and bear zone
+structure on monthly maps so if you break mhp that can start a down downward event that can create a
+catalyst um oh and we'll talk about mhp reclaim in a second remind me of that so monthly hedge
+pressure because it's based on monthly options related to now in a normal non-volatile bull market
+let's set a price right here and if price is here and stays flat all month in a bull market
+monthly hedge pressure will be really far away at the start of the month the month goes from third
+friday to uh to um last monday sorry sorry third friday third friday so the the first monday or the
+fourth monday sorry to the third friday is your month on that fourth monday where the month starts
+monthly hedge pressure will be very far away in a bull market and then as you get closer to expiration
+you will notice that monthly hedge pressure becomes actionable and therefore that trade
+is nearby it actually curves up fast because of the time decay issue or the time to a portion of it
+so at the start of the trading month right now in the middle of the trading month
+um monthly hedge pressure is sort of out of the bounds we're safely far away from it but when you
+get close to expiration last week or so or longer of the month you will see monthlies nearby and
+probabilities of collapses and crashes near expiration become higher just because the
+actionable pivot is nearby now this is dynamic hedge pressure the estimate that's a different
+one than the actual on the actual i'll pull up here you'll see in the middle of the trading month
+it's very far out of bounds we've been in a bull market for a while every single day hedge
+pressure is going to move when it recalculates and towards the third friday of the month which is
+coming up in two fridays you will see that this will be closer to price and actionable
+so you're going to get a lot more trades closer to the end of the month off of monthly hedge
+pressure and you're going to see that if you do break it near the end of the month it usually
+causes those end of the month sell-offs and it's mhp that usually causes that squeeze and you'll see
+that a lot now reclaim okay high volume pivots if you open on the one side and markets fall and you
+long and it fails you stop and get out of the way but every time it re-approaches the strong we'll
+call it the strong side and the weak side because of the odds 73 27 right anytime you fail the strong
+side re-approach the strong side we don't wait for a bounce to take a trade we chase it at the same
+pivot every single time on the real call it the reclaim anytime you reclaim the same pivot so here's
+a funny thing it seems like bad efficiency but this time you're playing on the odds you stop out and
+lose and yet you all this ground takes place that you miss out every time on an a plus pivot
+or a pivot that you reclaim which is monthly and weekly anytime you reclaim the side you started on
+you will chase at this high of the screen every single time because you're betting on closing
+above it you're not trying to capture all the efficiency of this move you're out of the way
+here better safe than sorry on a possible market crash and when you're back into here you're back
+to betting on that 73 27 or whatever it ends up being does this make sense you're betting that you
+close above so anytime it gets back to the strong side jump right back in on it every time that's the
+way that this works that the odds work out in your favor that every time you're back here you're
+betting that it closes above it will be rare and i mean rare that you lose there and reclaim and lose
+there and reclaim and lose there this doesn't happen that often without other clues mhp res is negative or
+something else is happening okay if mhp is positive you can reclaim it hard if it falls through here
+and it comes back to there and mhp is negative resilience well now you have a choice you have a
+73 chance and it goes here and 27 chance it goes there but you have confluence to the downside and
+therefore this unlocks the potential for you to make a discretionary choice don't want that high
+probability trade against confluence or do i want to jump in on the confluent bet to take it more
+often than not i will take the confluent bet and because it's an mhp break is the run going to be
+small or big and it's irrational structure you break mhp is it going to be big yeah it's going to be
+pretty big so because it's going to be pretty big wouldn't you naturally take a smaller trade
+especially if you jump from the high probability side to the low probability side you're also going to
+take a smaller trade naturally so when you take the low probable bet you're taking a small trade
+anyways and because it's an mhp break it probably falls pretty fast so you're not taking a lot of
+risk to get a big gain and it naturally works out because your brain is programmed when you have to
+take the small probability move to trade small anyways and just so happens in this instance the small
+trade may move really fast so you have a really small risk low probability trade but high opportunity
+for big return so on reclaims without the confluence you kind of get the option take the big bets
+the high probability without the confluence then you'll naturally trade smaller too because you lost
+the confluence now you kind of get to choose and there's no right or wrong answer there you have to
+weigh other clues out to try to guess and reclaim trades without confluence you can kind of take that
+when a short is unlocked you may decide how to own a 10 point scalp or take the risk for the 50 point
+drop right you can make that choice there's no right or wrong answer remember trading's random but
+it doesn't matter because you're right or wrong from the right place that's all that matters how many
+times a reclaim fails well we don't have individual stats of how many times a reclaim will fail
+but uh we just have the total days trades but statistically i mean uh anecdotally from my own
+experience very rarely if you failed a reclaim two times it's dead you don't see three and four and
+five reclaims failing before it goes it's very rare unless it's volatile markets but the reclaim is not
+going to stop you up because you're adjusting volatility if nasa gets falling in 80 point candles
+and your stop is 80 points it might do this but you've accounted for that you're very rarely going
+to stop that volatility multiple times and reclaim more than two or three i never see four five six
+seven eight nine ten almost never usually if it fails a second time it's done and that's just again
+anecdotally don't marry that stat that's just my observation yeah my experience doing this okay um that's
+really it for mhp so now should you guys learn something here it's one of your favorite pivots
+it's just not always nearby um if the market were to tank on fomc and fall through here and you're
+bullish the market then you can bet on bullish structure there like dude we sold off on fomc oh
+crap oh crap oh we're here i'm a bull heck yeah liquidity pocket oh mhp yeah let me take the long
+confluence oh heck yeah let me take long oh dd ratio bullish yeah let me hit the long hard there
+right and that's kind of how you think long for the long haul um right okay that's monthly hutch

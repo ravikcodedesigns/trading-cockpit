@@ -1,0 +1,693 @@
+okay welcome to class two the position sizing master class this is one of the most important
+classes that we have uh you're going to learn a whole lot and some of it's very very very eye
+opening to get started i want you to go to the discord and you can see that there are some links
+next to course two in the 20-day boot camp classes uh the links are going to have one of them's going
+to have a link to a cme group website and then two of them are google sheet links on these google
+sheets you'll be able to have access to them you'll not be able to modify these but what you're
+going to do is go to file and make a copy and save them on your own uh your own google drive
+these sheets are gonna be very important to this class now i'm going to give you a very cool lesson
+about market structure a lot of times the word structure is being thrown around a lot
+and you don't even know what that means and a lot of people that even teach quote-unquote structure
+don't even know what it means and a lot of them explain it with candles let me tell you something
+cool about structure and i'm going to immediately get right into it if you go to rocket scooter and
+you click the chevron at the bottom of the platform and you look at all the futures contracts that we
+have in the ri slash gd table today we're gonna learn all about the risk interval this is the actual
+structure of futures futures are traded on an exchange that allow it to do two things number one
+trade on its own you can buy and sell the futures contracts but when you're not pressing the contracts
+up or down the futures market is tracking some underlying spot price of something someone called
+a spot market for an example is that oil futures is tracking the price of a barrel of oil you can
+buy a barrel of oil by calling somebody that has a barrel of oil to sell and they can sell it to you
+for whatever price futures is going to try to guess what that price is going to be at a time
+in the future and that's kind of how futures works so futures are different from stocks and the way
+that stocks have no tracking a stock is going to trade based on its own supply and demand there's a bit
+an asset by a market maker and when you buy it it goes up against the dealer's desire to sell and the
+other side is true when you sell against dealer's desire to buy price will lower but the difference
+is that futures has that same effect you're buying against and selling against a bid-ask spread but
+also that bid-ask spread is moving around to track whatever it's tracking ndx is the nasdaq index right
+nasdaq 100 and nasdaq futures is tracking the ndx if the ndx starts to move then nasdaq futures will
+start to move but what's actually when i say it's starting to move what's actually really happening
+there and our belief is that that the simi group um is is the kind of owner of the exchange right
+and they run the globex which is this electronic casino that you trade on that has a lot of rules
+on it and you're going to learn a lot about them in some of these classes in the boot camp
+one of them that's most important is how they set margin requirements and we'll talk about that in
+this class but when the ndx is moving the nasdaq futures will move as well but but it's that
+market makers are quoting like on the ask and quoting on the bid but the simi group sort of
+as we believe sets where the minimum and maximum uh minimum ask and maximum bid they can quote at
+so essentially like the cme just draws a line where the bid and ask should be and your dealers have to
+line up behind it the cme is calculating what should the bid and ask be based on the ndx ndx goes up
+okay so the bid has to go up and so does the ask and then as they as they send the signal dealers are
+going okay the bid the minimum uh maximum bid and minimum ask is raised so let's move our quotes
+so the dealers are like quoting inside of a limit other than it's different than stocks that they
+can kind of like freely quote wherever they want and so it serves two purposes number one is that
+the futures can trade on their own if the ndx is flat and you go out there and fat finger a bunch
+of futures you can push the futures price up but because the stocks that it's tracking aren't moving
+when you stop putting that water flow on there it's going to naturally sort of like fall back
+in the place and get back on track to where it was so you're allowed to trade against you know a
+natural market but when you're no longer applying that unusual pressure that natural market sort of
+snaps back in the place like there's a spring tethering it to what it's tracking and a lot of things in
+markets are going to track other things they will have some kind of mechanical autopilot on
+it to do so an easy way to think about it is a plane like you set a plane trajectory to go from
+a to b and as you're flying the plane a wind pushes from the from the west and you start to steer off
+to the east well what the autopilot is going to do is as soon as that pressure is pushing against you
+the autopilot is going to steer into that to kind of get back on track and as soon as it's out of
+that wind it sort of converges back on the same path the wind is the natural order flow
+the autopilot is the cme tracking algorithm and when you hear about people saying there's a master
+algorithm in the market they always get it wrong because it's not some some magic force trying to
+squeeze your stops there is a master algorithm it's just an autopilot that tracks an underlying spot
+price and all futures are like this and only futures are like this everything else well options sort of
+have something like this too but options are based on an equation the quotes are based on black shoals
+which is an equation that sets options prices so futures are also quoted on an equation that's
+tracking the underlying that allows a little bit of flexibility before things go bad now a cool thing
+to note is that when the futures if the index is moving a certain way and you just start buying futures
+and not buying stocks like an abundance the futures will typically go a certain distance very quickly
+before the stocks have a chance to move and what happens is if it goes beyond that distance
+the market falls apart and these two things can't converge quickly um this distance is something
+you can calculate i'm going to teach you about in this class that distance is based on margin
+requirements and margin requirements are a framework of structure in the market they are so important as
+a matter of fact everything that you see in rocket scooter is built on this framework of this structure
+okay so margin requirements right that is how futures are um priced for an investor to buy a futures
+contract margin requirement is how much you got to put in the bucket to trade it your your broker may
+charge you five hundred dollars or something for a contract but there's a margin a total margin that has
+to be achieved by you and the broker so an example is if you go to the see me website the one i asked you
+to open you're going to see a program called span and span two for for nasdaq futures and s&p futures
+you're going to look at span two so we can click this right here we can go to the cme exchange we can
+load up um the equity index and we can load up uh let's look up nasdaq we were talking about that a
+second ago so i'm going to go down and find in queue e-mini nasdaq futures and you can see that the
+current december 2025th contract the moment trading right now is the date of this video has a margin
+requirement for long and shorting of thirty three thousand four hundred dollars let's use the long
+one because that's the bigger one thirty three four hundred okay this means that every contract
+you trade you need to have thirty three thousand four hundred dollars invested into the pot now what
+is this pot well you have your exchange that requires orders to go through it and orders are
+guaranteed through a firm called a clearing firm and a clearing firm is basically like a like a bookie
+one that that that looks at the buyer and seller there's a buyer over here which is you and a
+seller which is someone else the buyer your broker says you only need to put in five hundred dollars to
+trade this contract you know some of your brokers give you really cheap contracts but clearing says
+well the exchange says it's thirty three thousand four hundred so the buyer is you so the broker has
+to come in and pitch the rest of the money into the pot so thirty two uh nine hundred you guys following
+what i'm saying so whenever you're trading on margin it's you your broker's loaning you the rest of the
+money and y'all are putting into the pot the seller is the same thing in reverse clearing goes okay you
+cleared okay you cleared check so now you have a cash swap sort of arrangement where the loser can pay
+the winner in this trade whenever one person liquidates the cash goes from this pot to that pot
+or that pot to this pot the broker makes sure that you lose your money first before they do it's always
+the case right and so margin is a thing that is set based on conditions of the market as a matter of
+fact margin margin requirements this number right here is the single most important number in futures
+and it tells you so so so so much about futures let me show you something very cool just with these
+numbers right here i can calculate something that has um over a 90 accuracy of something happening
+i'll talk to you about in just a second let me load up nasic futures really quick checking this one
+okay so on rocket scooter if you go to this table and you go to the nasic futures which we show you
+if you go to the ridd table and you go to here and it says 230 points did you know that you can come in
+here on nasic futures and you can draw a distance a box of 230 points let's just draw one right here
+just a random box okay i'm going to set the distance to 230 okay
+okay so that's a box of distance 230 uh wait a minute let me show you that right
+8 30 24 8 30 24 600 okay sorry okay now i'm going to take this box i'm going to show you something
+really neat about that box this is something that we calculate from those margin requirements
+how are these margin requirements set is that when market makers uh or any investment uh anybody
+that's investing in the market are reportable entities they have to report their positions
+to the semi group uh every single reportable entity they run this program called span and span
+determines where the risk of everybody is and i'm just going to kind of simply draw it without
+trying to go too detailed in math what the risk is is that let's just say that there's a bunch of
+people are like i'm short here and i'm here and i'm here and i'm here and there's other people that
+are like well i'm long here long here long here and long here then the semi group will know well
+the liquidity is somewhere inside of here there's the buyers and there's the sellers so if the futures
+are tracking the underlying the underlying starts moving very quickly on a trump tweet the futures are
+also going to have to take a guess where this will be in the future because it's here now but
+it's going to keep going futures are always trying to guess the futures of the future of the thing
+they're tracking so how far is that step change it does make if nasdaq just bumps a little bit
+futures are kind of overshoot a little bit very quickly how much well anytime price raises you're
+looking for sellers and anytime price lowers you're looking for buyers and if you need to know where you
+need to go to find the sellers well you don't have any evidence of where they might be but you do have
+a clue because market makers and other institutional investors have reported their positions to you
+a bunch of people said they were sellers there and a bunch of people said they were buyers there
+the semi group will go aha the distance between the buyers and sellers is roughly about 230 points
+because of this risk model they run span is very intricate thing i'm very much simplifying it but
+this is kind of what it does so anytime the futures need to make a quick zap on a news or an event where
+it moves quicker than the stocks or whatever it's tracking it will move almost a set distance as a
+step change to test it's so accurate a fact that that number that i gave you from that table can
+calculate some really neat stuff and the market there it is there there it is there there it is there
+do you notice something interesting about that distance and once i when i draw it once you see it you
+can't really unsee it you're going to see that the market tends to like behave in waves of this distance
+that's calculated for margin requirements it almost looks like something that's tracking something
+else and then a wind blows it off path and has to snap back into place you can take this distance
+over and over and over again and see that the market will bump on it i'll do it for s&p as well but
+you can you can do this all day long and you can see that the market just kind of oscillates inside
+of this range over and over and over and over again the waves that the market moves is a distance you
+can calculate based on margin requirements and it makes sense if you understand it the way that we
+described it is that if trump tweets something and the index moves up futures are going to be like all
+right where is this going to land well let's just take a step change and test we know that the dealers
+are 200 something points apart on risk so let's move 200 points and test where we go and you're going
+to see that like in cpi comes out the market's going to move up that risk interval most of the time i
+discovered this when trading oil it was a really fascinating thing and i knew that the margin
+requirements had something to do with it because that distance was very accurate almost every time
+and the margin requirements would change that distance to get bigger and smaller you can do the
+same thing for the s&p um you can go here and you can do the s&p and this table works for any futures
+contract we've reverse engineered cme span one of the first things i ever did to come up with this number
+61 50 they give you the margin requirement you can give you can get a range out of it people tell
+the cme where their positions are they give them the risk cme calculates a margin requirement when we
+say margin requirement you say range okay so that's the range markets will move to track the underlying
+and how much that deviation happens before it can get back on track successfully uh the oops the uh the
+one i had here was 61 50 right for the s&p and you can do this for anything so let's draw a box of 61 50
+and every single day rocket scooter will update that number at 5 30 in the afternoon right before the
+futures market opens um let's do 61 50 and we'll do 6 800 okay and again uh it's it's almost like magic
+this is a structure point in the market this actual structure and you will see that the market just
+somehow has this affinity for this number um now the margin requirements recently have changed but
+you're going to see that a lot of your waves and moves in the market are going to be of that distance
+or about that distance um the market is almost testing liquidity now sometimes it's within it but
+you can see that the bigger runs tend to run that distance now the margin requirement used to be about
+50 something a little bit ago but you can just keep doing this over and over and over again and you can
+see that the market just loves that distance there's there um there's that wave there there's that sell
+off there and over and over and over and over again okay um it's pretty neat how it works high to low low
+to high low to high it kind of looks like if you were tracking the underlying the underlying just kind
+of moves like this right and it seems like when you're looking for the natural buyers and sellers
+it sort of just oscillates that risk interval distance around it does this make sense this kind
+of looks like some math going on here this looks like a an autopilot kind of tracking program the fact
+that it's consistent proves that there's some some some um some something going on here under the hood
+right and you can just do this all day long it's really fun go test it with any futures contract
+there's that wave there there's that wave there there's that wave there uh you know there's that wave
+there i mean you can keep going on and on and on on the big drops when it drops really quick
+it tends to just love that distance right it's really neat and that really is the step change
+that the tracking algorithm takes while tracking the underlying and we've actually cracked the code
+and figured out how the system works and now we can give you that range from the margin requirement
+we give it to you in rocket scooter every single day and you'll always have it so risk interval moves
+are very important so what happens when the market moves a risk interval cpi comes out and all of a
+sudden it's a huge wave of selling futures have to kind of land somewhere where dealers will buy
+and pretty much everybody's sort of like guess well we know the buyers are that far away let's go
+down there and test and see if that's the level and what happens is if you move that distance
+and keep falling this causes something known as a catalyst what happens in this instance where
+the market moves a risk interval and keeps going on a single event is that tracking algorithm
+that moves very quickly overshoots where it needs to go and then the thing it's tracking and it can't
+converge and they sort of go all over the place and then the market sort of flips out and falls apart
+rather than it moving and they catch up really nice and easily and converge at the same spot what
+happens is the selling pressure is just too overwhelming and the algo guess is wrong and what happens in a
+any any mathematical system that's a you know a feedback loop like that you can diverge the system
+and so if you move more than a risk interval let me show you what happens here the market will
+literally collapse just because it creates an effect now one thing you'll see on here is i can go ahead
+and start at the top right here okay if i measure risk interval on this move somehow there was an event
+this day remember we sold off and the moment that you break that exact distance what do you notice
+about the volume here at exactly this moment in time the market moves a whole risk interval and then
+all of a sudden keeps selling you notice something interesting about the volume like exactly here
+right that volume is starting to climb very quickly right and you're going to start to see that from
+this point forward the volume is going to just be all over the place and choppy what happens when you
+break this is that the market starts to get really crazy and you'll see this happen a lot in big
+sell-off days the moment you move more than a risk interval without like testing that uh like
+essentially undoing that move or kind of slowing down you're going to cause a big effect where the
+market just sells off and can go crazy um the same thing i can tell you here this volume spike
+is likely at that same distance right so what you're going to see with this risk interval it's very
+important because you can see that the market while it does move with a bunch of noise
+this noise seems to have like roughly the same distance and that's pretty normal lots of buyers
+here okay lots of sellers there okay it seems to be deviating a little bit then snapping back into
+place deviating and snapping back into place so we we can all understand that there's some kind of
+system going on behind the scenes and we exploit that right so the thought of a risk interval is that
+when the market just suddenly moves that's about how far it moves very quickly before at least stalls for
+a little bit it gives you a minute or two or 20 or even an hour to decide what you want to do next
+before it keeps falling so when you're trading sort of like the worst case scenario you always
+plan for is the market to literally just fall that much under your feet if you absolutely forget to set
+a stop that's about how far the market's going to move before you get your first sort of breather on
+this okay we use this in some of our positions positions sizing um criteria and the risk interval
+being such a very important part of the market it's in almost all of our indicators especially
+the dd band which is one of the ones you'll see as we have a class on this coming up dd band is at
+futures close you will raise one risk risk interval up and one risk interval low and it's also going to
+create a high volume pivot that's high volume every single time um the dd band actually is an
+indicator where only uh four percent of days close above and eight percent of days close below and 88
+percent of days close in the middle remember uh if you were watching me on the stream when you watch
+this video it'll be in the future but this day when i was trading i did take a short off the dd band
+uh because i was betting that it closed inside and this is one of those days that did close inside
+um now what's neat about that is what's going on here as well this overnight this pivot is given
+overnight and it's almost the same thing when markets open and close it's a high period of
+liquidity and when futures are trading overnight when our stock market is closed futures again can
+stretch a certain distance away from a stock market that isn't open and usually at that distance
+you're going to see some buffering to the buying and buffering to the selling that sort of drives
+it back on track and maintains order inside here it's so great that most days will not break through
+these bands uh and you'll learn when we go to this class that it's a very strong pivot so this is one
+of our strong pivots we trade from again based on risk interval uh which is based on margin
+requirements it's it's a very very very very very neat tool okay um so when it falls way further
+the people are getting liquidated it's usually dealers right that are buffering the order flow
+by selling against the buyers and buying against the sellers that the dealers are the ones that
+are hedging say that the dealers are longing and maybe buying some puts underneath it and when you
+press through the other side it's the put sellers rushing to sell the underlying to hedge their put
+exposure that force it even lower which then squeezes out further longs and causes a collapse
+yeah so the system just can't track the underlying as effectively and it creates the sort of domino
+effect where people start getting liquidated and all kinds of random hedging and stuff
+immediately takes place okay so so far do we understand that you're kind of just trading on this
+um video casino that's tracking basket of stocks and it's got some kind of order to it and that's
+really all we're gonna leave at you okay now when we go back to um this this um sheet remember when i
+told you i calculated um that 20 if you as long as you keep half your account after 20 straight days
+of losses and you randomly long the market the blind monkey thing it makes money over time no matter
+what this is the spreadsheet that shows this and it allows me to calculate a position size based on some
+criteria now inside of here i can set a margin requirement so an example is today it looks like
+we're trading s p so if i go to the s p and i go let's load this up i'm going to do this sheet for
+the s p let's find es and we'll see that the maintenance long is 22 391 if i go to the sheet
+and i do 22 391 and i calculate the risk interval which is what 61 50 from our from our table and then
+i set these parameters here you're going to notice something very interesting um about this so the
+margin requirement i found out that if you were actually going to take uh if you were to take
+an account of a hundred thousand dollars and you use an equation that i'm out to give you and you um
+follow this equation to a t if you have 20 straight days of losses you will at least have half of your
+account left following this one equation this one equation is extremely important and what it does it
+deleverages your futures account if the semi group tells you it takes 23 000 or whatever to trade this
+contract your broker tells you it's 500 bucks don't go out there and trade 44 of these things trade one
+of them for every 22 000 that you have if you take the net lick of your account which is the total amount
+of money you have and you divide it by 1.1 times this margin requirement
+which is what's being shown in here 1.1 is the maintenance uh it's the initial off the maintenance
+again this don't worry what that means but that's the real equation if you divide this your net lick
+divided by 1.1 times the margin requirement it will give you a contract size in this case it's four e-mini
+s&ps that's the maximum trade i'm gonna take to follow this equation what happens is if my if i lose money
+each time do y'all see that it makes me want to trade smaller each time and i ratio my account
+smaller and smaller and smaller according to this one this is a real account a prop account i have
+other rules for prop accounts but in a real account it lowers my position size such that when i lose
+in this instance it's a stop loss of 10 points if i lose 10 points every trade one trade a day for 20
+days i have greater than half of my account at 20 days so you can do this over and over and over and
+over and over again and you'll still always have half of your account left which means even with
+this rule if you do one trade a day at 10 points secondly you can never blow up because xeno's
+paradox half of a half of a half of half is never zero right so at some point you're going to win
+trades you're not going to lose every day forever but you can see following this equation um it looks
+like even 34 straight days of losses i still have half of my account left right this properly
+deleverages all this margin uh that you're given to trade with because if the cme group says it takes
+twenty thousand dollars to trade a contract don't go into a deal with your broker to borrow money to
+trade it just trade what the cme tells you to do and set your position size off of that and you're
+going to make sure that your losses are very tolerable if you guys remember the last class i gave
+you a scale and i said that we're going to learn something called the normal medium small and sit out
+scale right and in a long trade if you lose confluence you're going to trade smaller and
+in a short trade if you lose confluence you're not going to trade at all a normal a medium is half of
+your normal a small is a tenth of your normal and a zero is a sit out well what's your normal well
+here if you don't set your own normal you can let this equation set a normal four contracts if i'm very
+confident in trade two contracts if i'm not four micros if i'm very much not confident and then
+set out if i'm not what that does is my best confluence i have is the one that takes the
+position that if i lose 20 days in a row i still have half of it left this is a very conservative
+approach to position management and it's a lot smaller that i think a lot of you guys trade am i
+right a lot smaller i bet you a lot of you with a hundred thousand trade more than four contracts
+just so you know you're going to accelerate the losses but this is the appropriate way as a starting
+point if you don't have a starting point another way to set a normal is you remember normal is
+decided from person to person but the medium small and sit out is a fraction of your normal
+you are going to set this based on you you can use this equation if you want a conservative approach
+or you can do the following i call it the get kicked in the stomach roll if you lose five single
+days in a row trading a certain amount of money and you lose five days in a row at the end of those
+five days whatever you lost if you feel like you got kicked in the stomach you're like sick to your
+stomach that your weekend is ruined then you're trading too big so what is the most that you're
+willing to lose in a five-day period like you just tell yourself this don't have to type it but it
+matters on what money means to you for you you may only have a thousand dollars to lose in a five-day
+period so you can only lose two hundred dollars a day you might yours might be a thousand two
+two thousand normal can either be set by an equation to set a position size or set by a
+dollar amount you choose i have 100k and i'm willing to lose uh three thousand dollars per day
+okay now when you're trading s&p and nasdaq i'm going to teach you this our basic stop loss
+for s&p is 10 points nasdaq is 40 points i repeat s&p is 10 nasdaq is 40 write this down
+because 10 points and 40 points are the distance between strikes of the options of s&p spy and qqq
+so markets tend to move from strike to strike to strike at the same time as futures markets move
+a risk interval to test so options are moving along intervals to test at the money options and
+futures are moving along a risk interval based on the margin requirement that's set and both of these
+are working side by side to sort of keep the mark intact and these are both of your structure points
+you're going to notice that the futures whenever you're playing on a pivot when you lose at least
+10 or 40 respectively and it's written right here that's how you know you're wrong on the trade in
+a non-volatile environment so you're going to plan your risk off of 10 and 40. an example is if i can only
+lose three thousand dollars per day in one trade 10 points loss of s&p for three thousand dollars is
+how many contracts just do the math really quick see if y'all are quick at this quickie math you'll
+get better at this by the way how how many s&p contracts can i trade to lose three thousand
+dollars in one trade at ten points that's six right five hundred dollars every ten so three thousand
+divided by five hundred is six right so that would set my normal at six three thousand per day i said
+three thousand per week but in this example three thousand per day say if i want to lose fifteen
+thousand a week three thousand per day boom that sets the six if i lose three thousand and three
+thousand and three thousand and three thousand and i'm and at the end of the week i i hit the number
+that made me feel comfortable then i'm totally fine you decide what makes you feel comfortable and
+start there if you need some help and right now you don't know where to start take what you're
+normally doing and divide it by ten and start there and then make it slightly bigger start
+really small don't start big and work your way lower that can be big loss don't find out the
+hard way what you're comfortable with by betting too big at first don't traumatize yourself like
+that start small if you're normally blowing up accounts and having a hard time you're trading
+three minis start trading three micros and then if you're comfortable with that step up bigger and
+bigger and bigger until you start feeling uncomfortable and now you found your sweet spot trading
+your normal position which is your max confidence position your all-in quote-unquote position it's not
+really all in but it's the max you're going to take is still a conservative approach because you're not
+going to blow up your account following these same principles uh by by setting a limit and being okay
+with it unless you give yourself a limit that blows up your account but you get full control over
+this which is so important to trading is because in trading you can't control how much money
+you're going to make the market sets that right but you can always control how much money you're
+going to lose and the basic principle of you control how much you're going to lose you actually
+control if you blow up or not the only way you ever blow up an account is if you chose to it'll never
+just happen um and it always happens because you let it happen you have full control to not let it
+happen these position sizing guidelines if you rigidly stick to them like your discipline i told you guys to
+have practicing every day stick to whatever you choose equation method kicking the stomach method
+it's the same thing um
+okay six three six micros sit out when i have a really strong trade i'm trading six if i'm only
+maybe sure because i lost some confluence three i lost all my confluence but one okay six micros and
+then zero this is control and you'll always see me do something similar now as of the date of this video
+you guys watch me trade um on the stream about how many contracts do you see me take my quote unquote
+small position as of the state of this video about three right yeah give or take about three
+what's the account size in this challenge account that i started with 100k right what's 100k divided by
+uh the margin requirement of nasdaq right let's go back to here and it'll tell me
+and you wonder how i didn't blow up in that that challenge account that i did right so nasdaq is 33
+480 what's 100 divided by 33 everybody do the math really quick everyone type it five four three two
+one three do i practice what i preach absolutely i do have you seen that account go up and down and
+up and down and up and down but somehow magically it doesn't really go past ten thousand dollars of loss
+and ten thousand dollars again it's just sort of in that middle area right with full control even
+when i'm wrong it's the same loss same whatever three 100 divided by 33 is is about three right
+and so what's neat about that is three is my small in this case so i'm actually trading a little over
+leveraged to trade three of my small this equation should actually be your normal so three should be my
+normal and small should be three micros but i'm purposefully over leveraging um
+to trade up to 10 so almost 3x what i should be trading but i'm allowing myself to do that because
+i'm giving that's the number i just chose remember the equation is is just to give you some guidance
+but you set what you're comfortable with i'm comfortable with trading 10 and that's based on my own
+feelings in the market okay but 10 only if i'm very confident like this particular trade i traded three
+and then i had 10 at the at the boundary of something that tends to reject a lot right okay
+so when you're doing your trading you're going to have one of those two methods to come up with
+a position size that's that's good for yourself now a neat thing about this is that when you follow
+the equation method if you if you trade smaller each time you can use the sheet to help you with it
+um and again when i tell you guys the greater market is always bullet when the greater market
+is bullish which is our indicators do you remember what i told you yesterday and recover it what the
+what number of days are green in a bull market you remember the percentage of green days in a bull
+market when our indicators are quote unquote all bullish 70 right so there's it's going to be almost
+impossible if you're choosing one side whether it's only long you're only shorting to lose 10 20 days
+in a row that'd be very hard to do you got at least one one of those days right so even following
+this conservative approach you're always going to walk away from the worst possible scenario with
+half your account you're in full control as a matter of fact plus or minus a little bit of noise
+of getting out your stop or whatever you're not going to blow up your account unless you let yourself
+do it so immediately use some of this deleverage the margin and just trade what cme tells you to
+trade and it will keep you greater than half of your account better than the blind monkey after 20
+days right so that 70 of days if you're longing are green and ultimately will carry you imagine you
+had a month of crashing and you lost every single day and then the next month is rallying and then
+you're just building off of your account you've got something left now the neat thing that also is
+on the sheet is where i always talk about my 12 give or take maximum daily loss limit
+that i set this is based on a risk interval move for instance i'm in a trade at cpi and it doesn't
+just fall my nice normal um you know 10 points on s&p just nice and graceful it blasts the entire
+risk interval on cpi and it happened to accidentally be in a trade or something what do i do and we
+remember from this table that 61 50 is that risk interval move and so as we've agreed is that the
+risk interval is about how far it's going to move when it falls under your feet before it
+pauses so let me plan for that scenario if i use the same position sizing guidelines the equation
+version and i were to lose five days in a row like five catalysts in a row like cpi one day boom i lost
+uh ppi one day boom i lost fed boom i lost big loss big loss big loss following this equation
+the distance of a risk interval gives you half of your account after five days of the worst case
+scenario of a giant catalyst which doesn't happen every day but if you happen to have five of those
+in a row like the worst possible day and the worst possible luck five days in a row you still got half
+your account left and it averages out to about 12 and a half percent loss each time on your trade so
+when i'm trading a hundred thousand dollar account what do you do you guys know on my stream what's
+about my target my pnl about how much up and down are you seeing me ride as much as i'm letting it
+stretch when i'm wrong or right to trade right about this much right no no in in the hundred thousand
+account like how much upside down am i and how much am i allowing myself to win about 10 000 bucks
+right that's what i'm giving myself that full loss limit and again i'm just using this as a guideline but
+that limit is what i'm agreed to allow myself to lose on the worst possible day because a risk
+interval move is the worst possible day you're longing and then the market just drops that 60
+points underneath you you forgot to put on a stop oops and then it falls this much before it halts and
+then you blink and then the market's sitting there and you've taken a loss if you follow this guideline
+that risk interval which again was this distance of this box you see when the market suddenly falls
+out underneath you it's not moving more than this box very rarely is it moving more than this box
+before it stalls out a little bit before you get a chance to breathe right so because that is the
+distance of the structure of the market then i'm going to make sure that my position that i'm in
+allows me to survive this if i accidentally go take a leak at the wrong time forget to put in a stop
+up does this make sense everybody so with this
+equation it's the same thing net lick divided by 1.1 times inr gives you 20 days of a set stop loss
+of one strike distance to have more than half your account it gives you five days of risk
+interval kick you in the ass lose the exactly a risk interval every day and your max loss is hit and
+you still have half your account left after five brutal days that don't happen that often how many
+times does it run a risk interval underneath your feet not often uh here's the day that that happened
+and very rarely does it not at least stop for a minute this is one of the few days that it stopped
+for literally 10 minutes before it died out you can see on the on the five minute chart exactly here is
+where it hesitated just a little bit before it kept going 10 you had 10 minutes to react most days it'll
+just fall and it'll sit and then fall and it'll sit and fall and it'll sit so you're kind of
+wondering is like how much can the market slip away from you when when it's trying to when it's
+going against you and the risk interval is the way to go and you can see that it sort of just
+trades like the same distance in each one of these waves this wave that wave that wave that wave that
+wave that way they're all about the same size and so it's going to be very rare that the market
+gets away from you here's the risk interval before it continues to fall right so um
+you guys following what i'm saying actually risk interval was here um here it was and then it
+began to fall again so it was actually at the band all right so when you're doing your position sizing
+especially um especially following like the blind monkey strategy if your goal is to have at least half
+your account left by the end of the month don't size any more than that equation if you want to give
+yourself a little bit more leverage like i do give yourself the kick in the stomach method of
+finding a level you're comfortable with and that's kind of what i settled on um i give myself
+the flexibility to lever up enough to lose this on a single trade as well as my first entry uh is
+three contracts which allows me to lose 12 and a half percent if it goes a risk interval against me
+so i'm kind of covered in both places and that's why i chose what i chose now in props we have a prop
+position sizing calculator it's very important you can take this and come in here and follow all
+these instructions i'll give you an example is here um i have a rule of thumb that tells me how
+much i'm willing to lose per day i like to spend a little more money than maybe the average person on
+anything i do so i'm i'm okay with trading more aggressively remember you decide your budget so an
+example is you have you allocate a certain amount of money every month of trading props let's say that
+it's two thousand dollars that's how much money you have every month left over to trade you're going
+to set a budget now if you're trading props you better set a budget or you're going to be victim
+of the prop game the props are designed to take your money and squeeze you out and you have no control
+over whatever what you're going to do is set a fixed budget every month how much you're willing to
+spend on these things and you're going to plan your position size off of that now an example is i say
+that pretend that you're you're you got two thousand bucks and you and your family have agreed
+okay this is my budget every month imagine every time you commit money to the market assume it's all
+gone so now let's budget how we're going to lose that money right to make sure we can set a position
+size off of it in this case two thousand dollars and let's say that i have an account that i want
+to buy that's two hundred dollars and i want to trade one at a time okay so that means two thousand
+divided by two hundred is ten accounts and there's 20 days in a trading month so therefore if i lose
+every single trade every single day then i can buy uh i can trade for two days blow up an account two
+days blow up an account two days blow up an account and by day 20 i've spent my two thousand dollars do
+we all follow this divide the amount you're allocating the props by the cost of the account how
+many you want to trade at a time and then you're going to come up with your budget per day this so
+happened to land on two trades per day with this math now i give myself a general rule of thumb uh
+instead of just setting a budget for myself i'll set a rule of thumb of kind of just skipping ahead
+and saying i'll give myself three days to hit a hard breach and two losses per day to hit a soft
+breach an example is if my funded futures if somebody gives me a three thousand dollar hard breach
+then i'm going to give myself three days to hit it so i'm going to lose a thousand dollars a day
+and every three days i'm going to re-up that account and that always falls within my budget
+as again another rule is you can give yourself two losses per day on a soft reach so they give me
+three thousand and then some other prop firm gives me like fifteen hundred dollars daily loss limit
+i can lose a thousand dollars per day or 750 per trade right because i'm going to take my daily
+loss limit and give myself at least two trades per day the reason for that is a lot of times you're
+going to lose some of your high volume pivots and then fail and then reclaim and get back in
+today on the stream i did take a trade like that right i i failed and then i got back in when i needed
+to um on nasdaq on the upper upper trade here right um i trimmed and trimmed and trimmed um like
+i got in got out market fell i got back in right market went up here fell i got back in a lot of times
+i'll trade reclaims of the pivot so i always want to at least give myself at least two trades per day
+these are my rules of thumb they're very aggressive but you can set how many days to hard breach and how
+many days soft breach as long as your average win rate of whatever how often you blow up these accounts
+just falls within your budget you can calculate it if you're like i normally blow up every two days
+and i want to trade five accounts well then there you go right you're going to trade five accounts every
+two days right and five times ten is 50 so you're buying 50 accounts a month is that within your
+budget you don't know right you'll have to ask yourself that so you can calculate how many days
+to hard breach and how many days of soft breach based on your budget we understand this part so
+far you're going to determine that set yourself a hard limit and you're going to you're going to
+wiggle yourself into a position using this calculator now this example you put in the details of your
+prop account this example is 3000 profit target no daily loss limit 2000 uh total loss limit five
+days to trade how many days it require you to pay out the consistency they give you the stop loss
+you're choosing 10 for s p or 40 nasdaq 50 loss per point or 20 dollars per point uh depending on which
+contract you're trading and then the current risk interval which right now if i'm choosing to trade
+es the current risk interval is going to be um 61 50 so i'm going to type that in here right okay
+now with all of this um it's going to calculate some parameters here these win conditions
+this will give me like my minimum trade per day to get my profit target in total of days
+the example is if i need to make three thousand dollars and i have to trade five days
+and my average needs to be six hundred dollars minimum per day if you have a consistency then
+that's a maximum so days to trade is the minimum that you need to make and consistency is the
+maximum you need to kind of drive inside of this boat if it's 50 consistency at a three thousand
+dollar profit target then i can't go over fifteen hundred dollars or else i got to keep trading
+extra days we all good on this right as prop traders you understand these two these two limits
+so far so good right so now you've kind of created a little path for yourself now based on condition
+one and two i've kind of programmed in here my own things you can see that i have target loss per day
+right i take um the hard breach divided by my three that i chose for myself and you can choose whatever
+you want for yourself and it gives me a target loss per day of 667 right to hit my hard breach drawdown
+my target loss per trade to get two trades per day is equal to my soft breach divided by two which
+we didn't set one today so it's at zero now planning on a one-on-one risk reward target
+and now it's going to calculate um some conditions of the max target loss to meet both of these conditions
+at my set risk and reward i try to target one-to-one trades i'm going to teach you guys that that's
+actually very valuable a lot of misconceptions in trading is you got to make two to one or three to
+one or five to one trades i made a career out of one-to-one base hits 100 most of my trades are
+going to be one to one one and a half to one something like that when i have a high win rate
+with some of the setups we have have a very very very high probability i don't i can win more trades
+than i lose and let one-to-ones carry me if you have less than a 50 win rate one-to-ones will lose
+you money if you have a greater than 50 win rate one-to-ones will make you money we understand that
+right so people say one-to-one is bad well it's not bad if it works 90 of the time it's perfect if it
+does you want to be in the market as little as possible so the reason i have mine set one-to-one
+and you'll learn in the liquidity pockets class that a lot of our best setups are tiny one strike
+scalps that we're going to grab um but you have to trade too many trades to win with the one-to-one
+you really don't uh you really don't and uh i'll explain this to you as we go through the next class
+liquidity maps right um it's not what you have to do but you can choose what your on our target is
+mine is just set the one you can set whatever you want i'm setting this to one as a conservative
+approach as well so the max target loss to meet both the conditions at that one-to-one is 1500
+the minimum target loss is 600 so basically this is the um the minimum of the two divided by
+the ratio and this is the maximum of the two divided by the ratio and now i can choose my normal
+for props in between these two numbers these things that the little sheet chooses allows me to
+back into a contract size so the max target and the min target locks me into three minis or 1.2 minis
+and i get to just choose a nice normal between those two numbers if you have both consistency
+and minimum trading days if there is no consistency then choose the smaller number um
+but minimum trading days so that you don't uh so that you can get there as slow as possible without
+blasting it okay so you have these limits and then now you're going to get your normal in this case
+i'm going to choose the normal between the two and plug that normal into here and now it's going to
+calculate the rest of them almost every prop firm is going to land somewhere in this range for nasdaq
+and somewhere in this range for s p nasdaq props your your biggest trade should roughly be about two contracts
+give or take bigger accounts you maybe go up to three if you're trading any more than two or three
+nasdaq contracts and almost any prop account out there you are absolutely over leveraging
+so in this case scenario two should be my normal one should be my medium five micro should be my small
+and then zero set out s p 1.2 six micros three micros so you it it doesn't mean what about for
+micros you set the parameters and then it chooses the maximum you can go you choose any normal that you
+want that's the best part bruce normal is a choice you make remember from this theme is that you choose
+the maximum size this is the size you will not go over you can you can always choose something
+smaller it's better to choose something smaller right so if you trade micros and you set an in
+no bigger than that this is to keep you from trading too big you can always trade as much smaller as you
+are no you can't edit this sheet because you'll mess up my sheet but what you can do is go to file
+make a copy and save it on your own yeah make a copy so with this being said uh both of the things
+i've taught you with real futures account and this futures account and prop accounts both of these
+position sizing calculators are here in the sheet um and you can use this to kind of set some
+guidelines so either a you pick a normal based on whatever you're comfortable with or b use this
+equation and pick a normal that's smaller than that number and then the rest of it's calculated for you
+or you can use the kick in the stomach method to set a normal on your real futures account
+or you can use the margin requirement equation to set a normal but how many of you see these
+numbers and realize according to matt coward you're trading immediately notice that you're trading too
+big in these prop accounts it's okay like everyone type into like is me i'm trading too big you realize
+how they give you 10 contracts to trade with 15 contracts to trade with and you're trying to hit a
+three thousand dollar profit target a six thousand dollar profit target with 15 contracts they give you
+that much because you're going to use that much they really do they know you'll use it so they'll
+give it to you because they're going to let you over leverage that's the one of the ways they squeeze
+you so if immediately you realize you're trading too big cut down to something along the lines of this
+and either both your real accounts or your prop accounts and trade less than this and and maybe see
+if that makes a difference and you either hitting your budget with props or not maybe not maybe not
+even blowing up your real account maybe maybe this is that one thing you were missing right you've
+been trading way too big because you didn't know how it works and remember these position sizes are
+designed so that you can hit all your criteria and targets losing a normal 10 point stop in s&p
+or normal 40 point stop in nasdaq and of course the maximum drawdown that we take is i'm just
+forgetting to use a stop and i follow risk interval before the market stops and stalls out oh my god i fell
+asleep that's how much i lost when none of these cases will any of this blow up your account this is
+covering you in the crash scenario uh and it gives you a moment to realize how much you're under 12 and
+a half percent the real account no big deal now this will probably blow up your prop accounts um but
+that's unfortunate um you can trade really small to try to avoid those news events if not just don't
+trade around news events and then you're subject to maybe the random trump tweet or two that might wipe
+your account but when you get to the prop master class and i teach you not to copy trade your
+accounts only one of your accounts might blow up and the other four might survive and we work around
+every possible contingency for survival one thing you'll learn from me in this class is that i never
+never never never never copy trade prop accounts there is a mathematical certainty of your odds going
+way up if you don't trade all of your accounts at the same place i will prove that to you in the
+master class if you are trading all your accounts all locked together in a copy trader you are playing
+the prop firm's game which is designed to make you blow them all up at once you got to be perfectly
+accurate with your trade or else you lose all of them but you know what's neat is that if the market
+stays ranged most of the time which we've demonstrated with the risk general demonstration
+wouldn't you think just before i give you the math of this later on wouldn't you just think on the surface
+that if the market's falling an example here instead of me just choosing the long in all of my
+accounts like at one spot and then blow them all up what happens if i longed in one and longed in
+another and then longed in another and i just kept throwing longs at it and then the market rallies maybe
+only one of them busted and then four of them made profit right or maybe three of them made profit
+and the two hundred dollars loss of the one that blew up is offset by the two thousand dollars
+they made across the other four right there's a mathematical certainty that methods like that
+beat the prop space methods like that don't beat real trading you can't martingale a real trading
+account but when you split your risk up in the prop the opportunity cost is so it's so small the
+opportunity uh the risk you take is ten dollars or twenty dollar ninety percent off accounts even a
+hundred dollar accounts for the possible endless eighty thousand dollar payout it's the risk is so
+under overwhelmingly small uh that you take in prop accounts so you can afford to turn i call it the
+turn and burn method to get a big fat payout to offset your losses as long as the whole thing is
+profitable a lot of people do that but really don't think about that now i'll teach you the math of this
+later but the idea is is that if you're copy trading your account all you're doing is is speeding up
+the amount of loss you're going to have you're going to lose a whole lot more faster it's better to
+split up your accounts so when you follow these guidelines on this sheet and you split up your
+accounts you're going to start realizing that how much you're spending on props is going to go way
+down i i wish i didn't have a conscience and i was teaching you something on the other side of the
+coin like yeah everybody pile in long as hard as you can put all your contracts together all your
+accounts together boy i'd rake in the commissions if i did that right teach you guys how to blow up
+faster instead i'm teaching you how to survive in the easiest way possible this is something people
+don't teach you and if you're learning trading and people aren't teaching you risk management to this
+degree in both a real account and a prop account then in reality you're kind of trading blind this
+scenario allows you to set some control points and control how much you're going to lose in the case
+of here and make sure that after a string of losses you're not losing more than half of your account
+and in a string of catalyst days five in a row you still have more than half your account in your
+real account when i tell you guys i wasn't going to blow up the the blind monkey challenge account
+that i was doing the random trading challenge why do you think i wasn't going to blow up i controlled
+my position size to a t it would have been very rare even in the worst sell-off days that we had
+very rare and again that challenge was through this market that the market just dumped one risk
+vulnerable over and over and over and over again and i blew up the account went up and down 20 000
+bucks in the range that it was in i never got swept more than a risk interval except for one day
+one day i was upside down almost 20k all the other days roughly a risk interval on the days that i made
+money i made it all back and so i was mostly longing through this to prove that point of the
+blind monkey and at the end of the sell-off i walked away with pretty much where i started
+following those position guidelines and the cool thing about it is as the margin requirement gets
+bigger the range gets bigger naturally that equation will make your position smaller because
+you're dividing by the margin requirement if you divide your net lick by a bigger number the position
+size is smaller that equation is self-governing it will set a limit based on the current conditions
+if these ranges get much bigger your position size will naturally get smaller following that equation
+we follow okay let me introduce you to one more technique and principle before we cut you out
+of here it's called the greater market now those of you may not use rocket scooter you may not know
+this but if you watch the stream um you'll get this information there are three different indicators
+that we use to determine greater market and again i'm not going to tell you what we do with it
+but at least when you understand i'm asking you if you're a bull or a bear these this is how i answer
+that question number one is if this ratio in the top left corner is greater than half it's a bull
+mark stocks are bullish and i'll tell you more about this when we get to this class number two is if spy
+or s&p futures is above its monthly hedge pressure again you'll learn this in the next class
+um
+then the s&p itself is has has positive gamma hedging uh bullish hedging like more longs and
+short hedging against the options that are that are monthly options in this con of this uh index
+number three is if the monthly maps are bullish okay and a very key important point is that
+and i'll teach you how to read this in the monthly maps class you're gonna have a class in each one of
+these things if all three of these are bullish then i'm bullish if two of these things are bullish
+i'm bullish if only one of these things are bullish take a guess am i bullish or bearish
+everyone take a guess don't be shy don't type don't type for driving why why would i why would i still be
+bullish
+yeah if even one of them is bullish i'm syllable yeah blind monkey it takes a lot to convince me
+not to be a bear i mean not to be a bull if something is bullish i tend to lean to the fact
+that the market's still going to try to go up today ratio greater than half s&p above its monthly
+hedge pressure and then monthly maps are bullish all three of them are bullish i'm a super bold today
+right and even though the market's volatile and selling off i'm still not that bearish my shorts
+were in and out very quick i wasn't betting on the market collapsing because it was nice and strong
+and bullish and you're gonna learn that confluence is based like here is actually based on a lot and
+a lot of neat things that actually go on the structure of the market this is telling me that
+the stocks are bullish this is something that there's longing due to hedging and monthly maps is
+telling me the structure of the options okay and if those if any of those are bullish and i'm going
+to still bet that the market goes up because of the blind monkey thing now confluence also comes in
+the form of some indicators here on the platform the steedy ratio being one of them another one is
+resilient to see at the bottom now in the rocket scooter platform we kind of take care of confluence
+for you because if the condition is lining up the right way uh or whatever way the condition is
+lining up the words will literally say support and resist to answer the question for you
+if dd ratio is greater than half then this would say support and this would say support if this white
+resilience is greater than zero this this and this will also say support you'll get to these classes
+don't worry but just as an icebreaker when i'm deciding my normal medium and small position size
+i'm using these confluences to decide which one i'm going to go to and we'll learn this tomorrow when
+we do the monthly maps class but these are position sizing guidelines up here in each one of these maps
+and if you click this button or you see me click this button on the stream these are all my position
+sizing guidelines now you guys have gone through this now you see a bunch of n's m's zeros and and s's
+right this is that same thing i taught you this whole class so each one of these legs of my trades
+that you see on this guideline are going to be governed by it's going to recommend what i should
+do an example is here one b long off of this blue line okay one b i'm going to hit it with a medium
+perfect okay but what happens if i have a loss of confluence like the confluence that goes with it
+is negative well instead of a medium i'll step down to a small the guideline is the maximum i'll
+choose with the best confluence unless it states otherwise it'll choose the confluence for me an
+example here is 1b 1b i can short off of that if this confluence indicator is less than zero and it
+says resistance on the chart i'll share with a medium but the confluence indicator says support
+huh i don't short it i don't take this short leg why would i not take the short leg
+in this example with as little as you know so far answer that question
+i don't have confluence in a short why don't i take the short just on based on what you learned
+yesterday don't overthink it the quick and easy answer i have a short with no confluence
+not yesterday remember in a short you need full confluence if you have a short if you don't have
+confidence in a short don't take it because of the blind monkey right market's always going to try
+to find a way to be bullish so a lot of these confluences that when they flip bullish i don't
+take the short you're going to see a lot of these sit out of the short if the confluence is there
+to say bullish yeah so when you translate what i taught you yesterday in the actual
+instructional uh position sizes you can see that this is kind of plain english like this bull trade
+i'm going to hit it really hard if i've got the confluence i'm going to hit it medium if i don't
+i'm still taking the long but on the short side i'm going to short it really hard with the confluence
+but i'm not going to take the short without it see how this reads and when we get to this class
+you'll be able to cover this but this is telling you normal medium zero based on those position
+sizing criteria i gave you so a lot of times you'll say i'm hitting this hard i'm hitting that
+with that n that i chose i'm going to take a small trade here that's my s i'm going to hit this kind
+of medium that's my m and those words actually mean something i'm not just throwing words out there
+don't mean anything those are actual physical um numbers okay all right yeah just confusion don't
+put risk somebody said yeah great idea so with that being said everything that we've covered right
+the risk interval uh is a very important thing for structure it's going to work its way into so many
+of our techniques dd bands catalysts even position sizing are based on that structure of the market
+if the market's moving in a set structure doesn't it make sense to limit your risk to be able to survive
+as it oscillates inside of that structure right does that make sense the market's just wiggling
+between a certain distance make sure that your size correctly that you can survive through it um
+yeah so i mean when you're really sitting here thinking about all of that what's an assets
+risk interval if i repeat that one more time before i close out here 230 um
+um from 468 low plus 230 is 700 right and you can see that we went pretty much almost a risk
+interval here right the whole oscillation today was less than a risk interval as long as you have
+some position that's not too big that that risk interval doesn't break you up or doesn't blow you up
+then you're going to survive almost all days in the market most days do not fall or in the risk
+interval without kind of stopping somewhere in the middle a lot of them will rally that distance or
+move that distance but they don't go straight there they're going to go that distance and sort of hover
+before they keep going so you're never going to almost never i can't say never but almost never will
+you get caught off guard in a day like this that gives you just a couple of minutes to react
+that's the rare of the of the rare you can go through almost every single day and see that the
+market just kind of waves in those risk intervals and the only time you're going to get caught
+bag holding and blowing up is if you allow this to happen and then move a second one and a third one
+pretty much the market will hesitate that distance almost all day so that's why we plan
+our positions to be able to survive worst case scenario that kind of oscillation and you're
+trading smaller to be able to survive that's basically it in the last what three or four months
+how many just market crash out days that we have that just felt a couple that
+didn't pause at that level and it's very rare that that would happen this day and that they
+just swept underneath you every other day sort of oscillated right and this goes back
+three months of data so most even in the worst possible sell-off days you still kind of fall
+down in those waves um and this is the goal is to survive as we talk with the blind monkey
+his goal is just to survive long enough that the market stabilizes and hopefully you can win more
+trades than you lose or have more profit than loss and make money but you can't do that unless you
+survive these position sizing techniques are golden they have won me trading competitions they have
+got me live as of this date and three prop firms about to be a fourth um and i've barely been trading
+props a year the secret to what i do is position sizing 100 i follow that to a t no matter what and if i
+choose to over leverage i assume that i know i mean i i know that i want to take that that extra risk
+because i want to but i'm never in a position where i'll ever lose an account a single day in a single
+trade okay awesome so tomorrow will be or the next class will be covering the liquidity maps and we'll put
+all of this to use tomorrow okay

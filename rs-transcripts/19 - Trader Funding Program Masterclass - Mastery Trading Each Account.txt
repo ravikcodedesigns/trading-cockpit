@@ -1,0 +1,971 @@
+this is part two of the trader funding program masterclass series part one we covered what is
+a trader funding program what it's useful for uh and the minor differences between them and
+the account types and when you're shopping around for one how you usually pick one based on your
+trading style now we're going to go through some really specific and cool techniques on how to play
+each type of account uh and also more importantly how to beat the rules uh that are given to you now
+in general you might think that trader funding programs are a fair game you know they're not
+they're harder than typical trading on purpose because you put in a little and you can expect
+to get a lot out you know the you know the logic in that is going to be that it's not going to be
+easy to get a lot out it's like the lottery the big win for paying a little it's going to have very
+low odds and trader funding programs are designed to squeeze you it's designed mathematically to
+squeeze you we already talked about that there's rules like daily loss limit consistency and um
+profit uh tar or payout caps and things like that or total days of trading everything they can to keep
+you in longer keep you trading more uh because the more you play you're going to lose and we know
+there's another business out there that has a model exactly like that it's called a casino right
+the casino the house has an edge while the prop firm you're not necessarily trading against them
+ever uh but you are taking money from them when you win at least on the sim funded side
+on the live side you guys are getting in together and trading live but on the sim funded step in the
+middle you're trading against nobody you're just paper trading and if you win they pay you from their
+pocket so clearly it's their goal at that point to make you lose more than you win statistically so
+there's enough losers to pay out the few winners and the way they do that are all those rules by
+keeping you playing the game longer the edge is not in a house edge they don't have any edge against
+you um directly because you're not trading against them but the edge is they give you unrealistic rules
+that hurt you when you're trading uh that you don't normally give yourself an example is consistency
+rule right a consistency rule states that you can't win too much in a single bite uh if you pass a
+certain level you are punished beyond it you have to trade longer if you go past it daily loss limit
+rules if you have a that's your zero point and you fall to a dll then you actually get thrown out of
+the trade as well even though you still have money left in your account neither of these rules you guys
+give yourself when you're trading so they make it to where you can't lose too much and you can't make
+too much you have to drive this perfectly now pretend that you don't have any rules and you're trying
+to trade like normal in your own trading account and if you could if you had that much control over
+your trading then you should have that much control over your trading over time the fact is you really
+don't because you might be a new trader or you might just not be that good yet you might just
+have never gotten the hang of controlling your pnl to that degree it's almost impossible to just
+choose how you want your pnl to look however you have to choose you can only make so much when you
+get lucky and win you only make so much when you're right and you can only lose so much when you're
+wrong therefore you got to figure out how to be more wrong than right this kind of sounds almost
+impossible doesn't it right chat how do you got to trade with such perfect control just to get a
+small payout that's how it gets you that's really the edge the edge is you're not that good to control
+your wins and losses or that your win rate isn't that high enough to survive multiple dll taps or or
+the extra days that they're going to give you to trade you bust consistency and your five days
+somehow turns to like you know or your profit target turns longer it takes you um you know
+you have five days a certain profit target you bust consistency now you need to make like
+twice as much money um you got a whole extra day of trading and that's one extra day you can blow up
+your win rate just goes your odds go way down um they're betting on the more times you trade you're
+going to lose more than you win that's really the bet and that's the edge the longer they keep in
+market which why i tell you time and market's the most important rule okay we're on the same page
+everybody wake up type yes you understand we'll move forward you good okay don't have to type if
+you're driving though okay so now we have the three types of accounts and why they were important we
+talked about last time static end of the day drawdown and trailing drawdown now static is the easiest one
+to do and now let me show you the difference between the two major statics out there apex trader
+funding who we don't really kind of recommend a lot these days but that is one that has a static
+it's not that great but it actually represents the normal stack you'll see now they have two different
+plans full is one and um static is the other see if it's here somewhere did they not have the static
+anymore maybe they got rid of it oh here it is here it is okay so the static is as follows you got to
+make two thousand dollars and you can only lose 625 that's it that's really tight um so two thousand
+dollars is your profit target and 625 is your drawdown okay which basically means you can only
+lose 625 now think about what that means right one asset contract makes 800 every 40 points as you
+learn in the boot camp uh 40 points is one strike distance that's you're going to see that move happen
+dozens of times throughout the day so you're going to be up and down 800 with one e-mini
+with with one s&p e-mini it's up and down 500 so you can already see guys that for the for the the
+static it's so tight you can't even trade one full contract you're trading micros at that point and
+also your profit target to loss ratio is um you can only go up two thousand every six thousand that's
+about two and a half to one right so you can only really like you have to win uh three trades
+let's just say that for 625 if you lose if you're trading like an example as you're using this as
+daily loss limit for yourself because that's where you actually blow up the account then it actually
+takes four trades of 625 to get there that's part of the trick 625 times three is 1875 that's still
+not enough to get to 2000 so in reality if you're just trading pure one-to-one trades and you're going
+to allow yourself to lose 625 or make 625 and that just specific math alone you got to win like four
+days to get the target before you lose enough to hit the bottom now the problem becomes your first
+trade has to be your most important trade which gives you at least some buffer to not blow it up
+the first or second day here's an example if you're if you're at zero and the market is sort of like
+falling to a b setup and you have basically one trade to just inch it off of zero this is really
+your goal to inch it off of zero as much as you can in that first trade example is today right today
+the market is a typical 1a 1b blu setup which we know we long at the open to run and then we double
+down at hedge pressure if the distance is less than one strike you learn that in the boot camp right
+so you wouldn't be taking b setups in a static account on your first trade because you want
+your first trade to be the trade that gives you buffer the benefit of a static is that the drawdown
+doesn't move with you if your zero point is here and your blow up point is here any money that you
+make gives you more fat in the account to lose two days in a row instead of one to blow up right
+so depending on how heavy you go you understand that the first thing you want to do is put some fat in
+that account 625 to make 2000 is not a lot that's really crappy on apex right now just to compare
+etf has a static etf static is much much much better on their beginner static you can see that there is
+a um let's show more they have the uh do they have the profit target here the drawdown hold on
+it doesn't necessarily say oh here it is okay
+so an example for the two thousand dollar profit target right which is similar the apex one do you
+see how they give you a hundred a thousand dollars a draw they give you a little bit more fat
+tip for tat it's better than apex remember apex is um remember it starts moving around here where was
+it um this is 147 a month without the deal now apex and etf both have the similar product they both
+usually have 90 off sales this is 147 for a tiny amount of drawdown this is 229 for a bigger drawdown
+okay to get to the same profit target now this is great because if you're going to lose a thousand
+to blow up it only takes you two days to get to the final rather than four do we understand the
+difference in time and market if you're just assuming that you're limiting yourself you can pick any number
+for your your daily loss limit but if we use a thousand as a base or the drawdown as a baseline
+it takes you two drawdowns to get to profit target one drawdown to break four 229 okay apex takes you
+um three uh probably like three and a quarter i think which rounds up to four drawdowns because you
+can only trade per day um per one drawdown for 147 now you may say
+well that's cheaper but the problem is you have to trade four days when you round that up on this
+basis alone for every two days you trade you got to trade four days here do we all understand the
+difference no matter what you choose your daily loss limit is apex will take you twice as long to
+get to the final okay so when you make your decision you will say well is it worth paying an extra
+hundred dollars for two days off the clock class what do you think you've been in the first class
+is that worth a hundred dollars for you to get there two days faster absolutely because if you
+blow up one time in the extra two days you got to pay 147 again and now you've paid 300 rather than 229
+you have to think about it and statics are designed to make you blow up on the first day that is the
+trick on how they get you the first day blow up the super tight now etf goes ham and gives you a
+two thousand dollar drawdown they're actually really good so this just doubles in scale so the the ratio
+is interesting for a little bit more price you're going to get a fatter static drawdown now when you
+do cost to drawdown ratio because they scale the same this one is your best value however it's cheaper
+than apex but there's less of a drawdown so the question just becomes um you know how much fat you
+want to play with versus how many contracts the scaling is exactly the same four two and one
+they double double double each time so you'll you'll trade them exactly the same way just with
+different different amounts so the etf static this is considered the best in the business
+whenever they have a sale of like 80 to 90 off then you can snag one of these at roughly 50 bucks
+that's when it's important to get this other than that etf and apex don't ever pay full prices for
+statics whenever statics go on sale to 80 90 off go load up on as many as you think you're going to
+need right you know what i'm saying like buy 20 of them 40 of them 50 of them and then just save
+them for the year especially if there's no monthly fee now a lot of these will have monthly fees on
+them then you can't really hold them and stockpile them so budget what you'll use for the month or in
+between the two sales the trick with statics is that they're more expensive than your end of the
+day on trailings but you wait for the sale then you get them quick and then you do what i call burn
+and churn okay it's very simple i'm going to teach you the burn and churn method for a lot of
+these evals that are one day pass or whatever that you're gonna have to basically avoid that
+first day or pass it in one day is that you're only going to take a setups and a plus setups you're
+only going to take long only trades you're only going to trade when vix is below triple b you guys
+know all this from our boot camp a and a plus is only okay ideally when the greater market is all
+bullish but doesn't have to be you just need your confluences okay because your first trade is so
+important do we all understand from the previous boot camp that vix below triple b and obviously
+vix less than 100 but vix below triple b the main one long only side a and a plus is your highest
+probability of winning blind monkey stuff right 70 of days in greater market are bullish right the
+greater markets all bullish this even goes up even better 70 of days are green 70 of months are green
+so you want to try to take only long setups and if it looks like a down day you're going to sit out
+on it like if you break monthly hedge pressure don't touch your statics do we all understand
+they have a 50 sale or 90 off sale burning and churning is another alternative is that you can
+just take every setup but you're going to understand you're going to blow up a bunch up front to win in
+the downside don't let people tell you no again when people are teaching you stuff this is not coming
+from the the mouth of a math genius most of the time this is all statistically in your favor when i'm
+about to teach you these are the kind of like the black hat ways of beating this stuff there's nothing
+wrong with martingaling when there's a 90 off sale because at the end of the day you're going to save
+more money than just trading it as serious as you can when there's when there's not a sale so like an
+example in apex is 90 off sale some of these accounts are like 15 bucks a piece you can just long
+and five and long and five and long and five and long and five and long take the long side
+then ultimately some of them will win the other ones will blow up but what'd you lose right
+15 dollars times 15 whatever you might buy 50 to 100 counts at 15 bucks and that might cost you
+1500 but then you might pass most of them or 20 or 30 of them for the cost of 1500 there's not a 90
+percent off sale and the cost is about 100 bucks each 100 times 20 is still 2000 so if they're 90
+off sale 10 times 200 is the same as 100 times 20 do we all understand that class when there's a sale
+burning and churning is the best thing to do get those evals passed as soon as you can before the
+sale is over because you're going to spend the same amount in the end it's just that here even if you
+fail um 50 of the accounts here you passed 10 for 2000 bucks here you passed 100 for 2000 bucks
+right markets almost never do this and if you break monthly hedge pressure then or any of your
+irrational signals then you're not going to do the strategy so either a you can take them seriously
+and wait for your a pluses longs only and sit out of any short don't take the shorts and don't take
+any hedge breaks or anything like that and wait for long strong a or a plus setups if you're on a
+budget you have a little bit of flexibility and there's a sale you can burn and churn which means
+you long at every pivot you find you're not going to trade funded this way or live this way this is
+a trick to get out of the eval game you know fuck their hard rules that limit your wins and limit your
+losses just use math to beat it you can say let's long at the open with five oh crap i blew up let's
+long here with five more and five more and five more the probability that you lose this is is higher
+than this and this you're not going to lose this and this except for one percent of days we all know
+that so it makes sense to pile in as much as you can if you blow up buy more and blow up and buy
+more and blow up that is a viable strategy that's not telling you that's the strategy over trading
+wealth but that is what a lot of people do and almost all your influencers exactly what they do
+to book it book some profits or at least book some funded accounts that is one method and not the only
+method but it's it's the it's dirt cheap i'm just going to take every good long pivot i have
+and you will ultimately walk away with more accounts passed than you actually sitting here trying to
+guess the stock market isn't that crazy the martingale never works in real trading you can't
+do this in real trading you'll lose all your money but the martingale is an interesting philosophy and
+you know what a martingale is right it is a betting strategy that states if you walk up to a table with
+a game that has 50 50 odds like a coin flip let's say coin flip is perfect 50 50 in this example
+you either win or you lose if you win you what you you you um let me just walk to you
+if you win you win what you made so an example is i have 100 bucks and i bet and i lose okay say
+that i lost i'm down 100 if each time you lose you double the size of your bet
+see how i'm down 300 i lost 100 lost 200 the second time i'm down 300 now every time you double the size
+of your bet you accumulatively lose money but then but the next time you win
+you got 800 in your pocket it costs you 100 to ante into this entire game
+i'm sorry sorry you're down 700 you made 800 you netted 100 sorry
+you walked up to the table with 100 you left with 100 of profit pretty cool right
+you left with 100 you essentially make all your money back by just math this kind of strategy
+doesn't work in real life why because it requires two things infinite number of iterations means you
+need infinite time to play you could lose a billion times until you finally win there's no
+there's probabilities here but there's no guarantee you win infinite time now the time thing doesn't
+really limit most people it's the infinite cash um usually when you scale up exponent or when you
+scale up double like this you are going to run out of money likely before you win you can't absorb
+the bigger and bigger and bigger losses until you finally win and so martingale is an unrealistic bet
+in in engineering we create perfect scenarios like in heat engines and we have one called a car
+no cycle a car no cycle is a perfect design heat engine that doesn't have heat escape to the
+surroundings and it's perfectly reversible and it's not really anything that you can physically design
+but it's designed as a mathematical limit to what's possible it means that when you're designing
+something you can't claim it performs better than the optimal perfect engine so this is considered the
+optimal perfect engine a guaranteed strategy that makes your money back that you can't lose with
+martingale in theory you can't lose with now practically you can't actually achieve it
+but you can't lose it but in the prop space we create something called a pseudo martingale it almost
+works you know why because you almost have infinite money when something is 90 off
+it's practically cost zero right if something costs 100 bucks you may not have infinite amounts of buying
+something at 100 bucks but if something costs 10 bucks because of a 90 off sale y'all understand
+is that 10 is almost like zero you almost have infinite number of chances to do this because it's
+only 10 bucks now this may again be outside of your budget but if you're trading hopefully not do we all
+understand this the 10 is very close to zero that you can almost perform that pseudo martingale-ish
+strategy because you have as much you can play this you can absorb tons of losses with this and so your win
+rate against the high odds stacked against you actually is benefiting from the cheaper the
+accounts you wouldn't do that with this you might be spending tens of thousands of dollars but with
+this you're looking at the overall cost to get your 20 accounts passed and funded when there's a sale
+and the market's kind of weird you might just want to throw longs at each one of them bust bust and
+then long now again this isn't encouraging you to blow up accounts on purpose this is teaching the math of
+these things theoretically the best case scenario is to do this when there's a sale and trade only
+your strong pivots a's and a pluses long side only vix less than triple b and when they're ten dollars
+that not only gives you the benefit of taking your long only pivots the probabilities of those being
+higher than shorting but also gives the benefit of the cheap entry if you can trade on a month when vix is
+less than triple b and that's the good month to trade what happens if vix is above triple b well
+don't trade your static go trade something else there's always a problem with the sale
+your statics need to be nice and clean and and just out the door when vix is at least your first
+static trade when vix is below triple b if it's above like it has been this month then avoid doing
+anything really in any account that has a tight kind of limit statics first trade is a tight limit
+trailing drawdown is a tight limit the entire time the rules i give you static for first trade
+which is your first trade needs to be your best trade for trailing drawdown accounts like apex is
+regular or etfs one step or tradeifies advanced you're going to need to follow the same rules
+all the time on every trade because a trailing drawdown will trail with you so if a trailing drawdown
+is moving with you you're tight every trade okay a static is only tight on the first trade and once
+you build buffer you can relax on your rules so we understand why trailing drawdown you must maintain
+that strategy every time if vix is above triple b don't touch your trailing drawdown accounts unless
+there's a buffer and you've gotten rid of the buffer and how are you out you've added a buffer how a buffer
+works is on a trailing drawdown is after a certain point your drawdown will stop trailing and turn
+into a static usually when you reach your zero point say that your trailing drawdown was 3 000 as
+soon as you make 3 000 bucks and now your trailing drawdown's at zero a lot of times at the firms
+it'll say static before static here it's a plus only in trailing drawdown or a trades um below triple b
+etc long trades only when you have a tight limit the idea is that volatility will kill you
+so you want to trade the long side where volatility collapses as time goes by
+in trader funding programs the long side of the market if you can wait for it is your highest
+probability of winning these things so you wait like this month you say well i'll see you on october
+the 13th or whatever it is once you roll into this one like let me wait till it gets down here and have
+a better chance to beat these things and so as of right now you can see the market is unusually
+hard right no matter what you're trying to do the market's flip-flopping so much you're going to blow
+up your trailing drawdowns because the volatility it's going to chop against you even if you are right
+on the trade it's not just cleanly falling to make it easy so we understand how volatility is one of the
+biggest enemies to the start of the static and your trailing drawdown period and these these shorter
+funding programs are exploiting the fact that you don't know how to adjust for volatility
+and that's why they give you crazy rules that let you go way over like an example is
+uh you don't really see this but they give you up to one e-mini to trade on nasdaq see the here's
+another thing too i didn't forgot to mention if you were trading and you had s&p or nasdaq equal like
+you have we can trade one or the other this is max contract of one e-mini if you were to even make
+your odds even better would you choose nasdaq or the s&p
+make a guess your odds of success being even better we're above triple b right now as the date of this
+video s&p one thing to note is that the nasdaq and s&p especially if you're not using limit orders
+at any point in time the s&p is going to have almost like no bid ask spread at any point in time
+because the nasdaq is has too small of a denomination the nasdaq will always have a bid ask
+spread of like three to four ticks this is because the nasdaq is valued at you know 20 000 however uh
+you can trade in increments of like 20 000 and 25 cents because the nasdaq tracking algorithm is um
+tracking something that doesn't need to be have that much granularity nasdaq skips around a lot
+because nasdaq really at 24 000 should should have a tick size of just
+or it should have a tick size of one dollar see they designed nasdaq back when it was like 2000
+long time ago and as it currently trades in quarters of a point that made sense you know
+20 000 points ago but now that it's for 24 000 you don't need a quarter is not going to matter it's
+such a small percentage because it's trying to track that you can always see there's a space between
+the bid and ask so even if i jump and buy on the market order i'm already down 10 bucks a contract
+because every tick is losing me 10 now remember nasdaq spread will get up to four ticks sometimes
+five i've seen it bigger on periods of volatility which means you're down almost 25 bucks just buying
+at the ask if you're not doing limit orders versus s&p you're going to lose 12 and a half so even so
+nasdaq getting in and out of the trade might already cost you 20 uh or 30 bucks each side so you might
+lose 60 bucks just getting in and out of the trade with the one mini they give you so market orders
+will hit you even harder on these statics they assume that you don't know that and that's what
+makes you blow up do we all understand this so if you have one mini to trade and you're trading to
+the max capacity one mini on on s&p for every um move s&p makes nasdaq will move um so where every
+sorry for every move nasdaq makes and profit for every 800 nasdaq goes up s&p goes up 500 which is
+basically the rate at which they travel um so essentially per contract every 500 like if you
+long in s&p and long in nasdaq and they both fall their equivalent one strike distance nasdaq you'll
+lose 800 s&p will lose five so per contract if you're trading s&p you need to trade roughly uh
+five eighths of the size you'll be trading or sorry nasdaq needs to be five eighths the size of
+s&p an example is if you choose your small trade to be one contract on s&p equivalently trading nasdaq
+to scale the same percentage you'll need to trade six micros five eighths um and that's just to
+balance the two out nasdaq will move eight for every five the s&p moves dollar for dollar so keep
+that in mind that one mini is like well nasdaq's going to move faster than s&p keep that in mind as
+well so when you're trading nasdaq especially with these tight limits market orders might be your
+biggest enemy and even on s&p if you're trading one mini you're going to lose 25 bucks already to
+get in and out losing one tick per market order so if hitting your efficiency on these statics which
+is why 500 and the 625 on apex is kind of sucky it's just getting in and out of the trade you're
+already down a little bit the 2000 it's not as noticeable but but still four e-minis on your
+normal nasdaq 40 point move is 3200 bucks if you're wrong on your first trade with all four
+clearly you're not going to trade all four so one of the tricks these firms do is they give you too
+many contracts to trade with much more than you needed the bigger they give you the dumber they're
+assuming you are and that you'll use them here's apex um i don't know what the maximum size is for
+these oh here it is two e-minis for 625 do you see that crap two e-minis
+to lose 625 10 points in s&p you lost a thousand already 40 points in nasdaq you lost 1600 that's
+over almost three times what you should be trading just to even that out right so they give you way
+much more than you trade with because they understand that you won't know how to position
+yourself right you should be trading a handful of micros to lose 625 and again the same rules apply
+for a static you're going to do what i teach you to do which is you're going to allow yourself
+two trades per day to pass these things and so on a static assume you might blow up the first day but
+it's okay because you're only playing them when they're on sale rule number one never pay full price
+for a static just don't um wait for the sale and then give yourself two trades a day for 625 an example
+you're going to lose 315 uh let's just round down to uh three oh let's do three twelve and a half
+period so what position size should i lose i should for my two trades per day allow myself to lose once
+and then lose again then i blow up okay so if i can only use 312 points on a 40 point nasdaq basis and a
+10 point s&p basis what is that position size right so let's calculate that very quickly um i have the
+spreadsheet open somewhere i thought i did here it is okay so 312 and a half it's easy as that so on a
+40 point basis and a 10 point basis on s&p you're going to see like what it what gives you three
+what's the position size that gives you 312 and a half well it's going to be equal to 40 points right
+times 20 a point and it's going to be your total balance 312.5 divided by
+that and it's going to tell you your position size in micros or minis that's four micros okay
+you do the same thing um here
+right 10 times um 50 a point
+and that's six micros on the s&p which allows you to take this static in two trades before you blow up
+that's my rule always take two trades a day that's me being a little more aggressive i like to allow
+myself to lose once and then lose again and make a or lose once and then trade again why well because
+the pivots i want to take are 80 percent and 90 percent right so if the if the chance of breaking
+this pretend i had two a plus setups bull zone and bear zone this is your strongest trade if you want
+the strongest strongest trade liquidity pocket is it it's 10 chance i lose this under confluence and
+10 on this one which means also one percent chance to lose both of them so technically speaking it's
+very rare to lose this and lose this which is why i always give myself two trades do we all
+understand that because i'm going to hit two 90 pivots a chance of breaking both of them is kind
+of small that's where my two trade a day philosophy comes from and that really helps so an example with
+the apex situation we're going to give you two e-minis to trade with and even a best case scenario s&p
+you should be trading with six micros to hit that rule that's part of what i like to say the scheme
+that's how they're trying to beat you so screw all these guys we're going to beat them they give
+you way too much to trade with they all do and they know that's a way to get you you know what
+you know how they get you and i'm gonna speak to everyone's language you're trading normal you're
+trading normal you're trading normal and the market's falling really low and you go fuck it
+i know i can trade up to two micros i only put in three mic or two minis i put in three micros you
+know what fuck it i'm gonna put in the other 17 here how many people is that you just throw all of
+it back in to hail mary this back to the top that's you guys right you you use the whole thing
+they know you're gonna do stuff like that instead of three micros and three more and trading at
+normal you're gonna use what they give you in moments of desperation and lose these are the
+things they they put in here their secret squeeze out rules that aren't necessarily told to use that
+way they give you um a knife to hold while you're walking on a slippery surface um and that's you don't
+realize there's more ways they squeeze you without telling you that they're doing it okay so back to
+the side is that you're gonna do the position size just the same way 40 points and 10 points in
+non-volatile markets in volatile markets if you don't have the patience to wait through them then
+you're gonna have to use the other strategy which is account for the volatility if you've been to our
+volatility master class you know that the amount of the amount of ticks or the amount of points you
+allow yourself to lose per stop is either the greater of 40 and 10 or the largest one minute
+candle in the last hour you're gauging the volatility by that an example is the market's selling off one
+day let's go back to the days where the nasdaq was selling really hard
+and uh let's use this day so the largest one minute candle in the last hour say you want to buy the dip
+here well as the market's falling we can probably say that this is probably the biggest candle
+579 to 531 so that's 48 so i'm looking at this and i say well the biggest one minute candle is about
+48 and that's about how much overshoot you're gonna see which is kind of a neat little trick because um
+if you were to come here and uh i don't remember where the where the um if i knew where the levels were
+would be fun you can allow that to tell yourself how much overshoot you'll usually see if i lost
+whichever day it was was it here yeah so as you see this is the largest one minute candle if you
+can look at the ups and downs like how much it's moving up and down you can see that down to up the
+drawdown is usually less than that largest one minute candle the down to up is almost always inside
+of that distance right um it's just a neat way that you can say that the market tends to just
+search for volatility every minute it's a good estimate again there's no magic here it's just a
+good estimate but it's pretty good to see that your ups and downs usually are going to be about
+the distance of your largest candle or less so that's about the drawdown you're going to expect
+to take so you use that one minute candle as a gauge of maybe it's not 40 points maybe my stop is 60
+points and then you'll allow yourself to overshoot your pivot by that much which means you need to
+account for the bigger drawdown okay if okay so we'll talk about trailing drawdown in a second but
+a static account like i said your first trade needs to be your biggest wait for longs vix below triple b
+if you can a plus setups with all your confluences and greater markets good trailing drawdown every trade
+you make needs to be those conditions until your buffer is hit that's it end of the day drawdown
+has no really specific way they squeeze you typically end of the day drawdown accounts
+squeeze you with time and market your traditional end of the day drawdowns especially with ones that
+have no payout cap or high payout caps make you trade extraordinary amounts of time my funded futures
+you got to trade 14 days to get your big fat payout right currently at this time it's 80 000 or 80
+percent of 100k you got to trade 14 days to get there they don't squeeze you on volatility or
+small time things they usually give you big fat drawdowns and big fat uh daily uh total loss limits
+to attract you to the content to the the account but then the problem is they keep you on the market
+long enough eventually you'll lose your traditional um end of the day drawdowns like top step it's two
+days to pass an eval and then five days to get funded or get to get a payout once funded by funded
+futures it's two and five so both of them are seven find the next legacy it's three and five so it's
+eight you're gonna take eight days to get to your payout target like that's a bigger thing they're
+gonna keep you in the market longer so you have plenty of time to kind of trade those normally
+longs and shorts you don't have to be super specific because they don't try to normally squeeze
+you out on the first trade uh but they do also give you uh the too much to trade with thing and
+you got to be very careful with that um let me do trade a five as an example
+um trade a five right 150k straight to funded end of the day drawdown okay you need to make
+um nine thousand bucks it doesn't say it on here but it's nine thousand you can only lose six thousand
+and your daily loss sum is 3750 damn that's a lot of fat that's much better than um you know
+six twenty five and five hundred dollars you know this gives you plenty of room to take it slowly and
+especially with twenty percent consistency you're gonna have to take five days to get here so some
+of the rules here with twenty percent consistency as an example nine thousand divided by or times point
+two is equal to about eighteen hundred dollars a day max that you're gonna do so no trade needs to go
+over eighteen hundred bucks um or else you're gonna add more more days to this so that's about
+your target per day to get there and also with tradeify there's five days to trade so you got to
+trade five days anyways to pay out so with this example you're trading for eighteen hundred dollars
+a pop and they already give you 3750 daily loss summit which is already great this is already your two
+trades per day rule it scales pretty nicely you don't have to really adjust for anything so you're
+gonna allow yourself to lose eighteen hundred dollars a trade to make eighteen hundred if you're
+right right a one-to-one i'll get you there so you can take two trades a day here with your nasdaq
+at 40 right that's um two and a half contracts most on nasdaq that's eight eight hundred times two and a
+half or two sorry two and a quarter to get to your eighteen hundred and s&p that's three point six
+three point six times five hundred equals eighteen hundred and so therefore you should be trading
+two point two five nasdaq or three point six s&p maximum position size which would be um your normal
+that we do this is your normal obviously scale down um whenever you're small and medium as you guys see
+on my stream you never really see me trade that much more than two nasdaq or four es do you y'all see
+me pretty much follow this pretty exclusively on stream don't i that's just in line with these
+rules and that's a really big part of it why i limit my contract there but you know what they give
+you 12y minis really oh yeah so yeah 12 right
+six times which you need so again they give you enough you shouldn't be using it if so you're gonna
+blow up very quickly and these guys don't normally have 90 off sales and these are straight to fund
+in this example which is an end of the day drawdown account but doesn't have an eval so it's a little
+bit more expensive let me show you on the on the little sales page here end of the day drawdown which
+we'll cover in just a second they have one called growth your 150k with a similar daily loss
+of it is 230 if you skip the eval it's 510 pretty much for the same stats uh and the you know the same
+contract size and everything same profit target it's like twice as much to skip the eval why is it
+twice as much to skip the eval because your risk goes way down every extra day you can get to your
+profit target their risk goes way up so every day you can shave off the clock is huge risk with the
+balanced risk model they're telling you how much the risk goes up twice as much for just a few extra
+days right um i don't know if the consistency is on growth anymore it used to be 40 which was a three
+day pass it might still be the same uh with three days to pass versus no days to pass saving those
+extra three days is definitely worth hundreds of dollars of risk right so that's that's one of the
+things you're going to benefit from if you do straight to fundants and elite trader funding and
+tradeify both have straight to funded accounts they're going to cost a little bit more and you're
+really going to get a sale on them however with etf they did have direct to funded at 90 off sometimes
+and 60 off sometimes so keep an eye out for their direct to funded when they get dirt dirt dirt cheap
+again the sales are pretty much the best time to jump in on some of these things okay so we all
+understand how position sizing is important static your first trade is your best trade wait for it
+trailing drawdown like apex or these one steps or even take profit trader
+take profit trader once you go funded it's a trailing drawdown it says intraday drawdown type
+these you'll have to trade your um best trade every time and base hits only with trailing drawdown
+this is the second type of account static as long as they don't have consistency rules you can
+aim to pass that in one day if there's no consistency rule and you can do a one day pass aim to pass
+your static on the first day just wait for the best day okay a plus setups on the best day get all
+of them pass for the sales over with just that setup you can go the full distance to get the profit
+target in one day if you can with trailing drawdown you're never going to stretch any more than one
+to one trades okay this is why if you're going to lose 40 on nasdaq allow yourself to make 40 and then
+be done because with trailing drawdown every minute that you or every moment that you hold
+when it starts pulling back a little bit this is actually counting against you so the trick to
+trailing drawdowns is every trade must be an a plus setup in every trade you need to get base hits on
+no home runs don't ever try to beat a trailing drawdown or an apex or whatever in single day
+don't ever try to do that because you're going to end up hurting yourself on your next trade say that
+your trailing drawdown is you know and make up a number um you know a thousand bucks and you need
+to make a let's let's actually use a real number from apex again apex is a example apex is the firm
+that squeezes out more traders than anything that's the biggest firm that people lose against apex is is
+very very very much the hardest firm to make money from because their rules are designed let's just pick
+like the 100k full make 6 000 lose 3 000 it doesn't sound that bad right 6 000 and 3 000 trails with
+you but say that you make 3 000 bucks on your first trade you're halfway there it goes up 3 000 and then
+you keep holding and then it pulls back a thousand and now you're up too well you're not really up 2 000
+for the day you're actually down a thousand for the next day because you trailed a thousand dollars
+closer to your limit so your next trade your limit gets tighter and tighter what you want to avoid in
+trailing drawdown is this scenario you want to get in on a red and get out on a green period markets
+falling like this and moving like this you want to get in um here and you want to get out here
+you understand that the best way to trade this is strike to strike in the underlying one strike
+nasdaq qqq one strike spy you want to get your 40 points and get out of the way for you to take any
+drawdown take this in 40 point bites to get to your targets the easiest way easiest time i have at the
+apex is base hits trailing drawdown requires base hits because that thing is that thing is trailing
+behind you it's waiting for you to make a whole lot of money on a news event and then it pulled back
+half the distance and then you blow it up you blew up okay base hits only pivot to pivot whatever you
+got um an example is you know if you if you long at half gap trade it to close if you buy hedge
+pressure and it has like a 60 point ride up try to get your 40 and at least if you're not take all
+your profit close most of it out and leave a tiny runner and when i say a runner a runner should always
+be less than one half of your initial position okay that way um whatever you risk you can only
+lose half of it if it trails all the way back down to the starting point so an example would be that
+i bought two contracts or say three contracts and it went up to my 40 point target and i wanted to
+hold a runner then i need to close two keep one going okay if i have two contracts and even number
+then i got to close half it's better to close more than half because that way if it pulls all the way
+back down to your starting point you still got something left because more than half you're
+still profit even if it comes all the way back down so a runner the rule found with the runner is close
+out most if you've got five on the table close out three you got four on the table close out three
+round it up you got two on the table close out one but you probably should you know close out a little
+more but if you're just one two minis and close out one right and that's it try to go for base hits
+that's the trick with with trailing drawdowns uh and you go through base hits until your trailing
+drawdown stops trailing and it's back to break even with your or sorry back to uh static so a trailing
+drawdown account will convert to a static after you've made a certain amount of money like i said earlier
+it's your drawdown that they give you usually when you make that much in profit it stops trailing
+and so the moment it stops trailing that's your first day of a new static that we all understand
+that so trailing drawdown goes up and up and up and up and then one day you wake up and you've got
+a buffer or you have it as a static this is day zero of your static the very next day is your first day
+of a static you still wait for your a plus setup to build buffer then on day two you get room to play
+so trailing drawdown is base hit base hit base hit base hit okay it's static okay one more day
+of my best trade ever to build some buffer on a static once you build a buffer on a static
+you're clean you've gotten rid of most of the rules that they have to squeeze you you've gotten
+rid of trailing drawdown you've gotten rid of tight loss limits you got rid of all of that stuff and now
+you've got fat in the account to play with to trade like real to scale these things pretty well
+um and somebody in chat says unless you have a tight r to r you would avoid apex after all
+um yeah it is the hardest and in general apex is someone that likes it's just a good example for
+this um class is to the firm that squeezes you out the most it's probably the going on being the
+least favorite prop firm by anybody's means these days in 2025 uh because of the difficulties people
+have with them yeah um okay so going forward we understand static first day is the best day then
+you're good to trade a little freer trailing drawdown base hit base hit base hit get one strike distance
+in your equity so 40 at 40 nasdaq sp nasdaq and close out most if not all do not hold any of it for
+any period of drawdown you want it to be clean in and out like when it's going green and going green and
+growing green you think you're going to make more but it hit its 40 close out because you want to
+close clean so that way your next day has the full amount of trailing drawdown nothing hurts more than
+waking up the next day and your 3 000 trailing drawdown says 1970 because you took 1130 dollars
+worth of drawdown your next trade is tighter don't let that happen close at the green if you think it's
+going to make more close most of it out okay all right now that being said remember after you earn
+your static account with your trailing you got one day of static just like your first rule wait for
+that first trade to build any buffer and then you're good there and then you're free to trade on day two
+of your earned static and trailings end of the day like i said is the hybrid between a static and a um
+and a trailing end of the day your drawdown stays put there's no gimmicks so you get a fixed loss
+limit per day and that's it that's much easier to manage so with end of day drawdowns which is why
+i like to trade them you don't have to do any of these tricks you can go for home run trades bigger
+trades bigger r and r you've got room to play and you've got no gimmicks of the thing trailing with
+you it only trails off the end of the day balance so every day no matter what you did in the previous
+trade you've got a certain amount of fat to play the next day which makes it a lot easier right
+now end of the day drawdown accounts are characteristically more expensive than your um
+trailing you can put them side by side tradeify has an advanced account which is your trailing
+drawdown your apex equivalent like we have to say um
+4500 trailing drawdown is only 90 bucks man it's so cheap well it's because it's impossible to pass
+these things i'm going to go to end of the day for 4500 drawdown is somewhere between these two
+and you can see that's roughly about 200 bucks the difference is almost it's more than double
+in price per drawdown just to go into the day the fact that it doesn't trail with you means that
+you're not punished for winning the wrong way which is the crappy part you're trading and trading and
+trading and trailing drawdown then trump says something no matter how good you trade it all month
+and it does this and this and you blew up that sucks right so that doesn't happen with end of the
+day drawdown usually with end of the day drawdown it's fat enough and that that doesn't punish you
+so they have to punish you another way for winning too big in a single trade which is why most end of
+the day drawdowns will have a consistency limit on them to actually make you trade longer if that
+happens because the end of the day the hook on that is to keep you trading as long as they can
+you know offer you bigger payouts say that it's easier because there's no trailing which is true
+however usually have to trade a lot longer they're going to let your win rate and the problems you have
+with adjusting for volatility you would just squeeze you out every time they're betting on
+the fact that if you trade for seven days you're just not going to win as a trader as most people
+don't right so end of the day drawdown the rule is keeping the market as long as possible
+you you get a lucky favor it goes in your direction shit they're going to add you know a couple extra
+days or a couple extra you know a bigger profit target which means it's a certain amount of days
+if you're trading and trump tweets against you well you blow up the account or you hit daily law
+summit daily law summit is another thing that it prevents you from martingaling that's the whole
+reason they have that rule remember when i told you martingale is a pretty useful strategy because the
+reward is infinite and the risk is practically zero when the accounts are dirt cheap well imagine
+end of the day drawdown being dirt cheap you can martingale martingale martingale and then trump
+tweets and all of a sudden you made a fortune with no punishment no matter what the volatility does
+because your drawdown is fixed for the day so because of that they have the consistency rule to
+keep you from martingaling shit this person made all this money in a single trade you know in apex that
+would have squeezed you out one step etf that would squeeze you out tradeify advance it would
+squeeze you out but my funded futures you're still in it but man you busted your well actually
+my funded futures has no consistency once funded um some accounts don't have consistency which
+allow you to scale like that so my funded futures typically you're you're pretty good on that now
+some firms to counter it even further will throw a rule in there called no news trading they won't
+let you trade through planned news so that you can't take advantage of this accidental bump up with no
+punishment on volatility they might have a no news trading role and what makes my funded futures
+probably one of the best accounts out there is once you're funded there is no daily loss limit which
+means um oh i was saying there's a reason there's daily loss them is to keep you from martingaling
+um you usually can you know you can buy and buy some more or you can make multiple trades until
+you're ultimately right and one of them uh but a daily loss and it will cut you off after a certain
+point and and make you wait another day so that you can't keep adding to a loser and make your way back
+so daily loss and it prevents martingaling and then um consistency prevents you winning in a single
+bite now the news-based trading the rule is some firms have no news-based trading and that's a hidden
+rule same thing as consistency or whatever it's going to punish you for winning too much at a certain
+time when the volatility is high okay so understand that these are some of the hidden rules that they're
+going to have uh and this is what they're designed to squeeze you on the end of the day is is pretty
+much the best all-around account to trade it has a fatter drawdown than a static a lot more room to play
+but it does trail with you once a day so an end of the day drawdown you really can't
+easily build a buffer um because every day no matter how much you've made the trailing is still
+there so static gives you an infinite amount of buffer so it's harder to blow up trailing once you
+earn the static gives you infinite amount of buffer it's hard to blow up a lot of the trailing draw
+to or end of the day drawdowns will give you a buffer at some point usually again if you if you make as
+much as your total loss limit like with tradeify the straight defunded which is an end of the day
+if i make six thousand towards my nine thousand which is my initial total loss limit then it
+becomes static from that point and i can take that much drawdown the next day so your your goal is with
+these prop firms is to earn a static account no matter what you're doing you want to you want to
+take it seriously until that drawdown stops moving because i call it eliminating rules anything you can
+do to eliminate rules in a prop firm is good if you get rid of any kind of drawdown then that's one
+less thing you got to worry about try hardest to get rid of rules sometimes you can buy your way out
+of rules like with tradeify you can get the growth account which is an eval or you can pay to skip the
+eval that's getting rid of a rule right so keep that in mind now when it comes to end of the day
+drawdowns undisputed champion is funded next and my funded futures they are both tied uh depending on what
+you like and the rock paper scissors of no dll or sorry dll consistency and um profit caps
+um funded next on their legacy account is um no dll sorry it's no dll and no caps just a consistency
+and my funded futures it's no consistency no dll but there's a cap so it's rock paper scissors which
+one you like i personally trade um i trade uh funded next personally these days because i don't want to
+cap and i don't like dll both my funded futures and funded next don't have a dll which allows me to
+trade you know more throughout the day and scale better now another thing about dll it limits your
+scalability daily lossom is how much you can lose before you're done so the daily lossom and on some
+of these accounts for example is a thousand bucks and i'm i'm most of my trades are one to one or two
+to one which means i can only make a thousand to two thousand dollars when i'm right that is my dll
+that being said dll limits your scalability so i personally like to trade accounts with no dll
+so i can scale as much as i want whatever my total loss limit is the multiple of my r
+therefore that's about as much as i can make okay
+so end of the day drawdown you don't have to do like the base hit thing you can go for your full
+trading plan like you normally do just make sure your same rule applies two days to lose or three
+days to blow up two trades per day total to hit your your total loss limit and usually daily loss
+limit will set that daily loss limit for you if they have one if there is a dll just divide dll by two
+and then that's your profit target or your loss target that you're going to take per trade dll is
+2 000 you're going to lose a thousand per trade and again do the earlier math we discussed to find
+your normal position size and just scale from there so unrealized end of the day and realize end of the
+day doesn't make any sense somebody asked in chat end of the day you're flat and so realized means
+that's where you are realized means you flatten the position unrealized means you have a position
+open because it's unrealized gain you haven't earned the gain so if it's an end of the day drawdown of
+unrealized gain it doesn't make any sense i don't know if anyone's like that because end of the day
+drawdown means it's the drawdown from the profit end of the day now if there's a swing trading account
+that allows you to hold over weekends like etfs diamond hands then you'll have an unrealized end of the
+day which means you're still in a trade and then they mark it off of the high of the end of the
+day balance from there that's the only way unrealized would apply unrealized applies it's you're still in
+the position great question on etf site yeah so that would probably yeah that probably be for the
+diamond hands account ones that allow you to hold or swing trade will have an unrealized end of the day
+it just means at the end of the day that's the that's where they take the balance from that last
+end of the day balance okay now position sizing we've covered um now we'll talk about how to skirt
+some of the rules we've already talked about um burning and churning when there's a sale there's also
+sometimes they have a rule called dca which allows you it doesn't allow you to buy and buy and buy and add
+to red accounts dca well there's a simple workaround from a dca rule is once we figured out how to
+exploit it as years went by most firms got rid of it but some firms will still have a new dca rule
+so if you're going to long one contract and decide you're going to try to pseudo martingale this to
+burn and churn firms put an endo dca rule to not allow you to do this now i'll teach you something
+pretty neat about prop firm rules anytime there's a prop firm rule that they say don't do
+you know why they tell you you can't do it take a guess why on earth would they tell you you can't
+do something is it because they're looking out for you as a trader is it because it's banned trading
+purposes it works any rule the casino tells you you can't do something is because it works
+so if people don't believe you when you say you can't martingale these things when they're dirt cheap
+and they used to have no dca rules why do you think they have the no dca rules because traders
+just would buy them for 15 bucks and with no strategy whatsoever just throw contracts at it
+until it won and cost nothing by the end of the day to get 20 funded accounts right so some firms have
+a no dca rule they fought you back well here's how you fought them back instead of buying one and
+then buying two more and then buying two more or four more don't add when it's red close out the
+position then buy two you bought here market fell you want to add some more close it all out
+then buy two from zero the market falls close it all out then buy four from zero and you can make
+the argument when you get your payout do you in dca anything because you didn't dollar cost average
+all dca since we're dollar cost averaging it'll allow you to add to a red well close it out and then
+add from flat there's nothing no rule against making two trades in a day you can go on social media
+and ruin that firm if they flagged you for that that's not dca you didn't cost average into
+anything you were at zero so that's a way to get rid of a dca rule you can work around it all the
+time it's pretty pretty handy to know that um yeah how to get rid of how to get around a consistency
+rule well there's another trick i did this with trade if i straight to fund now this is an advanced
+technique that a lot of people don't do and i got a lot of social media questioning like why would you
+do this because people don't understand but you guys know me my brain works different okay
+tradeify has the following setup on their direct-to-funded accounts 9 000 profit target
+six thousand dollar total loss limit
+and 3750 daily loss limit okay so you get to the buffer and dll goes away well okay and at 20 consistency
+means you got to make eighteen hundred a day to get to nine thousand okay so after day five you get
+to nine thousand you get to nine thousand dollars and then you take your three thousand dollar payout
+cool okay now you've got a balance of six thousand from a starting point
+where zero is your blow-up point at that point we all see that they've recycled the same mll it's now
+again six thousand dollars to zero it starts you all over just like a fresh account you may have
+six thousand dollars a buffer in it however it's just like buying the account from scratch it's no
+different isn't it right it's no different and the next thing is that in tradeify's second round
+you have to make forty five hundred dollars for the next payout rather than nine thousand
+so at twenty percent consistency you can only make nine hundred dollars per trade which is fine
+so once you make your forty five on top of your six thousand dollar balance now you have ten thousand
+five hundred dollars and then you take out your three thousand dollars of profit and then you're down
+to seven thousand five hundred dollars zero as your blow-up point and you got to make three thousand
+for the next payout i think it's still the same now the new rules that tradeify these consistencies
+went slightly up i think they change it from 20 to 25 and 30 it changes but the principle's still the
+same after you pay out you're back to square one and after you pay out you're almost back to square
+one it's your your your total loss limit is the account size forget that it says 150k or 100k or
+whatever what you're going to lose is the account size we all understand that so you can see that
+every payout you start over from scratch do we all see that your starting balance is basically
+always the same every time you take a payout it's like starting all over but not the way that i did
+it see not everybody thinks like matt coward thinks see matt coward looks at numbers i'm different you
+know what i did i told tradeify fuck their consistency you know what i did to make my first nine thousand
+dollars i went ahead and made twenty five thousand dollars
+on purpose i made five thousand dollar days i blew up a whole lot in the first two weeks until i got
+five accounts with roughly 10 15k of profit in them it's going to take me 25 000 to get to that first payout
+so most people are going to trade you know five days take a payout back to zero five days take a payout
+back to zero and then your first couple of trades as you get started you're so close to the blow-up
+point six thousand dollars and you're done not me mine is long long long long okay take my next payout
+okay cool once i take my three thousand look where i am i'm here there's my blow-up point it took me
+month to get to my first payout instead of five days but then every other payouts i'm cycling back at
+the start over point with 25 to 50 000 a buffer in each of these accounts never blowing them up
+again i can go payout payout payout payout payout by purposefully nuking the first consistency and
+then following it for all the rest make 5 000 every trade get all my blow-ups out of the way here
+instead of blowing up mid-stride in each one of these cycles you could blow up at any one of these
+points where you start over after a payout i figured that out and instead decided to get my
+blow-ups out of the way right at the front so now it payouts two three four five and six i'm so far
+off at the zero point it doesn't matter do we all understand that i learned this trick because people
+used to exploit apex the same way you all follow what i'm saying imagine going to pay out two and
+you've got six thousand dollars of fat and that's it imagine going to pay out two and you got 30 000 in
+fat you need to make forty five hundred dollars before you lose thirty thousand dollars and you
+make it nine hundred dollars at a time this balance is meaningless it's not real money you're only getting
+paid out whatever they pay you out what this balance is it prevents me from starting over impossible to
+lose thirty thousand dollars nine hundred dollars at a time you had learned use 30 trades in a row
+you follow what i'm saying guys you know how everybody out there got one and two million dollar
+payouts with apex there's a trick we all knew and the trick was the same thing you blow up your
+consistency the first time in apex and just yolo a huge balance apply for a payout you can't do this
+anymore they've cracked down on it you make whatever put in 50k or whatever and then blow up
+you know blow up your consistency and then go for a payout and then they deny you right but if they
+deny you then you start all over and then you just inch forward a little bit of the time and maintain
+consistency and then go to your second payout and then take the 50k out the second payout because you
+just inch forward to the rules of the second time see the the goal this this class is to inspire you
+not to play their game play yours see part of this social media million dollar apex traders they
+didn't make it by being millionaire traders they made it being by clever being um clever traders
+beat the prop rules in ways like this you know tradeify you guys watch me i accumulated two hundred
+thousand dollars of balance and those tradeify straight to fundants taking them out three thousand
+dollars at a time just inching forward inching forward now you see my tradeifies throughout the
+day i'm making a thousand dollars per account maybe two sometimes somewhere in there because
+while they do maintain massive balances on them i'm just inching forward the next payout next payout
+next payout and uh that's a really good trick for these cyclical direct-to-funded accounts where
+when you take a payout you start over in any any actual staged payout account if you can exploit that
+idea sometimes it's better when they do have a sale again some firms will have a big sale 50 off or
+25 off or whatever you've got your my funded futures scale accounts and your fund and x rapid accounts
+they're accounts that you have to trade five days and get a payout and trade five days and get a payout
+and you're kind of locked with consistency you can always blow the consistency to put a big fat buffer
+in it and i call that rule blowing the consistency on purpose taking your first payout on purpose
+and it takes longer to get to your first payout but you don't blow up the rest of the time with
+higher probability that's a trick i use for tradeify and i'm just babysitting the same accounts
+people are going out there getting a three thousand dollar payout than buying 20 accounts and getting
+a five thousand payout and you're buying you know you're always constantly blowing up in the middle of
+their payout cycles not that way now you may not choose to elect that kind of strategy when i when i
+finally reveal in social media how i did it the brilliance of it was not seen by the average
+person a lot of people were like that sounds weird i don't think that works these people aren't that
+smart it absolutely works you know my my tradeify accounts like i my my account numbers in this in
+the double digits i didn't blow up thousands of times double digits tens of times right at the start
+babysit the rest of it for half a year you know what i mean and and the trick is is that that's their
+role consistency some of these people that talk about prop trading and teach you prop trading
+they just follow the rules your job as a trader is how can you bend the rules right um if you know
+you're playing basketball at the carnival can you lean over the line a little bit just to get a couple
+inches shorter will the carnival guy not notice you you know the only thing that you you only get
+busted if you get caught uh so you can be clever now these again you're the prop firm is you're not
+doing anything illegal by being the prop firm but if you're clever and beat the rules the worst they
+can do is deny a payout you're not gonna have the cops knock on your door because you dca'd when
+there's no dca rule you understand what i'm saying it's currently the wild west no regulation on these
+things and so their job is to keep you from winning your job is to win at whatever cost so the clever
+again and outside of this boot camp there might be clever ways to beat these things that i don't even
+know there's there's clearly a lot of ways that people have determined how to beat the system now
+here's another way people have beat the system before um the data feeds when you see your bid ask
+spread right um between nasdaq your prop data feeds or paper data feeds it's a simulated data feed which
+tracks the underlying somebody figured out long ago that there's a slight delay into the paper data
+versus the real data is tracking and so certain traders created bots that would recognize the arbitrage
+buy at the right point and sell at the right point like you know making one or two ticks per trade
+but noticing that the real data feed moved faster than the paper sometimes the real data feed popped
+up really quick they would buy in the paper account and just trade across the spread between the bid on
+the paper and the ask and the in the real account betting that the the paper account sorry the real data
+feed and paper data feed that the real feed was leading the paper feed and then they use that
+arbitrage to win hundreds of thousands of dollars before prop firms started having a no high frequency
+trading role right a lot of firms will have that role you can't trade in and out quickly and the
+rule is to prevent you from doing stuff like that clever exploits of the data feed but you got to
+understand that these rules these prop firms have weren't created because the prop firms are smart
+have to sit around and think about it prop firms got schemed or scammed out of that money and then
+they made the rule and they've accumulated those rules every clever card counter they found has
+created some of the rules that you all love to hate all right so keep in mind that right now prop firms
+in 2025 have pretty much figured out most of the ways that people have schemed or scammed them out of
+money not really scammed it's not really a scam to beat the casino card counting is not illegal it's
+just advantage play um there's nothing wrong with advantage play but you don't know what people are
+going to figure out between now and then the idea is is don't assume that their rules can't be bent the
+no dca trick i taught you right you can be clever the worst they can do is deny your payout and that's
+your risk to take um you know some of them have a no turning accounts rule like you can't just buy
+account buy account buy account and then pass to get rid of the turn and burn situation you've seen
+some prop firms right um that punish you for doing that i think wasn't it top step for somebody that
+did that you're not allowed to just buy a bunch of accounts and then pass one of them and fail the
+other 10 again why can't you do something because it works too well the idea that your downside risk
+is so small and the upside potential is so big burning and churning is an adequate strategy how can
+you prove that when i told you that it's adequate it's adequate because some firms don't let you do it
+that's why it's adequate so remember when there's a sale that's when you want to exploit all of the
+stuff um and be in in and i do that all the time like whenever there's a you know a sale exactly um
+when i try to get everything passed for the end of the sale because it's the least amount of money
+i'm going to spend on these things um okay so this is how to trade each type of account
+when to trade each type of account and all things being equal if you need like one sort of rule just
+to follow and you're having a hard time with props wait for the month where vix is below triple b and
+it's a bull market six year a plus bull setups and a setups you have a lot easier time passing and going
+funded another thing is when you have evals if you pass an eval and you go funded and you usually blow up
+immediately then you you fight to pass an eval then you go fund and then you blow up immediately
+there might be some nerves associated with going funded that happens right now the pressure's on
+now that you're funded what do you do well wait a day or two don't immediately jump into your first
+trade the next day when you go funded follow the same rule as your static your first trade is your
+best trade be patient and wait for it wait for a plus non-volatile bull setup once you go funded
+you guys all understand that very very very important so these are the tips and tricks on
+how to pass these these program accounts now if you want to know my opinion on what you're going to do
+if you're having a hard time passing any prop account and getting funded find a big fat static and invest
+the money into it and then trade it like i taught you with statics statics the easiest way to feel
+confident doing this if you can pass if you can get funded with trailing drawdown you can get funded
+anywhere because that's the hardest one that is the hardest one to do i recommend i highly recommend
+avoiding trailing drawdown if it all costs now the downside to take profit is that once you go funded
+it's trailing drawdown just for the funded part but it doesn't matter you can get your buffer immediately
+like very quickly the same day payouts make it worth it for some people um it only takes six days to pay
+out and once you get over the trailing you're fine now again i don't like trailing drawdown because i
+like to scale big but if you get lucky with trailing drawdown to build up to your buffer then you can scale
+big from there personally speaking if you like trailing drawdowns take profits the way you go
+it's only it's end of the day for eval but trailing in the middle if you want trailing drawdown the whole
+way through um probably i would say uh etf one step um or tradeify advanced are pretty much the ones
+that are the go-to for most people um apex as well it's just not the favorite anymore um your best end
+of the day drawdown like i told you earlier my funded futures currently funded next um and they
+have different types of trailing drawdowns um there's two actual types let me cover them really
+quick you have trailing drawdown i'm sorry you have end of the day drawdown with what i call flat payout
+and you have scaling payout so two different types my funded futures and funded next both have each of
+these types my funded futures has core scale and um uh i think it's called pro now right
+and then they have um funded next which is rapid and legacy the big fat one on each one of them which
+is your your your straight big payout is you trade a lot of days but you can get a really big payout
+legacy the same way core and scale and rapid you trade and get a small payout you trade a certain
+window a much smaller window but you get a smaller payout and so these are designed for you to trade
+like five days and get like cores like trade five days get a thousand trade five days get a thousand
+trade five days get a thousand this is like trade five days get 1500 trade five more days get 2000 trade
+five more days, get $2,500. Your profits scale each time you make it to payout. And this is
+just trade 14 days and they get a big fat payout. Rapid is trade five days, get a payout, five days
+payout, five days payout, and the payout gets slightly bigger. Legacy is trade and they get
+a huge payout. So the difference between all of them, obviously, is that the one that can give
+you the bigger payout is going to cost a little bit more. But it depends on what you're looking
+to do. My FundedX Legacy is the account you want to trade if you're trying to get a million dollar
+payout. It's the easiest account on props currently today to get you there. No DLL and no profit cap
+is a recipe for grand slams. You trade that when you want to trade big and you want to get a big
+payout and you want to trade longer and you want to take the risk. You might blow up a lot more
+because you're betting bigger, but once you put buffer in the accounts like you see me doing now,
+you're seeing me trade some of those accounts $5,000 and $10,000 per account per day. Currently
+on this day, one of my accounts made more like $6,000, right? That's the one I'm going for grand
+slam and it's just to show off. Might not be the most practical use of your time, but for me on
+social media, it'd be cool to just be like, hey guys, look at my 100K payout just to show off,
+right? Not everybody's cup of tea and it's slightly more expensive. And I say slightly,
+it's only twice as much as the rapid. The rapid is a quicker path to payout and it's smaller
+chunks of payout. You're going to trade them all pretty much the same because they're all end of
+the day drawdown accounts, but you're going to think of them differently. Um, you know,
+you're rapid, you're going to try to trade, you know, your five days or whatever and get the target
+and be done. Legacy with it uncapped, you need to go as far as you think you can go. And then you get
+to request your payout. This is the final part of the bootcamp. When to request a payout.
+It's something that is uncapped. You can go as far as you want before you request your payout.
+And then when you request your payout,
+how much do you take out? Now, remember, none of this is real until it hits your bank account.
+That's the rule of props. So every day you're in, you risk losing all of it. So how far do you go?
+And when's the comfortable part to take out? There's really no rule of this, but let me tell you,
+uh, what I never do is I never take out more than half of my account. So if I want to continue
+trading the same account, I want to at least leave half of what I've made in there. If I've
+made 20,000 and I want to take a payout, I'll take 10. It's a good rule of thumb. And you choose
+how much you want to take, maybe take all of it. If you don't want to follow any rules, but when do
+you take out, there's really no rule of this for me with fun to next, my job is to make 200,000 and
+request a hundred and then leave a hundred in there and let it keep going. Why the extra amount?
+Well, that's extra buffer. I still have my quote unquote static balance with a bunch of buffer with
+plenty of room so that after I take a payout, I'm not close to zero. If you do take a payout and you
+end up very close to your starting point, it's very likely that you do lose the account next.
+Be very careful. Also in your live accounts, which you haven't covered yet, but I'll cover very
+quickly. In live accounts, which is the final part that you're going to achieve with a proper,
+they give you real money to trade with. Live accounts are fantastic. Well,
+better than the SIM account. I'll tell you why. Remember at the start of this, when I told you
+there's eval, there's SIM funded, there's live, right? Then there's you.
+Your account. Live is an account that you split with them and they take a profit split.
+Eval, you don't make any money. SIM to fund and you make some money. However, it's considered income.
+You're taxed like it's wages and therefore you're going to be taxed at the highest bracket. If you're
+making a million bucks a year, all of your SIM funded is taxed at 37% as of today. So you're losing
+40% of this. Live, you're going to get a 12.56 for the most part, which is going to be futures,
+gains, incomes, taxed at the 60-40 rule. So 60-40 rule means 60% is long-term, 40% is short-term,
+which is the same rate as your wage rate. So effectively, this is roughly low 20% rather
+than 40. So when you go live, you're going to save roughly 20% per dollar on taxes for all your
+gains. And also in life, they're usually a profit split. It depends on who you trade with. Some of
+the firms, it's 90-10. Some of them, it's 50-50. That sucks to lose 50% of your gains to the prop firm
+and then 20% of that, the taxes, whatever is left. So every 100K you make, you net 40K of that. 50 goes
+to the other firm, 50 goes to you. And then out of that 50, you lose 20% in taxes. You're down to 40
+net on every 100. That kind of sucks. The difference between your account and a live account, it's still
+the same on taxes. However, there's no profit split. And a lot of times in live accounts, once you go live
+and they give you money, the balance is usually very small. You do all this work to go to live and you're
+like, congratulations, here's your $5,000 trading account. Have fun. It also has a $1,000 DLL.
+You can only trade two contracts a day. I'm live in two places right now. And I only earn live,
+again, to brag about it. I don't really put too much effort or care into these live accounts
+because what would you do with a tiny account? It's not worth my time to even trade this.
+I've been offered live account before and I was like, no thanks, I don't want it. And they're like,
+cool, we'll give you some more. I was like, not worth my time. Literally, these things are
+negotiable. When you go live with the firm, especially, this is, I call the, unfortunately,
+this is a power that you may not have. I call it the influencer power. You can say, hey, I'm live
+with your firm, but I'm not going to use it. They're like, no, we'd like for you to trade our
+live account. That way we can talk about you trading our live account. I'm like, yeah, but I don't want
+your rinky dink 20K account. I'll do it if you give me something better. And they're, at this point,
+live is negotiable. That's all I can tell you. You may not have leverage to ask for more,
+but you can ask for more. They give you, some of them have a practice and a standard. You can
+always try to say, hey, you know what? I don't do well with DLL. Can I have no DLL or can you make
+it bigger for me? I will tell you that most people don't know this because they haven't made it to live.
+When you go live, this is negotiable. Never act like it's not. So every firm that goes live,
+you can always ask for better parameters. And they're investing in you at that point because
+you're making money together in the market. And you can, I've argued, I've tried to argue DLL out
+of every single one of my live accounts. And I didn't, my last live account with my funded futures
+has no DLL. You know, everyone else that's live with my funded futures has a DLL. Isn't that crazy?
+I have a rule nobody gets because I asked for it. I fought for it. They're usually very, very
+ass cheeks tight, dude, watertight when it comes to giving out real money like that, which is weird
+because they'll pay out the same money. Once you're invested in you, these accounts are really
+rinky-dink. Tradeify, which I'm about to go live with, is about to give me a $20,000 live account.
+I'm going to try to negotiate some of those parameters to be even better.
+Sometimes they'll budge, sometimes they won't. Earlier in props, they would budge
+before live became such a big thing. Remember, before regulation was a fear, live was something
+nobody got unless they were the best of the best. Now they're making path to live easier and easier
+and easier to make it to because the fear is regulation is going to get rid of the SIM funded
+step. Therefore, live is more attainable and they're going to basically make live a smaller
+account and easier to get. Therefore, it's going to be more standardized, not so custom.
+Going live used to be a very, they were like, congratulations, you're going live. Here's
+what I'm going to offer you. You could say, well, can I get a better DLL and can I have
+a bigger contract size because it matches my style? At that point, they're investing you
+and they're going to realize that maybe they should listen to you. As long as it's not an
+unrealistic ask, it's always negotiable. Most people don't know that.
+With that being said, the best way to trade props is to not trade props. That's the final part of
+this masterclass. It's not trade them at all. Once you make money in your prop account, your goal
+is to not trade that live and make a living with it. Your goal is to take money out of that whole
+system and fund yourself. This is the rule. You're going to have money that you're paying in to buy
+your evals. You're going to play the eval, the SIM funded game, hopefully to make a payout.
+Now, whatever you put in, hopefully you get something out. You make something out. Whatever
+you make out, hopefully it's more than you put in. Therefore, this machine now pays for itself.
+The money you put in is normally from your pocket, but hopefully you get to a point where the money
+that goes in. It's just money from what you've made with some leftover. Say it's just spending
+$1,000 a month and not making anything. All of a sudden you spend $1,000 a month, but then you make
+$2,000 out of it. Therefore, from that, you net $1,000. Step one of props is to have the prop fund
+itself. Make enough that whatever your profits are, pay for the prop. At this stage of my journey,
+it didn't take me long to figure out how to do that, how to beat the rules of the game and have
+the prop fund itself. I'll pay a dime for prop accounts, resets, evals, whatever. I have a
+fat stack of prop payout money that pays for the props that I ever have to buy.
+So there's money left over. Your money left over is now money that you're, and especially if you go
+live, it's the same thing. The best thing about going live is that there's no more fees and no
+more monthly fee and activation fee. Now that live is just a pure profit generating machine with
+whatever's there. The downside risk to live is that you lose it all and got to start over. Well,
+if this machine's working for you and you have a way to make money more than you're putting out,
+then losing live just starts you back over there. Live also generates some kind of income. And your
+goal is, is to take this money and ultimately put it in your own account. This is the best way to make
+money. And that this is just a system to seed your own self with starting capital. What's great about
+the prop world is I don't care how far into your game you are, you risk losing everything as a
+trader. You could be a millionaire and start over at zero. 10 years ago, a millionaire started over
+at zero. You're like, Hey mom, can I borrow like 20 grand? I have zero money left and I need to start
+trading it back up. This is what your life was like. You have to beg for money to keep going once
+you lost it all. You know what your life is like here? Go buy another prop account for a hundred bucks.
+You figured out how to squeeze money out of it. Keep squeezing money out of it while you can.
+Remember as of 2025 today, SIM funded steps still exists and it costs very little. If you're good to
+get something out, your job is to get money out and put it in your own account. And therefore there's
+no profit split. Um, there's no anything you're able to just keep going, um, with your own money
+and then set your own rules. The rules are easier. And ultimately you want to, you want to be able to
+seed yourself. Now here's a trick. And I've taught this to a friend of mine. He actually, it's just like a, a
+rule of thumb. And he actually has been doing it for five years. What he does is my, my buddy is my
+best friends out there is a day trader. And he, you know, he had like a hundred thousand dollars to
+play with. He's like, I want to trade, but I don't want to lose all of this. And I was like, well,
+what I tell people, and again, it's not investment advice, but what I tell people is just use a fraction
+of what you have. Don't ever put it in the same account. You want a trading account? Don't put a
+hundred thousand dollars into that account. If you have a hundred thousand, put five thousand
+into it, right? Give yourself 20 chances to like make money and then blow up and make money, then
+blow up and make money and take a payout and make money, then blow up with your own money. Whereas each
+time you blow up, you're only down 5%, right? That's pretty decent for a trading path. And the goal is, is
+that it's not like you put a hundred thousand dollars into an account and only use five. Trust me, if you put it
+in there, desperate you when your shit's blowing up, we'll use it all. That's what you do. So keep
+the other 95K into your savings account or your checking account. Don't put it in here. Trade with
+this. The goal is play the game double in half. Okay. Every time you double your account, take out
+half. That's it. That's the game. You make 10, take out five. You start at five, you go to 10,
+you take out the five you made, you start back to where you are. This balance never goes down as
+long as you're making money here. And this balance only goes down when you decide to put more money
+back in. The minute this goes to zero, then you get to make an executive choice. You got to wait a
+day to wire anyways. So you might say, okay, you're going to get a chance to sleep on it before you
+funnel more money into it. The last thing you want to do is throw money into the account while you're
+live and then gamble in all of it. Never do that. So a friend of mine will make money, $5,000 chunks,
+put it back to the balance, make 5,000, put it in, make 5,000, put it in, lose the 5,000. Okay.
+Well, over time, his account has sort of just grown like this, where he's almost pretty much
+doubled his money day trading over like a few years just by doubling and halving. His risk is
+minimized. The chances of him losing it all in a single trade is zero because 95% of it isn't even in
+the account. And the idea is, is that you learn how to day trade this way. Get enough money so you
+can play the double and a half game with whatever this prop machine you've built funds you with.
+If you have finally $5,000 of money, people say, what do I do with my first payout? Well,
+the job of your first payout is to fund more payouts. That way you've got a machine called the,
+I don't have to borrow money from mom machine when I blow up all of this. Now, once the machine works,
+you figured out how to make money in props, fund your own account and double and half it. And if
+you ever blow up again, you can always return to this once you're at zero. The goal is, as a trader,
+is to learn how to make yourself survive as a trader. You want to try to make sure you don't
+lose your money. That's the rule number one of being profitable is don't lose the money you have.
+Not try to make money with it. Don't lose it. You'd be really smart.
+How you do that. Okay. So in this prop masterclass, your goal is to take whatever first payout you get
+to funnel the prop system, whatever money you make further. Once you've created that,
+it's just accruing in a balance. And once you get a balance, put a fraction of that balance into a
+live account so that now your balance, you're going to take a chunk of that and put it into live.
+You still have a bunch of balance left over, put it into your own account.
+You got more left over in case your own account blows. And then you'll gain your trading education
+this way. Whatever you start with, it's not how much you make or whatever where you're learning
+how to trade. It's like what happens when your account gets like close to zero. I tell people
+it's like, you know, you'll learn trading like right here, right when you're on the edge and you're
+like praying and bargaining and like, you know, crying and sweating and like all of that. And then
+finally you bust. This is a really good education that only costs you a fraction of what you
+started with. I mean, each time you do this, you advance in your training. Your trading knowledge
+gets bigger and bigger and bigger. Every time you blow up an account, this is where you actually
+learn. Not when you make money, not when you go flat, not when you go nowhere. You actually learn
+the emotional part of trading and emotional control here. This is where it's crafted in you.
+It's like you can go to a firing range all day and shoot a gun at a target all day.
+But then you go to war and the first time bullets are whizzing over your head, your hands are shaking
+so hard you can't even hold your gun, right? You're sweating so much you can't even pull the
+trigger. So like this is where you actually learn the game here. And so if you can create a system
+where you learn the game here with a fraction of your money, once you're alive, that's the ultimate
+goal. Once you're in your own account is that once you blow up, assume that you will, you still got
+money left over to try again. And you take it seriously each time. And hopefully that's the
+path to go to go self-funded these days. Back in the day, mine was like work and make money,
+put the money in, blow it up, work and make money, put the money in, blow it up. And each time I blew
+up, I got better and better and better. The blowups became less frequent. And then they came to the
+point where I don't blow up anymore. Right. But I had to go work and take time to get back in,
+take time to get back in. You guys, at least your work, quote unquote, is trading in the prop space.
+And then hopefully you can make money that way. And if you can make it in the prop world with all
+those rules, you can certainly make it in the real world without them. As long as you transfer that
+same discipline over, you should be fine because live trading in your own account is much less
+strict. You have no rules, period. Prop firm gives you rules. If you can pass with all those crazy
+rules, then apply that same technique to the live account. You're going to be strict on yourself and
+you'll be okay. Does this make sense, everybody? Your ultimate goal with props is to not need them
+anymore. I hate to break your bubble. And this is the final sentence of this part of the bootcamp,
+but nobody, and I mean nobody, makes a living out of prop trading. Zero people. You're not going to
+make any money doing it. You're going to make enough to bankroll yourself. And as a trader,
+you'll make the money in your own live account. Taxes and profits split make prop account not a
+worthwhile endeavor for long-term results. It's enough to build a bankroll to trade with. And
+that's it. Don't let them sell you otherwise on the idea that they want a long life relationship with
+you. Your job is to make money in that live account or that funded account and seed yourself. And I
+know that goes counterintuitive to someone who's an affiliate of prop firms, right? I would, my
+incentive financially is to tell you, love the prop system and stay in it as long as you can. It's
+great. I'm telling you, get out as fast as possible for your own trading. You're not going to benefit
+from it long-term. It is your rescue to yourself when you blow up. It's your way to practice when
+you're not that good. It's your way to make money to fund your own account when you have no other way to
+do it. And it's perfect for that. But as far as you paying your bills from your prop payouts, don't let
+anybody or any influencer tell you otherwise. Nobody, even the big amounts of payouts I get, that's not
+what I'm using to fund my lifestyle with, okay? I make a significant amount from props, but after taxes
+and everything, it's much less than I do in my real accounts by a fraction. It's a fraction of it. Not even
+close. It's laughably far away. So keep that in mind. Your ultimate goal to trade props is to not need
+them. Okay.

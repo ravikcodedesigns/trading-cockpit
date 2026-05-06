@@ -1,0 +1,794 @@
+so today is a class on all things futures futures mechanics uh in cme group level stuff globex level
+stuff things you didn't even know existed that are extremely important to your training as a
+futures trader now we've covered a lot of stuff in these courses so far myself as a futures trader
+we taught you how we utilize certain techniques in rocket scooter to find high volume pivots and
+futures using a variety of techniques right we use dd bands we use risk intervals we use monthly
+hedge pressures and hedge pressures bull zones bear zones and other things and equities and we find
+that we can predict volume very well in many different capacities of these types of indicators
+to give you that kind of extra layer to your analysis right but there are mechanics on the
+futures market that you can exploit very much so we've kind of covered them somewhat
+as we talked about the risk interval very heavily it is a number based on the margin requirements
+and the margin requirements are set by a company called the cme group and you may know the cme
+group you don't hear them all the time you may buy your data feeds from your broker which
+always says cme data feeds right um and so the cme group is is a is a publicly traded company
+that essentially created the globex and the globex is the electronic exchange that you play your
+futures game in if you if you trade in the american stock market it is the digital casino that you're
+betting in anytime you make a bet right you and your broker as we talked about before both put in
+money that equals to the margin requirements that the cme group sets that you have to bet to hold
+the contract you guys put that money into a bucket like a little trust and the other side of the trade
+puts that same amount of money in a trust like it's not really a trust but it is like a trust a clearing
+firm is the trustee of this the bookie that makes sure there's a bet here and a bet here and you both
+all ponied up and after the trade is executed it's ensured that the trade is cleared from one
+side to the other that some person can pay some person there can't ever be defaults on this
+contractual obligation does this make sense okay so the margin requirement that goes into the bucket
+is set by the cme group the cme group does a lot of stuff you may not have known about and here's a
+couple of things i want you guys to kind of learn about um so the risk interval as you know is an
+exploit of a program called cme span and span now got an update called span version 2 but as you see
+when you click on cme group product margins you will see there's a list of all kind of futures
+that come with a maintenance requirement and all these different things you may not know what this is
+it's okay if you're interested you can watch all kind of videos of the cme stuff has videos on
+everything to train you on we're going to cover some of them just to give you some fun information
+but you can do the research yourself they have really good educational videos on their website
+so span is a program that was designed to set the margin requirement as we already said before we gave
+you the equation 1.1 times this maintenance number is the margin so span version 2 is kind of the newer
+version of it and lately the cme group has come and put your equities products uh into this type of
+equation rather than the other type of equation to calculate the performance bond minimum requirements
+or the the minimum margins for this contract as you see there's a long and short margin that is
+different if you use span version 2 and the equity index s&p futures blah blah blah expires in march
+the current one right here these are the maintenance requirements there okay so they set this as you
+know based on the expected volatility and where positions are and risk is and we reverse engineer
+from that the dd bands which we use religiously to trade with they are some of our best tools we have
+they are amazing rock solid high volume pivots we talked about those and on both sides of the trade
+they're high volume pivots looks like we have google earnings today so this might be related to that
+um but anyways so there's more stuff the cme group did so essentially they can control a lot of stuff
+the digital casino has certain programs that exist on it that you never knew about that control the
+market like essentially rig the market in a certain way now not against you or to win money from you
+but to rig the market so that it isn't manipulated by people and doesn't shut down abnormally and
+doesn't have very few actors and illiquid periods and weird hours of the night change the price of
+something just by brute forcing it like the crown prince of saudi arabia can't come through a billion
+dollars at oil to reset the price of oil to 200 a barrel just by brute forcing it higher there are
+protocols in place that don't allow the markets to do certain things like move too far too fast in a
+single order around the same page here your casino is like a digital slot machine that's with pre-programmed
+odds and boundaries certain things just can't happen they initiate protocols that stop price movement
+or change price movement or reframe the entire market by moving the price somewhere else mid-market
+it's not necessarily just a supply and demand field market anymore you have a computer autopilot keeping
+things together one of the easiest things to understand that you deal with all the time as we
+talked about irrational rules there are two rules we talked about you sit out in all the time in the
+last class remember risk interval on the vix and when a catalyst is active well there's a third rule
+that we didn't state in that class but you will always sit out of and that's when a circuit breaker is
+nearby and what is a circuit breaker um they're called futures price limits and like the colloquially
+we call them circuit breakers but essentially if at any time during u.s trading hours between these
+times and this is again this is for the s&p you can look at they're different for different products
+so the equity index futures price and again you can find this information by just looking on their
+website um if the market moves seven percent down then you trigger the first uh the first price limit
+and so the price limit what it does is it halts trading for a certain amount of time the explanation
+is here um at any particular time you hit that limit uh a two-minute monitor pairing will commence
+for the futures contract and all futures and options during the modern superior trading will continue
+at or above the seven percent limit
+right here it says what happens at 13 percent um yada yada and then 20 percent so the market will
+literally halt uh trading at anything below that limit this is different than it used to be it looks
+like they changed some of the rules um and that's i'm reading this actually the circuit breaker rules
+seem to have changed let me read this really quick oh here it is here it is so that's the
+monitoring period right here what happens when the underlying s&p index it's a level one so in the
+index itself it's a level one this is nyse rule 712 713 this is what i'm looking for 713 and 20 percent
+when you hit each of these levels um the market will stop trading for 10 minutes um
+and after 10 minutes later the market will trigger again and start trading so the market just shuts
+off and that's to give people a cool off period to kind of like you know figure out what they're
+going to do next another thing is if you've got 10 minutes in a margin call and shit's hitting the
+fan you got 10 minutes to move money into the account like this is basically what it's doing
+it's giving people a cool off period so they can figure out what they're going to do next instead of
+just freaking out in the panic so you hit seven percent 13 percent halt each time and then 10
+minutes goes by and then you go again and if you fall 20 in the day markets will stop trading for the
+entirety of the day there's no more trading market shuts off for good so as you know the casino has
+boundaries of how far it can fall in the equity session um before it halts halts and then stops for
+the day so the market will just halt your orders they won't care what you do um and so we have a
+rule that says if you are anywhere close to that circuit breaker do not trade this market now if you
+recall with the s&p currently at 6 000 in a 40 point risk interval for the dd band you know 6 000
+divided by 40 um is you know 125 right uh or 1.2 sorry 1.25 percent you will be nowhere
+ever without the alerts of breaking a dd band to know that you're near a circuit breaker trust me
+when the circuit breaker is nearby you are many many many many many many times lower in the dd band
+so it's an unstated rule officially not in the in the platform but it's assumed right
+you're that far outside the dd band you're not going to do any kind of things now that's lower
+we do trade strong long pivots only but when you are within a couple of percent of this seven percent
+you're going to want to stay away don't trade anywhere near the circuit breakers so the rule of
+thumb that i have is that if you're five percent total loss for the day don't trade the market
+either it's an unstated rule because um it's kind of subjective but let me tell you what can happen
+that you didn't know about and this happened one time in my career in march of 2020 see what futures does
+is this one cool calculation called the iop the iop is a fancy word for the gap when futures gapped up
+or gap down based on that equation um you guys remember when futures gapped down the other day
+right we had a catalyst for an event sorry where uh trump was initiating tariffs over the weekend the
+market opened right here what do you think sets this price well the globex sets that price
+we almost hit the circuit breaker on the 25th now we didn't get close to it i don't think seven percent
+is a lot um be a 420 point drop on this day and turn right here
+that wasn't even close
+so about 400 something point drops me so the seven on six yeah so seven percent of six is for about 420
+so you'd have to drop to about 5600 in a single day it's a lot it's hard to do um we got like a
+4th of the way there but either case um you remember this gap right so this area right here
+is actually calculated a few minutes before the globex opens they actually calculate where the gap
+should be based on where people are moving their orders around that pre-open state this video
+um actually shows you the equation and how it works it's pretty neat they tell you we look at all
+the orders on the bid and the ask and we do this thing where we aggregate all the data and we find
+out where the highest probable liquid spot is and then we open the price there now let me ask you
+all something really quick did you know that the globex does this or did you just think it's like
+you had no clue literally a math equation set that opening price there's a lot of that in futures
+and you don't have to know it all but you have to know that there are things that you
+have going for you as we use cme stuff to create trade ideas that gap price is something that is
+mechanically fair it's not designed to stop you or screw you or whatever it's mechanically fair
+where does everybody want to order and then let's set the price there and so that price is actually
+set by an equation and so it leads down to well who who's there to set the price whose limit order
+is there whose market order is there that starts the price there well it is believed by us and not
+confirmed but it is believed by us that the stock market and futures market are traded a little
+differently in the futures market that the cme group sets a hard limit as the maximum bid and the
+minimum ask at all times it's like a pace car in car racing it is it is like a moving target that's
+always moving around and the market makers must bet above there and below there at all times
+so essentially my belief is that the globex itself sets where that is and then everybody is just
+reading that and falling in line the market makers are putting their orders on both sides
+so the sudden price movement is engineered it is engineered 100 percent we're going to talk about
+that today it's not designed to do anything but find liquidity because let me tell you one thing
+about the cme group anybody that is in the middle that's accepting trades wants the market to be as
+liquid as possible liquidity is the maximum frequency of trades taking place and so the more
+liquid the market is the more likely people are going to trade back and forth to each other
+which is good if your broker and your exchange and your clearing firms are all taking pennies or dollars
+off the top they want as many trades to take place as possible they don't want you to blow up your
+account if i had a million dollars and i lost it to one trader in one gulp they just got one dollar
+from me in commission they would rather me and that trader trade back and forth over and over and over
+and over again and neither of us make money and they whittle our accounts down a dollar at a time is that
+principle understood by you guys that it's financially motivating to them to provide liquidity it is not
+any incentive for the market makers are trying to move my stop and all and the cme group nobody's trying to
+shake your stop out they're trying to maximize liquidity at all times and all of these things
+are designed to maximize liquidity you just have to understand their motives are profit and if you
+want to know something cool about their motives i always like to show this but the cme group since
+the early 2000s has been one of the best performing stocks in the entire stock market since the market
+was decimalized in 2003 and the globex went digital earlier on uh sorry sorry went when trading with
+digital to the penny early on and we got out of all open outcry pits closed right about here and all
+market making went digital as well and god look at that stock guard rails as somebody said that's
+amazing way to put it like bumper bowling it's designed to keep the lights on in the casino and the
+circuit breakers are part of that as well but they're also governed by the nyse rule that forces
+the market to shut down as this is these all come about from past market crashes and panics they create
+these rules to create some sense of uh control in the market when things are panicking crazy so
+clearly digital liquidity providing and market making and all that stuff the globex is good
+business right for the cme group they do very well and so they collect their money from fees and data
+feeds that they sell i mean that's the moat that's their main source of income and so that's great they
+sell products they get commissions they get all kind of stuff right so when you're trading there's a lot
+of stuff that the cme does as they are in control now used to there used to be um nymex comex and all
+that were different exchanges where people would go and trade different things you go to gold in one
+exchange oil another exchange used to be guys in yellow jackets and futures that would send hand
+signals to each other and now it's all digital and now it's all under the cme umbrella they practically
+own everything so everything is governed by them they set the margin requirements for the nymex they
+set the margin requirements for the comex sema used to be a separate competing exchange and now
+they kind of like the umbrella that everything's under so there are certain things that happen that
+we're going to know about and we're going to take advantage of one thing i want you guys to understand
+as we talk about and this class can be very heavy on a tick chart we don't have these things in
+rocket scooter but you can get them in thinkorswim a tick chart is a time independent chart it's very
+important to understand this you can set it to whatever you want and this one particularly i
+if you're if you're using thinkorswim add time frame select tick and then max the interval on the
+number of days you want to show and then pick something here i usually use 25 and 233 ticks and
+what a tick chart is is a time independent chart and this is how you see some of this stuff see
+when i go to the time and sales every single line that comes through here is considered a tick a tick
+is a single order that takes place if the level one or say level two has like one contract and i
+sold it or sold to it it appears here as a one and that's a tick if this says two and i sold two
+it appears here as a two again that's one tick let's just freeze it right here every single bite taken
+out of the market is a tick one tick two tick three tick four tick five etc no matter the contract size
+okay it's how many orders took place so a tick is an order so every in this particular chart 25 ticks
+shows me a candle that's kind of what i'm looking for um and so on a tick chart you can kind of see
+some of the cme footprint here which is really neat um now i'm going to walk you through something so
+remember every single candle here is 25 orders you can see that there's orders to buy against the ask
+and sell against the bid and it's all up and down but it's it's time independent as you see the time
+axis at the bottom it's not like you know consistently spread out it's it's kind of
+asymmetric and you can see right here at exactly 13.59 there's this big flurry of candles within the
+first minute see out here like each minute has a lot of you know not a lot of space between but here
+there was there's something peculiar that you guys can notice about this chart if you see this right
+here and this right here it kind of stands out doesn't it see there's something interesting about
+this particular order as what happened is there are no orders to the ask there are just orders to
+the bid none of these red candles overlap each other do you guys all see that on a tick chart you can
+see this on a time chart you won't be able to see anything on a time chart it's just one single
+candle so tick charts are amazing ways to zoom in to that one single candle that's just this candle
+right here this candle packs a whole entire like wealth of information a tick chart is going to let
+me see every 25 orders inside of that minute or however many i set i use 125 and 233 they're not
+magical at all they're good 233 is a good average 25 is good to zoom right in and look and kind of see
+these things um overnight i'll use 25 because there's not a lot of orders per time allows me
+to kind of spread it out and in the daytime i'll use 233 to kind of give me a um i got like a wider
+view when i want to zoom in can we all see this right here that looks a little odd right your first
+thought when you see this is boy that looks kind of mechanical doesn't it right notice how there's a
+candle candle tick candle tick candle tick candle tick candle tick right
+very weird right it's not like there's no green candles in there there's no wicks there's no nothing
+so this is one large order that gobbled up all of the contracts in one bite so what happens here
+there's another protocol that says if the market gets an order to sell right against the bid and the
+bid has a certain amount of contracts there's a program and this may not have triggered that it
+could have i don't know the limits of this particular one but velocity logic is a program
+that says if the price an order is going to clear out so many tiers of the level two in a certain amount
+of time it triggers an immediate halt right here as we talk about the circuit breakers let me let me
+revisit that for i talk about this because we gotta i forgot to tell you one more thing about it
+the circuit breakers remember the rule of thumb is don't trade within five percent at all period if
+you're that far out of the dd bands you're going to already have your warning if it's falling that much
+you're likely in a catalyst very rarely will you get to seven percent without having either dd band
+breaker catalyst it gives you the alert already to sit out but don't trade anywhere near it is like i was
+going to tell you earlier in 2020 this is something that happened um the market fell sorry for skipping
+around the seven percent circuit breaker and then the market halted and then what happens is they run
+the calculation again after the 10 minute halt to price futures a second time the calculation actually
+price futures roughly 15 percent lower and the market immediately opened right here and triggered the
+second circuit breaker with no orders filling i have never in my career seen this happen one time
+and i've seen maybe 15 10 or 15 circuit breakers in the 15 years i was doing this okay so the only
+time in my career and likely the only time you'll ever since see this in your career but know that it
+exists the reason you don't trade near circuit breakers is the following um
+if you were to long right here and you blow up your account right there like you long just an amount
+and you blow up your account and you set your stop right there and price gaps to there and immediately
+opens and immediately closes with no orders being filled literally you will see the candles on the
+chart do this and then you'll see a little tick right there and then after the third another 10 minutes
+goes by you'll see the final trading happen so that second circuit breaker imagine being at zero
+and then looking at your account with the five contracts you longed and you looked at your
+account and it says negative 214 thousand dollars whatever and the market opens up
+after the second 10 minute halt just starts trading again because you're above 20 and all of a sudden
+this is fluttering around you're having a heart attack and all of a sudden that position gets
+closed with whatever you were negative let me tell you what happens well the thing is is that
+your account goes negative if you're in a margin account and you hit a you gap through your stop
+you gap through your zero point if you have a stop here and the market is shut down
+your stop only tells your platform to send a market order and the market order immediately
+gets rejected because the market's closed so your stop is useless you get filled where the
+markets open and we'll talk about that here as well here's an example of the market gapping lower
+and this is a different kind of gap but if i had a stop right here the market is frozen and my order
+actually gets filled right there even though my stop was there this is a different principle but you can
+see on the tick chart and i'll talk about this one in a second why this is but in this particular
+instance if you go negative and your broker will likely immediately close you out to prevent further
+loss you get a very angry phone call that day and it's not going to be like hey you know you know
+we see what happened we're really sorry don't worry it's a glitch we'll fix it it is usually like you
+have three days to come up with this money or we're going to ruin your life because we're going to charge
+it off from our office bad debt and go to your credit and you owe us this money we're going to sue you
+for it and get a lean on your house and lean on everything you do and so do not whatsoever
+ruin your life by trying to be an effing hero near a circuit breaker do you guys hear me
+that i never even thought was possible well clearly i was i i saw it happen and in my head i go oh my god
+what happens to people that bought there at the close the first one see because what happens in a
+circuit breaker in futures let me tell you how it trades all right since we might experience some at
+some point a circuit breaker now remember in the daytime these are the numbers it's seven
+the 10 minute halt 13 with a 10 minute halt and then 20 with a permanent close of the market for the day
+and that's in the equities session in the overnight session and that's only to the downside the market
+can rally as high as it wants so in the equity session it's only downside limits in the
+overnight session well there's actually an upside limit in this period of time 3 to 4 p.m so again
+there's different rules for different times of the day the overnight which you're very curious about
+is if the market moves up or down seven percent
+then you trigger those circuit breakers at night okay so
+um when you trigger the overnight circuit breaker or the seven or 13 circuit breaker in the daytime where
+the market is just halted and not stopping what happens is what you'll see is let's imagine the
+market is crashed to seven percent right there you will look at the level two and you will see the
+following you will see nobody wanting to buy and you will see people kind of wanting to sell
+and you will see something weird and abnormal like that
+everybody is lining up exactly the break point to sell
+so you will see your normal nasdaq spread of one two five ten contracts but you're gonna see like
+50 000 or 100 000 contracts people are clamoring to sell right here now in the five percent or sorry
+the seven percent overnight trading doesn't stop it only stops selling to the bid any order that is a
+market order to sell to the bid it's rejected but any order that is a market order or limit order to
+buy from the ask will go through so people can buy into this buffer all day long somebody can come in
+and gobble up bits and pieces of this and you will see this number of changes people want to sell and
+not sell and sell and not sell and this number will be rapidly changing down a thousand up a thousand
+down a thousand down a thousand you will see at the bottom of the chart it's time goes by volume
+volume volume volume volume but no price activity
+because the the price is just dashes against that flat line
+and then all of a sudden somebody might gobble into all of this and clear the next tier and you
+might see some price action again as trading resumes and then all of a sudden it hits the level again it
+halts again and then it stacks up again as soon as people buy into that it starts trading again
+you will see your circuit breakers look just like this this is are you guys following what i'm saying
+there's just a time it only only market orders are allowed to go both ways when you're above that limit
+so people are like buying against this and clearing it out
+so when you see this happen overnight
+it's just fun this is to tell you what's going on
+if you're anywhere near those limits you're not going to trade you're not going to want to be part of this
+you can go in and buy against that ask all day long
+and you'll get into a position but you're sitting here flat
+and you're already seven percent down
+don't be in a position don't be the person trading there because you can't handle it
+don't be the person that allows your trading account to go negative when markets are crashing
+because that will ruin your life you don't want a negative brokerage account because they're very
+mean you get three days to pay and then they ruin your life they're not your friend about it okay
+so one thing about the iop which resets the price when the market halts right and then you reset the
+price and market trading resumes in the futures trading will resume at any point it's trading above that
+limit there's no time frame it shuts down in the daytime it shuts down for the 10 minutes
+okay so this particular thing is a really neat thing and why i long today this is a really neat
+protocol um now again
+let me see if we can't see it on the nasa as well let's see the nasa because that's why it's
+do you guys see um right so trump news came out and the market just flutters down what happens here
+is that the market halts trading they run the calculation and say aha there's the liquid spot
+there's a huge flurry of sellers off of that algorithmic trip it's like a circuit breaker in
+your house it gets a surge it shuts off they calculate in the blink of an eye where the market
+is liquid and then they have to get priced there so they move the little pace car lower
+and there's some market maker probably one bank that is supposed to do this which is to gobble up
+all the orders on the bid we don't know who does it but someone does it because these are clearly
+orders but it's not market orders or else these candles would overlap like they do here does everyone
+understand why these aren't market orders they go both ways it's one-sided trading can we all see
+that it's just selling to the selling to the bid it's just gobbling up each tier one by one by one
+by one by one and then boom right here so at this particular spot you can see that it seems to be
+there's just like normal candles again and also on a 25 tick chart there are large orders per tick now
+normally in futures each tick is one or two contracts which means the volume per 25 is roughly 25 look where
+my my mouse is and off to the right it's roughly 25 because each tick is usually a contract but this
+particular tick was like 65 contracts there's big bites being taken out of the market so what happens
+in the iop is similar to those market on mo or moc process where there's a there's a buffer that stacks
+up and the dealer just fills all the orders at once to each other right here so in this split second
+when all the algos are firing sell orders and maybe buy orders the dealer takes a split second
+to say okay we're going to open there somebody gobbles up all the tiers all the orders are like
+slamming into a brick wall buy sell buy sell and they don't do anything and the dealer is reading all
+of that then right here they've got a stack of buys they got a stack of sells and then they turn the
+button on and trading resumes again the buys and sells get immediately matched against each other
+that's that candle and then the remainder gets filled to the open market and all the trading
+resumes if you had a stop right here well sorry stop your stop triggered into a market order which
+again hit that buffer you're at the end of the line so if you have a stop right here and that trigger
+happens your stop actually gets filled right there so never go into trading into an event thinking aha
+i'm going to long five contracts and either make ten thousand dollars or just lose a thousand right
+because your stop will not fill right there you are a nobody retail degenerate no one who gets
+filled at the very end because you don't have a radio tower on top of your roof a block away from
+the cme building to get your order in first your order is dead last mr mrs retail so never straddle an
+event by putting a stop in your buy and open for the blast you will trigger your stop and you're at the
+mercy of the market makers to get filled wherever they open that market back up if the catalyst of
+news is bad enough you could stop hundreds of points below your stop market loss we all understand
+that market order a market order means fill me wherever you want market maker and just like the
+moo and moc orders that you put the beginning and end of the day the market maker will fill you at the
+most liquid spot the open and close this is an open this gapping process is called the iop
+the o stands for open um if you go here to the cme group website the indicative opening price is a
+fancy word for market closes we gap it we reopen it here and we calculate where we open this is like
+the market close market open just like a real stock market close for 16 hours well this is closed for
+16 trillionths of a second same thing we close we open and so all the orders are matched here which is
+why you get a little burp up right there and then within split seconds like this is just order
+matching of all the orders that are taking place this is just the first one you get a bunch of them
+and this all happens when a split second of time as a matter of fact when i was watching the tick chart
+all of a sudden the news came out and in a single blink all of this printed it's not like it it was like
+printing like this it was like snap and then this square all appeared within a split second that's
+how fast this process takes it's very awesome to know about now what i did was all morning today
+right we had chinese threatened tariffs and trump didn't say anything and they're supposed to talk
+but we know trump always responds because demand of action and so why did i buy that dip on that news
+i didn't make any trades all day and i just waited for this why did i buy this dip here and i will tell
+you why because sometimes the market changes its mind do you notice that right here you had a protocol
+like this and do you see that right here you had something kind of similar on the upside a new trigger
+a new big enough order that triggers like five or six candles right liquidity was found so when we
+and i saw this right here i was like oh good we're liquid right there let me long to get back in
+to fill to that anchor point which we'll cover in just a second i just i when i saw the counter
+liquidity likely a second iop maybe maybe not but at least a big enough order to reset the other
+direction and again when it turns back on you see these big spikes on tick charts that's what you're
+looking for market shut off spike on a tick chart the calculations run market shut off maybe spike
+on a tick chart there's liquidity that's found and so right in here i just basically long back to the
+top and wherever i saw this and that's the trade i made and because i found the selling pressure found
+counter liquidity and i was like oh let's get back in i traded right back to there and that's it that's
+the trade i made so the event was not necessarily a catalyst to go down the news was trump just said
+i'll talk to him when i'm ready the algorithms respond to that because the algorithms are reading
+the words and acting on it but that didn't change anything did it and there's something very important
+when it talk about an event and a catalyst is that if it changes nothing right
+you're likely to return to the price you started at before the market got hit by a meteor right and so
+when i see this and i see this my brain comes in right here and goes aha there's an opportunity we also
+had an impact red line down here that allowed me to see and i'll cover red lines today that there's
+likely a reason for that liquidity to be there but when i saw the counter move here i go well i'm just
+traded back to the top about eight minutes of trading and that's it this is a response i did
+there's nothing rocket scooter about this as far as the indicators we have but this is a futures thing
+and i'm just waiting for a news event that's not really a news event because it's already the market's
+already priced in whatever it's pricing in and so it didn't change anything had he said tariffs are
+delayed for a month or we're getting rid of the tariffs mark would have made a decision but he just said
+i'll talk to him when i'm ready which means okay they're going to delay talks is that going to delay
+the tariffs or make the tariffs act faster no it's probably a day or two delay it's not really a news
+headline so keep that in mind is that when markets dip very quickly to pivots that you have and you've
+determined very rapidly that we have counter liquidity large spikes on tick chart non-overlapping candles go
+the other way i quickly decided to jump back in on that just to scalp it and that's the one trade i
+made it's very fruitful today okay so what is an event and what is a catalyst in more detail
+as we talked about a catalyst is when the market moves one risk interval from an acre point an acre
+point is an event on the market um that suddenly changes the direction every single time the market
+suddenly moves like with that trump news is a possible event now as we tell you anytime the market is
+moving you are looking for a specific pattern which is the market normally is trading lower and then has
+like an expansion of volatility and then a contraction and then it falls further this big v right here is
+your key point to measure the starting point to the v if you don't ever make it back half the distance
+and it falls even lower then when the volatility expands it contracts this is the lack of liquidity and
+liquidity is found so when buyers are found here against the sellers and that they're overwhelmed
+by the sellers see remember volatility is a lack of buyers or lack of sellers lack of both and so
+once the buyers step in and they get overwhelmed you know that this is the key point to measure from
+this creates an anchor point so in this example the anchor point started right here and the market fell
+then we expanded the volatility and then contracted it and so you would measure from here to there in
+the middle which looks to be about right there and it looks like we touched the middle if you touch the
+middle it disqualifies the starting point as a as a potential catalyst or an event okay so what you're
+looking for is something that have moved the market in that particular fashion without retracing and let's
+try to find something that would have been uh like recent and maybe i don't see yesterday no let's do
+like a couple days ago big old crash uh we talked about this one the other day let's just use this one as
+the example the market moves in a quick and sudden direction now we don't have the tick chart on this
+one it's been a while i only have five days of this but essentially if you take my word for it
+that here to roughly there
+is that expansion of liquidity like when i look at the tick chart this one kind of does this it moves
+it moves up and then has like a big v right here and then it and then it goes like this okay so you
+have your little big v which is that little thing right there and we measure and set the midpoint right
+there from the start of the move to here the minute the market takes off on whatever news it takes off on
+what you're trying to see is did that event change the direction of the market and change people's minds
+something that we couldn't have forecast so what you do is you mark that distance
+and you create an anchor point which is the starting point is imagine when the meteor hits the ground
+and creates a wave the first initial wave where liquidity is proven to become overrun by the other
+side of the trade we call that the impact red line we call them red lines for short but they're called
+illiquidity pivots it's very important because this particular testing point whenever you move up or move
+down the middle is always very important just like our half gap is between gaps the middle between two
+liquid spots is extra liquidity the middle between sudden buyers and sudden sellers is also liquidity
+so if the middle is not achieved then one side is overwhelmed by the other it's important to mark
+where that middle was not achieved and then what you do if you click something and hit space bar on
+linkerswim it creates a copy which is a neat trick to know and then what you do is for the rest of the day
+each time you achieve a new high you're just dragging the line up oh there's a new high there's a new high
+there's a new high and every time it dips it doesn't return to that candle then you're dragging a
+second red line along the way so what is this thing you see in front of me this is this is the
+Fibonacci tool we don't use Fibonacci's here we just use the tool and we gut it and repurpose it i
+create a ruler of distance one one half and zero all it is is a distance i can draw and have a midpoint
+between points a and b i'm going to trace this up to the high of the session now when an event happens
+in the globex session between 6 p.m and 5 p.m then that event stays open for the rest of the
+globex session i'm going to be tracing this high over and over and over and over again until the
+day closes so as you see in the futures market it goes higher and higher oops and higher and i'm going
+to continue to follow it higher and higher the secondary effect as the news continues to fuel the
+market is called the run length is what we call it so the length of the run for the rest of the day
+you're going to mark the high is this process understood by most people again a tick chart is
+what you're going to be looking at to know what you're looking for you're going to look for like
+a sudden flurry of non-overlapping candles that retraces without falling half or just maybe some
+mild overlaps but a market that shows obvious volatility before it goes you want to mark that
+little distance right there are we all on the same page of how this works these two lines are very
+important because they set the anchor for catalyst what we call yellow lines and red lines these are
+going to be some of your most awesome pivots that you can find and i'll tell you when they're useful
+so this impact run length let me write this for you again the starting point here is the anchor point
+this is the impact you'll see people say irl all the time and people will say run length all the time
+each one of these pivots are extremely important for the session as a matter of fact if you don't
+touch the impact red line or you don't touch the run length they stay here forever and when you touch
+them down the road they are high volume pivots on the return when you do it right how cool is that
+so here is high look at this when you touch this now dd band is there as well but you can see pivoting
+off of both of them look dd band pivot pivot pivot pivot pivot red line pivot pivot pivot pivot
+high volume okay and they'll stay there forever until they're touched once
+so as cool as that one is let's delete it because it was touched once and we're going to continue to
+watch because i have this one way down here and as you see we gap to blow it so we didn't actually
+touch it we just ran right through it but that one is also deleted okay so would have been cool if we
+actually traded down into it you guys can see the volume but you guys get the drill okay you'll always
+see these red lines on my chart these are ones that have never been filled now before we
+go back to the part that's filled there is a rule okay so once you've isolated your all your points
+you have your anchor point impact and run link you're going to every time you create the impact
+the first one it doesn't matter if this one's there or not if you touch this guy it's deleted so
+pretend we touched it and it's gone this one's still there that's okay you're going to go to your
+prosecutor platform and you're going to go to ridd and all you tried to do just now was to isolate
+that anchor point that's all that matters you're going to go down to the thing you're trading if
+we're looking at the s&p right now we're going to look for something called yl 332 okay and 332
+yl 332 becomes the distance of this box i think that's through oh we're in we're in nasdaq okay let's
+do nasdaq
+nasdaq is 12 59 25 okay so let's make a distance of 12 59 25
+so i'm just making an arbitrary box of a certain distance so i'm going to take this box and i'm
+going to line it right up at the anchor point and remember it's the moment that an event changed the
+direction of the market this is exploiting another cme group thing called the margin buffer limit
+and as we talk about exploiting all these cme group things we understand something very cool about
+the market see this distance from here is where we mark what we call a really infamous yellow line
+i'm just going to mark right here i'm going to change it yellow
+i got two lines there
+let me see that a little bit
+so what this yellow line is this equation is just like the risk interval it's an exploit
+from the low that created this event up you are projecting
+hold on make sure that's the right distance
+let me double check hold on that seems a little small
+oh yeah that is i was like that did seem small
+well okay let's just make this
+there we go that seems better i must have a typo
+okay and as you see i've already drawn it i've already done it in the previous class it's right
+here
+the previous uh previous sorry during the stream i'm gonna put this right on that okay
+so this exact distance from here even if it goes to all-time highs will be a high volume pivot when
+you get there as you see this impact is still there and hasn't been touched and therefore the
+yellow line that it created is still there as well yeah the box is not the right number thank you for
+letting me know i just saw in chat so these yellow lines on the way up will be high volume pivots when
+you get to them okay
+now these haven't been touched yet but when you're outside of dd bands and you need a high volume pivot
+to trade on we've talked about you're going to use bear zone tops bull zone bottoms and monthly hedge pressures
+but also when markets are illiquid remember rallying or selling off and illiquid illiquidity pivots are the way to go
+so if in the overnight markets rallying out of here it's going to tap some red line that hasn't been filled before
+or hit a yellow line on the way up let me tell you how cool this yellow line is
+i'm going to go back in time because lucky you guys i keep a history of all of them
+just for these purposes i'm going to go to an hourly chart and i'm going to go back in time to
+show you the history of all the old lines you ever had see i keep them all and the ones that are still
+open i keep there and the ones that have been tapped i delete the yellow line but boy this goes
+back as far back as i can see and the neatest thing about markets when they move
+let me see if i can't find like let's just do let's see if we can zoom in and see if we have
+any recent ones just for the effect okay
+this was calculated at some point ago wherever it was let's go all as far back as we go
+aha that particular tuesday we created now i must have deleted the yellow line or the red line when we
+tap them because they probably don't apply anymore but yellow line was created here and here as you
+see we walk right up to it and resist again another one of those oh my god moments what are these guys
+creating over here sort of thing and at all time highs oops these things become pivots even at all
+time highs it is a high volume pivot look at the rejection of the yellow line calculated like a week
+prior and usually what you'll know and even pre-market at two o'clock there's some volume
+creeping in right there so when markets are trading on an event there's a certain distance traveled
+where let me tell you what happens everybody longs the market right here on the news which means a
+market maker has to short against everyone and they're going to balance that short with some kind
+of calls at a certain distance when the market maker has lost 99 percent and rich was one of the
+people who helped me solve that equation you remember that back in the day rich rich and i found the 99
+percent thing a long time ago i always credit rich for this when you lose 99 of the value of that
+contract a magic thing happens here's a buffer to further price loss whether the market is fought
+off by that person or the hedgings balanced there or something but when you lose exactly nine percent of
+the marginal value this margin requirement was ten thousand dollars and you lose ninety nine hundred
+dollars and you have a hundred dollars left of the value of that contract there will be volume at
+exactly that distance we don't fully understand why we just know that it is now it has to do with
+the market maker pretty much going completely bankrupt on that trade and it's likely a limit
+placed to prevent the market maker who had to short against the market from going bankrupt my theory was
+always the cme group has a protective mechanism in there to prevent bankrupting their own dealers
+as it gives them the ability just like a circuit breaker gives you a pause so you can mobilize liquidity
+it gives them a pause so they can figure out what they're going to do okay you know what the the
+globex just starts pricing it lower like pushing price lower and inviting other micro makers to saw
+to sell um or whatever something's happening to prevent a move from going that quick too fast
+now it doesn't mean there's a there's always a rejection there but there's always counter volume to
+the trend and it's always big today is no excuse today was the same thing um i'll show you some of
+these examples but they are so incredibly cool um i keep the history of all of them once you see it
+you can't unsee it um in both directions here's a day where the seal line's been sitting here all this
+time and look at the look at the rejection volume there it's incredible how accurate this is um and
+again you can forecast breakout highs at highs and you can forecast all-time highs as you hit them
+look at the and it pivots multiple days and it can pivot for weeks if not months it can always pivot
+that when we've been in these ones smp for a long time and it pivots on them both ways um now let me
+show you again keep going keep going here's another one we bumped right up into it and that was the
+resistance so when you're trading another consideration in futures is yellow line may interrupt
+your dd band all the time because there's one in the middle you may see days where you don't get
+the full gamut remember we talked about exit targets we're gonna have the exit target class
+next but one of your exit targets is dd band if there's a yellow line in the middle you can use
+the yellow line as your exit target as well now remember this is one of the things that automated
+rocket scooter it's just an extra to have but it's useful to have and you have to do it manually
+there's nobody that makes them and shares them with you you just have to keep track now you can watch
+me on the stream to get the numbers until we figure out how to automate this um you guys have it
+but can you see that the market likes to hit it and then test it out and usually pull back for a
+little bit don't short yellow lines is another rule just don't we don't have any evidence that
+it is a long or short pivot or any probability thereof but you just treat it like it's not look
+at how clean the pivots are are you convinced yet or i need to show you like 30 more
+any more you guys want to see or can we move on
+it's just a high volume pivot that will always be there in the way now come up to today
+don't let me be the first to tell you what we traded up to today 60 68 has been kind of in the
+middle of our trades for a month right you treat it the same way as a dd line it's an exit target
+if you're trading long your long can exit there that's one thing we talk about um
+so the reason when we got that early bump up today and i was like i don't know if i'm gonna trade
+because we were literally 10 or 12 points away from a yellow line i'm treating it like an interrupt
+to the bull market it's gonna have a hard time pushing through it and going up if there was nothing
+in the way i would normally trade a long straight at the dd band wouldn't i but because it's there
+i know i'm gonna get out of the way and today it this was the resistance today and another thing is
+when i took that trade back there i didn't take the trade to v back up any further because i know
+the yellow line is resistance it's an exit target um when you're below the dd bands
+red lines and yellow lines are great long entry targets to back up now remember yellow line works in
+both directions when the market's selling off we create them to the down we haven't had a bear
+market in a while but you'll see me use dashed lines on the ones that are formed on the downside
+so when you trade above dd band yellow line is a great exit target or previous red lines from down moves
+so you exit off of them we don't enter on them up here remember once you touch the red line it's gone
+so if you pass through a red line you're not going to trade off of it so it doesn't qualify as an entry
+target above but below example we have an impact right here that should create a yellow i haven't
+made it yet but if the market were to crash below dd bands down here i will long off of my quote
+unquote strong pivots as we always talk about your strong pivots as you see are as they've all been
+taught to you except for this one now you have all the pieces we've talked about mhp bear zone top
+bulls on bottom and any red lines or yellow lines that qualify okay
+this is an error there's no there's not going to be a red line to long up because you're going to
+break through it it's no longer there but yellow lines for sure okay so on the downside you're gonna
+you're gonna fall two open red lines now sometimes uh it's used like sparingly you're not always going
+to have it in the way but when you have it in the way it's extra information you can see now that you
+have the complete picture ignore all the other stuff you see on my screen let me delete some of
+this this is all dynamics but as you see right it's kind of like there's two layers to the market
+you can see that sometimes we have the freedom to trade in different quadrants of this thing or
+different halves you can see that while we do have the dd band every single day but you're also
+going to take into account which side of yellow line are we on you kind of treat the market like
+it's two different pieces the extent of your trade in futures is usually going to just span that distance
+i don't ever say aha we're gonna go straight to dd band if there's a yellow line in the way i tell
+myself oh man that's all we've got to trade with today so you're gonna look at it kind of like that
+so as you see yesterday and today we didn't have blast ups through there because it's very rare
+to push through yellow line and break it's a big fight to make that happen so rule of thumb is if
+we're going to open in here your brain is not saying ah that's the range i get the play in today
+your brain usually goes out this is probably the range we get the play in because it's going to be
+resistance target now if this goes through here and tries to break this and goes to that side then
+your brain now says aha now i have this range to play in we utilize it as a break point for a bigger
+run and it all has to do with the event that moved the market up to begin with that created that
+illiquidity that people are likely still holding on to the long or the short that made it move
+so anytime you create an impact line
+you create a run link to the end of the day as you see at the end of the future session i stopped
+drawing it we hit the run link overnight i since deleted it okay but you will always draw a for every
+anchor point an irl that exists there's a yellow line to go with it it is just like the sith there's
+always two never more never less and so here m-e-s it's a star wars joke 4175
+i will make a box of 4175 just just so i keep the evidence for you guys
+um
+59 99 was it for i say 49 75
+oh i'm sorry 41 75
+okay wait a minute it's the risk interval i did the wrong one what's wrong with me
+3 3 32
+so i'm going to move this right on the anchor and again this is kind of a subjective thing right
+but usually when you have an event like a fed or cpi or any of that you're going to know exactly
+where to draw this from it's not that hard to do the ones that people have a hard time with the
+ones just spontaneously happen without a news event clearly every time there's a news event
+that you know trump moves the market or whatever you're going to come out here with your tools and
+start trying to measure is there an anchor is there whatever and as you see we're gonna have a
+yellow line right up here so i should come in here and draw this and now i'm now i'm ready for a high
+pivot on the breakout so that's it and so every single day i'm just looking what yellows we have
+in the vicinity on my trades and as you'll see on my stream uh when i open rocket scooter and i go to
+my smp pivots when i'm looking at my futures side you will not not see that yellow line that's there
+i just manually draw them and keep track of them i have one 61 34 and 60 68 nearby so as we're
+trading to like even in the overnight we hit the yellow line and rejected and then we traded up to
+it today and rejected my brain kind of cuts the entire dd band in half as my exit target are y'all in
+the same same place is 61 34 is gone oh okay that's right lucas reminded me we cleared out 61 34 okay
+we've already we've already deleted the um impact okay so roll of thumb guys the way this is one of
+our manual calculations if this is your first class this is the one that's not automated unfortunately
+not yet um the the impact stays forever until it's touched the run link stays forever until it's
+touched and anytime you touch the impact you delete the yellow that goes with it anytime that imbalance
+becomes rebalanced that's what's happening there's a buy imbalance that pushes it up and then market
+changes its mind and news comes out that goes the other way then there's a sell imbalance well the
+sellers and the buyers meet at that red line and when you find them we call them illiquidity pivots
+because they're formed by periods of illiquidity but when they're touched they're periods of major
+liquidity a big buyer is now challenged with the big seller and they meet right here in the middle
+and so if that illiquidity pivot exists if the imbalance is still there because you assume the
+market maker is still in the short if the sellers have come by market maker can get out of their short
+because they are buying from the sellers they shorted on the way up and then sellers are coming in and
+they're buying from them on the way down effectively neutralizing their position at that red line that's
+the beautiful part when you tap the red line that particular event has been neutralized the goal with this
+is to find high volume pivots from larger news events and larger things that happen in futures now there are
+reasons that the market had that that kind of like movement and the margin requirements you have to just kind of
+trust us that we did the math on all this as the margin requirements set the dd band the margin buffer limit
+sets the yellow line and these imbalance points have to do with the market moving around
+looking for liquidity and each one of these pieces forms a high volume pivot so in futures these are your
+pivots that you have your dd bands your overnight dynamic which we talked about in the last class and your
+yellow and red lines that's it and this is actually what we used for years before we created the liquidity
+map and options so for the longest time our technology was simply exploiting these futures things i only traded
+yellow lines i only traded on risk intervals and i only traded red lines that's it dd bands
+came after all of that let me build the options stuff on top of that so rule of thumb from yellow
+keep an eye out for which half of the section you're in if it is bisected by the if the green i'm sorry
+your dd bands bisected by yellow your trade usually will stop at a yellow every time from either direction
+can you guys see it everyone here see that no matter which section you're trading don't expect
+it to break through yellow and go to the other side expect it to be the end to your trade do we all
+everyone here see this everyone here see this we're all on the same page notice that it usually makes your
+move incomplete so we always say is we give you a little a little extra consideration to go with you
+don't worry when you're in this community we'll always learn to the yellow lines we got a couple of them
+kind of sitting here now tomorrow there's no red lines or yellow and just one yellow in the middle
+68 it's been the target so when the market's moving here i'm kind of if i if i find like an mhp along
+i'll exit it there if it breaks through there i usually like to utilize that as confirmation that
+the market's continuing to go but again it's not always permanent and we have no evidence of how many
+times it balances in the strength of the balance and the probability of the balance we don't really
+we believe we believe that it's random um so it's like how like what's the probability stay below
+yellow line we don't think it's worth chasing down we don't have evidence that we should all right one
+final thing which is catalyst which i'll show you again um we have a handout for it and um
+let me grab it really quick and this might be easier for you guys to understand if i show you the
+handout let me let it download really quick
+so an index catalyst right has to do with when there's an anchor point that's created remember
+we always talk about anchor point an event happens we have that volatility that tucks back we create
+a red line and then we do the yellow line and all of that but also when an event happens we got to
+start measuring from that same anchor point just one risk interval distance below that's our sit out
+rule to avoid the market the market has moved a risk interval on the event so if in rocket scooter
+you get your risk interval again from the ri table here if the s&p moves 41 75 on an event then a catalyst
+is active so the way that it works is that news or some kind of random buyer selling changes the
+direction of the market we call that an event we always will say an event has happened what's the
+event well trump tweeted something okay that's the event if the event hits a certain amount of severity
+then we create what's called a cat line a catalyst is active line if you move a risk interval on an
+event without returning to the anchor point
+then the event becomes a catalyst we talked about the alert lights earlier if we were able to automate
+this it would be just like this an event the light is green and then when you hit the cat it turns red
+a cat active is usually an automatic sit out when the market moves at least a risk interval on a news
+event don't play as we've talked about markets curve faster the volatility explodes and it's just
+not it's not worth trading it's the automatic sit out and it's it's best that you do you'll have
+so much better time just waiting when you breach back above the cat line it returns to being an event
+and again you can take a cautious position back to fill the gap anytime an event returns to where
+it started before the event it's called a non-event it's no longer actionable and a lot of people make
+this particular mistake is that the market moves and then moves right back up to here and then continues
+to sell and it say that this was the fed people will say ah the market is selling off because of the
+fed news and the answer is no it's not and this is a key point that you need to take notes on and
+remember this if the fed moved it down initially the announcement and the market returned to here
+what it means is that whatever the fed announced was already priced in since the market was liquid
+enough to return to the same spot i repeat if you return to the anchor point whatever caused the initial
+move is no longer causing any subsequent moves the market has accurately priced it in it just reacted to
+the volatility but when you return to the place you started it's now called a non-event if the market
+continues to fall on fed day it's a new thing it's usually some kind of forecast about maybe the next
+fed event it's not the current reading if the market fed raises interest rates a quarter of a point and it
+tanks touches this and continues to fall it's not the quarter of a point that's continuing to make it fall
+it's some kind of guess about the next fed meeting as futures markets are always pricing the future
+the key part about futures is if selling meets buyers and you come to a liquid spot a liquid
+spot is where the market agrees and quants are very good at guessing what the value of something is
+based on the expectations and very rarely is wall street going to be surprised if you return to where
+you started it's a new thing that caused the market to move so don't ever get that wrong your job is to
+find out what is that new thing okay you understand so when a cat is active you don't trade so sometimes
+a move can create a impact red line run length red line catalyst line yellow line that creates all of
+them the catalyst line has you sit out that day the impact line and run length line creates return
+pivots on the way up and the yellow line tells you how bad that news is where it's going to find
+where the dealer gets squeezed to almost nothing so it's a really cool thing and you'll always see
+me trying to scribble out where these things are this particular day let's go ahead and go back to
+there and just revisit and do all of it at once it's very important to know these things because they're
+going to be very almost all around futures pivots and again there's just a handful of them it's not
+really that hard to do but this is the one technique that is still manual
+so did we create a catalyst here right let's double check here's the anchor point here's the impact
+let's create the cat and the cat is is very much the risk interval right here um s p is 4175 and
+uh 59 51 plus 41 51 52 plus 4175 is 59 uh 40 59 93
+right 59 93
+and some change i can't read what that number is it's like grayed out basically here
+this is roughly the 42 ish points above here as you see the catalyst is active that day and we always
+talk about the catalyst being active so not only did this move create the run link thread line and the
+impact red line it also created a cat active line right here there's a catalyst active now
+catalyst active to the downside we always sit out of catalyst active to the upside you better get out
+of your shorts you can trade small or very small in an upside move as you try to find every excuse you
+can to be a bull but just know that when markets are moving the cat is active and it behaves a little
+weird and childly so each big news event that you have you're going to want to do this whole spectrum
+of pivots it's useful to have them in another platform um as i keep them all off to the side
+i've been using this since these things since 2016 when we created all these techniques and these things
+used to be my full trading strategy as good as they are right anything else and i have history of all
+look at all the red lines since covid um i keep them all here on the way if the market ever crashes
+we got pivots the whole way down so every day we've got dd bands and red lines and yellow lines
+that are still open and still active that go back years and years and years and they're always going
+to be there because markets pretty much always go up but see if the market is crashing on the way down
+we've got a ton of bounce pivots red lines still long off of on the way back up so anytime i'm trying to
+plot out like where does this fall to i've got a bunch of different options right for the
+markets are really fine here's a good impact and run link that have still been open right
+and so i don't just pick random targets and say like where i think it's going to fall to but
+every time it falls i take it a day at a time look we can follow to there we can follow to there
+we can rally to there like i utilize this as like the futures is always trying to just
+rebalance these imbalance points as all of these are imbalance points and it's kind of the neat thing
+to think about um so we've learned a lot today circuit breakers just as a recap
+anywhere near the seven percent circuit breaker don't even touch the market you're already going
+to be way outside the dd band to begin with don't long your strong pivots more than five percent down
+um maybe even three percent might be comfortable for you but don't get anywhere close to that
+circuit breaker because you don't want to market to close while you're in a position you don't want
+it to gap during the equity session into that 13 now it only happened once in my life but you don't
+want to market the gap against you don't ever hold into the weekend for that same reason
+especially if trump is president so more on things to understand is don't you ever hold a futures
+contract ever after close you will close out your futures every single time because you don't want
+it to gap against you do we got it you understand that the iop and the velocity logic and price banding
+and um the the mechanics of margin requirements are all like safety control systems or autopilot
+systems designed to prevent market instability from small orders moving the market all around
+or illiquid periods crashing the stock market remember if the stock market's always triggering
+circuit breakers every moment the market is open and liquid these exchanges are making money
+so the last thing they want to do is the power to go out every once in a while because of loose
+control on the market they all these things are designed to allow the market to pause for a
+minute so they can mobilize liquidity and just keep the order flow going and being as liquid as possible
+so these things are extremely important to know about a catalyst
+a red line yellow line combo as pivots to interrupt your normal trading now that you see it can you guys
+now all eyeball how the market seems to like exist and like two different pieces almost every single
+day like we're up here we're up here we're here and now we're down here down here down here you you
+kind of take that into account on your scalps most of you're lucky at a day like this you're lucky
+because you can get the full dd band these are the days where i'm like oh hell yeah like i love days
+like that right where you can get all the way to the dd band are your best days so mechanically
+um right if you have no yellow line in the way you're gonna get very excited on long setups like
+here here and here like this day you're not as excited because you're limiting it's about it
+usually just pivots around it but you'll trade it to yellow line every single time if that's your only
+pivot you have uh is the cat active cheat sheet available all the all the cheat sheets will be posted
+when the course is posted so this one will be posted today as well okay do you guys have any
+question um for me about what we covered these are all just the extra things and futures and extra
+considerations so just to recap don't trade near a circuit breaker automatic sit out let the market do
+its thing look for evidence of like velocity logic and things where you have the market gaps down to find
+liquidity in an illiquid moment the gaps right back up as we showed you at the start when what made me
+take my trade today use that understanding to quickly act and say aha the market found liquidity
+and let me long somewhere uh i didn't long all the way up i longed and got out right where it or
+wherever right here wherever it started i longed and got right back out the anchor point that was the
+final thing i was trying to say so today the trump event happened and again this is actually where i make
+these split second decisions and make these trades um right here so i i'm not on the 25 tick chart you
+can't see it but the market like did its thing and i just longed right back up to the anchor point
+why do you think we went i'm gonna be to guess before we get out of here why do you think the market
+went right back to where it started why do you guys think the market fell on some algorithmic
+trading and news or whatever but why do you think why do you think it went down to here and then jumped
+right back up to there and then went back to where it started it's a non-event as blake has said as if
+you guys are saying it's it's priced in effectively but it's really a non-event the fact that we went back
+to where it started just tells you it wasn't that important good job dre good job everybody priced
+in chris good job the trump tweet ain't real news it's just a tweet but the algorithms are listening
+to this stuff and acting upon it which is why it creates the volatility but as we showed you earlier
+you got the evidence that it wasn't really that big of a deal because we go back to when it happened
+where the heck was it i was at two o'clock let's get right here when it happened right
+you saw oh the market gap down trading resumed and then it started selling some more and then all
+of a sudden you're like oh wait nope gapped right back up and then big orders and then did it again
+big orders write it now whether this was the gap product protocol or just a big order coming through
+probably likely a big order but it was enough to give me confidence that liquidity was found
+because i saw a big flurry of non-overlapping candles and i said then i read the news and go
+oh you know that's not a big deal trump just said i'll talk to him when i'm ready about the tariffs
+okay so that's probably not a thing it doesn't change anything so because it doesn't change anything
+the market went right back to where it started y'all see that
+so as a quick decision i literally had like i don't know
+like right here and i just jumped in to trade it back to where it started i go that's a non-event
+so i exploit the idea that it's a non-event for a quick trade idea it's not a bear zone it's not
+a bull zone it's not anything it's just a i found liquidity buyers to the sellers and the market just
+kind of fell here and this is one of those ones that i just said i'm gonna go ahead and get in
+with a 40 point stop and trade it or or whatever my stop was i think it was like
+40 points to 40 but i'm like i'll get like 40 points to make 40 or whatever like i'll jump in
+trade it to there and then put a stop so you can choose to trade anywhere you want
+but this was just an extra piece of information right now remember you have to be clever when
+you're trading not everything is going to be super textbook but a lot of times if you're just
+waiting for something to come to dip the market when it's bullish and all signs are bullish today
+too right every single one of our indicators are bullish so it's not like that was news to change
+everybody's mind resilience is bullish gd ratio is bullish liquidity maps bullish everything's bull
+bull bull bull today nothing was bearish so i had just a trump tweet i traded right back to where it
+started and this was the only trade i made and this is very profitable and sometimes you can do that
+but just remember if you're making a determination that an event is going to close out and become a
+non-event you have to be very careful um if it's something that's changing stuff don't do what i
+did but if it's something like a wimpy little tweet like that the algorithm is just overreacting
+it's not really an event nothing changed he's not delaying the tariffs he's not increasing the
+tariffs not changing the tariffs he's just saying i'll talk to him when i want to you know the algorithms
+imply that means well okay we're going to delay talks and the tariffs may be here for longer or
+whatever but it reality hasn't really changed much and so i didn't expect it to and that happened to
+be a right decision and again this is this goes into more of a like an alternative way to trade
+you don't have to trade like this but just keep in mind that you can be smart like this and understand
+this so in reality the market just kind of jiggled around a little bit and it really didn't do anything
+that news okay all right any questions about this this was a special class to go over red lines
+yellow lines and a little bit more mechanically on what catalyst and anchor points are you're
+really just going to have extra pivots at your disposal choose to use them don't choose to use
+them they are very good to have in futures and this is the core of my future stuff so when you see my
+charts on the screen you will see dynamics yellow lines red lines and d bands that's it that's all and
+i'm using them to kind of find pivots against them you see the market loves to find volume and
+pivoting and all these different things we do okay tomorrow is going to be exit target class
+and then we're going to do trade plan mastery piecing all this stuff together you pretty much
+learned all of our exit targets entry targets already we're going to summarize it all and now
+we're going to start practicing putting all this into effect all right

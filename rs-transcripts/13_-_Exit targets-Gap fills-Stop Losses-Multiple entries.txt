@@ -1,0 +1,792 @@
+today's class is over exit targets this is one of the key components to a trading plan
+every time you enter a trade you're always going to be doing the same things every single time
+it's almost like a checklist we have a whole class over this checklist and you'll have this
+in your in your in your stuff in your handouts basically every time you make a trade you're
+going to do some things like ask yourself should you make the trade you already recently covered the
+irrational rules and so you're going to check your rational sit out rules right out the door if
+immediately it's a sit out rule you avoid it and you don't have to waste your time with the rest of
+this then after you check your rational rules and you determine if you need to long or short using
+your greater market then your other tools at hand liquidity maps and then your confluences to tell
+you which direction market's likely to go and then where you'll make your bet is next where you'll
+enter or multiple entries that we talked about before longing and longing again setups like the
+1a1b on the blu it's multiple entries figure out where you'll enter and then exit and then where
+you'll add where you'll stop full risk to reward ratio which also includes where you exit right uh and
+then of course accounting for volatility we'll get to the rest of this later and you know the idea is
+should i trade what direction should i trade what's all the mechanics of this how much i'm going to
+make how much i'm willing to lose i'm going to add again where am i going to cut where i'm going to
+exit if i'm right that's today's class we're going to exit uh and then the rest of this is you know
+calculating how much you're going to lose some of all your entries and determine if you're willing
+to lose that much at the end of it you calculate your number and then you say is that too much or not
+enough and you go oh it's way too much okay then then redesign your plan to where the total loss is
+tolerable to your normal conditions you gave yourself of what you're willing to lose and then
+finally after you've done it all then one final check you ask yourself should i take the trade again
+as a one final check like crossing the road look left look right and look left again this is a final
+sanity check do i feel good like this is the rules say okay even if everything checks the box the final
+thing is should i take the trade though one final last minute sanity check how do i feel how does the
+market look since i started doing this it still look okay am i still shaken up from today's loss
+blah blah should i even take the trade the answer is i don't know maybe i don't feel it i kind of feel
+off and the answer is no then wait and do nothing or execute right so the trade plan checklist part of it
+is exit targets and you have another handout as your exit targets and pretty much we're going to
+teach a concept called interrupts and interrupt is any single time the market bumps into something
+that you know is going to provide volume example liquidity map you might see on this diagram
+there's a white line in multiple places and the guide tells you white line is next resistance right
+what is the next resistance well it's one of these things on this list a resistance is anything that
+can possibly pivot against you and as i've been teaching you this market is random if the market
+is moving off of a really strong pivot like hedge pressure and keeps going up it keeps going up keeps
+coming up and bumps into something maybe the yellow line that you learned right uh you bump into that
+thing and we don't have odds on that one it's like a 50 50 shot maybe it goes this way maybe it goes
+that way we don't have numbers for it because it's kind of hard to quantify how that behaves it's such a
+strange pivot that is not like um a day-to-day thing it's like a month-long monthly month-long pivot
+right so it may hover at it for weeks before it decides where it's going to go each individual day
+it could be an up it could be a down so because you don't know the odds it's interrupting your upward
+move and you can you know flip the coin that it goes up or goes down it may be a long here and you
+get to that level what do you do well the answer becomes if there's a possibility that it can go
+against you with a probability that's high enough you're going to want to get out of the trade some
+of it at least trim every time you bump into something where you know volume is going to appear
+you don't know who's going to win that fight you can never predict it as much as we want to
+market is unpredictable price is volume is not volume is 100 predictable that's what we teach
+you this whole time this boot camp when you approach an interrupt to your direction and it has a
+possibility of going against you always trim if you bump into interrupt that has a 10 chance of going
+against you and a 90 chance of continuing to go you can also trim but not as much right if something's
+50 50 you would say if you don't have odds of something just assume it's 50 50 like half time
+it's up half the time it's down so take out more than half each time you reach an interrupt always
+close more than half your position there's a reason more than half is important talk about that in a
+second maybe if it's a 90 chance it keeps going and 10 chance it doesn't maybe don't close more than
+half maybe close a couple and let the rest ride right your odds just like we've taught you before
+are going to determine how much of a position you have when entering it's also going to determine how much
+position you have when exiting higher probability against you exit more less probability against you
+exit less does this concept make sense so far basic principles let's just line up with everything
+else we taught you less confidence close out more right so as you're as you're kind of gauging where
+your trade is here's an example pretend that i longed on this bull's down bottom right here pretend
+that nasdaq resilience was positive and i go oh and the dd ratio was also positive check i get to the
+level make my trade plan do all the checks okay good i want a long 10 contracts is my normal just
+make up a number 10 and on the way up there's three interrupts in the way okay three places it can
+probably when that hits that volume turn against me so of the 10 i get there and resilience pretend
+that resilience is greater than zero at this point in time and i go oh it's in my favor it might keep
+going okay let me take out two of those we get to the middle oh nice still in my favor let me take
+out three more boom goes there still in my favor all right let me close three more of those
+it gives me two to run to close out wherever the next maybe goes all the way to the top
+right locking and profit on the way up small at first because it's in your favor and continue to
+lock in more as it goes is a great strategy uh what would i do if i didn't have resilience but i
+still want to take the bet the bet then resilience was negative right below zero and i get to here
+with 10 oh it's probably going to go against me 50 50 shot who knows okay well then let me close
+out six and hold on to four you see the difference in mentality right i get to the interrupt and the
+probability is likely higher it's going to come against me let me trim out not two but i'm close
+out six of the 10 hold four to run gets to the middle oh hell yeah resilience is still or no
+hell no resilience is still negative this is where the bounce point likely is oh crap okay you know
+what i still want to hold on because i believe that resilience is only slightly negative and maybe
+people will come by the stocks right here okay but i need a runner all right let me close out
+three more and hold on to that one resilience is against me i've reached the peak but man i want to
+take the gamble just in case hold on to one and let your one runner go and then close out there
+you see the difference in mentality i'm quick to exit bigger and more than half at the first
+interrupt every time without the confluence but close out small along the way with the confluence
+every time the market hits what always sucks is that you buy and it hits a pivot you decide to keep
+holding and then it falls all the way to there and you take your stop after all anytime you hit the
+reward to risk reward target that you set for the risk you're willing to take you must must must always
+pocket some of that never hold the full position for full greed because you end up taking the win
+that you planned for with the odds that were in your favor and losing because you didn't get out
+of the way pocket something at every interrupt and let the confluence gauge how much that it is why more
+than half half is an important thing because if you're we always talk about normal is a certain
+amount and medium is half of normal we talked about that with the entry size say that you longed
+on a 1a 1b setup on blu you longed with the open and you got hedge pressure right here to long again
+you decide five five is your limit so you're gonna long with one and if it goes you make money if it
+falls to here long with four more and then take your stop right and you planned all this out and the
+total loss at all of this is palatable and you're like okay i like this this is good this is a good
+setup it falls to one falls to four goes right back to next target i always taught you you exit
+the four your original position is the position you wanted to take you land on your second entry
+you close out your second entry at the next interrupt which happens to be the original pivot
+any high volume pivot is an interrupt so in this example when you buy and take some red and you got
+to get back in the minutes you return to your original pivot you close out your second we call
+it dig you dig in a little bit harder always close out your full dig and now you're left with your
+residual position of one which is the original risk you were going to take if you're holding any more than
+one then that really makes no sense because you already chose to have one there that was your original
+choice based on the conditions why would you hold more or less when you return to the same spot does that
+make sense conditions were much better maybe you might choose to add conditions were much worse you
+obviously would subtract but the reason for this is that you when you circle back around your original
+position assuming everything's the same you want to be back in the same place so part of this is
+preserving your capital market certainly you were convinced it's bullish and it fell against you
+and you might get a second shot and i dig in pretty heavy because i did one and four it only takes
+20 of the return to break even i break even is 20 up from this whole distance because it's one
+four then i break even one fifth of the way up one out of five right okay now that being said why is
+more than half important when it comes to taking profit and it has everything to do with like
+basically the way retraces work anytime you see the market we covered it in the red lines but you know
+markets move and come down half every time it's a buy imbalance the dealers are raising their price
+until sellers step in and then they're lowering price to where the sellers and buyers meet each
+other the market always moves up and down half moves up and down half it moves up and down half
+when it moves up and doesn't move down half we teach you to mark that spot because that's a very
+important that red line illiquidity pivot it's a very important imbalance you need to take note of
+and leave that on your chart remember the last class covered this right so but markets move up down
+half move up down half all the time and when you're trading especially when you're trading prop
+accounts with trailing drawdowns that move up move down half usually is what kills you on trailing
+intraday trailing drawdown because you might have longed in some account apex or something that's got
+trailing drawdown you made 3 000 4 000 5 000 6 000 then took 3 000 a drawdown and you blew up the account
+even though you were green right because the market retraces half all the time so if you were long
+and you made a thousand dollars of profit and it returns to the halfway point
+um and then that's a 50 50 shot that it falls back and fades or not if you close out uh let me give you
+example let me do it the other way around if you buy and buy again and it returns to half if you were
+to buy one and then buy one more then the halfway point is the middle you at best break even when it
+retraces and there's your 50 50 spot that keeps going or not say in this case it's a downtrend and
+you bought and bought again it returns half the best you made was break even you wasted all this time to
+make nothing you wouldn't do that right so the idea is if you bought one and bought two more your
+second entry was slightly bigger and it goes to there and you close out greater than half at the
+middle you made money even though the market can split 50 50 from there you made money either way
+whether it goes here and keeps going or go there and reverses you still made some money here if you
+close out some right buy one buy two close out two now you have a cost basis of one contract from here
+and it has to fall twice the distance of that for you to lose money so you actually can break even
+much much lower if you take out more than half on the retrace let's do the math outside of the video
+it'll make sense so idea is um this example is the market falls 40 points on that so let's use some
+real numbers there i have one contract down 40 i'm down 800 bucks okay on one contract i buy two more
+here and it retraces 20 i made my 800 back retraces half the distance it's 400 times two i've um
+i'm saying let me not do let's not do two let's do three to make the math better okay i buy one i buy
+three more uh that makes 1200 bucks okay i trim out more than half two of the contracts oops and now i'm
+left with one contract here i've i'm down 800 on this leg i'm down 1200 on that leg
+and so at this moment in time i've netted 400 bucks i've written 800 too many times on here
+i'm still at 400 bucks at the retrace okay when you dig in heavier on the retrace you're always up
+that's a good that's a good rule of thumb that i always add and plus your second problem like if
+something has 90 probability of bouncing and 90 probability of bouncing the odds of it breaking
+both are one percent think about it like this 90 10 i'm just making don't look at these i'm just
+making up numbers night making up levels at a 90 10 and a 90 10 and the probability of breaking that
+is 10 and the probability of breaking that and breaking that is 10 of 10 which is a one percent
+chance there's a 10 chance you break this there's a one percent chance you break both of those does
+this make sense because the probability on a second bounce is significantly higher
+the odds of both of those happening is very small is also why when you enter in a second trade
+at a similarly similar odds you would you would feel the need to want to dive in a little heavier
+now some days right again everything's within reason you're not just diving in heavy with your eyes
+closed it's within reason that your total stop still acceptable in this case i bought one bought three
+and i closed out um at this point i'm up 400 if i close out three of those contracts which is my
+entire dig now i'm back to one i'm now up 400 from the middle and remember this was a distance of 20
+and this was a distance of 40 one contract i'm still holding falls down to my second high volume pivot
+that should bounce and one contract i'm up 400 loses 20 points
+um hold on let me do that math right wait i bought one down 40 i'm minus 800 by three i'm up 20
+it's 1200 so i'm okay so i'm i have down 800 that i made oh i'm sorry i did the math wrong i
+completed the math wrong there this one also removed 400 back so i'm not up 400 my math is so
+bad here i knew something wasn't working the three made 100 the one lost 800 but made 400 back
+so that's only down 400 there we go now that makes sense i was like i was missing something there 800
+there i'm net 800 on this particular spot in the middle now i've got one contract left after i close
+my dig one contract left and made 100 in the hole if one contract falls back to the original second
+pivot which is down 20 points i'm still up 400 on my second pivot which means the 10 of 10 chance
+this breaks i'm certainly going to get out of the way and hopefully if i stop 40 points lower on one
+contract or maybe even less i'm almost like i'm i'm still green at the second entry when i close
+out more than half at the retrace or the or the interrupt which is usually like a retrace
+this makes sense the position management allows me to make sure that i if i was longing and wrong
+and longing again and then i take out more than half if i fall the original pivot i'm still green
+there and i can choose at that moment in time instead of holding the full 40 stop or nasdaq or
+whatever i can look at it and say oh man i don't know let me just get out of the way
+so i was wrong kind of right wrong again closed out on a whim that's like oh it's not looking good
+i'm just gonna get out of the way and then you still walked away with 300 bucks taking a stab at
+some longs or whatever it was the idea is closing out more than half on a retrace is super important
+because if that retrace has that 50 50 shot of going the other way at least when you decide to get
+out of the way at the lower low you still have made some money digging is very crucial to my
+strategy especially in bull markets because you get very a lot of opportunities to play multiple
+pivots and you know the idea is to stagger as you talk about stagger entries to make them all work
+here's an example here today market open at half gap positive res i bought would have bought again
+there the market went up there right so i bought bought again returned to the interrupt trimmed out
+more than half held the rest to ride to close and then maybe i can held a little bit more because
+the res was positive just to see if it went but as an example right this particular day i didn't take
+that whole trade but i did i did long right here um on that trade okay so exiting is very important
+exiting doesn't just mean close everything out but when you hit interrupts try to think about
+locking in more than half because the market just like i said moves in halves moves up moves down
+moves up half right moves up moves down half you always want to make sure that the market is
+rewarding you with something lock in the most of it because the market and no matter what direction
+you pick uh if you're wrong or right the market still rewards half of your move even when you're
+wrong many times so get used to like you know if you're making second entries and you retrace half off
+the second close out more than half the odds your overall win rate goes up because more contracts
+are winning less contracts are at risk and you're in and out quick even if you buy and in the market
+selling off and you buy again and retrace a little bit close out more than half falls your entry get
+out of the way and you decide to sit out for the rest of the day the market falls it happens all the
+time to me i ended up walking away slightly green and then people make fun of you online like you're
+always long in the market when the market's selling off i know well the greater market was bullish and
+i still took the stab but i walked away how are you green if markets are selling in your longing oh well
+i mean the position management portion of that is exactly what i'm doing yeah i can't be wrong but i'm
+being wrong in such a strategic way i'm lessening the loss maybe even lucky enough to turn into a game
+right okay now your exit targets why are these things important well each one of these as we talked about
+is an interrupt that's a produced vault it's a it's a level that produces volume and each one of
+these we've covered a lot of them already but we'll just recover them in the context of this
+class now one of them is gap fills we've talked about gaps before in the resilience class the
+opening and closing is the most important piece of the day where the market opens and closes
+is the highest volume of the day smaller here
+right if you look at your volume chart the closing volume and opening volume is pretty much your highest
+volume almost all days which makes it pretty much your most important pivot that you're going to see
+every day because you're going to see it every day one of the other you're going to see so when the
+market returns to the open or close it's always going to be falling because you had volume there
+you had traders buying and selling at both of those places in abundance and so you have proof that
+buyers and sellers are there there's a lot of people selling and buying there and a lot of people
+selling and buying there and when you return to it some of those buyers or sellers might likely
+get out of the trade because they just broke even and they kind of disagree with
+their position so open and close is a huge interrupt for an exit target and so is half gap
+under the condition that resilience is going against you as we talked about earlier in the demonstration
+if i were to long here at the open on this 1a and market's going to run up to next resistance like
+it shows here then half gap is the potential next resistance if resilience is greater than zero i might
+choose to trim a little tiny bit and let it keep going if resilience is 95 out of 100 i might decide
+to hold the whole thing and say f it just risk it till the top what is the strat if you only bought
+one share unfortunately when you ask that question somebody asked in chat it's hard really hard
+to day trade if you can only buy one share of something imagine what you're saying to yourself
+when making that trade i am choosing that this exact spot is pivoting the market and i'm going
+to be right at this thing more than half the time without position management the the what you what you
+pose is a great thought experiment you're kind of making the claim that you're only going to make
+money if you win more trades than you lose you're going to pivot it exactly right you're going to
+every time you throw money down that's the pivot you nailed it every time and so you're kind of
+demanding a high amount of accuracy and prediction on your part you have to get it right so often and
+from that exact spot you can't make any mistakes and then it starts to sound ridiculous and not very
+hard right like god i gotta predict the actual market every time i get one chance and that's the only
+spot how we exploit winning trades is playing multiple places at once because the market is so
+random and squiggly all over the time all over the place that you have to kind of play different
+pivots at once altogether is like a giant trade day trading you can grab pivot to pivot sure but
+you can't make a habit of making all of your trades at one spot and expecting you to be right
+or one spot and being wrong and then day trading that way without leveraging the additional higher
+probability of success by cost basis averaging within reason that ups your win rate significantly
+so much so much so that if you can only trade if i was only able to buy one share of something
+i would not be trading something
+if only one trade is made you have to be so perfect and get it right so often exactly the spot and i can't
+predict the market to that degree and i don't think anybody can so it's hard it's really hard but if
+that's all you have as far as an option goes to only pick one spot every time to trade from you have to
+use your best pivot so what you would do in that case is only trade something that has the highest
+odds so if these are like 60 percent we say and weekly hedge pressure is 80 percent under the best
+conditions and this is 90 percent of the best conditions and this is 90 percent of the best
+conditions and you are not touching the market with that one contract and sitting out multiple days
+until you hit something that you know the odds are so good they're in your favor you basically
+treat somebody said in chat you treat it like you only get one shot makes sense so if you have one
+contract or one thing to trade and you can't subdivide it any further than that lucky with futures you can
+subdivide into micros and then nanos which is a fraction of a micro which certain exchanges effects
+exchanges nanos right you can trade with a couple bucks the idea
+is that you won't be taking every trade if you only get one shot you don't have the ability to
+play some b's and then play some a minus and a pluses if you hit them you get one shot and sit out
+most days until you get to the things that you really want to trade and you're going to be trading a
+lot less frequently because you require a higher degree of accuracy to get that pivot right so you
+got to wait for it don't don't be playing open and closing ranges um this is a lot of position
+finagling you know i'm saying like just like um you know not as easy
+markets are all all over the place here
+they're they're trying to these these these market makers like as a finagling is like um
+dishonest right like you know they're trying to cheat you out of your trade they're tricking you
+like trapping you right don't play the market makers game open and close with one contract
+trade zone zone boundaries and monthly hedge version dd bands and stuff higher probability
+bounces and only in bull markets as well you only get one contract to trade avoid the short side of
+the market as well because the market has additional volatility you don't have the ability to cost average
+in so avoid times and vix is above triple b the class hasn't happened yet but when you guys are
+watching the videos the class is coming up uh there's certain vix environments avoid that completely
+avoid those weeks if you can only trade bull markets long pivots 90 percenters low volatility all
+greater market signals are bullish and buy those 90 percenters if i can make one trade and wait for it
+that would be what i can do
+take your loss trade the next one take your loss trade the next one and just play it like that
+okay gap fills super important because it's high volume on a chart the way you identify a gap fill
+is pretty simple uh you can draw a line equities close at um let's put like um i don't know let's
+just put uh spy here equities close at 4 p.m eastern
+so every day at 4 p.m you have a place you can draw a line i think i've drawn them all on here before
+these are this is very old i think we've actually touched a lot of these so i removed them let me show
+you how to draw these right it's very simple you can go to a daily chart most daily charts will end
+the day at the equity session close this is spy for example you'll mark a gap as when the market
+opens remember a green candle open is at the bottom closes at the top a red candle open is at the top
+and close at the bottom so in this particular example this day open here close there and then
+open there because there's a space between open and close you can draw a line at the previous day's
+close which means the market has gapped up in the morning it hasn't filled the gap filling the gap
+is returning to the gap now forget about what you've learned in your trading 101 class that talks
+about gap fills and partial gap fills and all this stuff that's kind of much nonsense i promise just
+trust me on that people call this like a partial fill or if the wick overlaps but the body doesn't this
+is candlestick nonsense forget about that a gap is filled the moment the price ever again in the
+future returns to that level one time and one time only it doesn't matter if it hits their
+imbalances overshoots imbalances or overshoots and closes below it doesn't matter what the body does
+or whatever or the wick does it just matters if price returns to that level if you gap up because
+there's a buy imbalance and there's enough sellers to bring price down sellers and buyers meet at the
+interaction point right there and that imbalance is rebalanced anytime you return to a pivot it's pretty
+much balanced again so forget the candle shape filling the gap is just returning the price at
+one time as long as you've never returned to the price that gap can sit there forever um here's an
+example i think i marked these a long time ago this is oh man may of 2024 we gapped up and that white
+line stayed there the entire time until we ultimately came down and tapped it on the return as you see here's
+a particular day where the market just fell fell fell fell and then hit that line that's been sitting
+there for six months however long that's been and this is the perfect exit as a matter of fact this
+day it looked like the market this is a friday well this is a crazy friday market went up went down
+and then bounced off of that gap fill multiple times this certainly looks like an interrupt to me does it
+look like an interrupt to you guys that market well you're shorting right here into this and now you're
+upside down on the short right so the gap fill is just a huge volume sink when you hit it and you're
+going to see counter volume sometimes reversal so your exit target is remembering gaps had always been
+there always keep your gaps marked up on the chart and leave them there until they're touched and delete
+them now i'd left these here for you guys but once you touch them one time you can delete them and here's
+an example the next day we gap down and bounce off of that same open gap that we had before so you have
+a whole cascade of interrupting pivots that are rebalancing these big gap ups in a bull market
+if you're actually marking them over the history which this this thinker swim account doesn't have
+the history of them just ask some of them for the class you will have an infinite amount of unfilled
+gaps just sitting there because the market pretty much always goes up so you're gonna have millions
+of little gap lines always sitting there but if you interrupt if you run into one of them on a day
+trade just make sure that you know you trim out probably more than half or trim out something
+how to find them pretty quickly you get good at this you can use a daily chart as long as it's not
+showing after hours trades and most daily candles don't they stop at 4 p.m.
+you come in here and just mark some of these levels that you can gap up and down every touch
+this one that one was a gap up this one i don't know if we filled it or not you kind of want to
+zoom in to check the accuracy of that like here don't trust the visuals on the chart there's clearly
+a space right there but i wouldn't trust your own drawing i would actually zoom into the hourly
+chart if you can this actually looks like it was pretty significant though but yeah you would draw
+like this one it came back down and tapped through it so no gap so just constantly mark up a chart
+maybe a side chart you know where you just have history of where some of them may be
+and then you're always like you know keeping tabs of where some of them are
+you know there's obviously none of that i'm really quick at seeing this none none none none none on the
+way up there's one here right
+and here and you're always marking from the close price right i don't know if this is one or not
+nope it's not and then here on the way down you got a gap here
+it's now we got a bunch of interrupts to play with right so if we trade back trace back up we
+filled the gap we traced down we got a gap here and you could just always have this you know in
+front of you and gap fills are very important because as you see probably half the time you
+can hit it and turn around and go the other way so it's good to lock and profit there right next one
+closing walls all zone bottom bears on top and we talked about that in liquidity maps class right
+you've got liquidity pockets when you go from zone to zone there's always an exit this reminds
+you that exit is the um tip of the arrow so when you when you hit an opposing wall you're always
+going to close because it becomes rare that you break out of one zone into the other if you are
+example trading off of a bear zone and you go to a bull zone and remember it's it's like 10 chance you
+break from place to place if you open in the middle it's likely to close in the middle it's less rare
+to break through and go to the bull zone and keep going so in this example i will use this as an
+interrupt as well say that the market opens in the middle and for whatever reason i decide to buy one
+with the plan to buy four more here with the stop there and i'm good to bet that i'm going to buy one
+in case it goes up i'm going to buy four more in case it dips stopping the whole thing check the risk
+everything's good i like that the loss is fine and then we return all the way to my original entry
+close out maybe the four or if i'm very convinced that the dd ratio is very high like it's 90 and i
+go you know what i'm only going to trade i'm going to close one out and hold a bigger position on the
+way up but let me trim at the original spot take a little bit of profit now i got three on the way up
+and all the way up to the interrupt and because it's not a 90 chance we keep going let's assume that
+it's 10 and 90 the probability is really low that you just break out of the middle and go bullish
+without breaking through and testing i'll close out more than half at the interrupt so if i bought
+one bought four more that's five minus one is four i'll close out the other three here leave it at one
+i got one as a runner if the market decides to break through as a runner great it's good as we teach you
+never chase into that bull break because it's a low probability let it return back down and you think
+it's good the conditions are still good at that moment jump back in this is a second trade that has
+nothing to do with your original trade there's still long one it falls there you may decide
+all in baby i'm going to buy 10 here or whatever because it broke through tested support this is
+good this is a second trade anytime you hit an interrupt you must always reassess the conditions
+like it's a second trade normally pocket to pocket i don't usually hold runners through that some of you
+might might choose to if i'm buying like a couple of contracts down in here i'm not trying to hold
+something for the break i'm usually pocket to pocket exiting fully and then letting it do that
+and then taking it as a second trade there okay just because the odds are really small i don't even
+care to hold a runner usually as you'll observe most breaks into bull side pretty much always test and
+keep going we taught you that in the dd bands class as well right you don't you exit your trade at the
+band and then if it breaks through you still hold you still hold you still hold falls back down it
+becomes a second trade there that makes sense it says market from the body yeah oh you're talking
+about the gap fills yeah market from the body but in reality don't even trust the body if you can zoom
+in further go to like a sub hourly chart and actually mark the exact close because sometimes the visuals
+won't exactly line up exactly and i mean just one pixel could be off you know a couple tenths of
+percent just because it's not full granularity the more you're zoomed out but if you have no other
+thing mark the body of the candle yeah on the dailies okay all right so zone to zone you're going to exit
+because breaking through the other side is low probability again trimming it trimming at a possible
+resistance against you trimming most because it's a very low probability you break through
+so i'm holding a runner i usually close out the whole thing band to band i mean i wall to wall
+okay dd bands we just talked about that the same concept as the walls we're talking about the
+probabilities again uh we talk about the back test and and as of this day our last back test states
+88 percent a day stay in the band 4 percent break above 8 percent break below so if you run up and you
+have a 10 contract long and it smashes into forget that this is here but it smashes into the band and
+you're like oh yeah that's nice only four percent of days end up above it so of those 10 you better
+be closing out eight or nine of those things maybe the whole thing if you hold a runner great it's
+going to probably do this probably do this and you might want to add again there once you confirm that
+it's a that resistance becomes support then you might trade it again if you bought 10 here and it
+breaks through there and comes back now you're long two don't long 20
+don't trade heavier to lower probability moves
+say i bought 10 close out eight i've got two it bounces it falls back and i'm really convinced okay
+let me get five or i bought 10 have one breaks through falls back falls back falls back you know
+what let me get three right it's a lower probability region that last move could be pretty significant
+if you squeeze you don't need a big position if it does squeeze it's going to squeeze pretty hard
+you don't need mass amount of contracts the bulk of your trade should exit at the first high
+probability interrupt that goes against you you understand 96 percent of days fall below that line
+at the end of day four percent above so if i'm long 10 contracts here and the probability is that
+it's going to stay down in here i better not long 20 contracts there that sounds ridiculous
+right let the probabilities kind of guide you and to make keep your position size check
+and check right okay d band same thing it's an interrupt exit target if you're short d band same
+thing um you're going to exit your target there and usually on the short side this is another thing
+on shorts do we short to a we long to a level close out and likely hold a runner because most days
+go up and greater markets usually bullish yada yada yada what about a short trade let's talk about
+that really quick if you're short are you going to ride a short
+and close out a little and close out a little and close out a little in a short trade as we teach you
+in bull market short trades are a little bit more short-lived than long trades or are you going to
+if you short you get the drop and pretty much close out all of it if not almost all of it on the
+first center up yeah b right somebody said b before i even said it probably b right markets tend to grind
+up higher and fall very quick you ever heard the saying market goes up like an escalator and comes
+down like an elevator trade that exact way long trades go up like an escalator long trades you're
+going to go take some profit go take some profit go take some profit and you're good short trade is
+like upside down upside down upside down hell yeah i made all the money finally okay let me get out of
+all of it and the market does this does this and this crazy you saw my short trades when i make
+them on this day of this video i made most of the money this day shorting uh a mix of shorting along
+but most of the bigger trades were shorting they were very short-lived um i think right here i took a
+trade here got almost over there even though resilience was questionably in my favor to bet that
+it keeps going and filling the gap basically closed most of it here and all of it about i just basically
+got out of pretty much all of it i'm not betting that markets collapse as rare as that it that it is
+so in a short trade i'm going to close out most all of it at the first interrupt and definitely all of
+it by the second i don't bet the markets fall and fall and fall and fall without stopping we've only
+seen a couple days this year that did that most of them are in december of 2025 markets tend to fall
+and then bounce and then it falls breaks the level well then you get a second short and you treat each
+trade independently you don't like to hold the short uh for longer than you have to because it
+becomes more volatile and bounces around a lot more on the way up whereas long trades tend to become
+less volatile on the way up sorry on the way down becomes more volatile you take a lot more drawdown
+on what you're holding whereas the long trade you're punished less by holding runners the volatility
+dries up these v's get smaller these v's get much bigger so in shorting as i try to train people
+you're in and out as quick as you can once that market just like runs against you really quick
+you're going to close out most and also with a short trade if you're going to hold a runner for
+the next interrupt then you know that if the market is crashing it falls really quick again one contract
+can make a significant amount of money it's an asset falls 300 points without one contract you don't
+need to have your full lot on in case the market is you're like man i don't want to miss out but tell
+yourself in the fomo if it is going to crash the day that it does you want to be in on it you don't
+need a big position to make a lot of money because it's going to move very fast and the more distance
+gives you same money with less right so treat it like that you know markets don't just rally straight
+up really quick and like i hope the market crashes to the upside today we never think like that bull
+markets are usually slow and slow moving um bear markets or sell-off markets or crash markets usually
+crash really hard so you know i tend to hold bigger positions in a bull market because it's not as
+volatile and in bear market once i get the big part of the trade everyone else it's like oh i'm gonna
+jump in a short here i'm already getting out of most of it you understand i'm out most everything
+first interrupt i never stage out of shorts little by little by little if i want it to crash i got one
+contract and if it crashes it still may have fortune right only a lot the distance get makes up
+makes up for the smaller amount okay um mhp hp it's the same thing as those in reverse i mean
+sorry those those above mhp hedge pressure same thing 90 chance 80 chance ideal chance of bouncing
+uh with all conditions aligned bull market uh was at 73 and 68 chance of bouncing per the last back
+test the day of this video when things don't line up when the crash market scenario so more times not
+it bounces so again it's the same concept you hit a level you're short and it falls mhp
+mhp resilience is negative you think it's going to fall through okay you had 10 short it hits mhp
+mhp res is negative it's still going to crash close out eight of those 10 you got two left as a runner
+and if it continues to crash boy it crashes really far what happens when you break mhp class everybody
+type and chat the market becomes what begins with the level i letter i
+irrational if you break through mhp boy that market's going to fall pretty quick some days
+so you don't need 10 contracts yeah sure it'll make a fortune on 10 but two is less risk and will
+still make a whole lot because you took the safer play you still held a runner because you had the
+confluence but you got out of most of it and two still makes probably as much as 10 did here
+some days right now if you fall to mhp and mhp is going against you you somehow shorted 10 it falls
+to mhp mhp is resilience is positive therefore the chance of it bouncing is very likely how much would
+you close out of your 10 you still think it's going to fall but it hits here and the confluence says
+uh-uh all of it yeah and then you wait and then if it hits this a second time
+and mhp resilience is now deteriorated
+you still don't do anything and then it hits it a third time and mhp resilience is negative
+then you might say okay it's the time to get in let me build a position around here
+i'm going to bet on the break now i've got the confluence with me
+and again since it's a very strong possibility of sell-off and you stay on the same side of mhp
+73 of the time even with the confluence or sorry even in all confluence situations
+it's only about 27 chance you break because the odds are very small how big is your bet going to be
+if you shorted 10 closed out for profit and now resilience is giving you confluence to short again
+how much do you get in on that second trade relative to 10 give me a number your first big trade was
+10 hit there you closed out yeah i have an opportunity to build a second short on the break
+one or two you guys are nailing it yeah the odds are really small so maybe two what happens if you
+get two and it falls through here and then bounces right up to mhp now mhp resilience is way negative
+would you add to it probably could now you got confirmation now that the support is now testing
+is resistance you got confirmation to go with it certainly you can add a little bit more your
+stop is defined right here so many your your normal stop is in play i wouldn't go more than 10
+but if i had to and it broke and somehow retested i might be so eager if this is really bad to go into
+less than this it's probably going to travel further but yeah you know what this is that short
+let me hit it but never 10 close out looks good f it let's go 20 that kind of staging in later into
+the move is what newbies do the bulk of the move usually happens and it's the newbies or the late
+comers that get squeezed a second or third time very rarely are you going to get the market falls and
+then crashes and the second wave makes you all the rest of the money usually your first wave is
+going to be the bulk of your money especially when shorting and if the market is going to fall
+you don't need the biggest position in the world to take it trust me and those volatile markets
+i always go into a second short half or less as big you know what i mean because it's going to fall
+really far if it does i can take little risk and make big gain that's the way i see it i don't see
+it like i can take more risk to make more gain it's going to move three times the distance let's go
+twice the position oh it's going to move three times the distance i mean i can make the same amount as
+the first trade with a third of the size oh baby r&r on that is fantastic i look at it in that sense
+right and then i can play it that way okay so these are very similar illiquidity pivots covered in the
+previous class yellow line red line it's the same thing with the exception of we don't have stats on
+these we assume because we don't have stats it's perfectly imperfect balanced at 50 50 right if
+something has stats or no stats always assume it's a coin flip it's going to work half the time we know
+there's volume there every time uh yellow lines and red lines are fantastic uh we had a couple of
+them i think i still have some of them drawn from this particular trading day let me see if i've got
+it oh thank you did i did i was i nice enough to leave it on there i don't think i did i think i deleted
+it on this trading day let me see if es still has it no okay so es doesn't have it either um did i
+leave it on no okay same thing we remember how to calculate these right covered in another class let
+me show you all really quick make this really big and i'm just gonna do it quickly on a one minute
+chart usually we'll do it on tick chart but we don't have that much space on here because it's
+already been a couple of days you guys remember this particular day and if you if you did your
+normal uh red line trick remember you try to find where the anchor point is and if you retrace half
+it doesn't qualify so it went up came down to half that's not it okay here volatility expands
+volatility expands volatility expands then it contracts it keeps going perfect the contraction
+point is right here there's the impact line
+on thinkorswim click this hit space you're probably today years old when you learned
+that clicking space creates a copy of something trust me 10 years in my trading career i finally
+learned that too that's like how many times i right clicked and duplicated drawing to create a
+second one hit that space bar baby
+that crazy never knew that okay two red lines right here okay and on the way back you can see that
+nasdaq boy look at this hit that line hit that line they're interrupts you can easily see the
+interrupt as a matter of fact at two in the morning you can see the interrupt right here we fell right
+to it and there's some counterballing what's gonna happen you don't know 50 50 so if i was shorting
+to red line i'd probably get out of the way fully i wouldn't even try to stage a second short on a red
+line break either because it's 50 50 i got no odds to give me anything if i fell to this pivot i'd
+probably be done and leave it alone um if i have no other pivot these are great exit targets we teach
+in the dd band class when you fall outside the dd bands usually you'll have red lines to bounce off
+of close your shorts there will i buy at a red line again it's 50 50 i've got better long pivots with
+better odds screw buying on these things you can if that's all you've got okay but you got to remember
+usually regular risk management the market is like crashing on a bigger sell-off and you hit some kind
+of red line it's a little risky to try to catch the knife at a 50 50 but even if you do use your
+normal risk management make sure you get in and stop out don't get in get in get in get in no no
+digging when you're falling to these imbalance points there's a previous imbalance that caused that
+move and it's a current imbalance bringing it back it's a little bit more volatile i don't usually okay
+let me buy at this red line and buy at this red line again even though it can bounce we're still
+talking coin flips here you got better long pivots to play on but they're great exit targets as you
+see they're they're high volume predictable and we follow this one also high volume this is even
+pre-market 7 49 this is 45 minutes for market opens i'm at 8 30 is my open and look we fell here
+high volume right anytime there's high volume it's an interrupt treat it the same if i'm shorting i
+followed a red line i'll close the whole thing 50 50 right i don't need to hold a runner that's kind of
+silly if i feel like it's going to crash i want to hold a runner it better be one or two for every
+10 i had right it's gonna be tiny tiny i'm not trying to stage okay it's gonna break let me jump
+in again you know it gets a little crazy down in here you might not get the opportunity to get in
+again and of course when you hit a red line it deletes forever anyways so on the way back up it's
+not a pivot to test to turn back around here's an example why you don't do that oh we hit the red line
+from the bottom i held a runner let me add back to it so it shorts a little bit well maybe but look
+at this look how upside down you were 80 points before you even it's not worth it right so once
+you touch the red line you're in the habit of deleting it immediately no longer using it because
+it's violent around them it's very violent it's 50 50 does that sound appetizing you guys violent
+coin flips not to me so usually get out fully unless you're a madman but you better hold small
+position or less than small at that point um and never add to it on a red line break if you're
+shorting through it never never never just let it let it crash then okay um yellow line on the way up
+same thing never bet on a yellow line like you're longing here's an example of a yellow line where you
+talk about this when these are margin buffer limit pivots and they're longer term pivots
+we when you're hitting it from the bottom close out entirely again anytime you're breaking through
+into a potential long break you always close out let it retest and then go there's a debate around
+rocket scooter that yellow lines can be entered on the other side fairly often and work however i would
+advise against that as well because even this day i'm currently highlighting on kind of a coin flip
+this day it didn't work this day it worked or this trade it worked this trade it worked this trade
+it failed tapped it again then it worked it hit it again then it failed it doesn't look like there's
+any odds to this this it worked for a little bit right you know yes yes yes yes no no no no it kind
+of looks like a coin flip to me it's like about 50 50 to me right so you know more often than not it's
+the end of a bull run treat it that way because it's a coin flip y'all see this this is y'all agree
+this looks like a coin flip to you right there's no odds that support breaking through i i usually exit
+fully at yellow line i'm done completely done i need another pivot that's got odds we treat this 50 50
+when you long into yellow close out fully there if you're near it don't enter a trade below it either
+unless you plan to get out exactly there if you're five points from the yellow line and your your
+your distance is 10 to your stop now you're taking an rr less than one to one so therefore
+your position needs to be half or less you're scalping at that point and don't try not to take
+r and r trades of less than one unless you're very confident like you got six other pivots lining up
+right here and you're like i know i can scalp those eight points they'll be doing it with 40 contracts
+right you can trade it with a couple micros sure but know that it's going to hit the yellow line and
+half of the time it goes against you when it does it goes against you pretty hard so yellow lines
+because they can be violence we don't play with it um this is a great example of why you don't play
+with it you can see you get close to it this is an example where it was rejections every time
+sometimes it's going to break that's what i say some people like like to trade off of them
+because look this time it worked great and i would this is what makes technical analysis horrible
+you have one or two good examples of something here and here and then you convince yourself
+oh that's good you're curve fitting right yeah i think i should do this it looks good
+but if you analyze enough of something and you realize it's really a coin flip
+you don't do and the reason you don't do it even if it is a coin flip you're like whatever i'll just
+flip the coin anyways it's because on the times that you lose yellow line you lose it so violently
+yellow line creates an event sometimes not all the time but sometimes and that event is usually
+very bad and because you you sometimes take a little bit of a loss and you know say if like
+half the time you take a loss half the time you take a win but the times you take a loss the loss is
+massive it's not worth it we get that guys so don't bounce yellow lines and trade off of them
+despite what you might hear people in chat take the gamble there my my one of my oldest friends
+from high school named keith who's a annuities trader mixed income trader he tells me there's a
+rule of thumb they have and it's called don't pick up pennies in front of a steamroller which is what
+you're doing there's some pennies there's some pennies you lost thousands of dollars and don't don't
+try to take little bitty trades when the risk is crazy against you like selling option premium is
+also that same kind of philosophy oh i'm selling an option selling an option it's like okay you made
+100 bucks made 100 bucks made 100 bucks lost 10 000 when you're wrong yeah you know because the
+magnitude is severe exit fully at yellow that's my rule um any tip of the arrow on liquidity map that
+requires no additional explanation um this is your guide that helps you and they typically exit at
+interrupts this is the open this is next resistance which is anything on that other list
+right exit on hedge pressures right exit on hedge pressures this follows this entire map follows our
+rules exit at opposing wall exit at hedge exit resistance right exit at hedge pressure this guide
+is built off of these exit target rules yeah any tip of the arrow on liquidity map which is just a
+reminder of the tip of the arrow is going to be one of these things on this list and then one final
+time which is kind of an unusual and we got a vix class covering this but anytime you can show that
+the vix is pivoting higher you need to take caution we haven't had a vix class yet but let me teach you
+some general things vix has a liquidity map and vix is the volatility index don't worry about it now
+there's a whole class explaining it uh and going over the lovely mathematics that i know you all want
+to learn the vix it's probably considered one of our best classes because it's so eye-opening to some
+part of the market you likely overlook yet when you use it it is a part of every trading decision
+you make and it is so powerful you'll never not use it again sounds cool right so let's teach you
+one little piece about it vix is an index just like spx it's calculated based off of some options in
+the spx and vix is just a number that you can't trade just like spx is a number that you can't trade
+you can buy options these things but there's no such thing as shares of spx or shares of vix so spx has
+an etf called spy that tracks the spx and you can buy shares of spx vix has a couple etfs as well
+that track the vix um vxx is one of them people like uvxy is one of them that we like
+and any volatility instruments just like any index instrument that tracks the underlying will have a
+liquidity map as well as long as it has options therefore it gives us potential flow paths that
+make sense and this example here uvxy has a bull zone bottom here because we know bull zone bottoms
+usually are supportive and liquidity maps then i have something to help me out if the market is
+rallying as an example and i don't even specifically have an interrupt at this point in time
+say that for whatever reason i were longing the market and longing the market here and now we
+fell look at the left side of my screen my mouse is here look at the left side of my screen because
+the arrow is in both places see on the left side of the screen uvxy is bouncing pretty much at that
+bull zone bottom and it starts to pivot higher at exactly 10 36 as you see once that volatility starts
+getting higher the floor starts getting thinner under you and the market has the ability to quickly
+fall underneath you right so in this example if i was long the market and wanting a bounce and vix
+starts going against me i'm going to trim every time not fully get out but take caution that the
+volatility is starting to increase therefore the floor i'm standing on is getting thinner any amount
+of selling can be held off with a thicker floor and the vix is going down the floor you're staying
+on is getting thicker the best way to think about it you guys remember um squid game and squid game
+where the the game was they had the platform with the two pieces of glass right and they jump on the
+glass and one of them they fall through it one of them they land on it right so a pane of glass you're
+standing on a piece of glass and it's really thin when you jump on it the pressure that you exert on
+it you know you force over the area that creates a because of pressure and then if the pressure is
+high enough you break the glass right but the thing is is if you were to stack like i'm sorry if you
+were to put four panes of glass like this right and you were to jump up and land on this one you might
+break through that one and then break through that one and then like land on this one okay but if you
+were to take those four pieces of glass and stack them together like this jump on them well it's a
+different scenario would you break anything in this case these are one inch thick panes of glass on
+this thing is four inches thick are you going to break anything with these glass pieces of glass
+stacked on top of each other absolutely not you're going to land on it like it's a solid brick there's
+some inertia built in on because of that solid object that resists the movement so you landing
+on that pane of glass that force is distributed right throughout all of this now you have
+um like the shock wave is absorbed fully through this and the pressure doesn't break the glass right
+same thing with vix vix when vix goes up these glasses these pieces of glass are getting further apart
+if vix in this example uh vix is going up and up and up and up well every time vix is higher the glass
+gets further apart and you have less you have more airspace between them so the the amount the
+total amount of like resistance is the same but you can think of vix is like when it goes up it gets
+more spread out and therefore the probability is very high that when you break through one set of
+stop losses let's refer back to trading now not glass it quickly falls to the next one and falls to the
+next one there's less buffering of selling into buying to stop the move just like falling through the
+glass if all your resistance is stuck nearby the force applied to that trader's position is absorbed
+a little bit heavier by these people that aren't moving right kind of like when you hurt it together
+it kind of makes it stronger so anytime vix is going up the glass is getting thinner you're walking on a
+ticking time bomb vix going up doesn't mean the market can crash but it means with the same force
+applied you jumping on the thick set of bricks is 100 pounds of weight on this and you jumping on the
+spread out set of bricks is another 100 pounds weight 100 pounds i mean you guys are in shape or
+whatever but that's kind of like too too thin but anyways 180 pounds jumping on this same 180 pounds
+here the same amount of selling has two different effects so the the weight of you is the amount of
+selling an order of 180 shares instead of pounds and 180 shares will respond differently when the support
+is spread out differently do we all get this guys so higher volatility less stacked up support so what
+it means is that at some point it becomes thin enough that your weight breaks through all of it and so
+maybe 180 shares will hold it or a thousand shares will hold it maybe it will maybe it will
+vix is going up maybe it will vix is going up it's thinner and thinner and thinner and then that
+thousand shares finally pierces through it and breaks it all vix is not a telltale sign that the
+market will do something it's it's it's it's a description of how how distributed those panes of
+glass are under your feet when vix is going up it's just getting thinner by the minute and therefore
+any amount of selling has the potential to break through it so when you get the idea that vix is
+pivoting up and you're longing in the trade always start trimming in this example say that you bought
+this and assume res was slightly positive that you wanted to take the bet that we were long
+and then vix starts turning around you bought three vix is going against you you better trim out most of
+it and just hold on to a runner at that point allow yourself to know that volatility can go against you
+and because the selling absolutely did overwhelm that point in time your loss is pretty small because
+you're only in one so vix can be a way to trim profit early as well when you're in a trade when you
+have no pivot to go off of as an example pretend that we were uh like you're longing the market
+1a trade on a bld you long the market and it just took off and kept rallying now you're holding now
+you're holding now you're holding now you're holding and while that's happening vix happens to
+decay and decay and decay and decay at the same time this happens now vix hits hedge pressure which
+you know hedge pressures are like 80 20 ideal conditions and now the minute vix hits hedge
+pressure say that you long five contracts here and now vix is pivoting up you're still bullish
+because just because vix is going higher doesn't mean the market's going to fall it just means it
+can if the selling is enough much easier than when it's not going up so because of that i'm going to
+trim out i'm just gonna take three arbitrarily in the middle of the air no pivot just whatever
+vix is trending up i better take three out most of it at least most of it because when that vix is
+going up it's just a ticking time bomb your runner keeps going your runner keeps going and then a
+moment in time somebody starts selling and taking profit then you start to get some volatility
+and then maybe the market sort of like works its way back hard you guys remember y'all seen plenty
+of days like this right where the market's going up going up and it looks like it's gonna sell i know
+days like this most of the time some of you guys are probably shorting and then this happened and you
+finally got excited for a minute you're like oh finally the market's gonna crash it gives you five
+minutes of being able to breathe again and then 45 minutes still of being upside down crying
+we all know those days right when you short it's always like that feels like right seriously though
+um this is usually a volatility move when it just dips really quick because the selling just
+smashed through all that glass but the market isn't necessarily bearish there's still people
+willing to buy and then vix sort of like moves back down again the reason you trim out is for twofold
+number one is locking your profit you got any evidence the market's going to turn against you taking
+some profit or any evidence it could turn against you also you have five you close three now it dipped
+to a lower low if you're that ballsy bull put the three back in on the dip you just you you had
+five you closed out three now you still have two from this point now you added three back in here
+you're and then it returns to the same spot you made a little bit more money you can again you're not
+using vix to pivot and this might be you know some arbitrary whatever bull zone or some some pivot you
+have the idea is when the volatility starts going up and the market starts selling very quickly
+it might hit a retrace or it might hit some other pivot maybe you can add back in but always remember
+when vix is just going up or you can prove that vix is going up or it can go up which is the important
+part you hit hedge pressure it can go up trim and take profit lock it in it's the best time to lock it
+in you'll avoid that volatile sweep that usually comes midday and avoid two hours of staring at it
+just to break even which is always horrible right some people in chat said yeah they've seen that
+before yeah it's always it's always horrible thing you bought a whole bunch and then the market dipped
+and then takes three more hours to get back to the high and then the last hour of the day goes the
+other 20 points you've got like you're pissed off and mad you're wasting half of the day upside down
+but you saw the volatility possibly turning from hours ahead of time avoiding all of that right so
+um trim and take profit you won't be so sad when the market dips and your position was smaller
+you start to feel like an oracle like you can predict the market but really the vix is
+other people telling you their intentions so it's not really predicting anywho this is the exit targets
+it's a huge part of your trading strategy
+and you're always always always going to plan every part of your trade before you do it
+locate all of your interrupts you get the plan you see it you take a stab that's really it
+um when you get your liquidity maps pop open every day you're getting a whole spectrum of pivots
+it's almost like a framework of tons and tons of creative options you can take each pivot represents
+volume and each pivot has historic probability that we have calculate or have have a have a gathered
+so that when you calculate your risk and reward you can just build it's almost like having legos
+you can just build what you want with the pieces you have in front of you and little by little as you
+trade you're going to find some part of all of this that maybe you like more than others because of
+that you might just want to stick with what works at the end of the day trading is all about finding
+the one thing that works for you these are there's a ton of options of pivots you can have here in
+risk management styles i just teach you my style insightful to some maybe okay but it doesn't mean
+you have to trade that way as a matter of fact some people in rocket scooter are like you know what i
+do nothing but trade liquidity pockets that's all i wait for i sit out most days and then when i get
+the days we're falling through pockets i just trade them on that's all i do and then that's that's
+their bread and butter there will be something that you like more than something else and there
+may be something in this style that doesn't work for you here's a key point if it doesn't work for
+you you don't have to use it right some people have different ways they trade and different risk
+tolerances different patience is different love of money different speed some people are smarter than
+others some people can do what you can't do the best thing that i i learned growing up through the
+trading world is that most people don't look into the mirror and and say i can't do this i'm okay
+with that i made a a post online kind of the same thing there was somebody that made a a comment in a
+reddit post about i've been doing this for a couple years i've traded 100 evals i've gone funded 10 i've never
+taken a payout and i know i want to do this full-time this is my destiny to do this full-time
+and i can't ever win why can't i win that's what they said and then they were saying i'm ready to end
+it all like i just like you know unalive themselves in a very dramatic fashion and you you look at
+something like that and you feel you kind of feel bad for somebody but then you also look at the flaws
+of the way their brain is thinking like this is my destiny is it i pick up basketball you know i'm
+i'm not i'm not even six feet tall i can't dunk a ball is it my destiny to play basketball no i look in
+the mirror and i say you're not playing basketball buddy and that's okay you're gonna be good at
+something else and i recognize i'm bad at something and then i don't do it i don't believe i deserve to
+do it trading is the hardest profession in the world probably to be successful at i would say
+it is the probably the highest failure rate of anything you can ever do
+in life it is definitely not your destiny to do this just because you think it is as a matter of
+fact the evidence in front of this person's face was in years of trading there's two there's two
+takeaways number one is they bought 150 accounts and it funded in 10 it's not a terrible return but
+that's all obviously a very high failure rate as well number two is you kind of think like well
+how dare you like 150 oh tell me more about your 150 e-ball accounts you traded that's it let me tell
+you about the five years of grueling practice and hundreds of thousands of dollars spent in the market
+that i put in to finally get to the end so a lot of people out there that don't want to put in the
+amount of work it takes treat trading like college take you four good years to come out and be a good
+biologist or a good engineer not going to be 150 evals in six months of work and somehow you can't
+figure out trading kind of like boohoo get your realistic expectations in your head and don't
+romanticize trading like it's your destiny and you're going to become a millionaire because people
+on twitter force feed that impression of romanticized trading it is hard work there will be
+be a thing that you have to discover through this process that works for you some exploit if it's
+one little thing in our toolkit and it's the only thing that works for you don't be like well matt makes
+these other 10 things work i gotta make all of it work learn to look in the mirror and say you know what
+i'm i'm just not good at shorting this market in this type of environment good at chasing longs on dd
+band breaks or whatever i just don't do it right look in the mirror and say i can't do it and be
+i'm cool with that move on matt looks in the mirror so i can't play basketball don't be like
+it's my destiny to be like matt matt does it and he does it right but i can't do it what's wrong with
+me you know it's a beautiful part nothing is wrong with you nothing's wrong with me because i can't
+dunk i just don't play basketball so if there's something in this tool kit of all these things we
+taught you because we're pretty much at getting to the end of this that works for you then try to find
+something that works for you and then work your practice into that i can't dunk but boy i can lay
+up a ball pretty good you know what i practice when i head out to the gym i'm playing with my friends
+i'm i'm shooting free throws and doing layups things i am good at right i'm not trying to
+romanticize the things that other people do and think that i can do everything because all you're
+going to do is put yourself in an emotional spiral that will damage your stuff and then you won't have the
+capacity or even the capital left to attack the things you are good at so keep that in mind we
+taught you entries exits and all this other cool stuff find something whether it's from us or from
+anyone that you know that you've practiced that you find anything out there that works for you
+trading journey is a search of finding something that works for you how can you get ahead in a world
+where other people can dunk there's got to be something that works for you find it and work
+on that and then slowly build from there that's why i tell people they have a hard time trading i say
+you know i have a pivot that might work 90 of the time but you got to wait 15 days every time before
+it works that's just an example right nobody's going to wait the 15 days but what if you had 100 success
+rate and it was free money just pretend this was this is just a thought experiment wouldn't you take
+it as a starting point because you're you it's it's if it's 100 chance and it's free money sure
+you'll take it but do you have the patience to wait for the thing that you know you're good at
+and so there's a sliding scale right the higher the probability something is maybe longer you might
+have to wait but that might be the only thing you're good at but if you start feeling like you're
+doing bad at trading focus always refocus back on the one thing you're good at pretend that you're
+horrible at redistribution scalps but you're great at bear zone bull zone and you made some
+money made some money made some money then you start to branch out and say let me start trading
+these scalps here man i'm losing man i'm losing man i'm losing oh my god i'm losing all this money
+okay take a break take a day off pause take a step back get back to what you're good at start building
+your confidence again at the thing you're good at and then continue to branch out trading is all about
+taking a step forward slowly and when it starts hurting too much step back into the comfort
+zone of what you've mastered this makes does this make sense this is the last lesson
+find the one thing that you've mastered and be good at it and be patient wait for it milk it milk
+the crap out of it then when you branch forward once it starts getting uncomfortable please fall
+back and reassume that patience you have to wait for your good stuff your good setups and then re-attack
+it there and then slowly but surely as you get better and better and better don't let your next step
+up spiral you fully out of control that you suck at everything realize you know what that's dunking
+i don't think i can do that yet let me step back to just the layups this is where i was good and so
+your journey is whoever you study from when you i try to teach people generic skill set that goes beyond
+rocket scooter because i assume you're going to learn a ton of stuff in your journey after this you
+might go somewhere else as well you're going to find something that clicks with you and that's your layup
+right find it and don't be afraid to just abandon something that just doesn't look good and doesn't
+make sense don't let the trading guru out there tell you bro just keep studying the charts it'll
+click it'll click just keep studying keep working keep paying your monthly fee but keep working right
+you're going to know quick if something doesn't work for you right after five six seven trades you're
+going to start to feel that something is probably not aligned with you it's kind of like going on one or two
+dates with a new stranger if that seems weird it's probably weird you're going to know quickly
+if something's a no but it's going to take you a long time to decide if something's a yes again
+the dating analogy right you'll know on the first date of something's oh no no thanks not now you're
+not getting a second date but it's going to take you like 20 30 dates before you're like yep she's the
+one let's time let's get married you know what i mean like it's the same thing with trading you're
+going to know very quickly something's a no but it's going to take you all know something's a yes
+so practice that way um you're gonna you're gonna run to a lot of no's in this in this journey of
+yours right hopefully i've given you the basic principles so that you understand that no matter
+what is presented in front of you always approach it with a mindset of risk management position sizing
+based on your components right okay

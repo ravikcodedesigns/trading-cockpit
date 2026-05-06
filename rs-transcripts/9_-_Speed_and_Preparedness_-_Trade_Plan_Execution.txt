@@ -1,0 +1,587 @@
+this is a class over speed and preparedness in a trade plan uh what you've learned so far
+to date is a lot of information about how to find pivots um how to trade off of probabilities how
+to adjust position size cost basis imagine all of that and now it comes down to speed what we've
+been practicing up to this moment is when i say you know type something in chat be on time be
+disciplined the more you repeat and do something the better more efficient you are at it and the
+faster you'll be at it trade plans everything comes down to speed and preparedness um so we'll
+start off with giving you a little bit of an icebreaker about a way some things are arranged
+in the discord if you go over to where the boot camp stuff actually is um you can see as of right
+now there is a training courses i'll bring it like right over here you will see there is a read first
+right it's information underneath that platform setup which is some you know some info about
+platform uh curriculum and then summary summary is a very important piece of information and it's
+useful for you to have summary sort of like handy if you ever need to make decisions against syndicators
+say that some days you get like today where everything's example day of this video everything's
+pointing different directions something say support something say resistance which way do you go
+and so we have them organized here and this is a very sophisticated way that we've done this over
+the years and it's very important how it's organized you'll notice that everything is is labeled and
+organized here in a certain fashion we have initial checks irrational rational market uh usual and
+unusual market and then your normal pivot equations anything that's ranked higher than something else is a
+higher priority well we determine priority to be by volume if an example if the market falls to blue
+weekly hedge pressure and bounces traditionally we'll see a certain amount of volume you know on average
+uh there and it varies day to day but we look at kind of like a bulk amount comparing weekly and
+dynamic hedge pressure to dd ratio bull zone bottom bear zone top trades these traditionally have a higher
+volume or a higher percentage or higher probability together typically it's volume that ranks these
+but also by importance something that's like 90 would rank higher than something that's 80 in general
+the stronger the pivot or the higher the volume puts it up on this list so if you have a tie between a
+bullish dd ratio um with um and you're at the bull zone bottom and at the same place you have a hedge
+pressure that's got negative weekly hedge res then you go hey one's down one's up which one i do well
+the stronger one is good versus the weaker one so let me let me focus on this being the one that
+breaks the tie of the two and you go up in order here you'll see they have liquidity map hedge
+pressure dynamic hedge pressure the blue one right then you have your half gap gap fills open and close
+are slightly stronger than this you have uh anything in regards to resilience white or yellow will
+overshoot any of these sort of decisions right socks picking mhp on negative resilience for example
+are likely to break through gap fill like an example if you have redistribution zone you gap up and
+it's holding the gap but then uh it falls mhp and mhp res is negative and then it breaks that it's likely
+to smash through the close and smash through blue hedge pressure so mhp breaks we don't buy off of these
+pivots below if they are because they're considered weaker if you're going to break mhp why would you hold
+hedge pressure does that make sense right so when you break the stronger more probable pivot you're
+not going to take a gamble on the weaker one underneath it okay um and same thing with resilience
+like if you have you know resilience goes negative and you're going to fill the gap uh and you fill the
+gap and then keep going um you know that usually becomes a stronger press than the ones below it
+um illiquidity pivots we haven't had the class on this yet you will yellow lines and red lines more
+important and then bulls and bottom more important and again it kind of like boils down to the
+probabilities of the higher probabilities ranked here now above that individual stock catalysts a
+large cap news event can pivot the entire index despite structure we've seen that uh in december
+of 2025 as the entire index is sort of trading down just because big tech was selling off and
+nothing else was selling off right so individual large cap stocks can pivot down and each of these has
+an instruction next to them i mean a description next to them to kind of explain what they are um
+illiquidity yellow line or red line on the vix outranks that bull bear structure mhp um stronger
+this so this is where your actual mhp is above so i know this says mhp resilience yellow this is just
+resilience like if resilience gives you a signal um you can sort of like use that to kind of you know
+preemptively um not use that so example the difference between this and this one is that
+this is you're actually trading above mhp if you're trading above mhp and then mhp resilience goes
+negative and you got both of these lining up and you smash through it then obviously you're not going
+to trade both of them if you are below mhp and mhp resilience is bullish then you might consider
+doing both of those there's a difference between breaking through mhp and opening below it so if you
+lose the structure then you're not going to trade any of the things below it right you should
+consider that if you break mhp then nothing is really viable with a large position you're going
+to obviously size down or sit out anything below it um triple b on vix we'll have a class on that later
+um vix bull zone balances anything with the vix starts to go up the ladder you can see there's a
+lot of vix here volatility can clue you into a lot of stuff of you not trading as well then way up
+here at the top um oh i guess mhp is listed here this is the actual mhp break so the way that i have
+it organized here mhp is kind of in three places here but this is if structure is held this is if
+resilience gives you the indication and this is if you break the structure so um i'm sorry i misspoke
+earlier because this is where uh mhp holding structure is and this is where mhp breaking structure
+so it's kind of weird how how that's ranked but this outranks everything else here if you're holding
+blue um you'll take anything below what is fine you break through blue anything below that's not
+fine okay um so these are the severity each one of these is like an event uh bouncing off the pivot
+or breaking the pivot and those events cause large volume the larger the volume typically the higher
+on the list something is um losing the dd band is higher than mhp break into the 92 percent bigger
+than the 90 percent and index catalyst is up here in a volatility runaway risk interval and vix is up
+here these two are typically no trade whatsoever sort of things you would sit out no matter what we
+talked about this before because the volume of an index catalyst is immeasurable the ones that we
+can't measure the one that has a potential to have the entire market spiral out of control
+is why we say the no trades um a catalyst can't be measured some days they're small some days are
+massive some days they can crash the market uh to a circuit breaker typically anything up here
+that happens is an automatic sit out or trade small of any pivot that you have down here
+any volatility check that flags a lot of the time is going to just be a position modifier for any of
+your pivots and then if your pivots are tied you're going to break your ties right here is basically
+how it's going to work and that's just kind of a little clue to understand and very rarely you're
+going to have to tie break stuff but if you need to uh you can come here and say which one's more
+important as a rule of thumb you'll just remember the importance by the probabilities all your strong
+pivots are going to rank higher than your non-strong pivots your a plus which is mhp your zone boundaries
+uh your dd band are going to outrank your a which is your weekly hedge pressure are going to outrank your
+kind of like b plus which is going to be your um redistribution zone and half gap etc right
+okay no questions good good all right so speed and preparedness right let me show you a video of
+one of my streams from back in the day now uh at this moment in time the platform
+is uh doesn't have the futures conversions in it yet like it does now is the date of this video
+but you can see what i do when the market opens uh take a look at my reaction and what i'm watching
+okay and i'm going to show you all the steps that i do to get there
+oh easy peasy dude all right love it dude oh great love it okay market opens and immediately
+i know what i need to do let me repeat let me let me do it again watch one more time okay
+before every market opens right
+one so as it pops up it's open ready one two oh easy easy dude all right
+three seconds that's it all right love two seconds oh great love it okay
+all right open orange open this is perfect setup today oh i love it okay any any break here goes
+to dd band perfect oh god this is like textbook stuff all right let's let it pull back
+okay now this may be simple this phase of the boot camp you understand what setup this is i drew
+exactly what liquidity map shows it turns out you know that particular day um it fell it looked like
+it bounced exactly where i drew it and it looks like i got in on the trade and closed out exactly
+where i said i was going to trade to you know i see you can see on here i do have a trade um
+i fall the we fell to mhp looks like i'm in the long and then when it bounces up here
+it looks like i get right to my oops or whatever i don't know how the oh i skipped too far ahead
+you can see on here i get right to my pivot and then i probably close out here looks like i'm five
+six seventy two seventy seven hundred bucks really solid guys and that's what i drew earlier on the
+screen now again one more time as quickly as it is you can see in my eyes just how focused i am
+i'm not fumbling around i'm prepared as if this time i had qqq to the right and spy to the left and
+i'm trading nasdaq futures as soon as it opens i am prepared and ready to go i'm not thinking i'm
+reacting because i'm sober yes we're going to see where those resilience numbers start off at
+slightly it was winter time matt but give it like a final at this point okay pre-market
+watch me watch my face
+oh easy peasy dude all right love it dude oh great so i'm excited right it's a bull market at this point
+in time things are solid and we open with a liquidity map the diagram shows up now i know
+what we need to do now of course currently everything kind of shows up with instructions
+now as the futures conversions are good um and in that example i already know what i need to do now
+how did i how am i so prepared and so quick well the first thing you always need to know is you
+always have to have a grasp of what your greater market is and i'm gonna teach you something about
+greater market estimation so greater market is our set of indicators that we've taught you so far
+of three of them that allow me to know if the market is bullish or bearish okay and at the start
+of the day you don't have this information until it pops up when the market opens but you can take a
+guess as to likely what it's going to be remember only one of them needs to be bullish for me to kind
+to be looking for bull plays to take and in the example of the date of this video dd ratio is 0.55
+now that is bullish but that's kind of low we're in a period of selling off right now and it's kind
+of on the fringe of maybe selling off so uh in this example i'm going to show you what we are in and
+then tell you hypothetically how i would do this number two are we above or below monthly hedge
+pressure in the long haul and currently we closed above monthly hedge pressure but we're close
+um s&p well that's nasdaq sorry you use the s&p for your greater market remember nasdaq is not the
+market s&p greater than mhp okay so greater than half uh so this is a bull side bull side and then
+monthly maps right um we're gonna look at it and see while we did sell off today how far did we fall
+and about let me guess where we're going to be tomorrow how can i make a guess tomorrow with
+what i have today well we know that these things don't really move a lot dd ratio has moved a lot
+today because we were selling you know we went from 75 to like 55 so we're right on the edge
+monthly maps when we did sell off today we didn't sell off hard enough to kick us into bear territory
+just yet but take note there's some bull liquidation coming this week so while monthly maps is
+okay it's still kind of like questionable um maybe bearish next week right so when i look at this
+we only need one of these for me to be a bull and well at minimum monthly maps is probably going to
+still save me for tomorrow so tomorrow i'm going to wake up and still be okay i'm going to look for
+bull setups even if it falls i'm still going to look for my my bounce trades and get them
+now with everything being so close though to the edge i'm not as strongly bullish as i would be
+if say dd was 80 or 90 today like this ratio doesn't really change that much day every day
+in a bull market in a bear market it will be transitional 30 to 50 bouncing all over the place
+sometimes lower um so tomorrow because if this was 80 i would wake up and say well it's 80 and we sold
+off and i'm bullish tomorrow i'm fine so i already wake up with the bull mindset then once i get my
+liquidity map pops up sometimes there's going to be red and sometimes there's going to be green
+if i choose bull then all i'm focusing on are the green setups i know that there could be
+a red setup if we break mhp for an example but we were above it today and pretend that's pre-market now
+and i can make the judgment call if we're above it today we're going to be above it tomorrow even
+though we're close um we didn't break through it so we're still okay so therefore if like bld pops
+up on the liquidity map and i've already chosen bullish pre-market then i'm already going to just
+quickly focus on this that's how i get my trade plan in three seconds i'm not like okay i'm going
+to long at the open and long here but if i lose mhp i'm going to short there and then maybe grab this
+one i'm not thinking about all the setups this guess allows me to pick something very quickly
+inside of here does this make sense while i will have a contingency in case mhp breaks but i'm not
+initially planning for it the difference between thinking of this and thinking of this could be
+three seconds versus 10 seconds right so i want to get as quick as i can off of the trade that
+matters which is usually this opening move right here okay and i want to take my guess off of what
+month uh what the monthly or say the greater market is to kind of know what i prepare for now in a
+bull market i'm not actively preparing for this i'm not saying well if we break i could say like
+i can buy here as let's let me just give you an example let's let's do a bull long up or let's sorry
+let's do a bull long down uh let me let me find one in the scanner so when you get to the scanner class
+you learn how to do this but let's search for a liquidity map um one with the bl bld okay let's just
+pick up a stock cbs yeah i'm sorry not bld i was looking for a bld but above mhp okay so let me set
+walmart criteria um greater than mhp let's find those upper legs okay walmart cool let me make this
+one chart here make it easy um walmart okay excellent so an example with walmart just pulled
+a random one up at the start of the day let's just pretend that this is s&p forget that this is
+walmart pretend this is s&p and greater market i chose bullish and we open here great we open right
+here i'm i'm not thinking okay wait which one of these do i want to take you know yada yada i just
+know greater bull market we gapped up above mhp i'm going to immediately focus on just this part
+and do my calculations quick cool um let's pretend that this is a 60 point drop in nasdaq and i've got
+a trade to long from open to resistance and open orange back to open so i got a trade from in case
+it goes looks like it did and then if in case it dips i can add back to it and trade to there i've got
+this setup and this setup i'm not also wasting my time thinking of this and thinking of this because
+i have enough time to think about this when we get there so i'm not clotting my judgment super quick
+with every contingency or every red contingency like in case the 10 chance or whatever we break
+whatever the odds would be on that i'm not thinking about it actively so i can do some quick math
+this is 60 points i might say you know what nasdaq let me trade it smaller because it's greater than 40
+i'm going to trade small i'm going to add to it and then set my stop here's my total risk here's
+my reward my first trade goes to there my second trade goes to there close out the second entry let
+the last ride boom i'm done and immediately i'm doing that when the market opens my first thought is
+where are my bounce points here to there plus stop how much am i down
+and then here to there to there how much am i up and i've already when i do that that video where i'm
+like oh dude easy easy easy oh my god simple right i've done all of that including the math
+love it okay all right i already know how much i'm gonna buy i'm slightly positive i give it now
+it's not like every minute i'm like calculating should i do two today or three today or five today
+and how much is that i'm kind of rehearsed my opening position is usually the same the small
+setup which is usually like two contracts i already know how to multiply two by 42 by 60 how much it's
+going to be every 40 on a contract is eight so two times 40 is 1600 two on 60 is 12 is 2400 right so i
+already know how much i'm down per contract because i'm going to buy two and then at here eight more
+two is small five is medium this with positive res will be large this makes sense right so i already
+know how much one contract loses in 40 points and how much three lose in 40 points okay when nasdaq
+moves 40 how much is that lost per contract testing you in chat type it one at one e-mini nasdaq loses
+how much dollar amount 800 so 800 for every 40 so you're gonna round right if it's 53 points lower
+round to 60 if it's 32 points lower round to 40 you know what i'm saying you're not trying to get it
+exact always round up to give yourself a little bit more fat make it a nice even 40 so that you can
+do that mental math very quick to just decide the most important part of greater market it's not where
+do i trade it's should i even trade and that decision before you push the button you have a
+couple of things that you're going to need to do in your trade plan and the first thing is initially
+decide do i even make the trade if not then you can just sit out and avoid thinking any further
+then you your analysis will let you make the trade plan and then when you're done with all of it then
+you double check everything should i still make that trade when i get there as conditions change
+between when i started and then when i finished doing my analysis it's like looking to the left
+looking to the right and then looking to the left again before you close cross the road you want to
+make sure you initially check and then examine everything and then recheck the closest initial
+threat which is your left and then go your typical process should i trade oh no we open below dd band
+i'm going to sit out cool don't even try to justify trades you're going to force yourself to do
+something when you shouldn't okay well no we open we're safe we're good okay i'm going to make my
+plan make my plan make my plan and then okay now i'm about to push the button oh conditions have
+changed okay wait let me see that speed allows you to catch most of the trades especially in a bull
+market and a bull market most of the time your trade is going to be longing at the open and then
+taking some drawdown and then longing heavy at your second pivot strong bull markets this is the play
+most days so about half the time longing at the open with positive resilience is just going to go
+straight up and it's usually going to go immediately up right and then most of the time you guys are
+jumping in to chase it and then usually taking the drawdown usually me as soon as i get this i'm
+usually firing off along as much as i can but enough to starve off this dip that way in bull markets i don't
+miss out on most of the bull plays and i also know two contracts plus uh three more contracts
+plus a stop how much i'm going to lose in this example if it was 60 points on nasdaq from here to here
+uh then i would lose um 1200 which is every 40 is eight so 60 is 12 per contract so that's 24 for
+those two right plus 1600 for the stop that's 4000 plus another 24 for these three at 40 and that's
+6400 bucks if i were to trade that much total on the 60 point dip and i need to make sure that there is
+at least 6400 bucks worth of profit if i move to there and close out and move up and in this
+particular case um there would be if i get five contracts here i only need to go up um so to get
+to 6400 for example if i go up five contracts times 40 is uh it's 800 times 40 times 4 000 bucks
+just to go if i go up if i buy two here i only need to go up a i already lost count on the math
+what oh i said two and three my bad not two and five two and three that's where my math is off so
+two down 60
+maybe too much so i might adjust my position lower that's why i was kind of confused because like
+why am i doing two if it's 60 okay um an example if the market opens up and it's 60 points lower in
+my normal say that my normal was two my medium was three i was like that's way too much risk
+uh sorry normal is two medium is five normal is 10 in this example because it can fall 60 points if
+i'm using that as an example of 60 points then i wouldn't do my normal two because it's going to
+fall more than more than my normal stop so i might rearrange that to do one on that 60 point loss
+which gives me 1200 bucks on that one then when we get to here i might throw in the four more to get
+five and um these four on the 40 point stop is three 3200 that's more like it i was like now the
+math adds up 3200 so then i could say okay now i'm down 44 if i buy this and buy this and they both stop
+if i am down um 1200 and i add four more and i have five right here i'm just down 1200
+to make up 1200 with five um you're gonna have um let's see i'm gonna do that really quick um five
+contracts every point is a hundred dollars so i just need to move up 12 points so with nasdaq every
+point is 20 bucks so every you can also do the math in 20s per point so an example is if i have five
+contracts you need to make 1200 bucks um every point is a hundred dollars because it's 20 times
+five with the five total to 12 points that's it so i can fall 60 on this first one add here and i can
+just make it back a certain distance away or roughly a fifth of the way when you're doing that that's the
+easier math than doing the exact dollar amount is because when you have your first entry and your
+second entry the trick is is that if say i have one and i have four more for a total of five where's
+my cost basis this is where your break-even line is so the distance your cost basis off of your second
+pivot is always equal to the fraction of your first trade divided by your total so one divided by five
+is one-fifth of the way back up if i buy one and buy four more and it's one divided by one plus four
+means a cost basis is a fifth of the way up that's another easy way to do it if you don't want to
+think of the dollars you just think of where i break human does this make sense
+we're talking about this all the time you're going to have to get used to doing math very quick on
+planning your amount of loss and make sure that your total loss at least is not is not going to
+kill you now once you trade systematically and you have a system and an amount you normally trade with
+you pretty much know about what it's going to be and can make those micro adjustments fairly quickly
+if i'm if you're like normally i'm down four to five thousand if i'm wrong with my normal position
+and now it's moving twice the distance well let me do half of the position to go down the same five
+thousand means the same one i might be down 10 too much adjust lower and the more you do the same
+routine every day with the same position sizes the math becomes secondary you start to think in the
+fractions where your break-even is you start to think of how much my total stop is and then where i can
+break even and make it all back that is all done by me within three seconds most of it like i know
+about how much i'm going to lose and i know about where i'm going to execute and then initially what
+i do is i jump in on the trade on that first one and then while i'm waiting for that one to take off
+then i'm fine-tuning my calc and then getting the real numbers locked down you know what i mean
+i got to make a quick decision just in case it takes off but it's small my first thought is my
+first century where can it stop and then if it starts falling i got plenty of time to figure out
+what i'm going to do next but at least get in on something so within the three seconds i'm ready to
+take my first trade on a bull setup usually right out the door and i'm already rehearsed on how much
+it's going to be because i know it's about the same amount every time so i don't have to think too
+much the routine and discipline allow you to do execute the same way every time so your bull markets are
+going to be like that um now in this example pretend that this was s&p this walmart example
+um say that i were so long out the door and looks like it went up and look like it fell
+and then as it's moving i'm not just like yeah let me take my profit i'm like okay now i have some time
+what happens if it falls and then what happens if i stop and then how much am i going to lose and how
+much i'm going to enter in there if i want to take both the arms and you can you can do that after
+you've already got in on the trade just in case you get in it moves up looks like walmart got in
+and went up a little bit then decided to tank like everything else did today but ultimately
+it stopped out but then it reclaimed mhp which would be you know the second trade you would take
+on the reclaim so you can think of all these contingencies as they're happening as soon as i get
+in i'm thinking okay now that i'm in i already know that that's going to take a stop here and i'll
+probably add a certain amount there but i'll think about that after i'm in okay boom i'm in okay
+great it takes off great i'm green i'm green i'm green oh no i'm red okay you know what let me
+think of this okay so i got so much there i'm going to add some more there i'm going to stop there
+and that total loss is now this am i okay with that check okay as we're falling as we're falling
+as we're falling double check the parameters oh i don't like what resilience is now that we got there
+okay now that we got there my initial plan of buying two and then buying three more is now going
+to be buying two and then maybe holding on to it
+bouncing around bouncing around boom it falls off close to stop nothing happens i'm sitting right
+here i'm sitting right here i'm sitting right here i'm still on the two i decided i didn't want to add
+to it because something scared me i'm just simulating maybe i might add only two into into it
+instead of instead of uh three or whatever now we're sitting here and all of a sudden resilience
+goes positive oh nice nice okay you know what i am near my stop okay let me add to it here then great
+before i choose to add to it i'm going to know where my cost basis will be at that point
+two then i want to decide to add three more then my cost basis is two fifths of the way between here
+40 percent up of that distance for the break even and then when we get to there and then i close out
+the three now my cost basis is below because i closed out more than my first entry therefore
+that same size is now below the target perfect i've done that that naturally works itself out
+most of the time if your second entry is bigger than your first if you buy one and then two more
+and on the move up trim out the two or buy two and then three more and on the way up close out the
+three anytime you close out the bigger position like if you buy and your second entry is here and
+then you close out so that that all you're doing is taking that same amount and then moving that cost
+basis lower and if as long as you enter your second entry below the pivot and it's larger than the
+first and then you close out that amount every single time your second uh your you will have the
+initial amounts below your second pivot which is typically your stronger pivot so with that trick
+i do that all the time now it does require adding wall red which conventional trading is like don't add
+to a loser but a loser is not defined by you being red a loser is defined by having confirmation
+or invalidation in your trade what is invalidation well if something pretend this is 90 10 for this
+example if something holds 90 of the time and has now failed you've invalidated your bull structure
+now it's not bullish anymore so anything inside of here is a potential bounce place with pivots
+along the way each pivot is a potential move to the upside you just don't know which one because
+market is random but at least you know if you break through this then you're probably not going
+to bag hold anymore why well if we talk about the hierarchy earlier you're certainly not going to
+long at blue even though it looks like it bounced there probability is still lower if you break
+through orange right break through a strong pivot you're not going to chase buying here you see i'll
+just plow right through it right um so with that being said you know your hierarchy you know what
+you're going to do everybody on the same page here
+okay the idea is to know exactly what you're going to do as far as your next step or next two steps
+and remember invalidation is where the low probability thing happens and then you've
+invalidated the market breaking structure invalidation once you lose mhp you're irrational
+once a catalyst happens you're rational once you lose dd band you're rational invalidations
+you're on both side bear zone top you lose the liquidity pocket fall down there invalidation
+anything else above your strong pivot same side close is considered valid anything below it's invalid
+so a proper trader most of the time will be adding to an upside down position but you're not adding
+to a loser it's just taking two trades at once or two trades at the same time but two different
+trades i'm taking the the small possibility that we move there and adding while red only as low as
+this point and stopping out of all of it i'm taking a second opportunity now in markets like the
+current kind of choppy bear end of the year market it may stop out a lot i've been stopped out a lot
+and liquidity pockets have failed me a bunch in the last three days but then you know the period from
+april until november of the same year it worked most every time you know what i'm saying so the goal is
+is every day you're going to have that plan where am i at my account now what's my position size normal
+medium small am i taking some heat in the account okay i'm going to trade smaller tomorrow we wake up
+greater market take your guess what does the greater market look like at the start of the day
+um you're going to guess pre-market you get to the you get to your trading screen half an hour to an
+hour before you're always going to be prepared take your guess and then when the market opens
+immediately make your first decision do i sit out do i make the trade and then in the minutes you
+have to wait there figure out everything else okay um what have you know what um um where's my
+second entry where's my stop if i invalidate the trade which is where i stop you stop when it's
+invalidated how much do i lose am i willing to okay am i okay to lose that check are we good okay
+when the market opens double check the conditions oh dd ratio is now 0.3 that changes everything okay
+well i did take the long here but i might not take the liquidity pocket long with a heavier position
+now the dd ratio is less than half let me trade it smaller okay adjust everything boomer golden
+basically the point is is that the minute all of this information pops up on the screen
+i have roughly like 90 percent of my plan already ready to go most of it's just the same thing i do
+every day then i spend a couple minutes fine-tuning the other 10 percent
+the trick is that you do the same thing pretty much most days you're rehearsed most of the trades
+as you see there's a play off the open whether it's long or short now to determine what you would
+do there which indicator do we have is the most important part of the open trade and the index
+products which indicator immediately where your eyes go to once you get in the trade to invalidate
+your trade resilience say you jump in immediately and resilience was a 40 and then a minute later
+it's a negative 70 then you go okay cut i invalidated i'm done so invalidation is the word we're using in
+this class anything that invalidates your trade is something that questions the integrity or the
+structure of the market breaks your high um your strong pivots your 90 percenters or when your
+confluence indicators goes the other way say initially you decide to take the short and then
+the resilience goes positive you've invalidated you can get out of the way before you took a loss as
+well perfect so as you see on the liquidity map this is resilience this is resilience um right this is
+monthly resilience this is weekly resilience each one of these you're gonna know and you're the guide
+is here but since they're color-coded your brain is gonna think we got a resilience for every single
+one of these pivots that's the best part and so you're just gonna know which one you're gonna look at
+then over here it's dd ratio that gives you the confluence so you see all over here it's
+resilience resilience resilience resilience resilience resilience resilience dd dd dd becomes
+very consistent right with the same application open here boom markets opening within minutes my
+eyes go down here oh crap all my resiliences are negative shoot okay i'm in the trade but now
+resilience is negative i'll pretend this is the s&p not walmart again and we open and the market
+popped and then dropped and now we've moved up higher you took a small long market moved higher
+within two minutes all three of your resiliences are negative at here what do you do you plan the
+long to dd band and you're gonna add to the dip there and all your resiliences are negative
+yeah just get out quick right when the market's popping up you can close out and then see what
+happens okay what happens if it just keeps going and keeps going and keeps going and yet your signal
+keeps deteriorating what do you do you missed it right yeah you wait and you guys are really
+getting it because in all honesty trading is about being prepared but also being quick while you're
+being prepared you're going to be very prepared you're never not going to be but being being quicker
+on top of that is going to help you as you as you practice it just comes naturally the more rehearsed
+you are the quickness don't try to be quick at at the at the cost of being accurate your goal is not
+to attempt to be quick your goal is to practice until you get quicker you know what i'm saying
+don't get ahead of yourself and say uh matt needs to make a decision and make a decision within seconds
+of market opening no but as you get more and more rehearsed you're going to realize quickness will
+afford you more opportunities like the long or short at the open which many of your days that's going to
+be it now another rule of thumb on that is if you want to be very confident is um resilience will
+usually flip-flop within the first minute as every stock opens it doesn't necessarily trade
+to where it needs to do within the first moment of trading typically every stock is going to move
+and then counter move within the first couple of minutes resilience usually takes about one to two
+minutes to fully stabilize and sometimes that's enough to miss the move up most of the time you will see me
+jump into the long trade if my greater market estimate is bullish and resilience is even a
+smidge above zero i will take that initial long and then in those one to two minutes check out what
+it's doing and then make my decision from there okay only in bull markets in bear markets you're going
+to be completely different mindset you're going to be extremely cautious taking that long entry if you
+wake up or start taking that opening entry if you wake up and any of your greater market signals
+sorry if all your market signals are bearish greater markets bearish don't take the opening
+trade avoid it remember we only trade with good confluence in bear markets and these are not in
+strong pivots and we're only this is not a strong pivot even though you think it's going to open and
+die out give it a moment to kind of confirm everything then take the trade example here um s&p
+open right here uh we traded lower and lower and then res went negative and all of a sudden we fell
+to there and then it hovered at half gap hovered at half gap and then somebody could have said you
+know what i think it's going to fill the gap maybe i'll take that short trade and you can do something
+like that and sell off for volatile markets try to avoid taking the long at the open you will know
+that you're in a sell-off for volatile market because of the environment you're in you know we we have
+not been rallying straight volatility has been going up in the daily chart looks like this right
+now um so all throughout here i'm not eager to long at the open you know dd ratio is right on the
+edge you will know the difference between a bull and bear market you will see the difference okay
+all right that's really it and if you have to break ties go to that summary to break some ties but
+after you've engaged in the trade you have plenty of time to go through and make a plan and adjust
+your current plan um the more you practice the faster you'll naturally be and knowing what you
+need to do and when people you know when when you come and watch me trade and i lose one or two or
+three or even four or five trades in a row you might see something like that you never see me like with
+a look in my eyes of despair or like i look like i'm lost a couple people in stream chat might say oh man
+this guy sucks or whatever but it never phases me i've been trading long enough to know part of the
+game will be to take a four or five day four or five trade losing streak in the middle of a winning
+streak or in the middle of not winning it's all part of it and once you do enough and you rehearse
+enough you just know what what's possible and it doesn't it doesn't feel any different i don't lose
+my control because i'm so prepared that's really the most important part of this lesson is that the
+more you rehearse and the more you're prepared about whatever your style is and your risk management's the
+same you know where your stop is going to be you know how to adjust your initial position based on
+all that stuff where you are where your stop is and you enter the position you already know how much
+you're going to lose that way when you get there and lose it it's not a surprise to you
+and then you don't feel a certain way if you've already assumed i'm okay with losing two thousand
+dollars today that's it and you plan your trade immediately to get in and then add to it or
+whatever and then you're down your two thousand you stop out you never feel like nervous your hands
+aren't shaking you're never freaking out uh uh what do i do oh my gosh i'm freaking out because you
+never escaped your plan so don't be so quick that you didn't plan it out but be quick enough that you
+you've planned and you're able to execute and then you're ready to now fine-tune your approach and
+watch the market watch the conditions as they change to make your further decisions
+and you will get to a point that if every trade makes sense to you uh and it's it's within reason
+and you you assume how much you're going to lose and you're okay with that amount
+then when you lose that amount you shouldn't feel any emotions towards it
+yeah in this example oh let's use this as an example uh yeah today's an example where i got
+absolutely handed right uh the market's been very it's a weird environment because
+certain stocks and the dow jones are sitting at all-time highs and nasa is selling off and this
+time of 2025 at the time of this video um we are at the peak of the market all-time highs for the most
+part um and we've had a government shutdown where it's scared hedge funds out of some of their
+positions to lock in their big gains and this this year trump initiated a bunch of tariffs and
+the market kind of crashed out for a couple months and then rallied to the best rally we've seen in a
+long time for the whole year and then with the government shutdown here just put managers in the
+dark and they started taking profits on basically big tech avgo look at this i mean it's not rallying
+anymore nvidia not these are daily charts not rallying anymore ever since the government shut down
+people started taking profit on the big tech just to lock in gains of the year and they're done
+but you can look at other stocks i always pull up like johnson and johnson right look all-time highs
+and still going up boeing right kind of in the middle um you can like you can pull up a lot of stocks
+and they're all doing different things uh banking jp morgan at all-time highs right so like not
+everything is selling off but at this time your big tech stocks video microsoft meta abgo google
+they're driving most of the nasdaq and most of the market and you can see how the tech is is
+prevented nasdaq from even approaching highs whereas the s&p is close to highs so in this environment
+you're getting just nobody buying the tech stocks as they're falling back and people sort of just like
+last minute adjusting before the end of the year because of that a lot of the bull setups have failed
+just on this general low volume and it's just it's just a uh a remnant of like things that happened
+this year not every december is going to have this this mentality sometimes decembers are very strong
+just depending on the type of market but you would know that people are locking in these like
+50 percent gain runs for the year and just locking in their profits so they can you know brag to their
+colleagues hey look how much money i made this year collect their bonus and then not touch the market
+until january 1st they can work on first quarter gains right um so you're not going to see a lot
+so today was a day where everything just sort of lost right and it's part of the game and i still took
+my attempts at this um you can see that when the market opened right here this is the this is the
+nasdaq uh we fell to bulls and bottom at that time dd ratio was greater than half uh so i decided to
+trade from here uh actually no i think i just traded i traded from here because resilience was
+negative so when it fell and bounced the negative res is like okay we're going to fall lower and so
+we fell to the pocket which i long every single time whenever the ratio is greater than half and as
+you see the pocket did bounce exactly as expected but then fell and then broke and then we fell to
+the second pocket which also bounced as expected the scalps were working great as a day trader if
+i just would scalp this and take profit and scalp this and take profit and scalp this and take profit
+i could have made money long in the whole way down remember even when markets are failing
+bull setups it still tries its hardest to bounce at each of those places as we teach you it just
+becomes random if it does hold or not now today was a day despite all confluence the market just
+priced lower and stayed lower again there's not a lot of people trading and that's just the remnant
+of that so i long take a loss stop long take a loss stop long and then you know reclaimed take the
+trade got to there and i had actually broken even on all of my losses by still attacking the market
+i didn't come in here and say oh you know what let me flip to the short side i'm wrong let me go
+the other way there are still markets don't move straight down and i exploit that fact all the time
+this leg up was enough to break even i just decided to keep going if you've had enough and you're
+emotionally tired and this happens you can always close out but i decided to keep going tried one more
+time and market fell there then i was just done and so as you see one fail two fail
+uh three fail and while it didn't necessarily like you know not work the scalp sense the plays that
+usually are there worked fairly well like there were like the runs worked inside of here just for me
+i was betting on a bigger turn up in the market just in case we got it rather than just trying to
+take the scalps and be done but of course the way you trade is is the way you trade you can do scalps
+if not but you don't have to get the direction right to find setups and this loss didn't shake
+me too scared to take this one didn't shake me too scared to take this one and even in the day
+where we just fell and sold off you can see that there's still plays inside of the pocket especially
+when you get this like bearable bearable bearable and transitional markets when you're selling off
+you will see zone clusters like this we call them clusters where you have tons of opportunities
+the problem inside of this is that anywhere in here you can find a hook where it bounces up you
+just don't know which one so what i try to do is take a stab at each one of them when it's clustered
+up like this you also can decide just to trade small the whole day let me just play the whole thing
+what if i would normally do which i didn't do but you can also choose to do it what if i we open
+bull zone and i'm gonna tell myself we're probably gonna close in bull zone we got a ton of pockets here
+normally i might trade 10 as an example in a pocket but instead why not just put one and then one
+and then two and then six and i just buy all throughout here and catch one of those pockets
+and i can say how much 560 to 320 man that's a lot well that's actually just one tenth of what i
+normally would do for 240 points which is six times the distance one tenth of the position that's
+more than enough of a cut so i can say that maybe how about i just grab something down in here here
+with mhp and bear zone lining up let me take my bigger position here and just take attempts at all
+of this you see what i'm saying this is also a strategic way to trade it's not invalidated just yet
+it's it's slightly invalidated when the first liquidity pocket is lost and so if i were to
+plan like this and then i say okay because it could be invalidated let me get ahead of that and plan for
+it instead of taking the biggest risk here what if i want to just long and build a position through
+here just in case let me make these guys small enough that can survive the whole journey and if it
+is invalidated because it breaks the liquidity pocket i've already covered for it good i'm already
+trading small and so i will say well if the second entry is in an invalidated state we lost the high
+probability setup so in an invalidated state i'm going to trade smaller and even smaller here and
+you may decide well because of that maybe 10 is too much maybe i'll just do one one one one and then
+maybe three but then because the market's random and selling off you can build a position in this entire
+time and 10 points on 40 or 10 contracts on 40 is much bigger loss than all of this together
+one one one and three down to here is not more than that loss and so because you know or it's possible
+that it can move farther you can choose to instead of trying to be accurate on where it does pivot to
+play every possibility but just smaller maybe hit it micros micros markets build a position like an
+investor cost base is averaging and then when you get to where's your strongest point on the map
+well greater market seems to be here dd ratio is good uh but monthly res is negative this might be
+the strongest contender and that's it yep um but that that makes sense right so as far as how you can
+trade each day in these cluster days you can approach it both ways try to take a stab at each
+one or keep a runner like i would keep a runner add to it it fail i'd close out hold my little runner
+add to it it fail close out hold my runner like i still add a position on the table the whole way
+doesn't shake me out and i don't do the mistake of if i take a loss i'm done with the longing i got to
+jump in on the short if you're done longing you're done trading reversing is the easiest way
+to take a bad day and make it worse
+does this make sense everyone you the more you think about your trade plan when you're active
+uh the fast or that sorry the more you practice the faster you'll be and the less you have to think
+and this is the only real kind of contingency is what happens when every pivot fails and fails and fails
+you will see that sometimes markets are random and that just happens never get lost in your feelings
+to where you've lost sight of how much risk you have on the table always always always before you
+make the trade decide overall where all my entry is going to be what's my total loss if it's going to
+be chaotic and choppy and you just want to sweep it one time for the way up cool you want to scalp it
+each direction on the way down cool but before you push that button you automatically know how much
+you're going to trade and how much it's going to lose and then you tell yourself i'm okay with that
+if you don't do that you risk being blindsided and when you're blindsided you freak out and then you
+flip out and then you lose everything you have and you can only become that can only happen to you
+once just like in life you can only die once you can't learn from your mistake of something
+it killed you you're dead right you get one shot with your account don't learn that the hard way
+if you ever get blindsided you run the risk of you being the kind of person whose hands
+freeze and you don't know what to do when i worked at the chemical plant there was a new engineer she
+just graduated she got a job and usually at the chemical plant they test you to make sure you're
+physically fit you got to run on treadmill and stuff and they measure your heart rate before you
+actually work they test your lungs make sure you can breathe correctly and stuff all this physical
+fitness test before they give you the job and she passed but one time when they were climbing their
+unit right a unit has towers in it there's a big tower like the thing was you know i don't know 150
+feet tall maybe something like that you know seven or eight platforms along the way and about
+three quarters of the way up she's supposed to get to the top she had a freak out moment
+and she just froze and she slowly reached for her radio and pushed the button she's like
+i'm freaking out guy i'm panicking i help i need some help somebody come get me
+and then so somebody went out there the the rescue team the the fire team they always or the rescue team
+they went up there they crawled up the ladder threw her over their shoulder and then climbed
+all the way back down and uh then she got fired that night because that's a liability to her and
+to other workers right if you can't do the job they let you go the point is is that she wouldn't have
+known that sometimes you just freak out and you may be the you might be the world's strongest person
+the world's most fearless person but sometimes your brain is just wired for that panic moment
+and you trigger something and your brain just locks like a deer in the headlights and you freak out
+and when you freak out you do stupid stuff in trading it happens just like that and there's no formula
+on whether you freak out or not but i found that if you always accept your fate beforehand with your money
+and whatever you're investing you're like i can lose this and i'm okay with it the freak out is minimum
+as long as you pull the plug you won't be freaked out you understand that's the major lesson in your
+preparedness and speed always know how much you're gonna lose don't sit there and think oh i can make
+this much if i'm right you don't you don't choose that the market chooses how much you're gonna make
+you choose how much you're gonna lose don't get caught in the moment where you're frozen and you're
+hemorrhaging and uh uh uh what do i do no matter how prepared you are emotions can overwhelm everything
+and you'll get stuck and when you get stuck you can lose everything and unfortunately you can't
+recover from that don't be in that state accept your fate accept your loss before you make the trade
+be like okay i'm cool with it i take that loss as a matter of fact it's a bunch of bull bear zone
+clusters i kind of want to trade it all day long i might be able to play it 10 times well let me just
+trade small then the whole day because maybe i'll just play all of it and just play up and down and
+i'll have a tenth of my normal loss i'm totally gonna be fine with that then you're never blindsided
+right that's the one thing you'll find out the hard way is if you get blindsided
+and you freeze okay so that's basically it every day try to be prepared before market
+as much as you can try to take your guess when the market opens make your best guess in a bull market
+you'll probably take a trade initially in a bear market you won't in a volatile market you won't
+in volatile markets you'll play extremities you'll let the market move and try to capture reversals in
+both directions when volatile markets chop around a lot and nice bullish trending markets you're
+basically saying i'm long into the open and where's the dip i can buy in case the first trade
+is wrong first one's small second one's bigger where do i stop you're always prepared and then
+when the market opens decide okay i prepared now the data came in double check do i still make the
+trade okay good make the trade now adjust where's my second entry is there a third entry it was my
+position too big or too small am i still okay housing influence check okay we're good and then
+now you know and then the rest of the time you're engaged in the trade then you're going there and
+examining everything around it while you're trading to make sure things still check out just
+constantly be checking don't be like normal traders and like okay what does the five minute look like
+the 10 minute look like quit looking at the same chart this is a mistake people make okay what does
+it look like on the three minute what does it look like on the five minute what does it look like on
+the 15 minute looks the same it's not giving you any extra information i know just candles
+candlestick people and candle type analysis will tell you look at the different time frames
+you're not gaining much extra insight you as an index trader you're constantly looking at things
+that are going to matter okay let me double check a bunch of the stocks while i'm sitting here
+you seem to be falling hmm multi res is negative what are the major tech stocks doing because that's
+been driving most of the market oh nvidia broke mhp okay apple broke mhp oh yeah okay this is
+probably significant you know maybe i don't feel so good about this day maybe i won't trade it
+right you're looking for bigger more valuable extra information just then just shuffling through i
+call it fidgeting fidgeting through your charts you know you're just sitting here you're doing this
+like you're like okay what does it look like here okay wait let me draw this okay hold on let me
+measure okay let me measure this and then there's a there's a line there and a line there you're just
+basically fidgeting you're staring at the same thing and trying to extract minimal amounts of
+like drops of juice from an already squeezed lemon you got everything you need with all the stuff
+printed out spend your time looking watching other stocks other markets gaining other clues oh is the
+russell selling off is that a clue like search beyond just your fidgeting on your chart
+um okay don't ever sit complacent sitting on a chart you're engaged in a trade your money's at risk
+constantly be searching for information that could invalidate your trade
+okay all right

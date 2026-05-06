@@ -1,0 +1,948 @@
+so this is a class on all things vix now as an index trader a lot of you
+will be very very surprised to know that you're missing half of the available information
+to you by not understanding the vix and how it applies to your trading and how we modify
+our trading style based on what the vix is doing and what it's telling us and other things around
+the vix the vix gives you a wealth of information and in our kind of trading as we're looking
+for liquidity counter volume things as such like i say things like that you need the vix to help
+you understand that as vix is a measure of the lack of liquidity or the volatility which is which
+is causing lack of liquidity um price movements and the absence of liquidity will create volatility
+now vix v-i-x is an index um there is a paper on it if you want to go
+read about it um the vix white paper by the cboe it is just a really math heavy document that i've
+i've read a million times to explain what the vix is everybody's heard of the vix you can type v-i-x
+into a browser and it's going to give you a number it's a number that just pops up when markets are
+selling off as you may see and then decays back down when the markets are rallying there's a lot
+more complicated than that and that observation um is is not necessarily like the most accurate
+explanation of the vix there's a lot to it and it's actually very helpful to help you modify
+how you enter size that you enter when you avoid there's a lot more to it we've covered some things
+in the vix before in the irrational class we covered vix futures we said if vix futures move up beyond a
+risk interval like the vix has moved up too far too fast in a day the market is falling apart it's an
+automatic get out of balance i mean get out of the trade because the market's going to just fall out
+of balance and be be broken so the white paper and vix is just a very you know it's quickly to show you
+what the actual equation is it's this monstrosity it's a lot of calculus a lot a lot of stuff that
+goes into options and options pricing but vix is equal to the square roots you move the square
+over here of all of this stuff don't worry about any of it this is not a math class but just think
+about algebra when you were in high school right there's a numerator in this fraction the denominator
+vix is equal to something divided by time minus another thing divided by time you see how it works
+and then it's square root dependent so this minus that square root equals vix this is vix over here
+so this and this have everything to do with the supply and demand and pricing and how far away these
+options are apart from each other relative to the price of the underlying it's all a bunch of stuff
+and this paper goes into a lot of it but i'm gonna spare you all that and basically tell you
+the vix is a measure of the supply and demand and how distributed the options are against the underlying
+price over time it's the important part over time so vix is equal to something over time minus
+something over time now time is the distance expiration so all things being equal well and
+also vix is looking at one particular index it's looking at the spx and it's looking at options that
+expire on 23 days out to 40 days out it's a really interesting range it's basically saying what is the
+volatility of the spx i'm going to measure it by options that expire 23 to 40 days out it's a 30
+day window plus or minus seven days it's just how they decided to do it such that the near-term options
+don't skew the volatility index really high and further out options you know basically are too far
+away to be important this is a good view of the month and as we talk about with monthly hedge pressure
+we mentioned to you guys that people the old school way of trading before there were zero day
+options old fund managers would buy something like a stock and then hedge it months at a time
+with monthly options before they had weekly options and s&p spy had monday wednesday friday
+week these used to only have monthly options and weekly options expired on fridays so monthly was the
+best way for a large firm to hedge a big position for a month at a time they're going to buy options on
+their another longs buy some puts and a month later roll into some new puts a month later roll into new
+puts and a month later they get the dividend because they stayed in that stock trade by
+ex-dividend date so it makes sense to analyze the volatility of old school wall street by looking
+at roughly 30-ish days out in the future and seeing what the options look like about on that
+month scale very important that that 30 is there because that's kind of what our greater market does
+looking at spy monthly hedge pressure right that's also that 30-ish day window as two of our
+the number two of our three greater market signals is that kind of 30 day ish window and how we're
+hedging against those options vix is a way to understand the volatility of the market and so what you may
+notice is that um whenever if all the options that were bought pretend that there's no 30 day window and
+it's just all the options that are there if option t is timed expiration and say we're about to expire now t is
+roughly zero time minutes or however much time uh in years time to expiration and so if it expires a
+fraction of a moment from now t should be zero so an option that i buy that expires almost now you divide
+by zero so anything divided by zero is what class infinity right so something that is very near term can
+have infinite change to the vix which is why they exclude zero day options do we all understand that
+because the vix would fly to infinity multiple times a week because if that range didn't look at
+23 to 40 days out if it looked at an option that counted today then vix would fly every single moment
+straight up to infinity when the options expire so we all understand this concept that's why you can't
+use too soon of options this is too sensitive to the price of options the sensitivity is gonna be a
+very big part of this course so vix is telling you essentially how far out this options landscape is
+which we look at from our point of view zones bull zones and bear zones so how far out are the zones and
+where the bulls and bears are and all the options are distributed over time if people were going to buy
+like pretend that price is trading right here at some price what vix tells you is that if i hold
+time constant and i went and i bought like a bunch of clits like right near the price and somebody went
+and bought a bunch of calls right near the price and another trader was there and another trader was
+there another trader or basically just straddling the price really close to it the fact is that the
+supply the demand for options is near the current trading price and pretend that time doesn't matter
+if i were to compare that behavior right to everybody buying options near the current price
+to this behavior where everybody's buying options at very random spots would one agree that if people
+are buying like the same amount of people are buying puts spread out versus nearby that this is less
+liquid than this this is more liquid than this we all do i'll agree this think of it like a thicker
+wall tens of thousands of buyers clustered here with with uh with puts the hedge tens of thousands
+of shorts here with calls the hedge all right next to each other versus everyone's spread out and
+doesn't agree to where they're going to be buying or actually sorry right selling and longing do we all
+agree that when buyers and sellers are more spread out the market is less liquid
+do i understand the concept so without going too heavy into the vix equation it's basically telling
+you that you're looking at a two-fold piece of information the top part you can think of is like
+the clustering of that that demand around the current price and then the t factor of that is
+if price for here and everybody's clustered at this spot but these option expire 40 days out
+versus everybody's clustered at this spot and clustered at this spot the same exact price
+distribution but those are 23 days out that now this adds to the volatility and this adds to the
+volatility so the nearer the term and the more spread out that demand is the higher vix goes up
+so it basically tells you something very important about volatility that volatility is the inverse of
+liquidity because if the options are spread out then buyers disagree on the price further or if
+options are spread out in time then buyers are also less agreeant on when they should execute
+the liquidity has to do with one thing liquidity and the most basic explanation definition of this
+is equal to uh into the frequency of transactions that's really it um how often something trades and so
+as you would agree that the further out options are away from each other and price were to fall
+then it's less frequent a transaction because they're more sporadic as opposed to them being
+clustered together all the transactions took place here here they were spread out so price difference
+in demand versus time difference in demand both change the frequency an example to understand this
+with a real real life experiment is that if somebody were to say hey man there's a house that costs a
+million bucks here and here and then here but this one is some kind of you know it burnt down and
+it's worth like you know uh a hundred thousand dollars and you can buy this and fix it up for
+200 and then sell it for the million because these are all each a million and profit very quickly and
+you can go look at the comps and go look at this and say aha i get a huge return on my investment
+because not only am i going to find an agreeable buyer and a profit but i'm also going to probably flip
+it pretty quick because comps say that this particular house sells quickly so if i were to buy this
+in this area it's probably liquid because not only is the price agreeable but for me as an investor
+when i can flip my money is also part of the liquidity the other example is your buddy says you know
+what there's a house in the middle of the desert in the middle of nowhere and there's a house that's
+worth 1 million and about 300 miles away there's a house that's worth 100,000 there's nothing nearby
+for 20 miles you can get 10x your money if you buy that house and sell it and you may say okay i have
+limited information about the demand the distance between these houses is too far for that to
+correlate to this and the time it might take for me to flip that house is very high i don't think i
+want to wait five to ten years to get a buyer so the lack of available people to buy or a disagreement
+on the because because of how long it will take somebody to want that the demand is low or how far
+away the price is from its thing its reference like options are valued to the underlying this
+house is valued to the underlying the comps around it the option is the comps around it is the price
+itself you think of it the same way that's how you're valuing that option price is the thing that
+the option represents so how you're valuing this house the price of that but see the distance is too
+far away so it's really hard to gauge is that the correct price for that property so in the example
+of the house in the desert you have many factors affecting it mostly nobody wants to live in the
+desert so you're gonna have a frequency of buyers lining up to buy that thing and to increase the
+frequency of buyers you have to lower the price until they step in because you lower price to find
+buyers so we're basically giving examples of what liquidity is the lack of frequency of transactions
+and the two factors that lead into that are the distance between where people want to buy and what
+the selling price is and have the availability of buyers if people want to buy something for a
+thousand bucks but everybody doesn't have the money to spend it's also illiquid so volatility is
+basically telling you the absence of liquidity so volatility is proportional
+to the liquidity of the market which is basically easy to say is that the more liquid the market is the
+less volatile it can be volatility is by we describe it as the amount at which when price is the same
+that the market moves up and down to find the buyers and the sellers remember you lower price to find
+buyers raise price to find sellers now again in the example of time and price are both important
+if i fix time which is the space sorry the space between when a buyer and seller enter the market
+then increasing volatility is where the buyers and sellers are farther apart i.e the way we experience
+it as traders is a wider um oops sorry a wider um price difference and so if price were fixed the same
+and the buyers and sellers are separated by like one one tick on the bid and ask then increased volatility
+would mean the time at which they trade increases as well instead of a trade once every minute it's
+like once every minute then every three minutes and every five minutes so so volatility is represented
+by the distance where buyers and sellers are actually buying and when they are buying from each other
+when you hold price flat this is holding time flat and thought on the price this is holding price flat
+and throttling the time it's a differential equation with price and time as i showed you
+volatility is equal to something over time now we all understand that volatility depends on
+something relative to price and something relative to time can we move on price and time very important
+if you make your price too high nobody's going to want to buy it the people run out of money they
+can't buy it even if they want to all of these things affect volatility can i move on we all we all
+understand this concept so volatility arises it's not it arises from the lack of ability to provide
+liquidity and the market creates volatility from and this example imagine that you have a bunch of
+like uh you know small pieces of wood and you you stack them up near each other and then it's really
+strong and you can jump on that wood with the force of your weight and it doesn't break but if the wood
+was spread out kind of like this and you jumped on these pieces of wood with the same weight you could
+break through this and then fall and maybe crack that one because the further route it is the less it can
+buffer that same amount of pressure on it pressure is a force over an area same amount of area you just
+have more of it uh more more stuff to hold that uh force and then it's likely right so with the same
+amount of selling pressure to the market if the liquidity is not there the probability goes up that
+the selling pressure overwhelms the buyers because they're not all clustered like an army in the same
+spot the squads are spread out so if the same amount of selling pressure were to hit a big wave of
+buyers then the liquidity could prevent the market from falling see a falling market trigger stops which
+can fall further and trigger stops and ultimately becomes a domino at some point the volatility is
+high enough that a certain amount of selling pressure can trigger a domino effect and that's a
+variable that changes all day every day and so we fire the market as as traders is that when markets
+sell off we're always asking ourselves one of one of two questions number one when it gets to my pivot
+is there a domino effect that's going to cause it to keep going or are we expecting that counter volume
+to come up and then fight off that selling now remember any sudden move in the market is lack of
+buyers because they're having a lower price to find it against the sellers lots of sellers not a lot of
+buyers to lower the price to find it the lack of one side of the equation if buyers and sellers are
+equal all other things being equal market is liquid if there's one side of the coin lots of sellers and no
+buyers the market is illiquid because the market is illiquid if the sellers overwhelm the buyers that are
+there in this case it is you will start to see that VIX equation go up so the reason why VIX we always say
+VIX or volatility is the inverse of liquidity is because that's actually true so when we say
+illiquidity pockets when we say i.e volatility pockets it's the same thing now markets you can't
+ever tell if markets are going to be volatile you don't know who's going to step in and buy at any
+particular price but volatility will let you know there's a lack of liquidity and the way that the
+market is designed in this current state if you guys remember from the commitment of traders class
+you guys remember when we talked about the asset managers and the hedge funds that the asset managers
+were roughly mostly positive in their trade the net sum and the and the hedge funds were mostly net
+negative if you remember from that class i think right now like the net asset manager position is
+over a million contracts and um the net short is like minus 300 000 so the hedge funds are never
+uh more short than the longs are long the market makers take up the other side of that for the most part
+or 700k whatever that is so minus the market makers the speculative longs are always greater than the
+absolute value of speculative shorts almost always so because there's more people long the market people
+that are long the market will buy puts to hedge against the people that are short the market that
+will buy calls to hedge because there's more longs means there's more puts and because there's almost
+always more puts than calls in the market especially when markets are bullish that put the call ratio is
+always high now there's a lot of people who mistakenly will say the market fell off because
+the put the call ratio is high and that is the worst piece of advice you'll ever hear as a matter of fact
+from our commitment of traders class don't you guys remember we showed you that it doesn't matter that
+people are shorting the market markets don't sell off just because people are shorting
+if people are shorting against willing buyers will that market crash this is a question when you
+got all the answer if they're just because people are shorting the market doesn't mean it's going to
+crash and why is that if there's willing buyers i'm answering the question for you but try to answer
+it in the way that i'm saying what does that mean let me take a guess if you remember from this class
+this blue line is almost always below zero and markets go up despite people being very short
+on the hedge fund side it's because liquid markets don't crash as ed has said because a seller and
+buyer find each other it doesn't matter what side of the coin they're on once the market's liquid they
+don't crash the market so because the put the call ratio is greater than zero you expect that because
+the market is more bullish than bearish what i was just explaining was a refresher from the last class
+and this is the handout that the green line that you see here is more above zero than the blue line
+is below zero if this is the zero line the blue is barely below and the green's way above it of course
+the put the call ratio hedging the market will likely be greater than zero but because there's that
+asymmetry in the puts and calls and one other thing to take note of is that vix looks at all options
+including puts and calls but what you see is that there is a natural imbalance between the supply and
+demand of one side of the equation now because of that particular thing and because markets go up
+let me explain one thing to you um back to the vix um here as you'll see is that vix squared is equal
+to all of this if you remember your algebra is that if this number is negative or this number is positive
+it doesn't matter which way the demand flies negative two squared is the same as two squared
+they both equal four okay so no matter what this turns out positive negative up or down it doesn't
+matter which direction the market's going or the price is going vix is always going to be a positive
+number so therefore this is telling you there's no polarity to vix being that it doesn't matter which
+way um which way the options are skewed in one way or the other vix will always go up volatility goes
+up whether that volatility exists when markets are selling or that volatility exists if markets are
+going up if volatility exists vix will go up despite direction of market as you see it's positive no
+matter what so when you really read this you'll understand why that math is this way but i'll just
+kind of tell you why do you see the vix go up when markets go down right we always see that
+and it's literally because the market is almost always long it's when the market starts changing
+its direction on a fly or on an event it catches a lot there's some people that are maybe hedged and
+buying puts along the way but you're going to catch more people off guard on the long movement down
+because there's just more people there in that trade the probability that if if 30 percent of people
+get caught off guard in both the long trade or a short trade 30 percent of a trade that's 10 times
+bigger it's going to have 10 times more people caught off guard which means the domino effect
+of a long market crashing out is really crazy right whereas the domino effect from a short market
+rallying up may not be like that it may be less crazy so the surprise of a long market selling is
+bigger than the surprise of a short market rallying because there's not as much short people to squeeze
+out is there are long people to squeeze out so because the long side of the market being upset
+is the most common thing to create volatility i.e the blind monkey strategy wins because 70 percent of
+days or months are green and in rocket scooters ideal conditions 69 percent of days are green and are ideal
+so for the most part in the rest of the market 50 percent of days are green at all times there is more
+green than red because there's almost more buyers and sellers at all times so therefore there's almost
+more put insurance than call insurance at most times which means upsetting the put side is what
+squeezes the most amount of people and because people rush in to buy last minute insurance near term
+during a market crash you got caught off guard people are like holy crap i need to buy insurance now well
+these zero day options are very cheap let me buy them because i don't have to pay a lot the further
+out the option is more i have to pay so if i'm going to buy options expire two friday out to ward off a
+single crash today i'll pay a whole lot more than just buying something expire today but the problem
+is if vix equals something that expires today well not necessarily today because remember vix isn't
+accounting for today's options but in this example pretend that it did if people are buying options
+23 days out versus 40 days out these last minute hedges then because people are rushing in to buy
+the cheaper options to hedge here just for a last minute hedge then it makes this denominator
+much less and vix flies off the handle usually because people are jumping in and sporadically
+hedging their own risk or ever they're about to blow up with very near-term options very spread out price
+with very near-term options make the numerator go up and the denominator go down which is why in a
+market crash vix goes up is this algebra we're all at least familiar with algebra right if the numerator
+goes up and the denominator goes down then you got a two-fold effect on the vix right if i double this
+and half this oh my god it's an eight-fold difference right are we all on the same page so the idea that
+markets the upset of the market since the majority of the market's green then when the market is upset
+is when people flock in to hedge really quickly the market's very rarely just red all the time and
+then the upset's a squeeze see sometimes so when this happens vix goes through the roof which is why
+in a market crash volatility goes up because people are clamoring into near-term options that are cheaper
+and then hedging wherever they can because they got caught off guard and the very rare so basically when
+markets crash vix usually goes up but because vix goes up you can't assume market crashes it's that
+way around as a matter of fact during covid i will tell you when covid crashed in that march of 2020
+and we were down here the market moved this way for a week and vix kind of went up for a week but
+slowly vix didn't fly through the roof when we squeeze all those shorts but the upset to the shorting
+pressure once everybody was convinced it was time to short and sell the upset to squeeze those also
+made the vix go up and the market went up so it gives you a key takeaway what vix will tell you
+is that in a bull market which is almost all days vix goes up when market goes down in a market where the
+shorts are overwhelming the longs like in an extreme event like a market crash or a catalyst
+vix is likely going up when the market's crashing and then when it's consolidating very wide
+vix is coming down and then it's doing this and when the market does this vix kind of does this
+it's weird in a crash situation in this environment vix is just low low low and then it pops straight up
+this environment vix is going up up up up up up up and then down and then it pops up again so vix pops
+anytime the market gets a sudden unanticipated move to the other side when you're basically squeezing
+traders to get caught off guard they got to rush and throw insurance on that position really quick
+and that causes the volatility because you're squeezing out squeezing out an overwhelming number
+of people now how is this useful as a trader there are a couple of things that are really neat to
+understand and i have some some diagrams i'm going to show you um is that in general vix kind of helps
+you understand the shape at which the market moves um let me put this over here before we talk about
+if vix is going up like an example vix is going up throughout the day then the s&p if the average
+price between buyer and seller was held flat so let me draw a dash line here and the buyers were here
+and the sellers are here then if vix is going up over time then the buyers and sellers if we hold time
+between them constant just goes up it means that the market's gonna have bigger v's that's it and if we
+we assume that the volatility goes up most of the time usually when markets go down then the way
+markets fall means that the v's get bigger as the market falls we always know that i tell you the
+reason i don't short a lot is not just the market's mostly bullish but also the mechanics of shorting
+is much harder see if vix were to likely go down when the market goes up as we observe that most of
+the time let me find some blank space on here um so if the market is going down and it gets
+more volatile as it falls because you're upsetting the majority of longs which are long most of the
+time then markets that are moving up like short squeezes when you're upsetting the shorts tend to
+become less volatile i'm sorry uh long markets that are not short squeezes tend to become less
+volatile as markets go up because you're just agreeing with everybody everybody wants to be
+bullish and the market is favorably going in that direction the v's get smaller so long markets tend
+to have less drawdown with your wrong if you decide to be the blind monkey and long at the top like kind
+of a like a dummy you actually are punished that much the more you long into the high you're you're kind
+of punished less for making like you know um really inefficient entries you're entering at the high and
+the drawdown is very little but in a short market if you short at the low the drawdown gets worse as
+the day goes by if you short the low here you get squeezed bigger and bigger as the market falls so
+that's why when we when we treat shorting most of all of our short setups are always small trades and
+our long setups are the ones that in rocket scooter have the mediums to longs if you're to pull up the
+liquidity map that's a lot of the times why you do see that if i were to make this really big as you
+see most of the conditions of these long trades 1a is small medium normal full zone bottom normal
+um number one bear zone top normal you know we're very careful on on that particular thing
+but if markets like crash on an mhp break it's small for a reason because you shouldn't be going in
+with the heavy position because the drawdown can be massive even when you're right on the trade
+those v's are what kill you and most of our strong our weak setups sorry most of our short setups on
+breaks are considered um small trades if anything at all but in just in general that's kind of why that
+is volatility creates some problems in the market now we have ways to use vix to kind of get us ahead
+of uh some other things let me pull up some of these handouts for y'all we have a way to understand
+the impact of those v's in the market so as you see right as the market's just nice and strong and
+bullish today the v-ing and the consolidation even though it's going up and down you see it's
+kind of not getting worse right but if we go back to like looking at a sell-off market just as an example
+um we had some selling on friday let's just take a look at that and we had some selling a couple weeks
+ago in a market today when we can use vix futures so vix is the vix instrument lucky for us we have
+vix futures and lucky for us we have an instrument called uvxy which is an etf for the fix aha we have
+futures which means risk intervals and other things and aha we have an etf which means liquidity maps
+how about that why wait for the vix to tell you what's going on why not use people's own positioning in
+the vix to tell you what's going to happen how they're betting because believe it or not traders
+aren't usually caught off guard that much usually there's complex hedging strategies that utilize
+vix instruments to also hedge therefore we can use things like monthly maps and liquidity maps
+on these vix instruments to read wall street's belief in how volatility is changing over time
+therefore now we can kind of hack the vix a little bit which is really nice so vix has futures and as you
+see today vix futures are pricing and where you think the vix is going to be when the vix um uh
+options or vix contract expires what is vix going to be on that date as you see today volatility
+futures have just traded down lower and the market is just kind of like gone up higher now on this tick
+chart as you see tick charts make it very easy to see the spreading of those v's because it zooms into
+the candles there's an example like a tick chart is time independent i can see where those buyers and
+cylinders are spread out and as you see these v's are roughly the same size on the way up they're
+not really that much bigger not getting crazy um downside moves are not getting much bigger it's
+fairly linear right slightly bigger to the downside and i mean slightly right slightly and it's just
+slightly bigger it's like a tiny little megaphone but as you see throughout the morning uh actually
+that's actually zoomed in too far let me let me zoom out because that's actually going to be a small
+leg up in the vix but let me give you let's just look at the the time side of things i can actually
+just actually let's see i can see 33 i'll pull it um let's look at like the first part of the morning
+okay the first couple hours of trading uh you'll see come on you'll see that these v's aren't
+necessarily getting much bigger do we all see that like if i can look at when the market rises and falls
+along the path it's traveling on these v's are roughly the same size in both directions right
+do you see it's not really changing much the price difference is like up and down four points in the
+s&p give or take and as you see vix is not reflecting that if this were to get wider you would start to
+see the vix rallying up and let me show you an example of that i think friday will be a great example
+of that if we go to it and the vix was trading up because friday was a really gross day where things
+were kind of trading down um as you see on friday vix futures were moving their way higher and it's
+showing an increase in the volatility and it's very easy to see that you have these tiny little v's right
+here that are starting to get slightly bigger as we fall and then there's there's like small ones and
+then it kind of gets bigger again and really big right here relative to here it seemed like a lot but
+that's four points right there and uh this is almost 10 points right here we can see that it's like
+getting choppier the space between buyers and sellers are much more uh more much more prominent
+therefore you're going to have less ability to fight off selling pressure when markets are um
+vix is going up so the market's going to be choppier so if you know that the volatility is going to go up
+your brain should say choppier market if vix is going down your brain should say oh you know what
+i'm likely to hit my pivot and that volume is going to come up after it as we expect and my pivot is on
+s&p or nasdaq is likely to hold pretty strong why well if vix is going down it's telling you there's
+buyers nearby right now that want to trade after all vix futures are pricing in vix a month out so
+it's giving you the future of vix and people are going to trade based on the expectation if somebody
+is knowing they're going to buy there then they can actually go hedge that in the vix i know i'm providing
+liquidity therefore i'm going to long here and maybe to hedge my long long the vix if there's no
+other buyers with me and the market collapses where i'm entering a big position well vix will likely go
+up so let me hedge my provision of liquidity by buying some vix right people and so because they do
+that the market is very symmetrical so vix will tell you the probability at which you're going to be
+overshooting your pivots if that volume comes and it goes away vix is nice and stable then thank you
+you have the liquidity you want the temporary illiquidity that sold the market found the liquidity on the
+other side and as soon as those buyers neutralize the seller and you end up on this side when the volume
+declines then you're likely to hold the market and not crash out why would you not crash out when the
+liquidity mark liquidity comes to the market and the pivot survives because liquid markets don't crash
+that's the hint liquid markets don't crash so if the volatility is going up and this is a case that
+the vix is going down in the case that the vix is going up and what that means is the market is
+threatening illiquidity when you fall to your pivot you might not get as much volume in the two cases
+and therefore the selling pressure which will be 100 random you can't tell who's getting squeezed
+and who's selling and why market is random we got to kind of just understand that then the probability
+that there's liquidity there to fight off that selling is much less and what you'll see a lot of
+times your pivots will overshoot before they survive with less volume or you'll start to see a bunch of
+tiny little volume spikes before the market settles out instead of one big distribution because there's
+not a lot of buyers here and there's just sellers and buyers and sellers and buyers spread out as we
+talked about earlier with the higher vix buyers are going to be spread out from each other which
+means bigger v's which means bigger v's at your pivot so in a state that you can assume that the
+volatility is going to be higher you're going to treat your pivots very differently
+just easiest way to say it low vix or proving that you're going to have a lower vix hit your pivot
+long and hard at your pivot if you don't know if the volatility is going to be higher or you think
+it's going to be higher then you long near around and below your pivot by splitting your normal position
+let's say that it's three i want a long three there and low vix i'll hit the pivot i'll throw three at
+it and go if vix is high or i can prove it's going up like a bullish liquidity map then i will split my
+three one above one below and one very below all within the range of my stop to assume that i'm going
+to get some choppiness and i'm trying to build my position as close to my pivot if not below as
+possible so do we all understand that vix being higher means you might not get that big burst of
+volume exactly at that strike or that level to fight it off so take your bet and spread it out
+and assume pivots will overshoot now we have a way to forecast when pivots are going to overshoot
+there's a there's an environment and we call it triple b it's one of our best tools that we have
+to tell you two ways to trade as a matter of fact when it comes to the greater market as we talked about
+before the greater market is our indicator that we use series of indicators to guess are we bullish or
+bearish the market it's very easy to use the greater market in the greater market we have
+we talked about the dd ratio which is the stocks and bull zones now right that's the now that's the
+stocks balanced and out number two we have spy greater than less than mhp right mhp we'll talk
+about the bull case greater than mhp and it's bullish and again that mirrors that 30-day-ish window
+that's looking at the next monthly expiration so that's roughly 30 days or less out for for spy
+itself and number three as we talk about monthly maps we have a class in each one of these and the
+monthly maps class is going to tell you roughly um up to 90 days out this is about three months of data
+so you didn't know because we didn't say it yet but there is a fourth part of greater market
+this is going to be bullish or bearish you're going to say i'm a bull i'm a bear that's it
+but there's a number four here and there's also a number five they have nothing to do with bull or bear
+they have everything to do with how
+the market will move
+okay
+and it shouldn't be a surprise to you that both of them have to do with the vix
+number one is our vix futures
+less than triple b this is an equation i'm about to show you it's a very simple calc
+and the other one is what is the v vix see we've all talked about the volatility right
+vix is vix futures tracks the vix and vix is the volatility the spx
+but so vix goes up because the spx goes down
+we'd even talk about the vix having its own v's as it goes up
+or vix itself becoming more volatile imagine if the vix goes up like this
+on news of a trump tweet but what if the news of the trump tweet had the vix go up like this
+down the v's of the vix can get bigger which means the volatility the sp can be exponentially bigger
+the spx volatility can become exponentially bigger what that means let's pretend that the market's
+crashing and volatility is becoming bigger linearly which means that the market is just falling in a
+straight line with lower lows kind of trading lower right like a little bit of a channel
+but when the vix is x when that when the the vix itself has additional volatility the volatility of
+the vix volatility of the vix is the v vix that's the volatility of the vix itself which means the spx has
+exponential volatility exponential widening of the market the spx usually curves lower and becomes
+much lower faster than high v vix this is high v vix okay it's not a straight line it's curving faster
+it's falling apart so the volatility of the vix shows how sensitive the vix is to movements in the s&p
+and the vix shows how sensitive is the s&p is to upsets see in a high environment we're going to talk
+about how markets react to catalysts and a very simple thing this triple b is one of the best
+equations that will show you and so all you do is every single you're going to go to the internet
+and you're going to look up vix monthly options expiration okay
+schedule you're going to go to the vix and i just pull up the first thing that pops up
+and it's going to tell you when vix monthly options expire it's usually the third wednesday of the
+month unless there is some kind of holiday okay so for example february the 14th is
+that's 2024 2025 is going to be february the 19th which is two wednesdays from now vix and spx and other
+cboe type options are the the weird ones that don't expire in the afternoons they expire in the
+mornings spx while spy expires friday afternoons for example spx the spy is the afternoon spx is the
+morning vix monthly options is the morning vix has monthly options people use them to hedge so on that
+wednesday that um let me just leave all this that wednesday morning vix expire the tuesday
+before the third wednesday or before vix options expiration is the date you need to know trust me
+in our community won't let you won't let you sleep on it when people roll from one option to the next
+i'm hedging for march now i'm going to move to april the majority of migration takes place on
+that vix expiration that wednesday morning so futures contracts we roll into the next futures
+contract you know how futures work right there's always like different months of contracts they're
+trading at the same time currently right now we are trading the february contract of vix let me show
+you where we are right now so this is february but there's a bunch of contracts that are trading
+right now i can type in april april there's a chart for april it's currently trading at 18
+i can type in h to look at march and it's currently trading at 17.4 and i can look at
+february we're trading right now which is 16.8 so 18 17.4 i think those were the numbers
+and 16.8 three different contracts three different times all the vix so vix futures is trying to price
+in what vix will be on this contract's expiration on march's expiration or february's expiration
+and as you see february march and april are all priced slightly different volatility is expected to
+be slightly higher three months from now what's that pricing in expected volatility from market
+conditions from from news effects if trump were to say you know in may i'm going to initiate 50
+tariffs in china okay you might see the may contract jump to 25 because people are pricing in that
+particular volatility at that particular time from right now all these contracts are trading right now
+so the neat thing about that migration from one contract to the next we very much care about that
+wednesday as you see at the bottom of my screen that is that wednesday so we know with futures
+wednesday starts tuesday night tuesday night at 6 p.m eastern is when wednesday starts for the rest of the
+world futures so at 6 p.m when the market opens we care about the distance between where is the february
+contract now versus where was the january contract at the previous close how much space is between those
+two contracts now they're not just it's not a gap on the vix as you know this february contract was
+also trading in the past it looks just like the january just slightly skewed up it's the same exact
+chart as i showed you the three charts earlier they look exactly the same they're just at different
+points on the axis because the vix is likely to move up and down at a relative rate but some of them
+are going to move slightly faster than the others but the shape is relatively the same so what we care
+about is how far that future volatility is anticipated and what is it and so on the month
+when people are anticipating what's the month look like next all you do is you take the closed price
+of the previous month's contract and the open price when the when the futures market opens and you find
+the midpoint between the two that's it when two contracts are traded this way and the foreign one is
+traded higher than the the previous month of the current month it's a process known as contango this
+is all as far as we're going to go into telling you what contango is but it means it's a it's a fancy
+word for this contract is priced higher than the last one when when february is higher than january
+and march it's higher than february and april's higher than march and may is higher than april then
+each one of these contracts is in contango that's just something to note and bull markets contango is
+likely going to be something you will see very often because bull markets have are very nice and
+stable and people just hedge that with buying some volatility on it it kind of creates a little bit
+of extra supply a demand for vix which kind of has future contracts trading higher the longer the market
+gets you're always a contango but it's not a bull a bearish thing see what's interesting is that vix has
+nothing to do with bull or bear it just has to do with people hedging more and hedging wider and all that
+kind of stuff creates that difference in vix now the opposite is that the next contract is priced
+lower it's just called backwardation so backwardation means it's priced lower and so sometimes that happens
+now a good healthy bull market will roll into contango look at that january was this way but one
+interesting thing is that when you're pricing in volatility a month in advance you could be way wrong
+right nobody in november could have forecast that january be full of all this tariff news so when we
+priced in january is fixed with traders as far back as november buying this contract way back then
+when we get here we underpriced the volatility because there happened to be extra volatility from unseen
+news events that we couldn't even forecast so what you what you're interested in knowing it's just like
+anything else here when the market itself goes up on a rally we do things like red lines remember to
+test the liquidity where sellers and buyers meet each other a big buying spree meets a big selling
+spree um and the market usually tucks back to the middle the middle is very important in all areas of
+like liquidity and in game theory and mathematics and uh even computer science that a binary search if
+you're trying to find where something is the easiest way is to cut it in half and cut it in half and cut it in
+half you take the fewest steps to get there an example is if you're trying to look up somebody's name in the
+phone book somebody's last name is zebra i'm just making it up one of you guys's last name is probably zebra
+you're not going to start at page one uh and and just keep turning pages till you find it which you tend to do
+and again you might start at the end because it's zebra and you know that's the last letter okay
+but what if the name was j is in the middle well kind of i don't know how many b names and c names
+and m names are there well let's find out the fewest steps to converge to the solution is to take
+something cut in half say okay which side is it on ah it's less than here okay i got this side let me
+cut it in half which side is it on okay it's over here let me cut it in half and cut it in half and
+cut it out and ultimately you will converge to that page of that number you're looking up with the
+fewest number of steps liquidity is the same way markets fall a risk interval on an event to search
+for liquidity and if it if the market doesn't find it it usually moves another risk interval and
+another risk interval because we told them that's we're providing liquidity by reporting our positions
+and that's where they come up with the margin requirements you come up with the risk interval
+that is steps it takes like in cutting that phone book in half to aha there's the buyer somewhere in
+here okay well they bought there let's test the middle where the buyers and sellers are
+we've just talked about risk interval and impact red lines and run length red lines the middle is
+that red line we're exploiting a divide and conquer as somebody said a kind of binary search algorithm of
+just the quickest way to find liquidity the reason red lines work is that that's where the sellers and
+buyers meet in the middle that big run where there is no proven sellers right and that volatility
+expands very quick and and dials up when we look for that big v and that small v and then this is
+where we measure that from because it's the maximum amount of volatility or the least amount of liquidity
+which means the buyers were absolutely found here and here so liquidity stepped in somewhere in here
+so when we're measuring where we draw our impact red line from the anchor to the bottom this rise in
+volatility and falling is very important which is the opposite of the v shape the s&p is because
+this is where the absence of liquidity was and then liquidity somehow stepped in somewhere in here
+to buffer that additional selling so between the sellers and buyers the red line or the
+illiquidity pivot is the middle volatility pivot illiquidity is volatility illiquidity is sellers with no
+buyers sellers with no buyers oh there's the buyers that stepped in if i were a market maker let me meet
+this the buyers and sellers in the middle and then see what happens next that's exactly what we're
+mostly exploiting in futures the process of finding liquidity is like this giant binary search thing
+so the middles are very important and anytime you're trying to test if people underprice or overprice
+something you're going to find the middle now back to the vix this isn't a price movement this is two
+separate things priced differently and arbitrage is always a big deal when two things are priced
+differently you have sellers in one and buyers in the other trying to yank them back together after
+all they're both tracking the vix just at different times right april march is looking at march expiration
+january is looking at january expiration so they're both looking at the vix there's only one current value
+of the vix but it'll have different values at different points in time and the contracts are allowed to
+reflect that now what's neat is that when you roll over in monthly options it's the biggest migration
+of vix options positions period so where the futures are lined up at that moment when vix options expire
+in that wednesday morning is very important the midpoint between the open and close it's very simple
+let me show you how you do it oops sorry wrong thing let me clear this off so let's get our let's just zoom
+in and as you know as you you'll do it similar to a gap but it's not actually a gap because both of
+these things are still actively trading take the close which is the last traded price at 5 p.m eastern
+when futures close to the open of the first traded price on the new contract on that tuesday night so
+the middle is known as triple b we call it the bull bear break point back because we use it to help
+ourselves trade bull bear differently it's a terrible name for it in hindsight um because it
+has nothing to do with bull or bear it has to do with underpricing and overpricing volatility but the
+name triple b stuck and we like it because that's really what it stood for but in reality don't think
+bull or bear okay just keep that in mind just think triple b just like dd bands were created and dd stood
+for doomsday because we created it in a bull market and when the dd ratio went less than half the bull market
+tend to sell off and we go aha it's a doomsday clock but the dd works in both ways so again
+doesn't predict doomsday it just predicts the integrity of the bull market this in the same
+light is not predicting a bear market because as we talked about volatility goes up in both bull and
+bear markets um so the midpoint is very important though because when you when the prices are different
+vix is almost always in decay because of the time effective options so therefore this is almost
+always got a desire to meet that price vix is always on a perpetual decay to zero until it's not
+so you can always assume that it's moving its way down until something else comes and moves it the other
+way vix is like something that's always sinking like faster and faster and faster and faster and
+occasionally somebody yanks it up and lets go and then it's sinking and they yank it up and lets go
+so in the middle of the two contracts it's actually really called the contango midpoint whatever you
+call bbb is the contango or backwardation midpoint when vix is above this line and it stays there all
+month it's one number for a month when vix is greater than triple b we have underpriced volatility
+and what tends to happen is that additional hedging for underpricing creates a little bit more v vix and
+the vix the vix becomes more volatile up here than if it were down here so a common path you'll see is
+that the vix will likely come down to this triple b and then start to test and then move very rapidly
+above it or very slowly below it and this has to do with again testing the middle markets love to find
+buyers and sellers you got people shorting this because vix is always in decay you got people
+maybe buying the dip and so the middle the difference between these two have to do with
+the difference supply and demand just like any other pricing so the middle is always a great balance
+point with high volume it's a high volume pivot in the vix so one thing that's neat about this triple
+b now i just gave you the calculation is that for the entirety of the month as you see we've been
+trading above it now let me tell you some characteristics of being above triple b when you were above
+triple b on vix futures you will overshoot pivots that's one of the key breakaways your blus and
+your bull zone bottoms may do this when vix is down here on the underneath half of that and then when
+vix is up here you will overshoot pivots a lot somebody today said they bought at the open at the
+open price not at the open but they bought the opening pivot and the opening pivot overshot a little bit
+overshot a lot a little bit less overshot a lot and then came back down and then took off welcome
+to trading above triple b this is that one final consideration you need to take because you know
+it can overshoot the pivot and have bigger v's hence bigger volatility you're not going to have clean
+sharp pivots sometimes you'll have undershoots of your pivots and even touch your pivot so in vix greater
+than triple b environments assume you're going to overshoot your pivots or assume you might
+undershoot your pivots it happens a lot enter the final piece of the puzzle
+when this affects how you enter the market okay so what i normally do is if this is my pivot
+and if vix is triple b remember the greater market has me in my bull or bear the conditionals plus the
+liquidity map is what i'm taking and how big vix is going to tell me how i enter that if my normal
+position is three and we are under triple b well hell pretend that this is the case all three contracts
+go right there but if vix is greater than triple b and i decided to trade three contracts but in this
+environment remember this is how the market moves then i'm going to take the three and i'm going to
+buy one slightly above one at the first overshoot and one more at the overshoot that inches right up
+at my stop literally at my stop so that my cost basis for the three is below here hell more volatile
+market let me get in lower on those three then non-bolital market but because there's a lot more
+overshooting of the pivots doesn't it make sense to have smaller positions at each bite so that your
+drawdown in that volatility isn't big if you put the whole three in here you're watching big numbers
+of loss it's better to split your bet up around your pivot to aim your cost basis below it when vix is
+above triple b that's all it tells you so all month you may have noticed that while matt was
+stepping into positions maybe one add one more add one more that's the reason why because we're in this
+environment and while you might have taken similar trades and might have experienced more drawdown
+because you're not staging your position around your pivot you're going all in at your pivot do we
+all understand the difference here
+this is key importance of taking your position and spreading it out around your pivot anticipate
+undershoots overshoots because the market's not liquid that's what it's not as liquid as it could
+be so you're not expecting it to walk right up to your pivot hand you a trade every time and the market
+being random you can't anticipate that so you just have to play around it and so a key takeaway is that
+particular thing let me show you some cool handouts to go with this this particular class let me see if
+this is the one so when vix is above triple b you can see that um that overnight even like smaller
+catalysts or moves overnight or smaller events you see how like the market has the ability to kind of
+trade slightly wider as well this is just a random s&p night when vix is above triple b as you see it's
+not nice and stable it's choppy and higher highs and lower lows it's kind of fanning out that's something
+to expect whereas when vix is less than triple b you might see that those v's are relatively the same
+size if not getting less as the market goes by this is not getting wider as the market goes down
+as a matter of fact when the market breaks up those v's get even smaller so when vix is less than triple
+b you can assume that there's bearish hedging on the vix to make it even lower
+which is good now one takeaway about vix being above triple b and this is the biggest takeaway
+vix is above that contango midpoint now again i'm gonna spare you all the math as to why this is
+but when vix is above here the market is sensitive to news sensitive you ever notice that some days
+like j powell comes out and they don't do anything they just don't change rates or nothing and the vix
+and the s&p drops 30 points and then up 20 points and then kind of comes like this and does whatever
+but then sometimes they say something and it crashes the market have you noticed something
+about this month of january how small news events have completely top-sized the market
+y'all notice that anything particular about all this tariff nonsense right how many days the spx just
+collapsed on tariff news or gapped down tariff news or crashed for whatever gap downs gap ups you notice
+anything particularly weird about the way this month is trading right i mean it's not hard let me
+clear up a chart here it's not it's not crazy to see um the correlation there right on the 20th of
+january notice anything different about how the market's been trading lots of news events the market
+is extremely sensitive to news events while it's still very bullish across the board it's extremely choppy
+even intraday right the market has big responses to news it's just not that clean but what about the
+previous month right when the market was a little bit cleaner right i should listen to two months ago
+and let me load up triple b because because i i keep the history of all of them for educational purposes
+but let's go back to a month where it was nice and clean um like this particular month here we actually
+rolled into back gradation this contract was higher than this one so it's actually back gradation
+the midpoint is right here just the same so for a little bit we popped above it but let's see what
+happens when we come right up to that line and what kind of happens to the market right um where was
+that got right right here as you see the midpoint is high volume let me go let me go to here so
+contango midpoint just like anything else or triple b is a high volume pivot on that particular month i
+make the bright version the current month and so um let me clean this off so in this particular one
+i want you guys to focus on this line for this month that's the middle and as you see when you
+approach the middle it is a deciding point of the market it is a launch point for vix it's a very key
+pivot that you want to pay attention to now let me just zoom in right here and see if we can't see
+um when you get to it i think that's the june one whatever month this was i'm something let me get
+my bearings here it is the j uh the june one yeah yeah january it shouldn't be any surprise to you
+that home is even here that when you are interacting with this line january down here right the one
+right down here when you're getting close to it do you see i know it's overnight so there's not a lot
+but do you see how the market is very much responding to being close to that contango
+midpoint just like everything else that we do relative right vix trading was like 30 contracts
+and 20 contracts every five minutes and then it jumps to 240 from 20 12 times the volume just at that
+middle spot um where can you find up-to-date triple b levels it is a calculation that you'll do once a
+that takes 30 seconds of time it is good practice and discipline to do it yourself there is a triple
+b channel where i post the updated triple b but that's a routine i want you guys to get in remember
+i teach you guys for discipline find yourself a routine task and set on your schedule and force
+yourself to do it this is the calculation you'll want to do but everybody does it that night nobody
+misses out because it does affect how we do trade but this is just to prove to you that that level is
+extremely important even when you get there it does create high volatility in the vix itself now
+if i go to continue to just go through some of that um here's a new month right this is like the
+last month and you can see that we've been above that triple b for basically two months in a row now
+let me show you a month that's likely going to have like a really good one that's going to be a nice
+bull market let me show you the difference between sensitive to catalyst and not sensitive to
+catalyst let me go here and hourly chart um a good month where it didn't happen was was back in
+november december as we talked about here's the triple b and as you see we pivoted off of it
+we hit it a second time right here and as you see as we're playing here the vix itself gets really crazy
+and then it starts to decay out and be fine once it loses that battle and comes down from this day
+forward literally that day forward um let me see what date that was the market was basically in a
+really good spot to have clean easy trading i say clean easy trading this was um november 22
+so in november of 20 sorry november 22 do you notice something different
+from here to here in the range intraday of this market from here it is just tightening up like crazy
+look at this and then there's practically like no volatility the down days are very mild
+does everyone see a difference between left and right side of that
+the intraday is so easy and clean with minimal drawdown yes do you see a difference between there
+and there that can tango midpoint is the difference between emo market and yeah that news wasn't so bad
+market it has everything to do with pricing in that future volatility and the market overreacting
+me crazy it's super cool how that works and it's right on the edge of that thing so to kind of zoom
+out and show you that that's the exact date was what was it the 22nd was right here this day when we
+breached that triple b this day we are below triple b here and after this day that daily range just
+tightens up like super quick and then it's like little tiny moves even the big down day is like
+very small compared to the average down day over here and then the down look at the down candles teeny
+tiny teeny weenie teeny weenie teeny weenie if you are struggling to become a profitable trader
+wait until the time of the month that vix is below triple b if you have a month like this month where
+it's above it skip the entire month if you are struggling this is by far the one decision you can
+make that can change your game overnight i tell people this is the most important class for a reason
+if you're struggling getting funded and trader funding programs avoid these weeks and months
+have a shit month like this vix above triple b don't play in that environment there will be times when
+the market will hand you all three signals of the greater market or bullish and vix is below triple b
+tell me which side of this would you rather be trading bullish or bearish doesn't even matter
+a or b which one looks more appetizing and and a little more forgiving to your to your pocketbook
+b hands down volatility tells you how it gets there both of these went up about the same amount over the
+course of a week or two the distance from here to here is probably the same as distant from there to
+there but vix and triple b is how it gets there it is so easy to avoid a as much as you can if you're
+struggling and you need like i need something to just do that'll change me overnight it's like how
+the market moves when you are in that it's like if you were to skip december and january remember
+december was bad for a lot of us and in december and january we were above triple b most of the time
+right so november 22nd to december 22nd was when the market fell apart on that fed news so for the last
+two months we've been above triple b imagine how hard it is for me to be making money in this
+environment i've been doing okay but i i know how to spread my bet around in this environment
+we've been in that wrong side of triple b for two whole months look at days like this day every other
+day is a day like this you're scared to be long for long periods of time because the days like this
+and the market pops up really quick and sells off really quick and trump tweets something and it
+falls trump tweets something else and we gap down 500 points this doesn't happen in the other
+environment that often the market is so liquid the news is has a higher probability of being warded off
+there's a clear difference between these types of environments and like i said if you want the
+we call it the golden setup if you're like i need to just wait until i have the perfect environment if
+you blown up your account you borrowed a thousand dollars from your mom to get started again
+you wait for greater market one two and three all being bullish and you wait for vix being below
+triple b and that is the best shot you have at a nice clean easy pivot and you find a bull zone bottom
+the long on or a bear zone top the long on and you hit that with your first trade and that is the
+dice roll that gives you the highest odds of not having a trump tweet knock you out of the water and the
+one trade you have left to save yourself or the market having any bearishness at all to have just
+overwhelming amount of selling against the buying this is usually an extremely good bull market and this
+proves that we overprice volatility and the market's more surprisingly liquid than we thought
+and another rule of thumb is that vix is less than triple b you're good and another thing is v vix
+is how much the vix itself v's up really rapidly i.e the probability that vix runs a risk interval or
+higher is much higher when the v vix is really high the rule of thumb that we have is when v vix is above
+100 it's no longer perfect so you want to trade ideally with v vix less than 100 because that'll
+forecast the ability of vix to decay if the v vix is really high then the vix can move very rapidly
+and itself become more volatile as it goes up then the v vix is low the vix itself is less
+responsive to catalyst v vix has been relatively low as of late relatively it is now finally dropping
+below 100 okay v vix has been rather elevated for a lot of a lot of this uh month but it has been
+below 100 a lot of the time so when it's above 100 is a good rule of thumb anything below 80 is like
+the ideal spot anything between 90 and 100 is okay but still be careful but anything above 100
+it proves that the vix can become more volatile very rapidly and of course we've been kind of hovering
+above 100 so it's kind of in that okay range but a couple times this week it was like 110 and 120
+and you can see because of that you'd have some days like this particular day right when the v vix was
+already at 102 at the close the trump tweet that said tariffs or whatever gap the vix up and the
+vix itself had these big up and down candles you had a twofold above triple b is bullish hedging on vix
+and the volatility the vix is even higher means there's not that much liquidity in the vix instruments to
+keep it in check so vix can run away very quickly um when vix is much v vix is much lower i.e closer to 100
+you see how the vix doesn't respond as crazily to news and stimuli this was tariffs news and guess
+what so was this do you notice the difference between v vix at 105 and this day which is v vix
+at 97 the reason i choose 100 is because the sensitivity is crazily different around that 100
+it's just a sweet spot it's a rule of thumb but the tariffs crashed the market when v vix was 102
+but tariffs not necessarily crashed the market when v vix was 95 you'll see that when the volatility the
+vix is less than 100 the vix itself is is liquid enough to be less sensitive to crashes so while it's
+sensitive to crashes in general because you're above triple b the idea that v vix is high the v's and
+the vix are higher than here so the market runs away and completely collapses under the combination
+of under under bad news more often vix greater than triple b and v vix greater than 100 these two
+things are a recipe for please sit out if you're struggling to be a good trader and make money
+these two rules of thumb will allow you to time when you get in the market hey you just got funded
+near 20 apex accounts great don't go blow them up and waste two grand by trading in this environment
+you want to start funding yourself and just inching out the door some nice strong bull long ups
+then you wait for these two conditions to meet this with your greater market and you're going to see
+how much easier it is to trade under those conditions
+we all follow along
+so what's neat is that okay somebody said how was january february triple b okay let's let's do a
+couple extra months what does a good strong bullish month look like on the vix let's pick a good one
+right um i can tell by looking at the way the vix is i've seen enough bull markets that i can tell you
+there's a lot of good ones here these are beautiful bull months right now we weren't necessarily below triple
+b for most of them but you can see that the market was um vix was trading lower but this one was great
+the first half of the month we were above it and the market was kind of trading like a certain way
+and then the last half we were below it um so in june 2nd through 17 of last year i guess that last year
+they're below triple b or below triple b in june 2nd to 17
+boy was that a lovely market to trade markets up markets down but boy oh boy look at those b's
+most of those days stayed within the dd bands look at that most of those dips were rather contained
+how many how many dd band breaks do you guys see in this chart between points a and b the market
+just collapses on itself from lack of liquidity how many dd band breaks do you see to the downside
+over here notice a pattern right it doesn't mean it's always zero don't take that but you see how
+it's significantly less how the market moves very rapidly and pivots very quickly off the dd band why
+because the market is surprisingly liquid and not only is it liquid but it overpriced the volatility
+it underpriced the liquidity undervalued the amount of liquidity it was there surprisingly more amount
+of liquidity than people thought because they price an extra volatility that we immediately priced out
+by slammable at triple b so you're going to see the market is tighter and easier if you were trading in
+this this two-week period don't you think you would have had so many look at all your every single
+time trade just on this long every single time long every single time long every single time long
+every single maybe i don't know if you would have had another pivot there but do you see how much
+cleaner the market looks allow this to be like your indicator to tell if you walk into a shit show or not
+you already know the condition so if you're like i need that perfect week just to crawl ahead i've been
+doing so bad i need a week to restore my confidence let these things line up at the greater market
+this is a cool class i tell people this is the most important of classes because this is a bulk
+indicator that'll have you sit out weeks or months if you need to and you will find markets that look
+just clean and lovely and there's a certain time of the month usually the second half of the month
+when you can decay below triple b or even closer be better but your ideal month is to be below triple
+b all the time um you want a month that's barely gonna like this gap up i mean sorry you open higher
+and then you fade it within two days now while we probably had conditions change but oh my god like
+this right here at the start of the month if on day two or three you crush through triple b and follow
+the other side you tell yourself this is the month this is my month you get excited oh my gosh this is
+going to be the trades where you go up and up and up and up and every dip is bought and the market
+doesn't go crazy and when powell says something or trump says something the market's not going to
+collapse 100 points and blow me up this is my crawback month hey i just got funded let me wait for that
+one part of the month to finally make my first longs in that account static accounts static accounts
+have really razor sharp drawdowns your first trade and a static funded account needs to be your best
+trade because your drawdown is right near your starting point so you can't mess up so you can't
+have volatility so do not touch a static account above triple b either let that also line up the
+probability of volatility is lower you have a better chance of winning so if the fix falls below triple
+b somebody said buy here just straight to fund a tradeify account tradeify is a little more forgiving
+because it has end of the day drawdown but your statics right anything with trailing drawdown
+anything with a tight drawdown is statistically should be performing better under that environment
+there's a less sensitivity catalyst and again this is the triple b here all that tweeting and all that
+trumping and here the same stuff trumping is a verb the market just does not respond well to news events
+and so you're gonna want to see those particular times when it's just not like that and you'll have
+plenty of times in the history of your trading career when oh boy oh boy this month right imagine
+this month you gap up and then within two or three days it's below and it just completely falls notice
+how when the vix spikes up below triple b this month when the volatility goes higher even on its own
+accord the vix spikes up aren't risk interval moves whatever news crashed the market quote unquote crashed
+that day the vix isn't moving up three points is it absolutely not the vix itself is fairly volatile
+at i mean very liquid at this time and i can bet you at this time this v vix was practically nothing
+november of 2023 let's go back and check it i bet you that v vix was candy like let's just see how far
+we can go back november 2023
+80 84 83 you see that you will in your career get candy months candy months that you build your wealth
+in if you're lucky the probabilities all line up in that type of mode so let's look at what the s&p did
+in november of 2022 v vix in the 80s vix drops below triple b within days let's finally reveal the
+curtain and see what november of 2022 looked like and i'm going to tell you guys you will love this
+class because this is the class that allows you to really understand why markets move the way they do
+november of 2022 oh geez oh geez oh geez hello your favorite two trading months you ever had okay so
+what i'm telling you is that hopefully you've got your money's worth with these courses you'll be able
+to find these kind of markets with those two things imagine that you waited and started your trading
+journey here a long trade almost never really took a big hit now you got lucky that no catalyst came
+by in zap jet that's always a possibility and again this excludes the the fact that there's any
+market changing catalyst that can crash a market if the fed comes out and says we're raising rates and
+you can throw all this out the window v vix will quickly run to 100 plus you'll know that in a heartbeat
+but assuming there's no event that changes everybody's direction does this look like probably the cleanest
+two months you've probably ever seen in a bull market imagine having one two three four five six
+seven seven day actually wait one two let's just be one two three four maybe five days the majorities
+are dojis that are red they're not they start with every one of these days has a dip to buy with
+except of that one and this rallied up at the end and this rallied up at the end all these red candles
+have wicks at the bottom except for this one imagine the blind monkey in this month probably won every
+single day but one or two do you understand what i'm saying the odds are just better the market is
+less sensitive to catalyst does everyone see what i squared on my chart if you need to zoom in at the
+one place where you got ahead or you got two weeks of vacation and you're like i need to make some money
+or i need to make make it as a trader i need to do something you have i have two weeks of vacation i
+commit to trading maybe this is when you take your vacation and start hitting it pretty hard
+this is where all your odds stack up the highest there's no guarantee of success as we promise you
+know we tell you the truth here but do you does everyone see in this zoom call right now that this
+is your highest probability for finding a nice clean easy bull market that's not going to freak out with
+every trump tweet okay yes we all see it those two things this market so fun to trade every day goes up
+every day it goes up every dip gets bought unless there's a counter catalyst there's not a lot of
+red in here and the red here has got wicks at the bottom there's no volatility that's what those two
+things are telling you we under price the volatility that's why we collapse the vix below triple b and
+the v vix isn't even there which means the vix doesn't fly out of control the s&p has really tight
+v's when they have it s&p doesn't spiral out of control and crash that much that easily unless everyone
+wall street changes their mind at the same time and as long as the universe doesn't throw a lightning
+bolt that changes the direction of the market in a heartbeat like al decides to raise rates then the
+market has a very low probability that everybody sells at the same time when the market is so liquid
+that everybody's trying to buy these are the months that are your favorite months trading and they will
+come and they will be there and if you're in a market like this that we're in right now it's absolute
+garbage absolute garbage this market sucks if you've lost money in here don't get your hopes up
+it's not easy the only reason i've made money here as you guys have been watching me trade
+right i've been i've on 11 day winning streak in this garbage market because in the state of triple b
+being vix above triple b and us trading with high v vix what do you notice watching my stream how long
+am i in a trade in this environment this is the last key point of this class how many hours am i in a
+trade somebody answer it 38.2 seconds minutes do you now understand why i do what i do you think i want
+to be in a trade for a long period of time when the market senses the catalyst and a fucking lightning
+bolt is coming from the sky once or twice a day from from 1600 pennsylvania avenue from his cell phone
+tweeting something my quant mr trump himself do you think i want to have time exposure to the market
+where i'm standing there running through the rain holding two iron rods in my hand while lightning
+striking every five seconds it's not like something i want to be in no my trades are in and out as quickly
+as possible in in in better markets i'm used to i can hold half half an hour to an hour i'll wait on
+a trade and let it play out do you see in this market i'm a little more skittish when i get the
+signal i don't like i walk away quick if the risk is too high i don't want to be zapped by a catalyst
+and you'll never know when it's going to come how am i on a 10 day winning streak it's sorry a 10 day
+i won 10 of the last 11 days how do i avoid all this nonsense and choppiness because i got lucky but
+not because i got lucky because i have good luck but i got lucky because i wasn't in the market most
+of the time and that is the trick when vvix is greater than 100 and vix is above triple b try to
+be out of the market as much as possible and when people are coming in the stream like this guy ever
+trade you can just chuckle and laugh because you know this is why i'm doing well i'm not not trading
+because i'm an idiot i'm not trading because i know the market doesn't like hearing bad news under
+those two conditions and imagine just inching in there and then goes against you i'm getting my
+trade to my pivot and i'm getting out i'd be more comfortable to hold for dd bands and breakout longs
+as much as i can and the vix is lying up in my favor do we all get it
+as drey has said he pays attention i pay attention to resilience that the markets don't do what i want
+i'm out quick i'm kind of scared to be exposed to the market and this is the trick having a higher
+win rate in this kind of choppy nasty because you can just basically every every minute i'm in the
+market i'm like oh my gosh hope trump doesn't say anything and my trades have roughly been less than
+10 minutes a pop on average my trades are roughly 30 minutes to an hour sometimes in bull markets
+when vix is greater uh less than triple b because bull markets just inch their way forward the trade
+is going to take a lot longer but at least when you have volatility and vix is below or above triple
+b and vix is high you get the market dips really quick and then returns back to where it is just
+because the volatility and you can get your trade in five to ten minutes because volatility is there
+use that to your advantage oh heck there's volatility i'll get in and get out you know all my trades
+i've been tweeting hey look at this i made three thousand dollars in six minutes it's not just trying to
+brag that i'm some kind of superstar but it's to say hey the market's volatile i capitalize on that
+whereas a nice bull market that just inches higher you might be in that trade 30 to 60 minutes and
+there's a less likelihood of the market having a market changing catalyst because there's always
+inside information of people going to do something and they're going to be running to the vix the vix
+will be responding to inside information somebody always knows something if you know where to look
+it's going to be rare that that you're going to be surprised with a lot of things
+okay so takeaways when you have your two vix reads not going against you you're still a bull or you're
+still a bear but you act differently when the two vix is going against your bull market market is
+sensitive to catalysts market falls apart much easier you want your trade time to be smaller and you want
+to enter around your pivot slightly above slightly below let it overshoot throw one contract at it
+in case it undershoots put the majority of your position below that never enter at the pivot
+enter above and below so the average is below or at the pivot you got it don't enter at the pivot
+assume with the volatility that you're going to overshoot don't assume that you're going to pivot and
+go but that's okay because if you get in at the undershoot case you're at least in something and
+when markets are volatile they move very quickly so a small position is still going to pay out pretty
+well so is that the takeaway spread your your normal position out instead of putting it all right here
+at the pivot make sure you say it's likely gonna maybe undershoot but let me put a little bit below
+in case it overshoots and in case it falls right to my stop a smidge above my stop
+is that last trade my cost basis so oh let me give you the the technique okay i am missing a piece
+of the technique for y'all okay so let's use s&p as an example this is gonna be very important to
+understand um as the s&p is 10 my max stop is or rule of thumb is 10 points in the s&p and with
+nasdaq uh it's 40 points so let's use s&p as an example if my pivot is 6,008 then if i went along
+from here i say aha 10 point stop from 6,008 that makes it 59.98 is my stop however when i'm
+entering i must take this role into account when you do multiple entries it's not 10 points from
+the pivot it's 10 point from your lowest entry usually okay so if i put in a position here
+and then the market falls and it's kind of like doing this and then it collapses through there
+and i throw one more at that pivot there and then the market does this and then it falls
+right to my stop my stop was based on this pivot but now i've got entries here and here
+so in reality my stop is going to be 10 points from my second entry so give me a little more room
+to wiggle this guy in and whatever i put in here gives me a final cost basis of the average of these
+three probably right here my final stop then instead of being 10 points below my pivot which
+is normally the rule if i'm dancing around a pivot i'll give myself 10 points off of my final entry
+because that gives me a little bit more risk and reward to where i wanted to go than if i got my
+pivot right here because i dug into my position slightly lower as you see this has a bigger run
+than this so i can get a little more reward so i'll take a little bit more risk i'll lower the
+stop because i get more more reward so when you finally do what i call cost basis management by using
+the volatility to step into a position like that let your final cost basis quote unquote be your pivot
+if you happen to get good enough to get your cost basis lower than your pivot and you bounce above it
+then your stop is going to be a little bit wider but your reward will be a little bit a little bit
+better so it's good to have your give yourself a little bit of flexibility because a lot of times
+the market will pass s&p and fall literally nine point you know nine nine points and it'll fall
+literally 39 maybe 40 or 41 points on nasdaq before it turns around it'll usually fall that extra
+strike distance and slightly overshoot and turn around so in volatility do not be razor sharp on
+your stops don't say exactly 10 points and i'm out be like maybe it could be 10 or 12 maybe 13
+let me put my let me get my pivot around or my entries around that pivot and whatever my final
+cost basis is i'll subtract 10 as long as my cost basis is below the pivot if your cost basis is above
+the pivot then you're screwed you need to be 10 points below it not really screwed but you don't get any
+flexibility if you happen to get your cost basis below your pivot then you can give yourself 10
+the original 10 points of risk consider your extra work bonus to you yeah and this is what firms that
+don't like dcaing don't like but that's what i'm saying this what i what people call dcaing is adding
+to a trade when it's losing and they don't let you do it this is this is very good cost basis management
+accounting for volatility you're spreading your risk out and prop firms don't let you do it because
+it increases your likelihood of success that's why there's a rule that says you can't do it or
+anything that prop firm says you can't do is because it works for you there's the only reason
+they wouldn't let you do it they're not doing it for your own good they're doing it because it wins
+so the idea that you're using effectively the knowledge of volatility persists to take your
+normal bet instead of throwing it all at one spot betting that it's a sharp pivot you're spreading
+it out to account for the volatility and then you're moving your stop would normally be here now
+you get a little bit more flexibility on your stop which again is allowing for that volatility
+to exist without stopping you out so that's the cool part about using volatility advantage when vix
+is above triple b or v vix is really high you can allow yourself to get into your pivots quick
+earlier than around but don't enter here and then enter here never inch down if this is where you chose
+to enter to get the pre-shoot like i'm saying like one or two points no bad no bigger
+and it falls here and then starts to rally do not chase right there and add your position like
+a numbskull always say there is volatility it's likely gonna dip and let it dip if it turns green
+take the money you got in the run do not chase green when there's volatility volatility assume
+there's always going to be a v so wait for it wait for it wait for it oh there it is okay let me add
+my position here no you're not getting good cost basis management by adding it roughly the same
+place anytime you add more risk to the table when the trade is red the only goal is not to add to a
+loser it's to lower your cost basis to be more effective so if you entered here and entered here
+you're not even at your pivot you're going to allow the volatility to give you that flexibility
+to get your cost basis here or even here or even lower in an environment that's volatile you can
+actually get more profit just by spreading your bet out because you get more distance traveled from a
+lowered cost basis rather than a straight bounce so you you get a little bit more bang for your buck
+and it moves faster so in volatile markets one of the key takeaways is that you're in and out of your
+trades faster which means you're less susceptible to events and catalysts because your trade time is
+much less use that to your advantage spread your bets out slightly above slightly below right near your
+original 10 40 point stop and then wherever your average is your stop is there you'll get a little
+bit more reward for the pivot that you want it adds this as bonus so a little bit more risk for a little
+bit more reward and it scales equivalently so okay very very very important how you trade
+is what vix tells you not what you not what direction but how you trade it how you enter
+how quickly you exit treat your next pivot only and close out don't hold for multiple pivots don't
+hold and hold a runner and hold a runner try to get your trade and get out get in get out
+volatility means the market's sensitive the minute someone says something market doesn't like
+you waited all day and lost it all the final thing before we get out of here as you remember it
+might seem like i'm a gifted trader how many days that i sit here and do nothing on stream
+and then the s&p fell to hedge pressure this day i did nothing i did nothing on the back of my head
+there is volatility maybe the volatility will just happen maybe i'll hit my pivot and i didn't do
+anything all day and didn't do anything all day didn't do anything other and the market literally
+fell and all i did was retrace half that distance and it was like another five thousand dollar trade
+we just fell right to hedge pressure i piled in traded right back and then that's it i didn't have
+to do anything else we fell to hedge pressure i longed right above it with with my position
+then we fell a little bit through it i longed right there and i think it had like two contracts
+something like that and then it just tucked right back up so the idea is when volatility is present
+vix above triple v catalyst coming left and right news events coming left and right and v vix is high
+use that to your advantage don't try to chase an inch higher like a bull market when v vix is low
+and vix is below triple b like the november of 2022 it's not that kind of a market allow yourself to
+say it's a ticking time bomb hell yeah there's some volatility oh it hit my position my entry hit a
+strong pivot let me long it for just a little bit in and out retrace that last move boom i'm in and out
+not even care which direction it goes just play that volatility very quick the strong pivots are likely
+to be high volume so we still we still take the bull bet and it's just like any other risk management
+but the trade is quicker and i waited for it to happen and it's so neat when people are like wait
+what trade did you make i was like i sat there all on stream and i drew a line from hedge pressure to
+the target but i was like it's probably not going to happen but just in case it does i got that trade
+there because i know volatility is present it doesn't take much to tip the market so always keep that in
+your mind and today as we said i took a couple of scalps here but as you see the market's kind of
+in a similar condition we have you know redistribution zone but all of our high probability
+pivots bull zone is down here monthly hedge pressure is way down here so i'm just sitting
+here like you know what what if trump tweets something in the market just like false to here
+perfect res is good i'm sorry dd is good mhp is good everything's good great let me long right
+near the edge let me long again here let me long again here wherever my average is 10 point stop
+there and i'll trade it right back to maybe the impact red line or whatever half the distances of
+that last one just a little bit of a scalp or maybe there and close so all day i'm like if it crashes
+cool i got a bull dip to buy and it's okay waiting because when the market's volatile higher probability
+you can just dip that's it okay

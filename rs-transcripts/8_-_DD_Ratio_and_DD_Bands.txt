@@ -1,0 +1,473 @@
+today's class is going to cover the dd ratio and the dd bands together uh ratio is one of the three
+greater market indicators that we discussed prior to this class we have three what we call greater
+market indicators that help us decide bias uh number one this ratio right dd ratio um dd is a
+kind of nickname for it um it's really called the bull bear bias ratio uh but it's just a mouthful
+to say uh dd or doomsday was like a a code word that when we were building this we all had these
+like fun code words we give to something just like because it's a project we're working on
+and we just called it doomsday just just as a funny word and so it actually just stuck as the name of
+the actual um the actual ratio uh mhp smp or spy mhp looks like the broadcom earnings report just came
+out looking at that right now and then monthly maps okay
+the greater market if any of these three indicators are bullish then the greater markets consider
+bullish when i'm a bull what does that actually even mean right when i'm a bull it means i'm looking
+for bull setups it doesn't mean i'm looking for only bull setups but it means in the front of my mind i'm
+thinking okay where am i going to buy the dip today i'm not planning every bull and bear scenario
+in a greater bull market i'm thinking where are the dips to buy and i'm trying to get mostly bull
+trades if greater market is bearish and all three of these things are bearish then i'm planning bull
+and bear trades so when i have both of those together or that both that knowledge uh kind
+like in front of you what it's doing is whenever you decide greater market is bullish you're limiting
+the work you're going to do i'm not planning every single short setup i can find like here i'll
+short here i'll short there uh in a bull market and that's really that's important
+now what is this bull bear bias ratio and how does it relate to the bands and futures so it's a very
+simple uh equation and it relates to the liquidity map so let me pop up a um a liquidity map for apple
+for instance all this dd ratio does is it asks the following question every stock in the s&p is that stock
+in a bull zone or bear zone or neither we take this total market cap in real time of all stocks in
+bull zone market cap bull zone divided by the total market cap of bull zone plus the market cap of bear
+zone so we look as a stock bullish where's a stock bearish and that's all we care about if you're in a
+liquidity pocket we ignore it so it's not in either um it's not in the relationship at all so we're
+looking strictly at the stocks that are either bullish or either bearish and finding the tilt
+and so the ratio if more than half of the market cap of the s&p is in a bull zone
+then this ratio is greater than half if more than half the market cap is in a bear zone then this ratio
+is less than half very simple and it's just like the resilience indicator and that it's designed to be
+a tiebreaker right if um the trade for instance is moving or like the index say you're in trading
+index index is falling to bull zone and you know that most of the time as we talked about liquidity
+pockets are really strong strong trades and they hold most of the time and liquid markets don't crash
+so when you get to the bottom of the bull zone the question is how many of the stocks are also in the
+bull zone or how much market cap and if more than half of it's in the bull zone and you've got
+great indication that the likelihood of this going to a bear zone when all the stocks are up here is
+very low so it's a confluence indicator just like resilience resilience is a tiebreaker at your
+boundaries of the redistribution zone as well as a tiebreaker at hedge pressure and monthly hedge
+pressure well dd ratio is your tiebreaker at your zone boundaries so as you see all parts of liquidity
+map and the redistribution zone now have tiebreaker indicators to go with it i now have confluence as to
+what the stocks are doing hedge pressure monthly rdz bear zone and bull zone now now we're cooking right
+it's all come full circle now i have indications that help me understand what the relationship is
+between the stock market index and the stocks themselves okay so that's basically it this ratio
+is helpful for position sizing off a bull zone bottom and bear zone top if this ratio is very
+positive or sorry very much above half that i'm willing to hit a bull zone bottom really hard or a
+bear zone top really hard if it's less than half and we fall against a bull zone bottom would i long
+there with the dd ratio at 0.2 question class
+bsu if i get here and it's less than half would i would i long yeah pretty hard right we talk about
+this that the ratio uh is confluence for a bull side but when you don't have full confluence you
+you play it less hard right so this one says a normal trade off a bull zone bottom with the confluence
+medium without it you're going to hit it pretty hard most of the time now on the short side number
+one on a bear long down for instance if you have the bearish confluence that more stocks are in a
+bear zone then yes you're willing to short this pretty hard if it's bullish confluence you are not
+going to take the short at all does bring up one particular um one particular thing about this bear
+is on top is there's kind of a sort of conflict and strategies if you have dd ratio less than half
+you will normal short every time or you can normal short every time but if dd ratio is less than half
+you also can long it every time from the other side when approaching it from the bottom
+you have an option you can take the long trade because of greater market blind monkey or you can
+take the short trade it's very much the one one of our setups that has that kind of discretionary take
+to it normally when i open below i'm normally going to short off of it if the ratio agrees
+if the market opens above and it falls through and then comes back to it on the reclaim and the
+ratio is less than half then you're kind of at a choice right you can choose which way you feel
+like you need to go use other clues technically speaking the more correct way is to always follow
+the ratio but remember um if any other things are telling you to be bullish normally when we approach
+bear's own top we long it every single time over here you see that so you you have kind of a
+conflict and it's there for a reason it's more of a greater bull greater bear market conflict see when
+the ratio is less than half you take it as a small when the ratio is less than half you can sit out
+or short it so of all the setups it's one that you have a choice to make
+so let's let's practice this what happens if we fall through here and we hit it right here and the
+dd ratio is 0.45 it's just under five what would you do long or short no wrong answer but i want to
+know what you think it's less than half short with a tight stop maybe some people say long so the people
+that say short say short because of the lesson the people that say long why would what would make
+you want to long it and why somebody give me one answer why you'd want to long it
+because it's close to half that's the answer yeah because it's close enough to half yeah because it's
+very close you you are all you're all gonna be 50 50 on this if you're confused then and also the
+reclaim remember when you lose a pivot and you reclaim you want to take these reclaims every
+time too so they're both right answers right no wrong answer but as long as you use risk management
+either answer is correct okay what happens if you fail this and you reclaim it and dd is 0.08
+would you long it or short it now
+those that said long would you long it smaller than 0.45 yes those that we're gonna short would
+you short it harder than previously yes right again no wrong answer for me if it's like close
+to half i assume close to half is close enough to half bullish it's 0.08 and it does this i'm usually
+most of the time going to take the short like if it's overwhelmingly bearish and again it's the
+one time you do have a choice for the most part your brain should always say whatever place we
+started at that's the place it wants to end at so on the reclaim you might want to take the bet
+that you can long there but it's going to be very small if that ratio is less than half okay if it
+falls in that ratio is less than half you want to long you can i mean short it you can short a little
+harder and that's basically how you can do it remember just keep your position sizing in mind
+okay that's the one rare instance you have a conflict but it's that way for a reason it's very
+much coin flippy when you get to that point okay all right um now dd band let's talk about this
+dd band is a thing that we discovered at some point based on the risk interval we briefly touched before
+but the risk interval as we will refresh your memory if you open up the little chevron at the bottom
+the platform click ridd and then you scroll down to any one of your contracts s&p for example you
+have a risk interval which is here risk interval is based on margin requirements right and margin
+requirements dictate range and as we learned about in um risk interval uh teachings is that when the
+market moves suddenly on an event usually falls a risk interval uh before it finds that first batch of
+liquidity where it stops for a minute and goes like nazik is uh 230 points right so um this particular
+dive here 680 minus 230 is uh 450 and as you see 450 is where it stabilized it overshot it a little bit
+because that made crazy momentum on this night but this night we like fell and hesitated and then right
+here we started nose diving and you can see exactly one risk interval is about um here right this area
+right there and you can see that that's where that buffering took place when the market saved itself
+risk interval is very important when the market has to quickly find liquidity and uh that's where the
+buyers and sellers are distributed because that's where the reported positions are telling the dealers
+they're distributed now we have this cool idea that when futures is trucking along and then an event
+happens futures will move a risk interval very suddenly most times before it pauses when the
+stock market is open so futures can get ahead of it but futures moving first to test the step change
+in stocks to guess where it will end up is the same thing we thought well what would be neat is if the
+market gapped up or down more than a risk interval also in the overnight remember the futures market closes
+and then reopens based on an equation called the iop and you'll learn this in the futures class we'll have
+a futures dedicated class it goes through all these little technical things and we thought what happens
+if you measured a risk interval up or down from the previous day's close remember close is supposed to
+be like a liquid spot and open is a liquid very liquid spot in futures an equation calculates that
+liquid spot so my thought was what happens if we go up or down a risk interval if you gap more than a
+risk interval clearly the market's going to be unstable just like if you sell off more than a risk
+interval during an event so this is also an event if you need to go more than that distance to find
+liquidity there's something wrong so then we just mapped out a band to see what was going to happen
+like let's see what happens it turns out that when the stock market is closed the futures market is
+guessing based on something that's not even open so the futures market will move that distance usually
+and when you get close to that risk interval there's just some strange buffering away from it just like
+you get when the market dives really fast a risk interval all this volume comes through to try to
+rescue that structure at the same spot when the market's actually trading or an event happens so we
+thought it'd be cool what happens if we watch and it turns out that just that same distance from the
+open and close creates that same effect whenever you get to that risk interval distance from the
+previous day's futures close there's always high volume today is this example on this this day of this
+video the market fell to monthly hedge pressure and broke through it now actually let's take a step
+back remember the monthly hedge pressure class from yesterday and we talk about what happens when you
+break monthly hedge pressure more than a strike distance what do we tell you happens to the market
+everybody when you're supposed to hold the thing that's expected and you lose it it gets crazy and
+sporadic and it gets uncontrollable we call it irrational and one thing i'll walk you guys through is
+like let's talk about the volume you see how we fell fell fell right to mhp and that volume starts
+to spike when you get to it as we tell you it's expected you get there again here's huge volume again
+on mhp see that's how good our mhp is predicting volume and then what happens is when you fall one strike
+distance below your 40 points 670 once you break through that distance and you're certainly falling below
+mhp the minute you break through 40 points under look at the volume here this volume gets crazy
+and then it starts to fall apart the market starts to get bigger and bigger and crazier look crazy
+volume crazy volume crazy volume look at the bottom as i'm scanning across this bigger volume bigger
+volume bigger volume bigger volume you'll see that what we thought was even a big volume spike here
+10 times the average trade of volume there look these spikes even trump over this one this is usually
+your market structure holding this up and you see how when you lose it there's all this chaotic volume
+that's even bigger than this do we all see that that's what happens when mhp breaks i actually took
+this trade the night before this video was made and stopped out there and got out of the way and when i
+woke up or when i woke up this morning look what happened overnight this market absolutely collapsed
+as a matter of fact it collapsed so hard it fell all the way to the dd band which as we expect will
+have volume which i'll touch you about in a second we fell and there's high volume here and it even
+caused such a squeeze that that was overpowered itself for it eventually rescued so when i tell you guys
+if you're longing for instance and you lose mhp structure and i get out here imagine what my account
+would look like had i held all the way to there you'll see what i'm saying these are perfect
+crash deterrent detectors or crash detectors it's crash turn if i lose mhp more than strike
+distance i'm very much like now we didn't have liquidity maps until the morning because this is
+all overnight but i'm very much not going to hold and back hold the whole way down take my loss get
+out of the way all right but you can see just as an example this is a good one how much crazy sporadic
+volume came out of the woodwork just because we broke through mhp i can see even at the low which is
+this volume bar look how much volume was even bigger than the mhp bounce volume does everybody
+here see that we thought this was big when we got there look at how crazy it gets this is what happens
+when markets are rational with rocket scooter when you get that flipping of the gamma from
+bullish gamma to bearish like long hedging to short hedging you get that sort of squeeze play where the
+market just dominoes on top of itself okay now speaking of that because we broke through this the
+market was falling pretty drastically and really the first major resistance it found was the actual
+dd band when we got there and this is one risk interval low on nasdaq from yesterday's close
+and as you get here look look how much volume came in relative to all those crazy spikes we had along
+the way you see that so the dd band volume is very very very strong against all of that so you can see
+that the market tries to hold this as much as it can and when you fail it it gets even worse so
+irrational markets can cascade on each other when all these buffering you know that hedging buffering
+and then this dealer buffering fails then the market really fails and that's where it collapsed out at the
+end you see how that happened this right here on top of mhp break just dropped the market like another
+200 points in a what seven or eight minute period and that is what a crash is when the market falls
+that far that quick now see that wasn't just trading down it toppled over complete lack of liquidity do we
+understand everybody so when you lose mhp or you fall outside the dd band either one of them can cause
+what's called irrational behavior and we'll talk about that later i haven't taught you what to do but
+if you were to lose mhp and a long pivot came up would you still trade it and if so what would you
+do differently if you were to trade it everybody tell me what you would do everybody says no sit out
+maybe small trade long very small very small very small sit out size down i've done my job if that's
+what you think you understand the danger of the market falling apart and therefore you'll trade
+very small i'm talking like a tenth of your normal small position like tiny tiny if i normally were to
+trade a couple minis there i might trade a couple micros there right if i lose this irrational and this
+irrational would i want to be buying here every single time micros of micros like the tiniest of
+tiniest of anything at all nothing to be safe yeah you guys are nailing it so these structure
+things should not break and when they break and they shouldn't be you're gonna you're gonna know
+that you're gonna want to avoid it most of the time but if you're like dead set that that's your
+opportunity and you want to take it then assume that that irrational behavior moves the market quickly
+and then trade small because you know it's going to move quick all right great so these bands right
+as we observed over time it turns out that they were actually extremely good pivots and futures so
+remember risk intervals calculated in futures only and the dd ratio is based on stocks and what we found
+out was a beautiful thing as we started going through and counting every single day same site open and
+close we found out that 88 of days do not break through this green band any futures contract
+has a similar high probability don't break the band we only have this for the index this was s&p
+but the index products are very strong it's very hard to have enough volume to break through this band
+and the example earlier you had to break through mhp to cause a chain reaction to break through this
+four percent of days close above and eight percent of days close below that is fantastic odds it's one of
+your strongest setups so when you start to do the math here you'll realize that
+uh eight percent close below therefore 92 percent close above the lower band right four percent close
+above 96 percent close above below the upper band this is your highest and this is all confluence by
+the way this is counting every day not even looking at the ratio confluence these are your highest odds
+in the rocket scooter setups the highest you get this is better than mhp better than liquidity map
+liquidity pocket sorry okay 96 percent fantastic okay without confluence by the way the market does not
+like to break that risk interval structure that often and even if it does break more often than not
+it gets back above there most of the time so we're going to talk about a couple of things to kind of go
+with your understanding here this is the percent of days that close at the end of the day it's not
+the behavior in the day just like a chaotic example of the day that this video was filmed as you see it
+broke once broke twice broke three times broke four times and then made its way back above it's not going
+to be 92 percent of times it's going to bounce clearly that's not the case but because 92 percent of days
+close above doesn't it make sense that every time it breaks and it comes back above you'd want to take
+the bet with a small stop to bet that it closes above and if it fails do it again and stop and it goes
+there do it again and stop and then it goes there do it again and look what it did do we understand that
+when you're betting on odds of total percent closures on the day and the only way that that works in your
+favor is if you hit the reclaim every single time with the same intensity but not blowing up and today
+was an odd day the day of this video this is the most unusual trading day we've seen in a very long time
+that this date of this video was the day after fomc towards the end of the year where the market sort of
+like peak but sort of trading down a little bit fomc popped we had an overshoot mhp break dd band break
+die and then we sort of reset and it looked good and it looked great and when the market opened it
+did this up and down chaotic crazy okay i hit it here it fell i added i stopped it went back to there
+i added on the reclaim it went back to there i added on the reclaim it went back to there i added on the
+reclaim and then i stopped again and stopped again and held on to a small position held it held it held
+it, went back to there, added on the reclaim, fell again. I took a ton of drawdown doing this.
+Normally when trading, if it wasn't irrational, I would just wait for the pocket to add here to go
+there to get my cost bases lower. But when you fail rational territory, you're not going to want
+to build heavy positions down here because of crap like this. Do you understand? The possible
+flush potential is what gets you. So in a reclaim situation, when you lose something that's
+rational boundary, it would make sense to be efficient by longing at the bottom. But
+unfortunately you can be catching a knife and backholding. You don't want to add down here.
+Instead, I wait till I get to the reclaim and add here. And I miss out on this, but that lack of
+efficiency is more than made up for not catching a falling knife and trying to time catching the
+crash. I'm waiting for the structure point to get back in when it's reclaimed. A reclaim is you lose
+it and come back to it. Bear zone top reclaim every time if you want to. And the ratio was greater than
+half. Good. DD band reclaim ratios greater than half. Good. It just so happens in the rare instance
+when somebody said how many times is a reclaim is it's usually rare that you reclaim three times and
+fail. You know, once fail twice, fail three times fail. There you go. Once a year, it gets crazy like
+this. And then the fourth time was the winner. How crazy is that? Right? So being, and I was like,
+take a hit, take a hit, take a hit, made it all back. Almost, almost all of it back. And so if I were
+to just take my loss, take my loss and man, I'm so fatigued, I can't trade and my emotions are wrecked,
+I'm done. I missed out on that. And worse, which is okay to miss out. It's fine to not trade. But
+worse is if I see this and I'm like, fine, I'll get in. And I jump in on the long and take a stop
+and then see this and jump in along and then take a stop. And I'm too scared and timid from this
+that I desync from the market. And then I blow up on the way up. Right? Today's trade,
+when I longed here and longed here, I just held all through this, through this. And then I closed
+out here because the resilience was less than half, less than zero. And then the earnings popped
+up later. Okay. So back to DD band, the percentages, because the percentages are high. I'm going to bet
+every time at the boundary. If I have the confluence, if I'm losing money, I should go smaller,
+smaller, smaller to make sure I don't blow up every attempt. This is the rare time where it took four
+attempts to get back above. Usually on average, it might fail once and then do this and then go.
+You might get one failure to hit a stop and one dip to not hit a stop and you'll keep going.
+The rescues are like this. So because of that, when you're below the band and because of the 92%
+of days that close above, I never short below the band. Never do I chase a short. We understand that,
+right? That's such a low probability that markets crash and keep going. Let's sit out of that. Like,
+don't worry about that. If it crashes and keeps going, just be like, all those idiots and caught
+in that trade, I'm sitting out. And then just wait and just wait and just wait. And then when it's back
+to there, pick your scout, pick your trade, let it get back in a safe territory where the odds are in
+your favor. The odds are out of your favor, sit out. If you want to take longs down here to bet back
+up, then we allow that. Your strong pivots only. Your 90 percenters, bear zone, bull zone, MHP,
+and red line, which you haven't had a class on yet called an illiquidity pivot. And of course,
+because you're irrational, small only. Small, tiny longs, scalp it back to the band,
+get back to the band, add to your position, and then take it to your target.
+A lot of the time, the markets, 8% of days close below total, but it doesn't mean 92%
+of days bounce. As a matter of fact, maybe in a bearish market, maybe one out of four days,
+it gets pretty crazy. We'll break this. But when it breaks, it almost always snaps back in.
+On the bull side of the coin, 4% of days close above and 96 below. Bull sides don't do this like
+that. We discussed this in the very first class. As a matter of fact, on the bull side,
+you don't really break that much. If I'm going to make up a number and say you break 20% of days,
+but 12% of them you recover, it leaves 8% left. Here, you probably make 5% of days and 4% of days
+stay. I'm making these numbers up, but it's kind of like that. You don't normally break the band.
+And when you do, it just keeps going. It's very rare that it breaks the band and tucks back in
+because of bull market, right? Bull market doesn't really have top wigs. Bear market loves
+bottom wigs, right? So on bull days, because of that fact, it doesn't break that often. When it
+does, it usually just keeps going. That one fact, in fact, number two is if it does tuck back in,
+you never know how high a bull market's going to go because there's no volatility before it
+eventually snaps back in. And it usually snaps back in right there on the edge, opposed to a bear
+market, which usually breaks it really far and it gets volatile. And then like today,
+snaps all the way back up. That bear squeeze goes really high. That bull sell-off does not go really
+low. We understand that. It's a characteristic of bull market versus bear market. Everybody,
+wake up. Okay. Because of that, we also don't short the bull market. Isn't that weird? We're not
+going to bet that a bull market fades because you'll be upset on hundreds of points before you're
+finally right. Possibly. So no shorting the bull market either. So that's that principle.
+But no chasing a short because most of the days that break do tuck back in.
+Overall, there's a theme here. When the market's irrational, don't chase a short at the bottom.
+When the market's bullish, don't fade a bull market. Simple as that. So when you're outside the
+bands, the trades you can take are bounces off the band. Remember the three lines, if it breaks,
+which means if you break in the territory that you weren't normally in, you always wait for the
+retest and then take the small long check. Why small? Again, irrational. It doesn't really want
+to be there. So don't all in long on your bet. Always small. Again, down here, always small.
+Or you can long off of your strong pivots only as well. MHP bears on top, bulls on bottom.
+On the long side. Where do you exit? See how this goes to an exit target? You can exit any of
+your strong pivots. MHP bears on top, bulls on bottom, and your yellow line, which goes with
+the red line class, your illiquidity pivots, which we'll come to at another date. So in reality,
+when the market falls to here, this is one of your strongest pivots. If you fail on the reclaim,
+you're going to take it every time. Up here, when you're trading, this is normally your first exit
+target before you're done. Get out of the way. Let the market do whatever. Don't even hold a runner.
+Let it do whatever. And if it tests here, get back into the runner you would have held
+and take it as a second trade where you'll add right near your stop and then bet that it goes
+back to the band. So if you buy here with one and then you allow it to dip to your stop and you add
+two more for a total of three, when it goes right back to the pivot, you close out the two like I
+keep teaching you to do. And then you have your one runner here right at your stop.
+Right. So you play the trades just like that. I will almost always exit fully at DD band,
+never exit and hold a runner. I exit fully. And just like any other target, when you break from
+a neutral or balanced territory into a bull market territory, as I've taught you, you always wait
+for the retest. When bull resistance tests the support, you always have a retest on a reclaim.
+You don't wait for the retest. You chase it right when it taps. You don't wait for it to do that
+on a reclaim. Do we got it? Because usually on the reclaim, you don't get the opportunity,
+doesn't turn back around and retest. Reclaims are usually very sharp when they play out.
+And today's a perfect example of why you don't wait for the retest. This might've retested for
+a candle, but a lot of times it just goes and keeps going. You see that? So when it approaches
+the green line, I jump right back in two minutes, it kept going. This happened to kind of retest.
+This is what a retest looks like. You break out and keep going, but it didn't actually touch the
+band. So this time we got lucky. But many times on a reclaim, it just keeps going. This one,
+we kind of got lucky with the retest too. But normally on a reclaim, you don't take it.
+You don't wait for it to, you jump in right at the boundary. So again, repeating when you break
+out of normal territory into the low probability territory on the bull side,
+we start in here, we break to here. Always, always sit out of this. Don't chase this. That's
+the squeeze part of this. And if the market falls to there, then take another trade.
+Right? Okay.
+Simple as that.
+It was interesting to see how strong the Steady band principle was. And it just turns out that
+it became one of our strongest pivots. And as you start to like have more creativity and flexibility
+and like planning on what you're doing, it becomes something you're going to use almost daily in the
+overnight. When you're trading an overnight pivots, where's your exit target? Well, DD band is your
+ideal exit target overnight. Trade it to there and close out. If you're shorting short to there and
+close out. Right? Simple as that. Now the current connection between the
+ratio and the bands, it just so happens to be similar to the ratio and the liquidity pockets,
+right? If you break this market maker buffering sort of area where there's just volume near the band,
+it's very rare that the index falls apart and then creates a crash scenario when the, when the
+stocks are bullish, right? The stocks are getting that like bullish, like the pressure from all that
+bull positioning from all that hedging and stuff. Why would the index fall apart? I mean, that was
+the assumption we were making initial initially when we invented this and it turned out to be
+exactly what you thought. If this is a structure point to keep the market liquid, then why would
+you go to an illiquid territory when the stocks are bullish, i.e. liquid, liquid markets don't crash.
+The answer was it was so strong. It became one of the best setups we have. So when you hit the bottom
+DD band and the ratio is greater than half, I'm going to want to be long every single time from
+that band. Even with four failures, it still is the best play to take. Okay. Every time I reclaim,
+I get in on it. It's that strong. And while on the stream that I was doing today, people were like,
+what's going on? Why are you losing? Why are you losing? I'm like, I'm sticking to my guns.
+Every reclaim, crap, I failed. Crap, I failed. Oh, there it goes. And again, it's one of my favorite
+trades because the odds are so high. Now I have to survive the four failures like the blind monkey
+to initially get the gain. But now you understand how this works. I'm being right from the right
+place. Um, in this case being wrong from the right place as well. Okay. So on this side of the coin,
+if I'm long the market or sorry, at the bottom, if the DD ratio is greater than half, I'm hitting it
+with a normal, a big fat trade. Um, if it's not greater than half, less than half, I still hit it with
+the medium blind monkey. I'm not going to bet that market structure falls apart. Even if the
+DD ratio is very low, the lower it is, I can always decide to trade smaller, but I'm still going to
+long every single time because of that probability is really high. And then of course, on the short
+side, exactly what's expected. I'm going to short off the band with the ratio being less than half,
+but I'm not going to short the band. If the ratio is greater than half, because we don't short
+a bull market, any evidence of the market being bullish, we're not going to try to fade the bull
+market. What I'll do is be the first person in the trade off of something else and exit my trade
+here. And then let everyone else figure out what they're doing at the top. If somehow it pops,
+I wait for the bounce. Then I get back in right. Easy as that. Any questions so far?
+This is basically it. I'll show you some cool things in our discord. We currently have a
+member made tools area where people have made their own versions of the DD band for different
+platforms. Like there's one for thinkorswim, there's one for trading view. And so let me add
+as an example, the one that we've made to thinkorswim and 210 on NASDAQ. You have to plug in your risk
+in our books. It's not automated, but you should go to NASDAQ for the example.
+Oh, 230 and ES is 6150. Okay. So example, and it's all automated in the Rockseer platform,
+by the way, 230. I'm going to hit apply. It's going to add the span. And again, you can find this,
+it's their pin into that channel called member made tools. Let me add the one, the S and P
+6150, right? And again, doomsday was just a little funny word for it. Actually the history of the
+word came from the fact that every, every one of our indicators we've made, we've had a secret
+project team and discord and volunteers step up for it to do a, you know, data analysis and back
+testing and stuff. They always have cool names. And what did DD band or the ratio actually where
+doomsday came from? Cause what I noticed was that when markets were consolidating and the ratio fell
+less than half, my original reason for making it was that in a consolidating market, let's just see
+what the stocks are doing as a tiebreaker in a flat market. If the ratio fell to less than half,
+then the market would sell off for a few days. We go, Oh, that's nice. It's like a doomsday clock.
+Cool. So we call it a project doomsday. And then the, the, the name just stuck. But as you see,
+when you put the bands, right, this is ES for an example, do you see how S and P and all these
+like, there's just some kind of buffering at these bands. And even at the top hits, the band
+is a beautiful pivot. And it's so good. Like at all times, it's so good. Um, we fell, there's the
+band. We fell, we broke it. Look how chaotic it gets. And then it reclaims, right? It's like, um,
+here we fell to the penny and then it bounces, right? It's like, here we rallied to the penny.
+Then it rejects barely tapped over it. Right. Um, one interesting note, this is a rollover event.
+As you see on thinkorswim, the green line is a rollover. We rolled over into the December contract
+here. This is not correct because the indicator doesn't account for rollovers on a rollover day
+indicator is based on the previous day's close. So while some days you will see, it looks like you're
+outside the bands, the reference point needs to be that current contract. You don't consider
+one risk interval above or below the close of the previous month. We all understand this
+how contracts work when they roll over everybody. This is the previous contract.
+It was still trading like this. This is the December contract that was trading like this,
+right? So when you roll over this, the only the first day is actually this contract's DD band,
+this contract's DD band, you need to create your own sometimes with these indicators because they're
+not smart enough to use the previous contract. So remember some days you might say, oh crap,
+we're above the DD band. Rollover days will be like that. Um, rocket scooter. It's also like that too.
+Okay. Unless you're looking just at the contract, then it's okay. So if you're looking at the actual
+contract by itself, the full contract with the date and the month, then it won't be like that. You're
+looking straight at that contract. The minute you roll over to a new contract, make sure you have the
+full contract code in there. So I'm only looking at Z what, uh, Z 25 and think or so it should be fine
+and think or swim when you're using continuous contract. Let me start by, you should have said
+that at first, the continuous contract, which the daisy chains, the contracts around rollover
+your, your DD band will break on that first day and then be correct the second day. So keep that
+in mind. Um, okay. So that's another thing to note, but yeah, you can just see that, you know,
+the margin requirements changed a little bit. So the bands will be bigger and smaller as time goes by,
+but I mean, it's just such a good pivot and you're going to see that most days you can
+just observe it right. Most days, um, inside the band and there's a rare instance we break. Why we
+don't short when it breaks? Well, because blind monkey, right here again, when it breaks, it didn't
+even tuck back in two days in a row. How many times you break the downside? Nope, nope, nope, nope,
+nope, nope. Reclaimed? Nope, nope, nope, nope, nope, nope, nope, nope, nope. How many times you break to
+the upside? One, two, three. Nope, nope, nope, nope, nope, nope. Or nope, nope, nope, nope.
+And this is a gap up. So that's a, that's a crazy one. Yep. So you can see that the market
+drives between these bands very often. The risk and old band is actually really strong.
+Even in like big, crazy sell-off days, you will see that the market will have volatility here.
+Reclaim trading is very important on days you want to trade, especially when markets are selling off
+and they're volatile because you'll get plenty of opportunities to trade reclaims. This particular
+day, you had one, two, three reclaim trades, right? This day, you would have failed and stopped.
+Another thing, DD band breaks are considered very irrational, just like MHP breaks. And if you break
+them more than your stop distance and you don't have a strong pivot, the market can sometimes crash out,
+which is another crash detector that we have. Some of the worst days that we've ever seen
+started with a DD band breaks. Let me see if we got, yeah, like this example here,
+Trump day crashing, right? This was actually, this was four o'clock in the morning. So you woke up this
+day and the market already has crashed below it, right? If you ever, ever, ever wake up and approach
+the stock market and it's opening below DD band, make that a conscious choice not to trade that day.
+I usually do. And maybe on the stream, I'll force myself to trade very small.
+But if you are opening at nine 30 in the morning, already irrational, go back to bed,
+go do something else. Laugh that everyone else is going to have the worst headache of a day
+and you won't. You know what I mean? Come back the next day when it's not like that.
+Um, I wish I hadn't gone back to, uh, there's only, I can only show a years of data,
+but August of 2024, maybe I do have it. Hold on. I do have it.
+Um, yes. All right. Great example. All right. Nevermind. I do have it. One of the neatest things
+in the world that you will have as a, as a preemptive warning sign that the market is collapsing
+is that when you do break DD band and you're trading lower, um, this is the S and P in this
+instance, pre-market. So this example, the London sesh dropped the market. Like the S and P went from
+that stable point. Like, first of all, we gapped out and we immediately fell to it and broke through
+it by 11 o'clock my time PM from the DD band at 52 95. We ultimately bottomed out right before
+market opens at 51 21. That's a whole 2% drop overnight. And as you see, the market was chaotic
+for the rest of the day. This is not the day you want to make, have, have a good, you know,
+I don't want to trade this day. Um, if you, um, as a matter of fact, let me start over at
+this time, the risk interval was different. This risk interval is based on current volatility.
+I remember now that's why it looks a little off to me at this time. Risk interval was like
+30, I think. Yes, it was. That's correct. At that time, the risk interval started,
+so one thing about these indicators have used the manual ones as well. When you put in the
+risk interval, it actually does all of them to that risk interval. So at that time, I
+do remember the top of my head exactly what it looked like. There's the lesson. This is
+supposed to blow your mind. Okay. That's it. This day, this, cause it was 30 at that time.
+Okay. The market went below DD band at eight o'clock at night in the Asian session. That's
+right. So you had a warning sign already that the market was unstable and then it just fell
+and fell and fell. And then you woke up earlier in the night, you had the warning sign and then
+you woke up to this, ah, forget about it. And don't even think, well, let me just go
+ahead and maybe short this. I'm gonna make a ton of money. That's your style of trading,
+whatever. I am a master at missing out on this and then getting back in here. I love sitting
+out of it. So when you wake up and you're below it, just get out of the way. And then from 54
+or sorry, from a 54 all the way down to 53, it fell 2% from there. And then the next day
+we actually gapped down to it and then broke it within two hours. So again, you can see
+this, these market crashes that move this much, this is, this is one of the best warning
+signs you have. So at the time, yeah, the risk interval was 30. That looks more familiar.
+The last bootcamp class we taught had that risk interval in there. Okay, cool.
+It's such a really, really, really, really good
+pivot, just like everything else we have based on statistics
+and confluence based on the stocks, just like you're always going to do.
+Everything here is based on finding high volume pivots and then betting on it based
+on the best knowledge you have and what the stocks are doing to go with it.
+There's some handouts that you'll have. Obviously I showed you one, this one right
+here. We put a magnet here just to kind of just hint that there's just like the
+sort of like pressure wave or a fan on the stream. You might see me draw a whoosh
+fan. It's just like a resistance pressure that kind of drives it around here.
+Everything else here is pretty self-explanatory. Then we gave you some other
+handouts, which kind of just, you know, detail it further, but you should already
+know this from the liquidity maps. Full zone bottom. If the ratio is bullish, then
+hit it hard. Hit that hard. Hit it hard as well. This, as you see, draws the retest
+because we opened bearish. Anytime you open bearish and break in, you always wait for
+the retest. Then you take the trade. You guys got it? Good deal.
+So here, if a D ratio is bearish, I still long this with a medium. I still long this
+with a small. That's reflected here. That's this trade.
+And then here, if the ratio is bearish, I can short from there. As we talked earlier, if
+we open bullish and fell there and hit there and ratio is bearish, you have an option. You
+can take the short or you can take the small long on the, on the reclaim every time up
+to you to decide your greater sentiment, use other clues to help you with it. Okay. If
+you approach this and the ratio is negative, it's not considered a reclaim if you open below
+it. So if you approach it and you break through it like this, you're going to wait to break
+through and test to take your long. Just like we said, anytime you break out of something that
+you were originally in, you need to wait for a retest. It's not a reclaim scenario unless you
+start above it. You'll tap it there. So the reclaim from earlier, if I wasn't clear, is where
+you have the option to do both at the boundary. Do we got it? LN means liquidity map you ever
+asked in class. Okay. That's all. There's really not much else to kind of cram into this
+video. It's just, it gets simpler and simpler as the videos go by. You have the same concepts,
+strong pivot, strong pivot, confluence. Influence matches your position size. You have options.
+You can be creative. It's all the same thing. Every class is pretty much the same thing.
+Try to be as creative as you can with the tools that you have to make your best guess and be
+efficient when you can be.

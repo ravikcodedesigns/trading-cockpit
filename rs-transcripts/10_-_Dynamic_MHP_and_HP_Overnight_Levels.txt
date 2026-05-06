@@ -1,0 +1,431 @@
+today's class is over the dynamic overnight hedge pressure and monthly hedge pressure
+calculations that we have this is something that was invented for a specific purpose now as you
+learn liquidity maps class we have hedge pressure and monthly hedge pressure which is based on the
+dealer gamma exposure in the options world which we get that data right overnight we get the open
+interest and we have all the trades in the previous day and then we have all the prices and Greeks in
+the morning and we run the calculation now in the morning at 9 30 the market opens we have all the
+data that we need but overnight we're missing some data and therefore for overnight trading we came up
+with this idea here now let me find a little blank spot to kind of draw on and demonstrate so part of
+the hedge pressure calculation requires a couple things now i'm going to draw this again i think
+i drew this in a previous class but 9 30 in the morning is when the options and stock market open
+at that point we have a lot of information immediately we have all options you'll have
+price of each option like the bid and ask price you'll have Greeks i'll just put like a delta gamma
+etc um and you'll have essentially stock data stock trading everything and order flow all come in at
+9 30 it goes all the way until the options market closes which is 4 15 at 4 15 you don't have any price
+so uh you have basically the market cuts off overnight and price you have no idea what they are because
+there's no trading there's no quoting price and from 4 15 all the way to the end of the night you have
+nothing until it opens again so at the end so the way that this works is that when you buy or sell an
+option uh right there is somebody else on the other side of your trade and everybody that buys or sells
+an option there's always somebody else on the other side of their trade now you don't know every option
+in the time and sales uh whenever you are seeing order flow anything you never know like with stocks
+every time an order shows up in the time and sales on a on a uh in your stock trading platform an order
+just changes hands there's a buyer and seller the seller sold it to the buyer that's pretty simple
+with an option there's not a finite amount of those things you can create them you can destroy them
+uh an option is a new contract so every time you see an order you really have no idea
+if the option was just traded hands like you had one and sold it to the other guy it would show up
+as an order somebody bought a thousand options a thousand call options and it says on the time and
+sales a thousand were bought at this time well the did the seller just have them and then dump them to
+a new buyer or did somebody want to buy them and somebody had to create them to sell it to a new
+contract or did somebody you know cover like essentially or it's the other side of the coin is
+uh somebody created the option or somebody destroyed the option like somebody exercised
+the position and turn the option the shares it's really hard in the option time and sales to really
+know what's going on in real time but the point is is that when when trading happens um you can think
+like open interest is like a box how much of something is in this box so oi would be the level of total
+options in existence it's very important to map out where that structure is in the market
+and so in in the overnight the way that it works is that the open interest is reported to people
+like me platform owners or wall street in general in the middle of the night a company called opera
+they're the options reporting authority um opera that's supposed to be an r and the way that it works
+is that options in real time nobody knows not even the exchange knows um how many options are in
+existence inside of this box at any given point in time uh until the end of the day at the end of the
+day all reportable entities large institutions and stuff report their just options position at the end
+of the day to opera so they every fund will say i own this option this option this many of this this
+many of that or the opera opera collects everybody's information and then publishes it one time in the
+middle of the night and then we get a hundred percent of the oi is known so the hundred percent of
+landscape is known in the middle of the night um we know exactly how many of every call input are open
+everywhere and then that's known all the way till the market opens and then when the market opens
+then you don't know anymore the oi is it's a question again so um you know um oi once the
+market opens is well you're in the dark again the minute trading starts happening this box is either
+adding or subtracting you don't know trade trades happen immediately and therefore you have a varying
+amount again in the dark so when you look at a clock which you'll notice that goes in the hedge
+pressure calculation you need a lot of information like the orders that took place you need to know
+all of it at once the total oi um the amount of oi that's a market maker the price of the option the
+greeks of the option and some other data that goes into the calculation the problem is only time on the
+entire clock when everything is known is that moment in time the market opens when 100 of the oi is
+known up until the point of open and then once the market opens then we know the price and the greeks
+to go with it and about what the oi should be because after like a you know five or ten seconds
+of trading the oi is immediately going to change but not too much so the only time all data is known
+for us to calculate a liquidity map is right when the market opens as unfortunate as it is it is we don't
+have the real-time open interest we nobody does it's not even a thing that exists so we have a
+liquidity maps hedge pressures and everything that calculate throughout the day uh sorry that calculate
+once in the day now throughout the day if we did have the real-time open interest in the real-time
+everything we'd be able to guess where hedge pressure moves to it can move around the the estimation
+from kind of like where we are i'll let you start over um where mhp is calculated at 9 30 in the
+morning uh some early tests that we did about how much it does move throughout the day because they
+can move but the thing is on their platform it doesn't it's just static and the levels that we
+have at 9 30 in the morning are just as good till the end of the day uh the amount that hedge pressure
+can move is based on the changing of oi and where where some of those things are but the good thing
+about this is that there's not usually enough trading throughout the day that moves hedge pressure
+around a lot or the walls they pretty much stay put as a matter of fact very rarely do they move
+any more than one strike distance so because the variance is about one strike distance when it's
+non-volatile of the probability of where it actually is because remember we don't know the oi so
+mhp and everything is sort of just kind of like going off in the morning numbers and so throughout the
+day we found out that it can possibly move a certain distance and it's less than that one strike
+distance that we talk about because that is the variance that leads to being that ends up being our
+stop loss how much do i allow an overshoot of a target that's probably moving we don't know
+is that one strike distance and that actually why it works out really nicely to be what our stop is
+just a little trivia as to why we choose one strike distance spy for example which is 10 points es for
+stop and 40 points on nasdaq because that's the average variance of where these things can move
+if we did have real time oi but we don't have real time oi you're saying so how would you know how much
+it moves well at some point i decided to take it upon myself to create a model to kind of calculate
+where it possibly could be because well while it was nice to have this you know one calculation in
+the morning it turns out as you see at the end of the day this particular day mhp was pretty much a
+pivot all day long which just proves that the oi that we have in the morning is good enough till the
+end of the day but even so if you had the real time mapping of what all options were in real time
+you'd be the only person in the world to have it and boy you'd have a cheat code of the market
+because you would know exactly where the risk is balanced at any moment in time to the penny
+that'd be beautiful right imagine a dynamic moving hedge pressure that can move up and down like
+two points and three points and sort of just be exactly balanced exactly where it needs to be
+if everything was known unfortunately the only time we know everything is at one point in the morning
+so what happens at the end of the day uh you have so much volume that trades the open interest is
+completely different at the end of the day the beginning of the day so you're not going to use the
+morning numbers to trade overnight and we were like well so what do we do what can we do overnight
+if you optionally trade in the morning what about nighttime traders in asia and europe traders to
+train us markets what are we going to do so what i did was i created my first attempt years ago at a
+real-time open interest model we have a clever way of doing it and the way that it works is we know what
+the current open interest is and then we sort of make a couple of estimates okay and if you know
+what the open interest is for a certain option and every time an order comes through you can guess
+is it adding subtracting or just exchanging hands you can keep a real-time tally of the open interest
+by guessing certain orders now there's a there's a couple of assumptions we make to kind of estimate
+if an order flow is created or destroyed it's kind of proprietary so i don't tell how i do it but it's a
+pretty solid estimate even though it's not exact it's definitely a guess let me give you one example
+and a good example would be that you see a bid of 20 and an ask of 40 right
+and you see an order come through for a thousand and the bid and ask doesn't change so you can assume
+the bid and ask are what people want to buy and if the bidder ask doesn't change and an order of a
+thousand comes through and that likely means that somebody dumped these options to the market
+uh by either by mostly like creating them they weren't currently in existence because they weren't
+on the bid and ask and then you could assume a thousand were dumped and somebody just naked
+shorted a thousand options um and sold to market and a dealer jumped in and grabbed it and so the idea
+is is that if you know the other side of the coin is if you see a thousand on the bid and an order
+comes through for 800 and the bid drops to 200 well then you would know maybe two a thousand that existed
+got shrunk by by 800 and that was definitely um somebody wanted to buy and then you sold to them
+and then you can make the assumption that that maybe they just exchanged hands right these are just
+examples this isn't exactly what we do but you can see how you can kind of make assumptions
+based on and then using auxiliary data to double check if there's no um assignment of those options
+then they weren't destroyed example is if um you see an equivalent amount of shares being purchased
+around the same time or after the option was traded then you would you would see that it wasn't
+destroyed right a destroyed option means it was exercised so you look for clues to try to guess
+real-time open interest model as you can kind of tell it's a little messy right we're making huge
+guesses so why would we do that well because if we have that open interest at the end of the day
+and we can have like a new set of hedge pressures in between the the time the market closes and when
+opera gives us the data so in the sweet spot of evening trading we needed something to trade with
+i created this real-time open interest model that had three parameters that's kind of neat
+we had an oi max which was pretty pretty simple we had an oi min and then the oi real oi total
+now in the oi uh estimated early on this is a little history the oi maximum was pretty simple
+we take the existing oi we'd add the total volume we take the existing oi and subtract the total volume
+to have the min and max and that created a range which it couldn't be any far above or this and
+calculate a hedge pressure both places a min and max knowing that hedge pressure is likely in the
+middle of both of them we take that number and and and calculate where hedge pressure will be at 9 30
+in the morning adjusting for the time and then inside of there i developed an open interest model
+that had a very high probability of calculating inside of this range uh and and it basically was
+pretty spot on for being kind of like a good enough estimate to get us by overnight now why would we
+want to have an estimate overnight and how was that useful well so at first when we started creating
+this we had a range of where hedge pressure could be and that was the best we can do and then i worked
+on a real-time open interest model that was more sophisticated and we got rid of the max and min
+sort of approach hedge pressure used to have two numbers and now it just has one overnight
+and monthly we have the same thing so this overnight dynamic is one monthly hedge pressure and one
+weekly hedge pressure that we've calculated based on this this estimate model and basically the reason
+for that is the best you can do imagine you're a stock trader or an equities trader or something
+and you own the s&p and at the end of the day you want to decide man this market's volatile
+i wish i knew if we're going to be above or below tomorrow's hedge pressure so i can buy some
+options or hedge it overnight with an estimate and see that well we were like okay so what if we had
+an estimate of like you know the max and min were an exact range so we knew hedge pressure had to be
+in between somewhere there and if you knew that this is where uh hedge pressure was likely to be then
+of course you can buy your puts below the lowest possibility so overnight you'd have your position
+guarded right before the market closes you'd have an estimate as to maybe where to put your puts
+we were like okay that's pretty much good enough right we close here and we're kind of above our
+hedge pressure is probably going to be somewhere in this range so i'm pretty still pretty cool to
+still stay bullish all right i'll hold my position as an estimate that seemed good enough for an
+overnight sort of you know understanding if if you close below the hedge pressures and you were
+like uh man maybe it's bearish tonight uh let me let me let me close my position end of the day
+and so while that being as good as it was i further refined it to get rid of the maximum
+model and create just the estimate model so then i was left with what we thought was a really solid
+estimate based on real-time open interest model and again it was an estimate i didn't think it was
+going to do anything other than just be about where it is we had like like a little range where
+hedge pressure could be and then estimate of that we had a range where weekly hedge pressure could be
+and an estimate of that then you have like a pseudo liquidity map overnight as we learned in the
+and the liquidity maps class if we were currently opening the stock the futures market open here
+we would be in a long up state just like a blu for example would be on your liquidity map opening
+above blue and blues above orange so then as it went through us just observing this for years and years
+and years something interesting happened um it turned out that what i thought was an estimate and
+wasn't going to be really that good for like exact trading more like just estimated or hedging
+turned out to be like another set of rock solid pivots and it was weird because it's very repeatable
+and it's a high volume pivot but it's an estimate and i never thought that it would be something that
+would be any good or actual dynamic futures like specific day trading but this on my chart as i've drawn
+here is the dynamic monthly hedge pressure off of my estimate model and you can see that it's
+different than the actual hedge pressure we get in the morning and it turns out they're both pivots
+like there's a high volume pivot there it it's interesting and s&p i don't know where it was last
+night i think i drew it on here s&p's i think was like right here let me get that number really quick
+it was uh 68 71 on the s&p and so what's interesting about this number is i thought i didn't think
+anything of it but it turns out
+it it ends up being one of the strongest high volume pivots that we have off of an estimate model
+and it's exact and for the longest time and still to this day we we've been confused
+as to how an estimate of oi somehow creates a high volume pivot every time and not only
+overnight is there a high volume pivot there uh just like you would see your regular head like
+here here at night right you see how there's volume right here on this hedge pressure break
+it starts to create the volume not only is it a solid pivot overnight but for some reason in the
+daytime it also pivots so like what the heck is going on here right we created something that was
+supposed to be an estimate in the dark spot before we got the opera published but then yet it accidentally
+by discovery of the members of this group by the way who were like oh man i use that pivot to trade
+in the daytime it's so good and i was like it can't be it doesn't make any sense and so we we
+thought for years like what what's going on here how is matt's real-time open interest model
+feasibly like or even feasible for an exact pivot where everyone's trading as well and we kind of came
+up with the generalized theory as to what actually is going on see the assumptions i make to calculate
+where hedge pressure will likely be so essentially how this calculation works is i have an estimated
+real-time open interest and i have at the end of the day all the closing parameters of those options
+i make assumptions and adjust for 9 30 in the morning and then at 4 at 5 30 p.m when we calculate it we
+make the adjustment and guess where hedge pressure is likely to be at 9 30 in the morning assuming the
+price of the underlying doesn't change all night so that's all the data you need to calculate
+where the 9 30 targeted hedge pressure is going to be and it uses an estimated oi for some reason
+that's exactly what you need to do because it creates some kind of volume pivot that is perfect
+for overnight trading and it lasts throughout the day it becomes one of the strongest considered
+pivots in the daytime as well just as strong as the 9 30 calculation so now you have two and now you
+treat them both the same way and so why it works in the theory that i have about why that it works
+is that in the overnight every firm in the world is in the dark but there's other firms that are
+trading in their normal session like asia right when our market opens asia is about to open
+they don't have our options landscape and some creative mathematician running some hedge fund
+probably came to a similar conclusion i did and was like we can kind of estimate what the oi is using
+some clever math and watching the order flow and then some hedge fund is probably like okay we
+calculated this level another hedge fund is like yeah we calculated this level another one's like we
+calculated this level and they all happen to be around the same area because we all made the same
+logical assumptions called convergent evolution where that the most effective and efficient solution
+is converged upon by multiple people without collaborating because it's the obvious conclusion
+the way to describe it is um if there's a tree with a banana in it right and there's a group of monkeys
+on an island that's staring at the banana and they're all sitting here scratching their heads like
+hmm this is a monkey there's a tail like how do we get the banana and one of the monkeys just stares at it
+one of the monkeys punches the tree another monkey grabs a monkey and throws it at the banana
+and then finally another monkey gets to the tree and walks up steals the banana and goes and everyone
+goes oh that's the way to do it now everybody in that system will start to copy that monkey and then
+all of a sudden everyone's getting a banana the same way if you were to take this system and go to
+other planets where you had the same situation the result would likely be the same a bunch of monkeys
+would trial and error how to get the banana but the one that climbs the tree to gets it is the most
+efficient way to get it and then everyone's copying it and just so beholds that every planet you look
+at monkeys are climbing the tree to get the banana because they all converge to the same obvious
+solution are these monkeys blind somebody asked lol well yeah of course right so the idea is is that
+it's not really that far-fetched that this solution was likely found by other people so other people are
+acting there which creates the volume another thing that could be plausible is that we've discovered
+something that we just can't explain that is some market making type thing where the exchange or the
+dealers are themselves buffering at some level to keep the market in check overnight for example is
+if you know hedge pressure breaks in the daytime markets are keeping track of that flow of orders based on
+gamma and delta right and so if they were able to also estimate where that threshold is likely to be
+maybe the dealers themselves are applying some kind of buffering pressure just to prevent the market
+from becoming destabilized overnight and there's some kind of market maker thing going on there
+probably less likely uh the more likely thing is that everyone's kind of stumbled upon the same
+conclusion especially firms in asia and europe who are trading when their markets are open and our
+options market is closed so they don't have any idea as much as we do so they're hedging their positions
+and they've come up to a similar calculation and they're just hedging around where they think you need
+to hedge and they set it on autopilot and then they go to bed and then our market opens in the morning
+and they're sleeping and their robots are just trading the same level all day which is what
+makes this progress throughout the night so maybe asian hedge funds and banks have made similar
+calculations and then they're on autopilot throughout our market which is why this estimate lasts
+throughout the day either way it seems to be a process of mathematics we've converged on to something
+accidentally and neat little trivia that goes with it but hey it's another pivot it's another clue it's
+another piece of information it's another another place to see if the market's going to be stabilized
+better than other people whatever causes it we don't exactly know i mean i know my open interest
+model is pretty good but i didn't believe it was that good but it turns out it is and as much as i'm
+still confused to the date of this video as to why it's as good as it is it doesn't matter because
+we've been trading it for many many many many many years and it's done the same thing every time
+it's a high volume pivot no matter what throughout the day so therefore let's just do what you normally
+do when you don't understand something find the probabilities of it and those probabilities we have
+shared with you earlier on in the boot camp series that these are the same probabilities that you hold
+the same side of dynamic is the same as the other hedge pressure it's uncanny how both estimates so
+basically the dynamic one is calculated at 5 30 in the afternoon 30 minutes before market opens
+and it's aiming to guess where monthly hedge pressure will be when the actual options market does open
+which happened to be way down here instead why the discrepancy well because the assumption as i said
+earlier is that price doesn't move overnight the price were to stay pretty flat overnight and go
+absolutely nowhere monthly hedge pressure would likely be pretty much where we estimate it to be
+but because price moves all over the place and volatility changes hedge pressure drastically moves
+once we get the actual data in the morning but it turns out both of them are pivots and so we're
+going to treat them both the same way is that whenever you open on one side you're likely to close on that
+same side more often than you don't the market's going to try to make its way back to the same side
+you close on so let's forget about the morning calculations and just focus on the nighttime ones
+okay and how we would use it just like any other hedge pressure or monthly hedge pressure it creates
+two-thirds of the liquidity map calculation letters you have hedge pressure monthly and then the zones
+tell you which way the flow is going so every time the market opens at 5 30 now the date of this video
+we haven't automated them in the platform yet they're still manual there's a channel in the discord where
+i publish the manual calculations i run the model on my own local machine and give you the numbers
+but by the time you watch this video they're likely to be automated in the platform they will just
+show up automatically overnight you will get a weekly hedge pressure and a monthly hedge pressure
+estimate okay and wherever the price opens you're going to treat it just the same as you would a
+traditional liquidity map um if i like an example is if we open above blue and blue is above
+orange like a blu we would use the same sort of trade plan right i could long immediately at the
+open add to my position there add to my position there and then stop if we break mhp one of the
+things to note is that if you break the mhp overnight the market usually becomes unstable
+maybe finds the dd bands and still keeps breaking it can be an early warning sign that the market's
+falling apart overnight um you can trade pretty much the same way you do in the daytime
+you can assume the same probabilities now you won't have resilience right to go with you
+because resilience is based on the stocks and the stocks aren't trading overnight so you're not going
+to have any confluence but without confluence you can just assume you have no confluence and
+therefore you'll trade it like you don't have confluence which means you'll always trade it small
+if anything or maybe medium to the long side so an example is with confluence right i might trade a
+medium off of there but without the confluence overnight i'm going to trade a small with
+confluence this is always a normal without confluence i'll probably make it a medium on the long side
+on the short side of the trade the opposite uh you know without confluence you usually sit out
+so on the short side of the trade um you do not short off of blue hedge pressure
+at all and you can short off of mhp but always small so just like anything else without confluence
+you're going to you're going to take small shorts don't never short off a blue it's it's not that
+great remember if you remember the odds from the first couple classes it's a 40 chance you break
+on this blue and 60 percent on weekly 60 that you bounce 40 60 is not a strong enough short
+we just set something overnight also in the overnight trading uh what are my rules for profit
+target so i will trade off of a long pivot and get 10 points and call in a day i don't try to trade
+for runs i don't try to trade for the full amount i'll get a scalp if it's there and usually take it
+if mhp is in the vicinity i'll usually take it every single time if you're in between two hedge
+pressures trade from hedge pressure to hedge pressure and then close out if you lose your 40 points
+or 10 points as a nasa can s&p then take your stop so usually i'm trying to get one decent trade
+overnight trying to get my one scalp and be done if i do it now i don't try to trade overnight uh just
+kind of to tell you guys this don't try to over trade and force things i glance at the overnight
+and if there's an opportunity i take it because there's an opportunity not because i feel it i want
+to i want this direction i want to try to get it on a trade the last thing you want to do overnight
+which is a slower moving market that doesn't always necessarily move and sometimes you don't
+have a lot of triggers or news events that you understand the market could be tanking because
+something in china is happening or something in germany is happening right things you may not be
+aware of and so it's a little bit harder the last thing you want to do in the evening is to be locked
+into a position for six seven eight nine hours upside down maybe and then just not sleeping and then
+showing up the next day missing work missing family time at night you know try to use your
+night time for relaxation and you know your best data is always in the morning but for some reason
+the night time is the only time you can trade it's absolutely fine say that you have a day job
+you're trying to practice trading at night to get your feet wet these overnight dynamics are perfectly
+designed for you to have something to trade with and so you can practice all your skill set do i have
+two places to long from okay how far is this oh that's 15 points that's below my stop so instead of
+trading my position of three that was my pretend that was my small let me trade it with shoe to
+allow a further run to the next entry then i can add three more there which is five it's my medium
+and i'll set my stop there and my loss for each one of these is that and i trade it just like normal
+if i buy two and it goes and i take the profit off of 10 if i buy two then buy three more then it goes
+there i close out the three let the two ride for 10 close out if i buy two buy three i stop then that's
+the loss this is the same position as when i teach you in every other class you'll treat it the same
+way you just don't have zones overnight at this stage because um the zones with the variance that
+it can have right we say that hedge pressure can move up or down probably a strike based on how much
+variance this open interest model has that's where we actually calculate that variance by the way
+a real-time open interest inside of the range of where the high and low estimate was
+that range almost always calculated to be one strike that's where our uh our stop loss came
+from so remember when i take the open interest and add the volume and open interest and subtract the
+volume it would create a boundary for where max and min hedge pressure could be and that boundary
+when vix was below triple b which we'll visit in another class is always one strike or less
+therefore where hedge pressure could be was always uh one strike variance off and therefore we notice
+in any specific trading day when we have hedge pressure you very rarely move more than one
+strike distance of overshoot before it takes off and so when volatility would go up and we'd be above
+triple b which will come to that class we would see the variance in the real-time open interest model
+be much higher two three four strikes which is leading us to a different path of calculating
+um exactly where what your stop can be when it's volatile now that's kind of like a work in progress
+but like an exact stop loss calculation the market is this volatile allow this much to overshoot not
+just 10 points or one strike so what's neat about is the the frontier is pretty awesome of where we are
+and what we can do with this but in all honesty you're going to treat it just like any other hedge
+pressure simplicity as it is okay i'll give you some scenarios market opens here and here
+uh in the futures market these are estimates and the futures market opens right right with this white dot
+right here the distance between here and here is um 10 points
+what would you do everybody quickly type up a trade plan remember 5 30 in the afternoon these
+calculations are performed they're updated in our discord uh 30 minutes before market opens and then when
+this automated in the platform it should just show up on your platform overnight everyone quickly
+type up a pseudo trade plan give me contract size where you would add where you would subtract where
+you'd stop where you'd exit
+somebody said they'd short it orange we have blue stop okay small a weekly short from okay cool so we
+have a bunch of options here you have you have a lot of people taking small longs from here and a lot
+of people taking shorts from there now let's analyze this you're opening in between orange and blue and
+orange is above blue that's like this one right here in case you noticed all of you were right
+everybody that came up with the plan all of y'all were pretty much right good thoughts right you've
+got a trade from here and a trade for you got two pivots to trade between which is perfect now nobody
+did say short below blue which is fine you wouldn't do that if the market's here you're going to short
+off of your strong pivot only without confluence with a small position and if you were going to long
+you're going to do one of two things you're going to wait and long from somewhere or wait for the
+market to break and test retest and then take the long from there right um great good idea now again
+you would use the calculation to kind of figure out how you do a trade plan but you have options
+overnight which is better than nothing and that's why we did this we were like let's have something
+that's better than nothing yeah perfect good job now one more example let's do really quick the
+market is like this and we are like this and then you open here
+the distance here is 20 points the distance here
+is five points what do you do
+first tomorrow let's practice speed everyone type really quick are you feeling long or short
+quick just give me a give me a name long or short speed right okay so automatically you're like long
+then you're gonna okay where i long from would you long at the open this is s&p by the way i say
+points this is s&p my bad yes would you long at the open
+sure you could it's only five points away it's kind of like longing a hedge pressure but you can
+get him right at the open and then add here so when somebody said yes
+okay so everybody's feeling long so would you agree that if i were if i if i were to long here and my
+total budget for a medium trade was five i might just toss one edit at the open which is usually
+like that open trade and then add the other four right here and then put a stop right there makes
+sense so i have a trade in case the market opens and goes which is small i have a very small loss in
+case it just dips five more i can add four more there with my cost basis here with a stop slightly
+below this is not that bad of a trade to bet on a quickie little run right so perfect now what happens
+here if we were to somehow stop out of this and market falls to there what would you do here
+at the bloom
+all right half of you got it half of you're kind of thinking about it remember your priorities when you
+break through mhp it's a different class of uh of structure break we call it irrational when you
+break through your higher probability pivots you do not bet on the structure of the lower probability
+pivots holding one of the key rules of thumb is that hierarchy we told you in the last class
+if you're breaking through a strong pivot like mhp you're not going to bet that weekly hedge
+pressure is going to hold or even you know or half gap is going to hold right the stronger the
+pivot that should hold structure if it breaks then the market's becoming overpowered by something else
+therefore you assume it's going to overpower even the weaker pivots in that particular example
+if you lose hedge pressure and trade lower monthly hedge pressure you're going to be irrational so at
+best you're trading smaller than normal and not executing longs at the weaker pivots
+mostly if you're trading small already one strike or sorry uh like the you know essentially
+one strike if you're trading small and you lose the confluence you're going to trade smaller than
+small which actually becomes a sit out so if you in this situation and you break mhp
+you're more you're less likely to buy down here to bounce rather than you're ready to short off of
+here to sell off okay so when you're breaking mhp be very careful to buy anything else underneath it
+with any hard position i'll mark it is irrational at that point okay that was just the the this extra
+one extra example so in all essence it's no different than what you already have learned how to do
+uh in liquidity maps you're going to have two mhps to play on if you're curious as to like how you're
+going to handle it just revert to looking at your liquidity map summary it will give you ideas
+when you're in between hedge pressure you will play between them when you're above both of them in
+this orientation the up orientation you can long up this one long up of this one that's in that play
+in this play uh when they're oriented the other way around you can trade between them this way
+then of course uh if you break through monthly hedge pressure um which i don't think we have the case
+drawn right here but you can see if you open here and the market is in this orientation there's no
+longs off of the blue and that's really important to note um here there's no longs off of the blue
+unless you break through it from below with confluence which overnight we won't have so
+remember as long as you don't break through monthly hedge pressure it's not being below
+it's breaking through it that becomes irrational so there's a difference just one more thing
+there's a difference between uh in in the way the market structure is we talked about this the mhp class
+is that if the market's open here and then starts trading like this versus the market opens here
+and starts trading like this price is in the same place in both instances but this one is extremely
+worse than this one opening down here the market is pretty much stable on the bear side on this one
+bulls are getting knocked out and frantically jumping to the bear side right and hedging is
+pushing it that way so when you break is when irrational markets happen it's not if you open
+below so in the example here is that if you open below monthly hedge pressure but above weekly like
+this this orientation like you open right here the market's like moving and moving and moving and
+it's right there you can choose to chase a bull trade from there longing with your traditional
+stop to there and then you'd get out of the way and then maybe reverse a short you can take a trade
+off of this from approaching it from the bottom it's the mhp break when you open above that you do not
+try to reverse along in the middle of potential collapse okay um all right so that's basically it
+uh and just to recap overnight you have this information to make estimates for and in the
+daytime now you have a liquidity map with two possible pivots how do you handle it well uh the
+liquidity map tells you pivot to pivot and your monthly resilience and weekly resilience that you
+have can be handled the same way off of the pivot as well so like example today weekly resilience was
+negative and this is your dynamic hedge pressure your actual calculated one was down here and so
+you can see that it's still bouncing off of it and when you approach it from the bottom what do you do
+it's not uh it doesn't you know in the future it will have like a tag that'll tell you support or
+resistance currently at the day of this video it doesn't since it's just manually drawn
+but i'll treat it the same way as i would the other actual calculation with the same position
+sizing criteria and the same confluence numbers because it's better than nothing and we've noticed
+that it just becomes a pivot the daytime and you know in this date of this video we still treat it
+the same so you're going to have basically two monthly and two weekly hedge pressures in the
+daytime however the overnight dynamic weekly hedge pressure i don't necessarily utilize that in the
+daytime as much because in the daytime there's so many a plus pivots with strong probabilities that i
+focus mostly on those and you'll never really see me with the overnight dynamic blues in the middle of
+the day even though they're possible pivots the only time i'll whip them out is if the market's
+trading in no man's land like i don't have anything nearby i might say okay is there a pivot here
+it'll be is a possibility again the monthly is such a strong pivot and calculation the weekly is just
+as good but it's it's kind of like limiting how much i do sometimes you get a very big cluster of
+things put together and i really focus on the monthly just because that's a bigger break point
+on the market those monthly options and i really care about pivoting off of that much more than the
+smaller weaker weekly options so you can choose to use the overnight weekly in the daytime as well a lot of
+people do uh you just don't see me do it but there's no reason not to do it other than uh just for some
+simplicity's sake uh it is an estimate after all while it is still a high volume pivot i don't necessarily
+utilize it like i do monthly which is definitely going to be like a make or break bigger pivot for
+the market as well weekly is not when you break weekly the market's not falling apart when you
+break monthly it is so that dynamic when i'm like let me use an extra clue for this and uh we can just
+assume just going forward that this is your asia europe version and then the the daytime version and
+they're both going to be acted on and so like i said it's a little bit fuzzy at this point we have a
+technique on how we use it but like what else can come of this as the years go by we might find other
+ways to utilize these uh overnights but and in reality i mean they're so good like in the daytime i
+mean you just can't deny uh how how nice they are right when they work okay

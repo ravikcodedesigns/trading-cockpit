@@ -1,0 +1,512 @@
+so this is the final class of what we call the blind monkey saga the boot camp that you've been
+watching videos and participating in is now coming to a conclusion you have learned everything
+rocket scooter to date the state of the art of everything that we do and now we're going to go
+through and tell you why all this was important what it is you actually learn and absorb now the
+first things we start off with is we gave you the foundation of understanding that price action in
+the market is random price doesn't tell you anything about the future of the market price is
+a result of people doing stuff to the market now is there any guarantee they're going to do something
+later no price can't predict itself and price can't be predicted and technical indicators that read the
+price can't predict what's going to happen next your interpretation of indicators can lead to
+some common tropes like something that's oversold may turn around in reverse but there's no guarantee
+markets can continue to continue to crash as long as they want to the indicator never gives you the
+answer of okay now it's going to turn around what we taught you is that volume is predictable and as it
+is most of you that have had experience with previous volume-based indicators like vwaps volume profiles
+you found that the market responds to where volume was in the past and can't possibly respond there
+again vwap volume weighted average right vwap volume taps it and tends to sometimes have a rejection
+against it well what makes that happen well self-fulfilling mostly people are reacting to it
+but what makes volume so strong is that there were traders there at some point and maybe they're still
+there again maybe they're second guessing their decision when you return to the spot maybe they're hedging
+when they weren't hedged before typically volume has sort of repeated action but rocket scooter takes
+one step further to not make the assumption that maybe traders will be there again because the volume
+profile said they were there before we use people's current options as you've learned in liquidity maps
+class to predict where volume flow will be volume flow is predictable right do options if you can
+identify that somebody has sold an option and that person has no desire to be speculative in the market
+like a market maker and you can calculate exactly how many shares they need to hold at any given price
+at any given time so that they can remain neutral in their risk and all that calculation of where
+volume could be we found was a very powerful tool as we learned in rocket scooter volume prediction is the
+next wave of or the future of trading analysis being able to use this map that's available to find out
+where volume will be gives me an idea of where i can be right or wrong on the direction but from the
+right place as we learned in this entire boot camp that the most important thing about your entry is
+learning how to be wrong and right from the right place more often than not if you are wrong from the
+wrong place you're going to lose a lot of money an example if you know the market is let me just draw
+something random here uh let's use this as an example now let me some space down in here
+if the market were moving through here you learned you're never going to short against that with the
+dd ratio being favorable to the bull side and being wrong from the wrong place is that you jump in on a
+short right here well it's got so much travel before it even hits the next resistance where maybe a short is
+even possible and we know the short is probably short-lived because it's bullish with that being
+said being wrong from the wrong place is is equivalent to chasing the trade market falls pre-market and you
+jump in and short at the bottom because you don't want to miss out and all of a sudden you're squeezed
+and you're the last person to short being wrong from the wrong place typically means you you had fomo
+and you jumped in because you didn't want to miss out you guys follow that right being wrong from the
+wrong place is you saw something you're like i want to get some of that let me jump in on that
+and you're always going to be wrong the worst thing you can ever do is being wrong from the wrong place
+but being wrong from the right place makes all the sense in the world if i want to short it's not
+because the market's falling that i want to get in on something it's because i have a reason to short
+an example we go to the top of the bull zone actually let me before i even draw that market fell to
+here and here and here then all of a sudden it's gonna it's gonna pop like this
+shorting from here is not the right place shorting from here is more of the right place and let's
+pretend in this example dd ratio is 0.3 shorting from here is the perfect place to short from with
+everything we have on the screen for the most part the exception of this is probably uh we don't teach
+shorting from yellow but again the only resistances are here and here this is probably the best place
+to short from so being wrong from the right place means identifying the place where other bears can be
+and trying to be the first bear to the party so that other bears can maybe come in after you
+and move the market the direction you want you don't want to be the last bear to the bear party
+be the first bear you don't want to be the first bull or the last bull to the bull party
+right you want to be the first bull so being wrong from the right place is such a key important decision
+because it allows you to be wrong small i always say if you were wrong from the wrong place i short
+right here the market goes and goes and goes and goes and goes and goes and all automatically boom
+it falls to there you were short here you never broke profit on that but if you were short from here
+the probability is much higher that at least you got a profit before you got out of the way
+being wrong from the right place means you were always wrong small it's such a powerful thing to take
+away predicting volume as best as you can is the only way to guarantee that you have a shot
+and knowing where the right place is where's the right place where traders will be that's it and this
+kind of calculation such as with the liquidity maps are helping me understand where volume is going to
+be so i can try to be right or wrong from the right place the efficiency we call it entry efficiency
+is one of the key components of a trading strategy being it's getting the most return for the risk
+that you're taking okay so so far um
+we've learned a couple of things how to predict volume is such an important thing how to find where
+traders will be it narrows down where you can act just just a handful of places that make sense
+there maybe there maybe there maybe there not every price is important not every move is important
+and let's cover some of that here an example over here to the right we've got resilience at the bottom
+markets open pre-market we've you know had a lot of stuff and also what you've learned from me too is
+to completely ignore pre-market once the market opens it's a brand new liquid spot that high volume
+the market maker is trying to open where the most liquid spot is when you find liquidity you say
+equilibrium and markets equalized right there it's a brand new day forget pre-market so you walk up here
+you're sitting here and all of a sudden resilience is positive monthly resilience is positive and you
+would say aha we moved up into here and now we're in bull zone positive res and i tell myself immediately
+oh we can fill the gap it's wherever that's going to be right the gap fill is all the way up to there
+okay positive res immediately market bumps this morning i jumped in on the long literally right
+there market bumps we can fill the gap cool i've got movement to there we have to pass through mhp
+dynamic to get there but mhp resilience is also positive so that really shifts the dynamic favor to
+go forward we learned as we learned our back test is a lot of these things have a very small chance
+of happening with all confluences right this is not with confluence in the direction we don't have
+the with confluence probability but we assume that it's a much higher probability than a quarter chance
+of breaking remember 73 percent is same side close on monthly hedge pressure with the confluence it could
+be as good as 50 50 we don't have enough data to know that but observably i'm more willing to chase
+the long side of it breaks through and supports to let it go and you can see the first gap we went
+from here all the way to our first interrupt which was there the interrupt itself has volume as we get
+to it and then of course we hit the liquidity pocket which of course is another place or sorry we had the
+gap fill right here which is another place where volume will be on the volume is spiking as you can see
+those little circles and then we fill the gap but as you know the process of filling the gap
+also passes through a liquidity pocket which we learned in the every single time class
+the dd ratio is greater than half i long every single time so therefore i'm already long and i
+want to be long so i hold on to it to complete the move all the way to bull zone we all we call this the
+sandwich trade right the bear zone sandwich between two bulls you trade right through it like it's not
+even there so now that we fill the gap now we're in another liquidity pocket where another trade is there
+i i i got in on the long because my indicators were good i held my breath right there hoping that
+it didn't reject the things turned around and boom and we walked right up to there i trimmed a little
+bit got back in here wrote it all the way to there right so textbook when everything sort of has
+structure in the market these decisions are much easier to make i'm not making decisions randomly
+through here i'm chasing the open because the gap fill was really big we so gapped down overnight
+the positive res hell yeah i'm going to take the gap fill but before i even enter i go through the
+steps of making sure that the trade is worth it now what you've learned in your boot camp uh handouts
+it's a trade plan checklist that we always talk about that checklist is so important because it allows
+you to make these decisions very quickly pre-market as i review with you pre-market i already had my
+decision um of greater market dd ratio greater than half we're we're not even close to the end of the
+month and we're above mhp so we're good and monthly maps are bullish so all three of the greater market
+indicators are bullish which is great vix is below triple b as is dated this video and vvix is it is
+below 100 so i have the perfect setup for the overnight i mean start for the greater market
+what probability class of days are going to be green when all the greater market lines up to be bullish
+what's the probability of green days 70 right and so i already wake up today when the market's
+opening saying 70 chance of a green day which means 70 of days are going to go from here to there
+because that's where we closed yesterday and slightly above would make it green isn't that cool right so
+even when the market opens i'm already prepared pre-market with my my greater market estimate i already
+know resilience is positive cool we can fill the gap 70 of days end up here good
+boom we're in okay i'm in the trade what's my reward well here and then some and then there's
+also the possibility to hit this and keep going so i can say well i've got 40 points of run
+with my non-volatile stop when the market's non-volatile 10 points of stop four to one trade so
+pretty much everything i've taught you i applied today right and when market has structure right when
+everything's sort of either trending up or trending down or even chopping um with structure you see
+that the decisions are made at the key points with the key confluences to go with it i did everything
+i taught you should i make the trade with the first thing on the checklist well check if irrational or
+sit out okay well all the greater market was bullish we didn't have you know a catalyst or anything
+no risk interval drops there um nothing was irrational we weren't outside of the dd bands no nothing's
+crazy going there with vix so right the initial trade plan checklist should i take the trade yeah
+sure do i need the long or short well my greater market estimate was bullish and when the market
+opened i dove in and within two minutes i got pretty much everything lined up to say yep bullish is the
+right choice i traded before i had the answer because i knew that i'm you know resilience gives me the
+answer right when the market opens but but dd ratio in your your liquidity maps take about you know a
+minute or so to come out so when that's saying your 30 seconds at the best and so with that
+i make the decision i jump in for the gap field it's a four to one trade i already decided yes i should
+take it let me get in my greater market estimate everything was bullish and non-volatile cool so i can
+use a 10 point stop it was volatile well i'd look pre-market to see the biggest candle to say okay
+maybe i'll use a 20 point stop or 30 point stop or something but 10 points s&p four to one made the
+decision then wait wait wait data comes in and then check check check everything's still good
+all right liquidity maps popped up oh heck yeah we're already going to fill the gap and already i'm
+in a est bear zone sandwich which means i'm trading all the way to there great good setup i'm taking it
+find out where i will enter exit add stop i just actually did both of these together um account for
+volatility and make sure i have my stop loss correct so you know essentially this also was
+pre-market i'm going to long to gap fill and then everything comes in i piece the rest of it together
+calculate how i'll how much will i lose something i want entries in this particular case i was making
+one entry i was going to buy at the open buy at the pocket stop 10 points under and that would have
+been roughly you know 10 15 points of loss the position size of i don't know what i had maybe 15 or 20
+uh s&p contracts or actually i was now i think on this date i was actually nasdaq now the way i think
+about it the nasdaq seems more familiar but it was pretty much the same setup it was um i was like
+maybe 10 or 15 asset contracts something like that and actually i now i remember because it wasn't
+going to be pocket i was going to long here and long it banned and stop below and same same rules apply
+in this example calculate how much i'm going to lose well this was certainly the amount i was going to
+lose was was absolutely okay by me and the reward was adequate for the risk so boom boom boom take
+it right or wrong from the right place if the market's going to be long it's going to be long
+from right here or nowhere right you got a very fall far drop to the next place and then of course
+even if we're irrational i would say well i'll take a long off in there but make it small
+right but i know my big trade it's either here or it's nowhere for a big trade so i got it so i
+i looked everything i calculated yes is to take the trade made an assumption got in on the trade
+verified the trade after the fact with all the rest of the data was 95 of the way i got the other
+five percent here and things popped up i already calculated my risk and reward and then actually
+before i you know this is a trade where i got in first and then verified after but in any particular
+case unless you're chasing that open you get plenty of move plenty of room to do all of this
+beforehand um you know before you enter the trade so in normal in a normal circumstance when you're
+you're sitting there waiting for an entry and you have all your data already out check your rational
+do your math calculate how much you're going to lose see if it's adequate and you're okay and then
+ask one final time should i take the trade before you push the button double check the conditions at
+that moment whatever time it takes to do here it's like look left before crossing the street
+look right and then look left again one final check how do you feel everything good okay then
+execute the demonstrate i was demonstrating is the trade plan checklist but a lot of times i'll take
+the trade with most of the info should i take the trade not irrational check i'm in i'm not doing the
+second check before i get in i'm doing the second check while i'm in and if it's not looking good at
+that point then i'll get out sometimes your b setups that are gap fills that the move is so swift
+you don't have a minute or two to wait and the risk to reward is set no matter what because i'm filling
+the gap and uh i got a certain distance that i'm going to get no matter what the conditions turn out
+to be you can always choose to get out of the way early or just keep my r&r what i call commitment
+to trade commit the trade is commit to the reward commit to the risk and just all or nothing
+so even if the data came out looking bad in that particular example trying to get ahead of it
+slightly i would have still taken the same loss whether the data was good or bad anyways the trade
+pan checklist very very very very very important every time you're going to make a trade when you
+have all your data follow it you don't have all your data make sure you set your r&r first
+like i gave the example today
+make sure you calculate your r&r and that your risk is okay and adequate you can take that and
+you're okay and then when the data comes through you confirm do you still want to stay in the position
+or not i mean if the data comes in great you can add to it on the fly if the data comes in bad you
+can trim from it um but that's it that's how that works okay so you learned that you have the ability
+as i was trying to demonstrate with this to even get ahead of a trade plan by making some clever
+estimates and what's the benefit of that well the benefit of that is the difference of getting in
+here versus getting in here in this particular example it was 100 points worth of move right
+that's pretty substantial especially in nasdaq uh and so that trick allows me to some of these gap
+field trades to kind of get in kind of quick um but in either case right you have greater market
+allows you know probabilities of things we gave you some stats on where open same site open and
+close probabilities are in some of our major tools and then we tell you how to make a trade plan
+the reason all this is important all leans to the reason why most traders fail the reason why most
+traders fail if i were to quiz people and say why do most traders fail right and they don't really know
+why but i can tell you traders if i were to list these three things all of you will say two of those
+at least one of them is you but two or three of them are you as we taught you where the greater
+market is bullish right actually let me just list the things real good the the three things that
+traders do is they short too much okay this is number one and as we've covered this before in
+the first class i'm in all full circle as you've learned when the greater market is bullish which
+you've experienced most of the most of the time is that 70 of days are going to be green and that
+makes sense there's more people trying to now again intraday one could argue you can long and short
+long and short long and short that's fine but not every trader is is master scalper most traders are
+like throwing a trade in and just crossing their fingers and hoping they win right and so they're
+picking the wrong direction most of the time right because they're they're trying to if half of your
+trades are that style of trading let me just short and see if i win by the end of the day let me long
+see by the end of the day you're fighting against the herd of the market always going up and you're
+just shorting way too much now i'm extreme to the other side i long like 80 to 90 of my trades even in
+bear markets are long i'm just so comfortable and good at it that's what i do you don't have to be as
+extreme as me but if you're shorting um 60 50 60 of the time uh you better have some kind of
+exploit that means that you you short the high win rate because other than that you're fighting
+against the herd and most people do lose because they're trying to always fading a bull market is
+one of the biggest sources of loss people are going to get in and they slowly burn and slowly burn and
+slowly burn and it's not like a quick loss it's like a tedious loss like a million paper cuts because
+it just never seems to come down and this is what really grills you are like sort of like ruins your
+soul if i'm in a long and i lose twenty thousand dollars really quick and cut out okay that's fine
+right that's a lot but it's not like okay that's that's much better than losing five thousand and
+then praying and praying and praying and making 500 back then losing six thousand then seven thousand
+then twelve thousand and then twelve thousand five and then thirteen thousand and you're like come
+on come down come down come down come down okay good ten thousand i'm losing again i'm losing again
+and like the roller coaster by being on the wrong side of a long trade is so much more painful to the
+soul than being on the wrong side of a of a long trade that just dumps against you you take the loss and
+it's like a giant punch in the stomach yeah it hurts but the punch in the stomach heals faster than
+thousand little paper cuts i promise you over time shorting too much in a bull market is why most people
+lose uh there are this it's a general thing that means going against the trend you're usually chasing
+something and you want to jump in and chase and you're wrong from the wrong place shorting a low
+those kind of things okay another thing as we learned is that people don't do that trade plan
+checklist like i gave you ahead of time they don't calculate what's potentially possible immediately
+when i said pre-market probably 70 chance of green day which means 70 chance we're above this white
+line and when i saw the liquidity map come through halfway through the move i'm like oh even better
+not only are we above the white line we're actually probably going to go to there even better so now i go
+okay i've got a plan the reward the risk is calculated i've done the checklist i've calculated
+exactly how big my position needs to be and i know how much i'm going to lose even before all my data
+comes out as i can say even on the gap fill i can lose so much there to make so much there or wherever
+i am and so one of the things is that i'm not betting too big for any reason even guessing at
+the trade i want to have or the trade plan i don't have all the data i still know where i'm going to
+stop from a certain distance from my low entry i know what vix is after all i know what vix is when
+the market opens i pretty much know that i can use the greatest one minute can't or the largest one
+minute can't on the last hour trick to decide if i want to be in a normal stop of 10 points
+or s&p for a larger stop i already know how much i'm willing to stop even without all the data because
+i have that information pre-market as we talked in the pre-market class how to obtain that with that
+being said i know exactly how much i'm willing to lose one of the other reasons traders lose more
+than anything is not because they're fighting the trend but it's because they're betting too big for
+the risks they're taking and when you're betting too big uh what happens is that um when you're
+two things when you're wrong the psychology of being wrong it's a sticker shock to you you lose
+so much that no longer feels like a kick in the stomach like it feels like it feels like your life
+is over like you're you're so devastated from the trade you bet too big your loss is too big you
+didn't calculate the potential risk and reward you didn't calculate where your second or third
+entry will be and where your stop would be and ultimately carve out what your position size needs
+to be such that before you even push the button you know exactly how much you're going to lose if
+you're wrong if i'm looking to lose 15 points in the s&p that's 750 a contract if i had 10 i'm down
+7 500 if i have a million dollars in account i may decide that's not that much money for that total
+amount it's very small percentage i'm okay with that i make those checks to make sure i'm not betting
+too big two or three entries i can add and add and add i've all calculated before i do even the
+first one i'm never going to bet too big unless i just want to bet too big and i want to take a big
+swing because i chose to do it but the fact that i never accept my fate or the fact that a trader
+never accepts their fate before they enter is why they lose it's not just and the second reason is that
+they don't just not just betting too big and losing right there and it's a psychological hit there
+it's a psychological hit for the long time too you losing
+50 of your account from 100k to 50k you need to make 100 to get it back it's double the work to claw
+back from a hole that's a thing that people don't ever realize you can't just you're doubling your
+account size it's much harder than losing half but it's the same amount of money because of that
+it's always harder to dig out of a hole and you're kind of beat up from the previous trade
+psychologically you perform worse and worse and worse every time your performance deteriorates
+when you bet too big because the losses will destroy your confidence the losses will remove
+your capital you can't play again and the hole is hard to dig out you never feel like you get ahead
+you start doubting yourself then you start trading bad you start making poor mistakes rushing it and
+then you ultimately fail betting too big is a spiral of problems mostly psychological most traders
+never do that and that's why they lose big not if they get their trade right or wrong it's that
+when they're wrong they're wrong way too big and it messes them up for the future
+okay
+last part no market avoidance strategies as we taught you in the bootcamp as well
+is that there are key indicators that are going to let you know that the markets to be avoided
+market avoidance is why technical analysis fails because um in general
+technical analysis is always firing signals when there's a price there's always an indicator for
+that price and indicators are always firing off signals like you know averages crossover uncross
+cross uncross cross uncross signal signals signals it's always sending out signals these indicators
+are like to call dumb they're not programmed with any kind of logic to say you know what
+don't use me right now under these conditions conditions are weird i know i'm giving a signal
+don't use it the indicator doesn't give you a warning to say yeah there's a signal but it's probably not
+good to use it because of that dumb indicators are always firing off signals sometimes when the market's
+collapsing out and you're like oh the rsi is is a is a 10 that's very oversold and i should probably buy
+there and then the market continues to crash the next three or four hours and it goes from 10 to
+eight to seven and just stays low and doesn't reverse that stuff doesn't give any predictability
+and the fact that it's not saying oh well also we as we teach you there's a catalyst active maybe
+avoid the market altogether right rocket scooter tools tell you that we can we can have a high
+probability that these probabilities are maintained when structure is there but sometimes there's a panic
+going on people are clawing each other's eyes out to just get out of the way there's no structure to
+that people are just getting out as fast as they can without planning when there are traders that are
+planning it creates the structure it's self-fulfilling traders that are like you know a boss goes hey i
+just want you to sell all of our apple position today a trader is going to go in there and say okay
+where's some resistances where's the best place i can get out okay let me just try to do my best let's
+slowly get out of the way and sneak out of it there's structure because people are planning and acting
+towards a plan but if it's like holy crap we're a margin call we've got 10 minutes we got to close
+everything out or else we're screwed get out now and people like okay let me just short here people
+are making bad decisions or sell here people making bad decisions on the fly without a plan because they
+have to do something in those moments there is no structure people aren't behaving to any kind of
+pattern or resistance or whatever they're just getting out of the way in that case you would want to avoid
+the market it's very silly to assume something that's relying on structure is going to be reliable
+when there is no structure when the traders creating the catalyst or whatever in the sell-off are just
+getting squeezed out of the way against their will they're not making smart decisions here they too are
+acting panicky and dumb so therefore an already dumb indicator is not knowing the condition of the
+market to tell you to sit out market avoidance is essentially this is saying let's repeat all of it
+shorting too much means you're fighting the trend too much betting too big means you're never you're
+never accepting your fate in a trade before you enter it and you're surprised and it ruins you
+emotionally market avoidance means you trade too much now everyone in this chat right now would you say
+that you're on the wrong side of the trend you're betting too big or you're over trading
+is one of your major problems
+this is every trader that i've ever come across in the history of me talking to traders
+has fought all three of these if not are currently fighting two of these right now in their journey
+and that's why most of our boot camp was focused on trend identification and probabilistic approach
+which way is the trend going not just short too much short too much is kind of like the nickname
+for this but it means fighting the trend too much what are the odds of the trend right we have some
+probabilities so our approach was well the stock market is random but we do have odds and odds are
+better than nothing they allow me to say the probability at which something would happen which
+allows me to make an educated guess on the likelihood of the direction so i can try to get on the right
+side of the trade more often than not the betting philosophies that are very important that we
+cover every single handout we give you that's directional or trade related is going to give you
+position sizing guidelines with our really strict normal medium small sit out on the long side step
+down when you lose confluence short side without the full short confluence don't make the trade etc
+all that's designed to let you know when there is a high probability of something happening
+bet big the probability is low bet small when you lose confluence or confidence bet small and that
+is an appropriate way to make any kind of bet in a betting game which has to do with um size
+um odds based sizing sorry
+like in poker the better the odds the better the size odds based betting um so if you have your odds for
+direction and then also you can use your odds to base the size of your position or normally people
+would just wing it i'll just buy this or that but you're never really paying attention to what makes
+sense right two things when you're betting philosophy is number one make sure your loss is tolerable
+we taught you that if you were to take a loss repeatedly five days in a row if at the end of the
+week you don't feel sick to your stomach then that's an appropriate trade size to take for your normal
+right the bigger trade you'll take everyone decides what their normal is but the idea is
+is that when you get that weekend break and come back on monday you're not still hurting from friday
+if that's the case you know you're betting too big most of you never had a plan to let you know you're
+betting too big instead you just let your emotional spiral continue to get bad so these two solutions
+odds and odds based betting are to help battle the two most important uh trading related decisions
+you make and then finally which are rules to decide when structure was gone which is a non-trading
+related rule when to not trade and so everything that you've learned from anybody whether it's videos
+gurus indicators algorithms or whatever always rely on this magical word called structure what is
+structure anyways and i covered it a second ago structure means the market is doing something with an
+organized fashion a structure there's you know a foundation that structure is built on and a
+structure would be imagine everybody's doing the same thing at the same time let's pretend that there's
+just a magical rule that everybody in wall street decides to buy at this level because that's just what
+happens and there's structure because everyone's doing something logically at the same time
+creates structure it looks like there's a floor here that it bounces on there's a structure you can stand on
+right structure requires rationality people making rational decisions multiple people that are all
+doing random things making a rational decision that lead to the same conclusion that repeated behavior but
+shared between a lot of people creates that move which is the structure you observe structure requires a
+rational thought process it completely every indicator that you've ever used or technique relies on some kind of
+structure to fulfill that move or to fulfill that that um indicators um indication but nobody's indicators
+are smart enough to tell you avoid them today don't use the signal every indicator has got a signal but it
+doesn't say there is no structure so we created a whole series of tools to let you know there's the absence of
+structure um and i'm just gonna write ab because my handwriting is horrible here the absence of
+structure anti-structure let's go ahead and put it there is no structure so don't try to make rational
+decisions assume that the market's irrational and just let it be be okay with sitting out which which
+tackle is one of the biggest reasons people over trade is let's just face that a lot of you are
+probably gambling addicts and degenerates once money's in your hands you can't wait to part with
+it and you don't have the ability to sit there without the money burning a hole in your pocket the
+minute the market starts moving oh i gotta make a bet right and the whole part of trading it's like being
+a jedi if you're a star wars fan it's about you know emotions are good they can inspire you
+but you have to be able to control them and all of your trading journey is about controlling those
+emotions finding those urges to do things you're not supposed to do not betting because the market's
+moving that fear of missing out fear of making not making money is is the reason people over trade
+and we we teach you to be comfortable recognizing there is no structure because there is no structure
+i'm not going to assume people are behaving or behaving rationally and making smart rational decisions
+people are stepping all over each other get out of the way because the absence of structure let me
+throw out everything that assumes there's going to be structure and then i can now make a smart
+decision to avoid the market and so these tackle the three biggest problems traders have right
+and that's why you design our boot camp the way that it is it's to give you a foundation on how to
+make a trade plan how to make good betting decisions how to scale your bet based on the
+your probability of your outcome and then how to know when there's just no structure right and it
+sounds really silly when i talk about market structure and the in the way of you're playing
+cards or you're playing blackjack then all of a sudden the dealer rolls dice on the table
+he said there's a four everyone loses and you're like oh man i didn't bet wait wait dice this is
+blackjack why is he rolling dice i didn't know that rule well there was no rule there's no
+rationality that somebody threw something random in there and you lost you're trying to figure out
+i wonder how i could predict that he's going to roll those dice so well can i wonder if i could
+seen it in the indicator you can't right no structure unpredictable dumb things and the more you practice
+all three of these things the more your confidence grows in trading you don't have emotions don't fall
+apart to where you can't come back the next day and do your job because you beat up from the previous
+day you're not getting in that spiral of chasing chasing chasing chasing chasing and always being
+on the wrong side of the trend because you're chasing instead of waiting and then you're also
+not in that weird place where you just have to take repeated beatings because you're trying to trade
+with rationality in an environment where nobody else is rational but you it's the environment you
+don't want to be in right so as you learned that these are the three i call them the three
+tenets of trading these are the most important parts to anybody's trading diet whether you're
+new or experienced you're always battling these three things of trend identification position sizing
+and risk management and market avoidance strategies as you weren't learn from the very first video you
+watched i told you those are the three things we're focusing on this boot camp and then we just went
+all full circle turn right right back around to it there are times when the market has no structure
+and you can just feel it like there was a period in december of 2025 where the market was responding
+very weirdly traders disappeared at the end of the year certain big tech stocks which are leading the
+pack were selling off and everything else is rallying the market would just be like sitting still and then
+just kind of like bump and then fall and just sit there all day like this there's no structure or
+reason to that nothing could have alert us to that that's just the behavior of the market that day
+but then you can feel that there's no structure it's not it's not doing what it normally does
+this is weird let me sit this month out three or four days of in a row i'm like uh let me wait till
+the new year and see if something gets better why the new year well maybe traders are on vacation right
+so sometimes your market avoidance is just seated in some basic logic there you know things aren't
+really working out well why well you may not know why you can guess why but you can always just wait
+for structure to come back and then keep tackling the market hard right the point being is that most
+traders focus on the wrong part of what are the focus on the wrong things to to work on the three
+things that lead to success if you can master identifying the trend
+your win rate will go up which is a very key part of an overall profitability it's not the only part but
+your win rate should go up if you're on the right side of the market more often than not betting too big
+you can lose trades that you're right on by betting too big say that like an example is
+markets like playing through here playing through here and then you long with everything you had
+and then it fell to there and decided to stop but it didn't overshoot by too much and then it hit the
+liquidity pocket and kept going and you don't want to trade anymore because you lost too much
+you actually have inefficient entries which can also tank your win rates hurt your capital and your
+profitability altogether you're going to have a very low expectancy or your overall reward that you
+take from the risk you're putting in is going to be low because you're betting too big and at the
+wrong place without betting philosophy it hurts your profitability altogether betting the right size
+it helps your efficiency go up you're not going to exit a winning trade too early efficiency that goes
+up means higher profitability as well more bang for your buck by being right from the right place and
+wrong from the right place and make sure your betting size is okay that you're not stopping out
+too earlier at the wrong place because you just took a big enough loss win rate higher efficiency and
+probability higher and market avoidance is a psychological victory because when you're avoiding
+the market at the right time you have perfect control over your over your trading if you can choose
+to sit out and not feel that itch you can control your emotions efficiency is up win rates up control is up
+all three of these things and of course there's some crisscross like betting too big has to do with
+control as well and things like that but mostly this is emotional control you're not stuck in a
+position where the market just has no rationality and you're like trying to find a pattern in it and
+it's just beating you up each time you're wrong and wrong and wrong and wrong you'll start to doubt
+yourself and lose confidence in what you're doing and so just accepting the fact that hey it's just a day
+where there's no there's no structure in the market so there's no control I'm cool with that let me sit
+out if you fight a losing battle and every decision you make is wrong wrong wrong because
+you're assuming structure and there is none you're gonna start thinking you suck at this
+but in reality you're just seeing that that's today's not a day to play the game right should
+I race my car today I don't know the track is covered in snow I'll come back tomorrow and that's
+really important and these things overall is where your profitability comes from efficiency in your
+entries exits and planning position size upping your win rate as much as you possibly can and then
+controlling your emotions such that it doesn't deteriorate the other two if your emotions fall out of
+control your efficiency is whack and your win rate goes to crap and so that's why we made our our training
+education about these three tenets it's all grounded in probabilities it's not trying to it makes the
+assumption that the market is unpredictable and random which means it doesn't make an amazing leap
+of logic to be to be able to be effective technical indicators make a leap of logic the price can
+predict itself in the future I'd argue that that's a bunch of baloney believe me or don't believe me
+that's just my thought but at least when our foundation at rocket scooter is that the market is random and
+unpredictable and we built all of our tools on that fact it sounds a lot better because we're not
+making that leap of logic that the market's 100 predictable we're actually saying it's not so
+let's work around that fact uh what can we know from what we do know and that's why this is very
+important and if you're using odds odds are a very realistic way to bet on anything where there's
+somewhat of amount of a structure but not always structure right you have the odds of a card turning
+over you know the odds that you'll get the card that you want at any given time for the most part
+but you don't know everything because you don't know what cards they're not showing you around the
+table but you can make guesses around it it's the best way you can bet and that's how every poker
+player and blackjack player always plays the same as well you have an odds you have odds of something
+happening you make a decision around that everything else is random the next card turnover is random
+the next order in the market is random so there is no more suitable betting style than betting with
+some kind of odds and as you go on your journey making sure you everything that you learn going
+forward from anybody not just myself if it's not telling you the odds or probabilities then it's making
+the assumption that the market's predictable and you have to make that connection with your own mind to
+tell you if it's worth your time or not do you believe the market's predictable this guy's telling
+me this indicator he gets like 90 of the trades right what's it based on well i don't know it's just
+an indicator well is it is it based on price action well i asked the guy he said yeah it's based on
+price action you believe price action is predictable well no not really but i'm gonna give the indicator
+a shot anyways now you sound foolish you just doubted your own ability to think critically didn't you
+you know what i mean hopefully i've instilled upon you the ways to think like a logical human being
+so that way you have the world's best bullshit indicator as you go out there with all kinds of
+products and tools and things anyone here play golf the minute you watch one instagram video on
+golf you get pitched every goofy golf gadget in the world designed to make your swing better all kind
+of sticks and strings and springs and vests and crap that you can wear and crap you can put on your
+club things that aren't even clubs none of it works right you get every goofy tool in the world they
+want to sell you and everything's going to somehow make your swing better you watch all the videos the
+guys like like swing your leg don't turn your wrist too early do this hold it this way hold it that way
+move this open your body open the club and just like you know you're gonna get that too when it comes
+to trading you're gonna every hear every product pitched in the book saying it's gonna make trading
+better the only you have to be critical thinker yourself and that's really what the magic of this
+boot camp is to teach you how to think and when you get out there don't don't buy into something
+that goes against your greater logic that's the best tool you do have is your ability to think
+critically and if you believe in something don't let somebody talk you around your belief to teach
+you something else learn something but always learn something with some with you know a little
+bit of skepticism that you're it may not be something that's going to help you and again if
+there's a magic sauce indicator that's based on price action and it makes the claim you're going to
+predict the market go into and say i'm going to give this guy a shot anyways but don't say he's going to
+fix my trading i know what i'm putting all my last dollars into this i'm betting on this guy
+just be like you know what he's probably full of crap but i'm going to be able to tell within
+two minutes of him talking if this thing is nonsense or not and then you're confident in
+yourself and you can say yeah this thing's kind of baloney i'm done with it so i can try to sell
+you otherwise no man it's good check out this chart you're like no no i got a bad feeling i'm done
+that decision you don't realize you're making a trade you're making an investment just like betting in the
+market cut your losses early on that right thinking critically is an important is an important skill
+set no matter what stage of the game you're in learning or even trading you know you feel something
+out and use your best logic more often than not nobody out there is smarter than you you're just
+as smart as everyone else doing this maybe most of them you're smarter and nobody knows something you
+don't everyone here knows pretty much exactly what you know they just have a little bit more
+experience with it um when you when you swing a bat a thousand times and you see the ball leave the
+pitcher's hand you can kind of just see where it's going and swing the bat the right place in the
+right time first time you pick up a bat you don't have that skill set we all know you're hitting a ball
+there's nothing i know that you don't know now you know everything i know for the most part leaving
+this boot camp it all comes down to just practice and experience from here okay so when you get out there
+in the world never let somebody try to convince you they're smarter than you at the market
+you have more information in your head right now than just about any trader out there if not dozens
+of times more info you are more and well equipped to be successful at this you just got to put in the
+practice it's gonna be a hard journey from here for most of you it's gonna be sometimes many years
+if at all you become successful many people won't um but if you do it's a long journey and it's mostly
+just that repetitive practice making a plan sticking to it find what works abandoning what doesn't work
+quickly and those skill sets are what you're going to use as a trader anyways all right so that that
+concludes everything we come full circle to what we told you at the beginning we would do teach you
+those three tenets of trading and we focused on it at the end of the day it doesn't seem like you you're
+you were kind of delivered a bunch of hocus pocus like we got the magic sauce don't worry
+right everything you learned has a reason to be everything you learned here we taught you kind of
+what's going on under the hood and why it's important you got to see why stuff works and
+you know it checks out like the rationality is there and we're not making crazy leaps of logic
+like you can use an equation called black shoals to calculate order flow assuming the options are going
+to be hedged against oh that makes sense yeah you can google that you can go check it out and say
+yeah there's some substance to this right and hopefully in your journey some other person finds
+something cool of substance that we haven't thought of and you know you find it but you're going to know
+there's something there because i taught you how to go out there these basic principles to think
+critically and this boot camp was designed to teach you how to think more so than teach you how to trade
+it's the hardest step in all of this um but hopefully you're stronger smarter faster less
+gullible and you're ready to take on the challenge and you know i wish every single one of you luck
+your future endeavors here i really thank you for being part of the community and for going to the
+boot camp this concludes the series of the blind monkey who in this challenge at the start of all
+these videos when i did that challenge myself proved that just with those three tenets under control
+it's really hard to lose money trading because you have well the market is random and it decides how
+much you're going to make you have a hundred percent control over how much you're willing to lose and no
+matter what the market can never take that away from you all right that's it thanks for tuning in

@@ -1,0 +1,2183 @@
+today's class is a very important one probably the most important one i would say um it kind
+of covers a lot of stuff and we're going to kind of just jump right into it we're going to be
+covering um irrational rules which includes catalysts and risk interval vix you might have
+heard some of these things thrown around uh inside of some of the courses before or even in our
+discord um they're very important to understand limits on our strategies and any strategy that
+you use and we'll just jump right into it what an irrational rule is is a rule that we've defined
+to meet the definition of the market as being irrational and so if you go inside of our
+discord you'll see up in the uh in the summary side it talks about irrational rules and it basically
+states the market is uh um spiraling out of control and completely random irrational means
+people are behaving irrationally a rational market means whatever you think is going to happen
+is likely to happen an example is if the stocks move up then the index is likely to move up with
+it right because in a rational market the index is tracking the stock or inside the index etfs are
+tracking with it so for example if the sum of the stocks are moving higher and resilience is greater
+than zero in a rational market one would expect the s&p to run towards and fill its gap just kind of
+like it's trying to do today right um now again sometimes an irrational market is hat is taking
+effect and an irrational market is something that's not following the expected rules for whatever reason
+and usually it comes from markets falling apart an example would be that if some hedge fund or
+something is in a margin call and they own a bunch of spy and they gotta sell something and they decide
+to just sell spy the stocks themselves would be trucking along and they're just dumping spy right
+it's no longer tracking the stocks that is an irrational sort of thing you can't rationalize that
+from the trader's perspective you don't know why that's happening you just see that somebody's selling
+one thing while the other things aren't selling and this could actually cause a chain reaction which bumps
+other people to sell and trigger stops and trigger stops and then the stocks see that and the dealers
+are like uh well everything's crashing let's price the stocks lower then and then people are dumping
+everything randomly and just because the spy drip uh dipped down the stocks fell with it that's kind of
+irrational because that's not what normally is supposed to happen so irrational rules are predictable
+rules that state that there's a high probability of stuff just not working too well and so we've
+already taught you a lot of stuff greater market dd ratio mhp liquidity maps a lot of stuff now
+there are conditions as to when these things work the best enter the irrational rules right here if you
+click this little chat bubble on the side of the platform you will see alert shows up we have two
+different categories of alerts irrational rules and unusual rules irrational rules work on a system of
+red light green light red light means the rule has activated okay qqq hedge break is red qqq has broken
+through monthly hedge right um spy hedge break is green it hasn't hedge break is one of the things we'll
+talk about today if there's an arrow to the side it tells you which direction the violation has taken
+place qqq has broken hedge to the upside if we were to click qqq you will see that qqq has um moved
+through monthly hedge to the ups and i believe that this is uh actually looks like there's a bug here
+this actually shouldn't be flagged unless i'm mistaken because we open here we'll check on this
+but either case what this means is that you open below and broke above it and it turned red
+so we'll investigate this because we just did some math on these alerts here uh to change things up a
+little bit so um when these are activated it's an like a quick alert to you that something is off
+when you're trading our stuff and we've talked about the higher percentiles of things 80 and 90
+with some of the moves those come with conditions now and we've talked about those conditions and we
+call them ideal an ideal condition is literally all of these things all of these alerts for the most
+part sorry the irrational alerts are either green or yellow now what red means is activated green means
+no never activated and yellow means it broke but then came back an example is today if you guys
+remember the futures but the yellow light in the dd band break means we broke through it and came back
+right we know that we gapped down on trump's tariff news and then we traded back in as you see the lights
+are yellow it's a caution it means you've broken once but now you're back in so the majority of our
+irrational rules are automated which is good some of them aren't we're still working on that
+and it's kind of hard to automate them you'll learn why after this class but you'll learn how to
+manually do them which is really nice now to walk you through basically what it is is that when all
+of these lights are green or yellow which means nothing is active right now you'd expect the full
+gamut of probabilities to kind of work mhp 90 hp 80 bear zone bull zone 90 the perfect setup as long
+as the confluence indicators also go with them so perfect setup requires fully rational market and
+then the qualifier to go with it so to repeat when i go to s&p and i want to go to a liquidity map and i
+want to take this 1b trade off of hedge pressure open blue open which is one of our favorites and
+it says 1b is a medium trade any lack of confluence i have will let me trade smaller than what i want to
+do so a medium trade you see how there's no qualifiers here like some of them say resilience
+must be up or above zero or below zero or whatever these are qualifiers of confluence that rational
+markets allow them to be good confluence in an irrational market they may not be good confluence
+resilience typically tells you that the stocks are leading the index under a rational market you'd
+expect that when the market is irrational though you cannot trust resilience we understand to be a
+leading indicator it may it will show that the spy is lagging the stocks like stocks are moving higher
+than spy but it doesn't mean that the spy is catching up the spy can be collapsing as people
+are dumping it so the qualifiers require a rational market for your fullest confidence so what do you do
+if you get a signal here but you're irrational to go with it right is this you guys following what i'm
+saying see a rational market is like dd bantz says that spy is going to hold a bull zone if the stocks are
+holding their bull zone but in an irrational market is a high probability of margin calls a high
+probability of just domino type selling you can't expect market structure to hold do we all understand
+this yes so resilience we usually use the irrational rules is a very strict almost sit out type thing under
+certain conditions um some of them you can use a red light as a second qualifier to this if it's not
+explicitly stated so it's like two sets of qualifiers dd and resilience are great for my position size let
+me eyeball this oh okay that light is red let me not take the trade right or because it's more of like a
+less of a probable shot let me take a smaller trade and under irrational conditions we've noticed that some of our
+90 setups become 60 some of our 80 setups become 50 to 60 the probabilities deteriorate even though the
+probability is high as we as we look at you know we talk about under rational conditions the dd bands
+typically hold price inside the bands 88 of the time under irrational conditions like mhp breaks and other
+things or catalysts it tends to be closer to 60 so do we all understand that when you see irrational your
+brain doesn't think 90 and 80 sort of thing i make sure we're all on the same page got it
+irrational start thinking it's more random than anything take a lot more caution of the trades
+some of your rational rules will be sit out no matter what and you're going to thank me for that later
+but just keep in mind irrational is going to affect the probabilities um so you may decide to change the
+size of your trade but right now before we have a dynamic back test that gives you the actual
+probabilities this is sort of a second check oh my bear zone to bull zone
+may not be 90 because you know irrational rules have triggered okay so it might be 70 right so just
+keep in mind you're going to think like that as you're trading all right so what are the irrational
+rules and they're pretty simple because we've already kind of covered a bunch of them we're going
+to start at the ones you already know and i'll just write them on the screen the first one is dd band
+break that's the easiest one it's at the top of the list um we know that when the dd band breaks
+futures market is sort of falling apart we talk about that little spring that keeps futures tethered
+to the stocks well typically you're not going to break that unless there's a really important reason
+to do so means that people are just dumping something really fast um maybe the stocks are selling
+really fast or the futures are selling really fast pre-market in the example of today um we gapped down
+and broke through it on trump's tariff news and again the market's completely irrational one of
+the rules with the dd band break is that we've already covered all the conditions of dd band break
+because it's irrational we trade a certain size only so when trading down here remember from your dd
+class it's small trades only right we only trade long setups irrational breaks to the upside again
+only small setups there's a theme here irrational means i kind of lose confidence in the structure of
+the market well doesn't it make sense that when markets are irrational i would trade smaller
+right that's why on your dd class that you did on the cheat sheet all the setups outside of the bands
+were small setups we got it and that that is the reason for that because markets a little crazier
+um outside of the band you actually on a break remember three lines is on a break or if it breaks
+you are irrational small trades only if it breaks irrational small trades only the market is behaving
+outside a structure don't go all in with the big fat bet let the market be a little crazy and you
+behave accordingly so dd brand breaks irrational one of the things that's neat about that is you know
+the rules long only on small pivots or small trades strong pivots okay and your strong pivots are
+going to be monthly hedge pressure bears on top bulls on bottom and a topic we haven't covered yet but
+what would we call them yellow lines and red lines or your illiquidity pivots okay um now
+any index that triggers a dd band break they all trigger and this is important to know the lights
+may not turn red but if one of them turns red you assume the others are likely going to be red
+now russell and the nasdaq and s&p do not overlap this one thing to note about the indices but the s&p
+and nasdaq do overlap so when you look at the hierarchy of of alerts when one index falls apart
+you can assume the others are soon to follow s&p is the one you need to watch the nasdaq is falling
+apart but the s&p isn't trust the s&p more than you trust the nasdaq the nasdaq is an incomplete index
+it only covers health care tech and telecom it's not necessarily uh a representative index of the stock
+market and the stock market is going to sell off in general the s&p because it's diversified because
+people are selling all the stocks and moving to cash but the nasdaq may sell off while the s&p is
+flat you may have an idea why that is nasdaq is selling off just as a as a quickie little icebreaker
+here nasdaq selling off and the s&p is flat why is that take a guess best guess think outside the box
+rotation yeah people are selling tech or selling communication services or selling something
+and maybe buying oil and gas companies maybe buying financials so if that's the case money is just
+moving from one stock to the next the stock market isn't going to crash if people are just rotating
+money into something else you understand so if the s&p is flat nasdaq is falling likely not the case
+so what you're really kind of looking for is what the s&p is doing if the s&p is breaking it's going
+to drag everything down nasdaq russell whatever there's a rule of thumb when it comes to indices
+or risk people like to risk on and this is important as a general understanding of the market
+people like to risk on and to riskier things last and strong things first you have things like you
+know your blue chip stocks are very very or like bonds first right people get in like bonds and
+then blue chips and then they get into like uh like medium and then small cap and then they get
+into like you know crypto and then nfts right as you kind of like load up on the stronger stuff
+you know you tend to like diversify into the weaker stuff right you remember the peak hysteria before
+covid you remember nfts were like super hot and popular not anymore because everything was doing so
+well people kind of diversify into like dumber and dumber things whether you think this is dumb or not
+up to you but when people are selling off they crash in reverse order they rally in this order
+um but they crash in this order people dump this and then this and then this and then this small cap
+is going to be your russell um and then you're you're kind of like medium and blue chip is going to
+be nasdaq and s&p and they overlap so sometimes nasdaq stocks can fall far enough um and it can give you
+an indication that something's really bad but don't assume that when nasdaq is falling it's going
+to yank the s&p down it's very important to understand the s&p is going to be the granddaddy
+because it's a diversified index and the russell and the s&p aren't related but if the russell is
+tanking don't think the s&p is going to tank either if the s&p is tanking you better believe russell's
+likely going down with it it's very rare people will rotate out of blue chips and into riskier stuff
+you understand that so when you see your alerts kind of ignore russell unless you're trading russell
+people could be dumping russell because it's small cap but rotating the other things people
+could be dumping nasdaq and rotating into other blue chips they're in order and that reason ep or
+sorry yeah s&p nasdaq and russell for that very reason the highest priority win is on the top of the
+three you understand so again ignore the russell unless you're trading it nasdaq can show you that
+there's a problem in tech but if people are rotating out the s&p is going to be just fine
+and in some of our you know classes we've already covered this right s&p resilience and nasdaq
+resilience if nasdaq is down and s&p is up who do you trust well s&p right because again the difference
+between that is is rotation between sectors right so when s&p is broken you assume
+all the other ones are going to break the market is falling apart and people aren't going to
+dump s&p and jump into russell that's very rare you got it they're not going to uh if s&p is
+tanking everything's tanking right so if nasdaq is tanking it could be an early warning sign that the
+that the tech stocks will yank the the s&p down but that's only right now in 2024 and 2025 when tech
+stocks are leading the pack there's a very small period of time when that was the case you know this is
+like literally from the last maybe eight years that tech has been on the top right before this
+oil and gas companies were near the top right um so being careful that nasdaq is not necessarily
+always as important during the course of your trading career as it is right now now if tech and ai
+take over and this is the thing for the rest of our lifetime they could be right um just keep that
+so if spy hedge break which is rule number two right um is mhp hedge break so when you break
+through monthly hedge pressure the market is also irrational um if s&p breaks monthly catch pressure
+you could assume again nasdaq and iwm are soon to follow if nas if iwm breaks hedge pressure again
+important if you're just trading it um but qqq again can maybe be an early warning sign the
+spies falling apart you have to judge them by themselves but again never say because nasdaq is
+doing something the s&p is going to follow always say good old s&p gonna hold the fort you got it make
+sure you put your faith in the diversified index because that's letting you know if money's just
+leaving the stock market people are cashing out that's really the point of that okay so again when
+you are outside of dd band strong pivots only when you break monthly hedge pressure strong pivots
+only as well in small positions it's kind of the same thing you understand guys it's kind of what
+we learn in dd band it's the same thing applies here trade small no matter what i don't care what
+your liquidity map says trade them small so under irrational rules
+dd band break as we've already covered
+small strong pivots okay
+when mhp breaks
+you can trade small strong pivots as well
+and that's good now question
+i want everybody to answer this one
+in the case of a bull long down where you opened above here and you break through mhp and you fall
+to hedge pressure would you take trade number three
+tell me why with what you know
+not just what i'm talking about in the class
+take a guess
+everyone guess i'm gonna give you five seconds don't don't wait
+everyone type something in
+pick a number like when i say guess i want you to just spit an answer out
+don't overthink it because in trading you want to be quick
+i'll correct you if you're wrong it's okay if you're wrong
+don't type if you're if you're if you're trading okay
+all right so first of all i'm glad that everybody said something and y'all are all over the place
+which is good
+okay as shane remembers it's likely to break
+but keep in mind i'll teach you something remember
+number three already is a small trade
+and because you broke mhp
+you're already going to
+small your trade so you're going to
+small a small which is practically sit out
+usually when you have to small a small it's a sit out
+so by default just following our rules of how to translate and read this
+any irrational sign you're going to trade small in general if you can
+if it already says trade small
+you're not going to pick it
+now the other thing is that
+hedge pressure is not considered a strong pivot
+a strong pivot is one that we consider to have
+90 chance
+under the most ideal conditions
+because when you break mhp remember it takes a hit on the percentage
+and it's again without the real-time back test
+we don't have enough data to know
+uh what the actual number is likely to be
+because it doesn't happen that often right
+but we've measured what the data we do have
+and we know that a lot of your 90s become 60s
+right
+so your 80 could become 50
+and that's not good
+your blue is 80 under ideal conditions
+and therefore it doesn't qualify as strong
+you got it
+it's not good enough
+and usually when you break mhp
+the rule is
+expect hedge pressure to also topple with it
+it's the weaker of the two
+if you're breaking through the strong monthly
+doesn't make any sense that you're going to hold with those
+zero days
+right
+you got it
+monthly is the entire market's falling apart
+people are capitulating and dumping everything
+we got it
+so
+breaking mhp
+you can think of as you're going to automatically choose small
+and if it already says small
+smalling a small is likely an out
+okay
+so by default we don't trade that
+it's the one caveat
+okay
+so
+this is an o not a d
+oh down implies those
+but the small doesn't take that into account
+oh i see what you're saying
+no the idea is that
+if you're breaking the stronger hedge pressure
+don't expect the weaker one to hold
+i mean it's basically it
+and we only trust in irrational markets
+to trade the strong pivots only
+so the strong pivots are the ones that we know
+under ideal conditions have the best probability of bouncing
+and so while blue is stronger
+it's not strong enough
+to get a 60 percent or more
+that's kind of the qualifier
+now later later iterations and enough
+enough
+you know history of mhp breaks the break hedge pressure
+it's such a rare case
+typically a bld is one of your strongest bull setups
+so to have a bull market completely collapse from being strong and bullish
+is a rare thing to begin with
+we don't have enough data points
+so at this stage of the game
+we have a generalization
+that the times we see you break through mhp
+you just don't assume you hold hedge pressure
+do we got it
+until further notice
+don't assume
+it doesn't qualify a strong pivot
+so keep in mind
+your strong pivots are always going to be
+the same
+four things
+mhp now in this case
+mhp is what's broken
+so it doesn't count
+bear
+zone
+top
+bull
+zone
+bottom
+and
+yellow red lines
+right
+we'll get to that next class
+the next couple classes
+so when mhp breaks
+you only have a couple of options
+your zones and that's it
+so that was a trick question
+to get you guys to think
+it's only if you break
+good question
+opening below
+monthly hedge pressure
+is different than being below hedge pressure
+and let me explain this to you guys
+great question
+and this is very important to know
+opening below
+dd band is one thing
+futures had to gap through that
+but opening in bear structure
+is not the same as breaking into bear structure
+for this particular reason
+if this is mhp
+and i am
+price has moved from here to here
+and imagine with the options i've sold
+i have to go from like
+plus 10 000 of a position
+right
+and pretend that's my hedge
+plus 10 000
+and the market's gone the other way
+so i need to go to minus 10 000
+to balance my risk out
+right
+the delta went the other way
+so the problem is
+is for me to reverse the position
+as price is going through hedge pressure
+i have to dump this
+and then short this
+to travel from positive 10k
+to negative 10k
+is a 20 000 share sell
+so when you capitulate
+and flip to the other direction
+it's practically
+you can think of it as being
+twice the size of your original position
+to hit it the other way
+do we all understand this factor
+which is why breaking is such a more powerful move
+than bouncing
+right
+if the market is
+down here
+i'm already minus 10 000
+then maybe i'm just
+close to zero
+and then minus 10 000
+again
+i'm only playing with
+the position between 10 000 and zero
+but to go from one side to the other
+your
+polarity shifts from positive to negative
+it's a bigger factor
+so below
+mhp
+you're fine
+it's only the break
+being below mhp
+just means downward pressure
+breaking mhp
+means
+the market selling
+has overwhelmed structure
+to keep it in place
+the 10% thing
+has taken effect
+remember
+hedge pressure
+bounces are like
+considered the 90 percentile
+most of the time
+under ideal conditions
+so for
+the bull
+setup
+to break
+is the unusual part
+okay
+very very very rare
+to break structure
+it means the selling
+is overwhelmed
+sentiment has changed
+for the majority of wall street
+to be dumping their longs
+and the shorts taking over
+and the hedging going from long to short
+so that
+that power
+it's like double the position to reverse
+if you're in a position yourself
+of five contracts long
+and you want to go five contracts short
+you got to sell 10 to get there
+the market
+doesn't care whether you're five long
+to five short
+your position never changed in your risk
+but the market felt
+blunt force
+bop in the head
+of 10 contracts sold to it
+while you were only in a position of five
+right
+so that's kind of what i'm talking about
+when everyone on wall street's dumping
+the power is like twice as much as the exposure
+just to flip flop
+so that brute force flip
+creates the problem
+that's why breaks are such a big deal
+and monthly hedge pressure
+is holding up
+the majority of all those puts
+that are holding up those long positions
+that are being hedged by puts
+right
+the institutional longs
+the asset managers
+from the commitment of traders
+the monthly hedge pressure
+is kind of like where their insurance is
+means the majority of wall street
+is now bearish
+if you're on the other side of that
+on the month scale
+okay
+so keep in mind
+that these that you see
+that are automated right here
+markets irrational
+and you're going to trade small
+one of the things we haven't touched
+and we'll get to more
+in the vix class
+but uvxy
+it's one of the things
+that we do look at
+to determine if the volatility
+is going to go out of control
+so just as a quickie
+because we'll cover this more in detail
+is anytime
+that vix
+breaks through monthly hedge pressure
+it's the same thing
+is that vix is going to fly out of control
+and the market becomes
+unusually volatile
+out of nowhere
+so keep in mind
+that when we use uvxy
+as the best example
+of a liquidity map
+for a vix etf or etn
+anytime vix is flying out of control
+and there's a structure
+markets irrational as well
+trade small
+trade small
+trade small
+strong fivots only
+strong fivots only
+strong fivots only
+it's the theme
+we got it
+irrational is going to limit
+what you do
+hedge pressure comes off the table
+the blue one
+we don't use it
+you trade anything
+that you think is 90%
+under ideal conditions
+because under irrational
+it's probably closer to 60
+so because of that
+you trade small
+anybody confused
+about the theme of this
+this is applied
+if it comes back above MHP
+aha
+if you reclaim
+the break
+you're good
+the caution
+the caution
+is to let you know
+that it happened
+once before
+so you can choose
+to use the caution
+to trade smaller
+than what you want
+that's flexible
+so an example is
+if I trade 1b
+right
+it's a medium
+and it falls through here
+and I take a stop
+I'm not going to take this
+I'm going to long off
+the bull zone bottom
+to next pivot
+with a small pivot only
+exit out
+then I'm going to avoid
+this trade
+but if it breaks back above
+I'm jumping right big
+back in at 4
+with my normal medium trade
+because 1b was a medium
+and if you break above
+you're back to normal
+you're back to medium
+just like you said
+when you return to where you are
+you can take the normal position
+when the irrational signal
+goes away
+now you may say
+oh man
+I don't know if I like it
+because
+it's cautious
+let me take the medium
+and trade it as a small
+you can use
+this
+to whatever
+your comfort zone is
+I usually treat yellow
+like it's green
+I get right back
+to full force
+now again
+that's just me
+I usually
+red usually means
+automatic small
+in this case
+okay
+great question
+when you
+when you recover
+the light turns yellow
+and you're back to normal
+okay good
+so
+these are
+strong
+pivots
+strong pivots
+okay
+now another thing
+with MHP break
+is
+one of the trade setups
+we have
+is if you break MHP
+to the downside
+and return
+you can chase this trade
+every time as well
+under certain conditions
+if
+this is greater than zero
+we don't short off of that
+but if it is
+and it tanks right through
+you can short off of the MHP break
+let's just all quiz you
+what size would you short
+an MHP break
+if you're chasing the short
+it's a really good short to chase
+it's one of the strong short pivots
+that you have
+you're
+the market is crashing
+and you want to jump in
+and ride the wave
+what size would you take
+just use your logic
+take a
+first thought that comes to your head
+use your logic
+you're chasing an MHP break
+let's see if you guys are trained
+just to think ahead
+there's no wrong answer
+there's just a way I do it
+which may not be the wrong
+right answer
+most of you said
+small to medium
+so small
+small because it's irrational
+and again
+when you're irrational
+you can trade small pivots
+right
+or strong pivot small
+now remember
+your strong pivot
+includes MHP
+so if MHP
+is what you broke
+it is
+your strong pivot
+to trade off of
+and again
+as the theme goes
+small is good
+on the short side
+Chris
+and whoever said
+be very careful
+because
+you got to make sure
+you got your tight stop
+and
+downside moves
+have a lot of volatility
+if you go medium
+or bigger
+you might
+get volatility
+to stop you out
+so I usually only chase
+small
+on sell off
+MHP breaks
+because the volatility
+is big enough
+that one contract
+will carry me
+to a big trade
+right
+as I fall 250 points
+I'm good
+with one contract
+right
+maybe get 100 points
+with one contract
+I'm good
+so I usually
+the theme is
+any irrational signal
+for the most part
+is going to be
+an auto small
+you guys are getting it
+now again
+if you take a medium
+you might just take
+some more drawdown
+but you don't need
+a big position
+when the market's
+falling apart
+you just need to
+ride the wave
+with something small
+you guys are getting it
+the theme is
+I want you to hear
+irrational
+and be scared
+to go bigger
+than small
+now let's talk
+about some of
+the worst ones
+now
+we have something
+called a catalyst
+okay
+and this is
+I'm going to
+warn you
+oh
+and let me
+before we go forward
+let me remind you
+the DD band break
+small
+strong pivots only
+the strong pivots
+are MHP
+bear zone
+and bull zone
+which are only
+on liquidity maps
+which only come out
+in the morning
+and the overnight
+remember the dynamics class
+all we have on that list
+is an MHP
+so
+down
+outside of the DD bands
+MHP
+or
+yellow and red line
+are
+we have those
+in futures
+those qualify
+as strong pivots
+I would highly advise
+against doing
+any trading
+overnight
+when DD band
+is broken
+I would not
+care to scalp
+that volatility
+when the stock markets
+close and we've
+gapped down that much
+in futures
+I would sit out
+until the morning
+and then think it over
+last night
+again
+if you do
+if you choose
+to trade
+what size position
+would you take
+and what would you take
+like an example
+of last night
+NASDAQ
+the market
+gap down
+fell to here
+if you were to take
+a long
+it would be small
+and a strong pivot only
+and that is not
+necessarily
+the worst idea
+the DD band break
+you likely would trade
+it back to DD band
+as the DD rules tell you
+so
+last night
+there were people
+in our discord
+taking the long
+now I'm a big wuss
+and I sat out
+but it doesn't mean
+that the strong pivots
+aren't necessarily
+decent
+but you only need
+one contract
+now the problem
+with the overnight
+is that you're
+kind of stuck
+I mean this is like
+you know
+till 3 in the morning
+and it finally took off
+at 5 in the morning
+or 3 in the morning
+you kind of
+may not want to
+commit to that
+but if you're like
+wanting to swing this up
+your choice only
+but heed my warning
+outside of DD bands
+and the overnight
+I usually sit out
+very
+I
+this is like
+rare that I would
+even do this as well
+and if you do
+it's a small only
+okay
+now on to catalyst
+a catalyst
+no matter what
+I don't care
+whatever you think
+you
+will sit out
+I don't care
+what you see me do
+on the stream
+you will sit out
+and I usually
+will always sit out
+almost always
+will sit out
+and so will you
+a catalyst
+is an event
+as you remember
+we talked about
+the risk interval
+that has moved
+the price
+one risk interval
+from its origin
+from its anchor point
+okay
+so what I want
+to tell you guys
+is that
+when
+catalyst is active
+the market
+dynamics have changed
+like an example
+is
+overnight
+we completely
+collapsed
+because over the
+weekend
+Trump initiated
+tariffs in Canada
+and Mexico
+and the market
+collapsed
+right
+so a catalyst
+is a change
+to the dynamic
+it changes
+everyone's mind
+of something
+that's unpredictable
+the reason the market
+moves a risk interval
+and greater
+is because
+the news
+was so devastating
+it shocked
+so many people
+we broke
+that future structure
+just on the news
+so when an event
+moves the market
+a risk interval
+which is the number
+in this table
+from the origin point
+called an acre point
+a catalyst
+is active
+when a catalyst
+is active
+you do not trade
+you don't even think
+about trading
+you sit out
+no matter what
+in any index
+that creates a catalyst
+SP or NASDAQ
+or Russell
+it doesn't matter
+we have a rule
+that any index
+that's catalyzed
+you be very
+very very careful
+if an index
+is catalyzed
+from an event
+someone's getting
+squeezed
+in a domino effect
+the market
+has fell
+into that liquidity
+and then pushed
+through it
+which is going
+to create
+margin calls
+and destabilization
+if someone's
+destabilizing
+in the Russell
+they might liquidate
+their Russell stuff
+they might liquidate
+anything
+catalyst is near
+the top of the list
+of all things
+to sit out
+and the rule
+is any index
+you sit out
+now sometimes
+because Matt
+is on a stream
+entertaining people
+while they watch
+will trade
+what's known
+as a very small position
+you don't do
+what Matt does
+because you're not
+entertaining people
+who get bored
+when you do nothing
+I will sometimes
+on stream
+take a very small
+position
+which is like
+two micros
+trading in a catalyst
+or events
+relative to my
+one to two minis
+that I would take
+knowing that
+40 point moves
+with one
+mini of S&P
+is 2,000 bucks
+but 40 point moves
+with one micro
+is 200 bucks
+and I'm absolutely
+okay with
+very small
+you do not
+for the life of you
+touch the stock market
+when a catalyst
+is active
+I will come over
+to your house
+and if it's snowing
+I will throw snowballs
+at your window
+out of anger
+if you do
+get used to having
+control in your
+trading diet
+I don't care
+what you feel
+get used to saying
+aha
+the market's falling apart
+you know what
+let me let everyone else
+have a heart attack today
+let me take the day off
+you will thank me later
+because catalyst
+is the ultimate
+of irrational
+the market has
+blasted through
+available liquidity
+now
+again
+I know what I'm doing
+and I
+sometimes on stream
+will take an MHP
+or again
+strong pivots only
+when irrational
+that's it
+and if I take one
+it is
+remember
+normal
+medium
+is half of normal
+small
+is
+a tenth of normal
+very small
+is
+one one hundredth
+of normal
+if you're putting
+more than like
+five dollars
+on that trade
+I will be angry
+so don't
+do very small
+because you don't
+have a reason
+to entertain people
+on the stream
+they just get bored
+when you sit there
+and you're being smart
+and saying
+well I'm being smart
+and sitting out
+people are like
+this guy really trade
+so I always say
+I'm taking the very
+small trade
+it doesn't exist
+in the education
+please don't do it
+okay
+so catalyst
+you sit out
+no matter what
+pretty simple
+you get your risk
+interval from this
+table
+and we'll do
+some examples
+let's see if I can
+find
+some recent
+examples
+let me pull up
+the S&P
+now
+yeah
+we had an event
+today
+perfect
+so
+as in general
+you know
+in general
+Trump era
+trading
+you guys all
+know the drill
+you know
+he says one thing
+market falls
+says another thing
+market rises
+now we zipped
+right back up
+remember we're
+going to have
+tariffs in Canada
+and Mexico
+then they had a
+phone call and
+said we're going
+to delay it for a
+month the market
+zipped right back
+up
+so a catalyst
+which we're going
+to cover today
+is a very simple
+process
+what you're going
+to do is you're
+going to go to
+a tick chart
+I use thinkorswim
+for mine because
+Rockstar doesn't
+have them yet
+and you're going
+to go to the
+origin point of
+the move
+I usually use a
+25 tick chart
+or a 250 tick
+chart or sorry
+233
+it doesn't
+matter what
+you do
+233 is good
+enough to kind
+of see where
+the move is
+and the reason
+you want to
+tick chart
+is because you're
+looking for an
+independent time
+independent move
+and as we know
+the news came
+out here
+and it's very
+simple
+what you're
+looking for
+and what I
+do is I
+take a fib
+tool and I
+gut it out
+so Fibonacci
+retracement tool
+right we don't
+use the Fibonacci
+numbers here
+but the tool
+is a good
+ruler you can
+repurpose it
+so I
+right click
+the tool
+and then I
+remove all
+the silly
+Fib numbers
+and I just
+leave zero
+and one
+clicked
+and one
+half
+so I
+basically
+create a
+ruler with
+the midpoint
+we all
+follow so
+far
+and so the
+ruler with
+the midpoint
+is going to
+allow me to
+see a distance
+travel then it
+marks the halfway
+point
+from the moment
+the event
+takes off
+you can easily
+see where that
+is right
+markets moseying
+along and then
+it starts
+moving
+what you do
+is you start
+at the point
+where the move
+obviously is
+happening
+and just see
+it's not like
+this consolidation
+right here
+it was like
+like it just
+took off
+you can see
+that volume
+like ramping
+up right here
+and you're
+looking for
+a move
+on a tick
+chart that
+doesn't
+retrace
+half its
+value
+after its
+first major
+pivot
+and volatility
+expansion
+what that
+means is
+you're looking
+for on a
+tick chart
+a move
+that has
+bumps
+along the
+way
+and you're
+looking for
+the biggest
+V
+in the move
+the first
+move
+V is middle
+size
+big size
+small size
+again
+or small
+big small
+this kind
+of V
+shape
+here
+as you
+see
+is like
+right there
+if you
+say head
+and shoulders
+I will also
+throw snowballs
+at your window
+not head
+and shoulder
+what you're
+looking for
+is for
+the volatility
+to expand
+and collapse
+as volatility
+expands
+liquidity
+is minimized
+and when
+volatility
+collapses
+liquidity
+steps back
+in
+that's what
+you're looking
+for right
+here
+so again
+volatility
+is the
+inverse
+of liquidity
+the more
+volatile
+something
+is the
+lack
+of
+liquidity
+you're
+looking
+for the
+maximum
+amount
+of
+illiquidity
+to that
+upward
+move
+do we
+got it
+yeah
+you're
+looking for
+like
+essentially
+how much
+the market
+is V
+up and
+down
+you want
+to see
+the biggest
+V in
+the first
+move
+and so
+what you
+do is
+you start
+at the
+starting
+point
+of the
+run
+and you
+move
+all the
+way to
+there
+and you
+find the
+middle
+see why
+it's hard
+to automate
+this part
+we're still
+working on
+the algorithm
+to do it
+but that's
+basically it
+when you can
+identify that
+as you're
+moving along
+it doesn't
+retrace
+half the
+distance
+then it
+creates
+something called
+an anchor
+point
+which is
+the starting
+point
+anchor point
+will be very
+important for
+your yellow
+line or red
+line class
+after that
+first wave
+it creates
+something called
+an impact
+red line
+which we'll
+cover later
+but don't
+even worry
+about this
+if you
+can prove
+that it
+breaks the
+highs after
+that volatility
+bigger
+smaller
+collapses
+this V
+right here
+then
+the anchor
+point
+you measure
+one risk
+interval from
+there
+okay
+and if you
+break that
+distance
+then there's
+a catalyst
+that's active
+okay
+on the
+downside
+cats
+you will
+absolutely
+sit out
+okay
+on the
+upside
+cats
+you'll
+definitely
+not fade
+them
+right
+okay
+so let's
+start at
+921
+right at
+5951
+and let's
+go back
+to rocket
+scooter
+and show
+you
+so right
+at about
+5951
+on the
+S&P
+I'd love
+to have
+an alert
+for you
+guys
+working
+on trying
+to figure
+out how
+to even
+do it
+it's a
+little
+subjective
+because you're
+eyeballing it
+but
+pretty good
+so 5951
+is that
+starting
+point
+the risk
+interval
+is in
+this table
+and if
+it moves
+4175
+above it
+so that's
+5993
+the catalyst
+is active
+okay
+so
+5993
+is here
+you'll usually
+see on my
+screen when I'm
+streaming maybe
+like a purple
+line or
+something
+a catalyst
+is active
+when a
+catalyst is
+active the
+market is
+very unstable
+it's very
+weird it's
+very squeezy
+and downside
+catalysts are
+more rare than
+upside ones
+or markets just
+tump and fall
+apart but here
+a catalyst is
+active now
+we try to find
+every excuse we
+can to be a
+bull so upside
+catalysts are
+really good
+we still long
+off of our
+strong pivots in
+any give and
+take but again
+small trades
+downsides trading
+small on the
+stream downside
+catalyst you
+will sit out
+every time
+every time
+every time
+or I'll be
+very mad at
+you if you
+don't as you
+see the first
+rejection and
+bounce is to
+test that
+catalyst line
+you didn't even
+know that when
+you drew a risk
+interval from the
+bottom but do
+you see how the
+market is testing
+that liquidity it's
+a beautiful thing
+and again more
+interesting stuff that
+comes about with
+the risk interval
+thing that we
+taught you the
+risk interval is
+just an awesome
+magic number that
+has structure
+written all over
+it now the first
+bounce point again
+just reviewing where
+that is
+59.92
+and if we go all
+the way back to
+59.92
+I'm just going to
+mark it here
+right
+you see how the
+first major pullback
+after that run
+is like the
+biggest boom
+boom is to test
+that liquidity
+there it's it's
+really neat so
+we all we met
+all we did was
+confirm that this
+is an event when
+when a market is
+moving and creates
+a red line that
+doesn't retrace we
+call this an event
+when an event moves
+a risk interval we
+call it a cat cat is
+active up here as
+you see the market
+tends to behave very
+weirdly volatility is
+big and then small
+and then big choppy
+up and down you see
+how today wasn't
+necessarily a trending
+day it just kind of
+moves and then down
+it just is like
+sporadic there's a
+clear night and day
+difference not just
+being irrational in
+selling off like when
+we broke DD band but
+you can see there's a
+clear difference between
+the movement and
+choppiness of the
+market the V's are all
+over the place right
+it's just big and
+choppy and down here
+it's it's kind of like
+the same amount of
+movement it's kind of
+just ebbing and
+flowing lower right I
+mean NASA or S&P
+goes up 25 points
+roughly in you know
+like one minute of
+time right when a
+catalyst is active get
+used to the feel of
+the market they may
+remember how today
+felt if you were
+trading it giant single
+one-minute candles
+now is it going up 40
+60 points in a single
+minute things like that
+that's what happens
+when a cat is active
+you got to be very
+careful okay like I
+said if you choose to
+trade small or very
+small on the upside
+move that's upside
+moves we do like to
+find every cease we
+can to be a bull but
+again I trade small
+downside callous you
+will sit out every
+time the volatility
+is abnormally crazy
+you think it's crazy on
+the upside the
+downside is insane you
+don't want to touch
+it if you go to our
+summary just so you
+know and you go down
+to up here you will
+see that an index
+catalyst is no trade
+whatsoever spontaneous
+unplanned news event
+makes the index move a
+risk interval from the
+anchor point now all
+those words make sense
+to you no trade
+whatsoever if the
+VIX futures which is
+the next one moves a
+risk interval period from
+with with or without
+events you sit out no
+matter what again if
+fix moves up to the
+upside we sit out of
+the downside sell-off
+moves the upside moves
+we love to jump in on
+with small positions right
+the theme of irrational is
+small if you do it VIX
+futures is slash VX and
+anytime VIX moves up one
+risk interval in a single
+globex session from the
+bottom it's measured from
+the bottom it's not an
+anchor point like the
+last one it's just you
+find the low of the
+globex which is from 5
+p.m. until 4 p.m.
+central or 6 to 5
+eastern this example is at
+any point from the low of
+the candle as you're
+moving higher you have a
+high limit of VIX that if
+you break one risk
+interval in the VIX you
+leave the market for good
+now we do have a rule of
+thumb that we tell people
+that once VIX risk
+interval is broken or
+catalyst is active to the
+downside it's good
+practice to practice
+control instead of let
+me see if I can still
+find a trade learn to
+say the market has
+fallen apart and the
+probabilities of my
+high probability pivots
+are very small and the
+probability of the
+index ETF is tracking the
+stock is a lot smaller and
+the probability that the
+S&P don't care what the
+stocks are doing it might
+break the bull zone
+is higher because it's
+irrational get used to
+saying you know what
+because I don't know I'm
+not going to trade when in
+doubt I'm going to sit out
+and so the power that
+comes and this is what
+people tell me is that
+when I told them when the
+DD bands break pre-market
+or catalyst is active to
+the downside in the index
+or VIX is broken a risk
+interval to the upside and
+they sit out they feel
+powerful as a trader you
+feel like you're in
+control and the worst day
+of the market it feels
+great for you to go
+lol look at these people
+on Twitter these goofy
+people half the people
+made a boatload of money
+the other half the people
+didn't you said I had
+control and you will never
+see me even on the even on
+the stream I will not do
+very small and VIX I'm
+scared of even very small
+so I telling you when you're
+when S&P NASDAQ has fallen
+and cat is active the
+downside do not trade if
+VIX is broken risk
+interval to the upside do
+not trade now let me show
+you why you don't be
+scared of those two things
+when you see VIX risk
+interval or catalyst is
+active be so scared of the
+market you close it down
+these are times when the
+market falls so much your
+trading account can go
+negative you may not know
+that that can happen but
+circuit breakers and
+things can happen your
+account can go negative
+it's crazy so just be
+careful stay really far
+away from it this is that
+really crazy day back in
+August right when the
+market collapsed this is
+the risk interval
+distance on the VIX you
+get that number from
+rocket scooter and the
+table down here
+somewhere 360 and so on
+here I've marked the box
+at that distance I think
+that's the distance now
+this particular day at
+nine in the morning risk
+interval VIX was achieved
+the moment the stock
+market opened you would
+have sat out that entire
+day and then the next
+day at 11 o'clock or
+actually 20 yeah 11 o'clock
+p.m. that triggered and
+look at this when you break
+through the risk interval
+on VIX VIX could fall
+apart in this particular
+instance 26 to 37 this is
+a day that you put your
+hat on the table and cry
+and say I wish I wouldn't
+have woken up and traded
+today you have such a clue
+from the night before not
+to do it let me show you
+what the S&P did on those
+days because I really want
+to scare the heck out of
+you right now okay this was
+back in August August 1st I
+think if I remember
+correctly um aha here it
+is I think this is it yep
+this is it this particular
+day let's let's let's draw
+the scale so remember the
+stock market was giving you a
+clue that we were what's the
+word below dd band begins
+with an eye irrational
+already overnight markets
+irrational then when the
+market opens right when it
+opens VIX breaks risk
+interval and so from here the
+S&P was falling like 50
+points up and down
+volatilities over the place
+you are seeing risk interval
+moves every hour okay and then
+down here when I said at 11
+o'clock at night right here
+imagine right here getting our
+sit-out signal VIX greater than
+one risk interval imagine trading
+the S&P when it's moving up and
+down 80 points per wave and 120
+points per wave imagine that
+imagine the headache you avoided
+and look at these little V's they
+don't even look like much but
+these are 40 points a pop you
+see that 40 points up 40 points
+down 60 points up 40 points up
+you know what I'm saying you had
+the sit-out rule right here you
+already had irrational dd band
+VIX broker risk interval right
+here I didn't even stream that
+day I remember I was out of town
+but I didn't stream and I told
+you guys no no trading imagine
+seeing the possibility of a
+crash where it happens do you
+understand that those rules you
+stay out of the way you have a
+bunch of rules that are cluing
+you for market avoidance as we
+said is one of the three things
+that traders do wrong is that one
+is they bet too big for the risk
+they're taking number two is they
+fight the trend too much means they
+short too much usually and three is
+they don't have market avoidance
+strategies below dd bands pre-market
+risk interval VIX or catalyst is
+active you just stay away and
+imagine avoiding that crazy crazy
+crazy day tell me of anything that
+that you know that you've used
+before that has told you under
+these conditions don't touch the
+market stay as far far away as you
+can you guys ever use anything like
+that I think this was the NASDAQ
+that day imagine when we got the
+signal here on the net actually I
+still have the circle here from the
+last class that's what that's there
+for and imagine avoiding the
+NASDAQ's 800 point drop is you've
+got a risk interval on VIX trigger
+irrational way to go anyone have a
+question about how it works let me
+show you how to do the calc super
+simple it's the same thing as as you
+can use a fib tool or you can use a
+box you can use whatever you're just
+going to draw from the low of the
+session a box of that distance so
+wherever wherever that box was I'll
+just draw a new one so an example is
+today VIX popped up on the crash I
+would measure from the bottom there's
+a certain distance from the low now if
+it finds lower lows and that distance
+comes down a little bit but you're
+looking for total distance traveled
+from the low of the session and that's
+it okay so that is one of the rules
+that again is an automatic sit out as
+well
+so we've covered dd band break mhp break
+you can long on small pivot strong
+pivots small trades only you can chase
+mhp breaks with the small trade only
+against mhp if that's your choice
+catalyst downside sit out dd band break
+pre-market sit out mhp is the only
+thing you can take but again it's a
+long commit overnight I usually choose
+to not take it
+catalyst active you sit out
+risk interval break vix you sit out
+when the market is irrational as one
+final thing you don't assume
+that resilience is going to predict the
+movement of the index because
+irrational means you can't predict that
+the index ETFs are going to follow the
+stocks they're tracking they may be
+crashing so resilience loses its leading
+edge when any irrational rule is
+triggered
+dd ratio giving the confidence of a
+bull zone bounce throw it out your
+confluence indicators default to not
+being as strong because these are based
+on arbitrage you're expecting that index
+product to be tethered to the stocks
+the strength of it is less when
+irrational this is your overall check and
+then this is your position size to go
+with it
+okay so just remember when in doubt sit
+out but when you hear people say
+irrational is active your brain should
+immediately say is this a small day or a
+sit-out day and just to type really
+quick what are the two sit-out rules no
+matter what I want everybody to
+understand why the discord is quiet on
+those two days because people usually take
+the day off and they get used to closing
+down their platform and walking away
+everyone in this class unless you're
+driving I want you to type it
+cat and vix break can vix can vix those
+mark and voidance strategies are how I
+survived December's craziness there were
+so many catalysts that went active on
+December I had plenty of sit-out days and
+I know it's not the you know sexiest
+trading style nothing unsexy about having
+money to trade when the market comes
+back we had a catalyst active this day
+remember the Fed triggered that one I
+think lots of index catalysts that we
+got way out of the way on way out of the
+way on and I'll show you a couple more
+examples before we get out here just to
+show you some of them and again tick
+chart is the easiest way to see it looking
+for that particular let's find yeah like
+this day right here this is pre-market
+maybe I don't know what we had 730
+whatever I know what what other pre-market
+whatever day that was Friday ah non-farms
+okay those non-farms right market fell and
+I I draw I think I have this from the last
+class this looks like a this sense of one
+risk interval from the anchor point and as
+you see the catalyst is active one key
+takeaway about a catalyst being active is
+as follows what you'll notice and again
+and this is something to take into effect
+is that volatility is going to move
+exponentially usually when a cat is active
+and what that means is that the S&P or
+the Nasdaq or whatever is trading is
+likely to have some curvature to it like
+if I were to draw like a trend line on
+like how these lows are basing out like
+right here I don't hate trend lines you know
+me but as you see like it's kind of like
+speeding up over to connect all these
+dots you can kind of see that the lows are
+like curving lower right when a catalyst is
+active the volatility is not just getting
+bigger like this would be getting bigger
+linearly the volatility is like getting
+bigger exponentially so what happens is you
+get like this curvature as the market is
+exponentially expanding that curvature is
+really bad for trading part of the reason
+we sit out is because when you break a
+risk interval the market is chasing to find
+that liquidity it doesn't know where it is
+anymore and so the market just gets flurried
+with all kind of random orders all over the
+place and the market bid drops really fast
+and ask rises really fast and it just gets
+really crazy the curvature is the scary part
+of a catalyst it's not just the distance
+it's that you know what's normally just kind
+of like abbing along and this is just
+abbing along and abbing along the market
+starts to rapidly kind of curve faster and
+the curvature is the scary part so you kind
+of want to be out of the way when that
+happens especially on downside moves you
+got it VIX flies out of control but in
+either case you got a bunch of signals for
+market avoidance you got to be very careful
+this is the easiest way to see curvature you
+guys remember this day right we gap down
+and this was whatever day this was and
+it's so easy to see that the market is
+curving lower does everyone can you all see
+curvature here I mean this is the easiest
+example of it I mean shit look at this
+y'all see that you see how it's speeding
+up it's fall it's getting worse as the day
+goes by right I'm sure that cat triggered
+like back here like the start of the day I
+think it triggered like right start actually
+actually like on SMB and one more on this
+one but right so the speed as the market is
+speeding up its fall it's not what you want
+to be in and now you might be saying well
+can't we short it and this is where I tell
+you you can do anything you want but the
+power in trading comes from control the
+market has no control what makes you think
+you will that's what I told myself and I
+learned that my performance went way up when
+I started avoiding that nonsense 42 points
+from the top would be 60 90 and right here
+the cat was active right and let's just
+moseying along however you know your cat is
+active right here ED band is broken you
+already like I'll screw this and you might
+want to think oh you know I can buy this
+dip this looks great hell no look at that
+you ruined your life you real you ruined your
+life here you lost your you lost your life
+savings you blew up your trading account when
+cows act and be very scared downside moves
+are crazily big and what's sad about this is
+that people that don't use our tools might
+have thought this traditionally for you I'm
+sure all your moving average is probably
+crossed over right there they probably look
+like good a good signal right I'm gonna show
+you something before we get out of here I
+don't even know but I'm gonna take a guess let's
+put up my least my most hated indicator the
+worst indicator I think ever invented let me
+just show you something and again while the
+market is drawing this eyesore let me get
+over here and find that day again use the
+mac the more power to you but I don't know what
+kind of nonsense that this looked like a great
+yeah and then I was gonna assume this look a
+fantastic signal right fantastic signal there's the
+crossover there's a crossover there's a
+divergence boom looks long right right right it's
+green take the long right here you sit out no
+matter what your technical signals will never
+never make sense there's no structure in the
+market so rinky-dink indicators are certainly
+not going to work does everybody understand
+while this looked like a great spot to get in
+if you don't have our rules of risk and
+you don't have our rules of dv and you not
+might have thought of this it's just as a
+technical trader it doesn't even look that
+dangerous it kind of just well you know what
+this kind of held and this kind of held let me
+get the dip you are scared of the market from
+here do we all see that this kind of stuff is
+why technical analysis outright fails because it
+has no conditions to apply to it now you can use
+technical analysis under our conditions is the
+market rational then maybe I'd take that move is
+the market irrational heck no do you know what
+it's doing look at this it's giving you an amazing
+signal and no warning sign right it's like even here it's
+like you know it's like even there look it fell 30 points oh
+look we're back to we're back to crossing over maybe so ah it's
+green aha let's buy that dip it's green okay no wait how about
+that dip oh wait no wait how about that dip oh wait no wait
+every one of these green signals is absolutely garbage garbage garbage
+literally garbage this stuff has been proven not to work for these
+particular reasons each one of these is a failed signal and
+you may say well it works sometimes right but when markets are
+irrational and you use stuff like this don't use stuff like this even
+when it's irrational be scared of the market here this was
+enough to ruin people's lives so each time it consolidates it
+gives you a signal but you have a better signal the
+structure's been broken it's that simple right so and then when
+it reverses it's like you can say well maybe I would have
+taken that one well you which one did you take right is that
+the one you're gonna take by that time you already beat up
+enough and it's just like what I like to meme on is the idea that
+this stuff doesn't even work normal it doesn't work under these kind
+of circumstances but you have the market avoidance tricks
+avoid dd band breaks at the open avoid catalyst moves to the downside
+and avoid risk interval vix to the upside and you will have an amazing
+time in your journey as a trader maybe at best you'll feel better we
+can't make guarantees or promises to you maybe you'll feel better over the
+market because when this happens yesterday I go lol I'm gonna have the
+night off and hang out with my family I didn't even think about it come back to
+the market and then I deal don't try to guess dd no you can't see the dd band
+because of this dd band break don't try to guess let it do its thing right if
+you're trying to short the market and accounts is active the upside well you
+better get out of the way right don't don't trade against a catalyst
+ever okay so pop quiz when irrational your brain immediately thinks what two
+things on sizing
+final guess
+small to zero yeah immediate small to zero something weird is happening and
+structure is broken approach very lightly catalyst and risk interval sit out
+automatically dd band breaks pre-market sit out if you can MHP is the only thing
+you have overnight but then again it's a long commit don't do it unless you want to
+be sitting there all night um I usually don't um hedge breaks or dd band breaks
+during the session the equity session you get your strong pivots only you can
+trade it small you want um and that's basically it when structure breaks
+volatility can likely go higher and exponentially higher that's why the
+small position is advantageous because the market can chop around a lot
+especially on the downside moves and you just don't want to be with a lot of
+exposure when that happens so what we usually do is we tell people
+there is one one thing you can do there is one button you can click
+it's actually a button that's an instant win button and when you click this button
+you always win you always win your trade every single time so this is a hack
+and don't tell the sec watchdogs that we're doing this so this is a hack
+if you do this when all those any of those rules irrational rules are active
+you click this button you'll win your trade every time it's this x button in
+the top right of your platform that is a hundred percent guaranteed winning trade
+no matter what literally no matter what if you click that button you will win that
+trade every time that's the best part about trading and it took me many years of
+my life to remember or to realize the power in that
+choosing to sit out is not not taking a trade it is choosing to take a trade of zero it is a choice
+you made and it is the same choice as a poker player choosing to see the cards and fold the cards
+um so if you choose to sit out and say i don't like it today you commit to close the minute you click
+that x button there's another rule don't open your platform at all ever again that day until the very
+next day so in futures the very next day is 5 p.m like if i choose it three o'clock in the morning
+to close my platform down i'm not opening it up until the futures market is reopened for the next
+day if i close it down during the stock session on a tuesday i don't open it back up until the
+morning on a wednesday why because you get in the habit of trusting your decision don't second guess
+yourself if you come back and the market's bouncing back up and you may be enticed to jump in a dumpster
+fire and the rule is we tell people especially when catalyst is active or risk interval on vix this
+is the rule that has turned so many traders here into funded traders and all kind of stuff as they've
+learned to sit out and get probably some amens when i say that when they choose to sit out they say
+god there's so many days i would have chosen to trade here but i just didn't do it and i lucked
+out because i would have made a bad decision we can't promise you changes in your performance
+but i can tell you that whatever you choose to do to sit out and the more that you do it
+when things don't line up for you you're likely going to do better with your own rules not just
+ours so this is what you create for yourself avoiding the market when things don't line up
+the way you want them to is power and power as a trader is all you need is to choose to sit out and
+then stay stay committed to the choice and come back the next day there's no shame in it and like i said
+on the stream people come and troll you does this guy even trade and i'm like let me put a micro on
+here i know it's a dumpster fire so let me risk 100 back remember when the fed came i don't trade
+during catalysts or events but because i had a huge audience i said well let me gamble on this two
+micros i'll lose 300 if i'm wrong you know something like that and i'm like okay i know i'm just rolling
+the dice and playing roulette with the money but i'm definitely lowering my risk to something that just
+shows a position but as small as it goes right and that is a choice because i'm on a i'm on a show
+right but you can choose to sit out which i usually will do i just can't close down the platform and
+stare at a blank screen on my stream people don't usually like to watch that so i kind of have to
+annotate and you know talk about things but remember closing down is powerful and get used to adding market
+avoidance to your diet you will if you're lucky
+feel better feel less beat up you'll have fewer bad days of not just you doing bad but like bad days
+where the market's so confusing and exhausting the thing is i say is that when you avoid the market as
+much as you can the next day you always seem to come back refreshed after a really bad choppy
+catalyst day that you were stuck in all day your heart's a little broken right you feel bad that
+night you're kind of a jerk to your friends kind of distant from your family and like these things
+are just bad for your soul and then the next day you come you're like emotionally damaged maybe a
+little timid and shy avoiding the market is like picking and choosing your battles only fight when
+you need to and it's very very good like mentally for your mental game i promise so don't just be like
+you know what i'm gonna trim down and trade very very small because i think it's a cat just be like
+i'm used to sitting out and then you're gonna start to feel powerful and more confident and you're
+gonna watch everyone's social media and you're gonna giggle you're like oh look at that they
+they blew up and you probably were like oh man i've been there they bought the dip on that macd
+every time huh oh man i remember when i used to do that what did i do oh i don't know i just caught
+up on that show i was watching i closed my platform down there's power in market avoidance that's why
+you say it's one of the three tenets of improvement as a trader whether it's our rules or your rules
+if you have rules to sit out commit to them and stay committed to them it'll be the it'll be
+the best choice you ever make

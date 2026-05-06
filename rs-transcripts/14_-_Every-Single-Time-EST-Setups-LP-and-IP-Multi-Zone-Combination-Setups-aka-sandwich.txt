@@ -1,0 +1,443 @@
+today's class is over what we call every single time trades or est trades this kind of came from
+the fact that it's a trade that i take every single time no matter what as you probably have
+guessed why that condition exists to take it every single time no matter what because it's
+the highest probability trade that you have and when you're trading something or doing anything
+that has probabilities to realize the probability you must have as many data points as possible
+you know there's a thing that's like the law of large numbers states that the the more often or
+the more games that are played the average or expected the mean is realized or the expected
+average of what's going to happen so the example i i tell people is that you know the example always
+was if you were you know um playing basketball somebody says you know you want to play basketball
+against uh lebron and you go you play one-on-one and you get to you make a million dollars if you win
+you know the odds are extremely hard to beat you're gonna lose 99.9 out of a hundred times right
+um but if you can if you're allowed to design the game you can exploit the fact that upsets can happen
+try to design an upset case that you get lucky in a 50 50 shot the first game and then you say play
+first one to one basket i get the ball first you have to stand 20 feet away from me and just throw
+the ball maybe you make it maybe you don't but then you make it you don't play again and you can
+say aha look i won and then never play again you can say you beat him however if you play a hundred
+games you're gonna lose just about every time you know figure out how to beat your your system and
+then kick your butt down the road now the average has realized that the more you play
+the advantage is seen by who has the advantage they they realize the mean so in his example
+he has a 99 chance of beating you he should just play you more often this makes sense everybody
+right so this is the basically the the the the framework of this entire lesson you guys understand
+from your point of view you want to play and get out of the way because you're the upset case in his
+point of view he needs to keep playing you because he's going to win more often than not give his
+money back so the same example is if you have something that has a high probability you want
+to play every single time if he got beat his first time you know by somebody half his size half his age
+and he's like oh man i'm just going to quit well then that's working against him you know you have
+to know your statistical odds and play them so every single time trade is very simple in trading
+it's something that under ideal conditions right greater market lines up in the direction this example
+today is bull the greater market's bullish which pop quiz what are the three indicators of greater
+market just as a refresher you have three indicators just type them real quick everybody type them quick
+just remember as quick as you can yep dd ratio bull bear bias there right you got s&p or spy mhp or s&p mhp
+you have monthly maps okay if all of your greater market are in the same direction say bullish for
+example for bull trade and you have the confluence that goes with the bull trade we call that the
+perfect condition and the perfect condition bull trades tend to have close to a 90 percent probability
+of same side closer or optimal close for whatever whatever you are um whichever depending on which
+circumstance you're looking at we like you know as a nickname call them our quote-unquote 90 percenters
+right that's our that's our nickname that is back tested under certain conditions to be 90 we know the
+realistic conditions when not everything's ideal roughly closer to like 70 percent right for some of
+these now i'll give you the odds you can notice on here the four conditions are bear zone bull
+bull zone bull zone bear zone mhp and dd band what you might remember from previous classes is dd band
+lower was eight percent of days closed below and this let's forget about the conditions being perfect
+all conditions we counted every day in eight percent of days closed below 92 percent close above now we
+don't have stats currently on the ideal conditions of this but we know that same side closes 92 percent on
+the upper side clearly this is this is your lebron trade right mhp same thing full uh lack of confluence
+all conditions it was what a 73 percent chance same side close and a 27 percent chance of bounce
+right or 27 sorry 27 percent chance of break 73 chance of bounce under ideal conditions right
+it's a 90 ish 10 ish situation so all conditions this is an every single time trade no matter what
+these conditions are 73 or 90 percent same side bounce rate to the long side or same side close rate
+on the long side 70 to 90 and then these ideal conditions same thing 90 90 we don't know now again
+same side open and close so if you open on the bull side you're likely not to leave the bull side you
+open in the middle you're likely not to leave the middle more often than not you'll stay in the same
+course or the same place we don't have non-ideal conditions we haven't counted the probabilities of
+this in the 90s more like an estimate from observation we don't actually have a back test that comes up with
+the 90s here but it's observable you notice under ideal condition days it's almost every time it'll work so
+we lump it in with the 90s these are highest probable setups you will notice this from the
+actual position size choices that alert you to est what do you notice here that alerts you to being
+est and you'll notice the same thing in the diagram over there tell me something you notice that lets
+you know i'll trade that every single time let's see that some of them are there right anybody have an
+idea kind of what that clue is visually no matter what the condition is there's a trade
+up down normal small the only difference is position size based on the lack of confluence
+but because the odds are so high
+i'm going to take it every time with the lack of confluence i'm going to scale down
+but still take it every time right the odds are really good we've seen in certain environments where
+even in the worst case scenarios there'll be days where you have this sort of
+bull zone bear zone ping pong and i'll talk about some of those in a little bit
+where you might see three or four of them fail and six to eight of them you know make it and
+overall if you played all of them you won the goal is basically that you'll see on days where it just
+bounces between here more often or you have multiple options more often than not this leg of the trade
+works more often than it doesn't almost every single time and because it works almost every single
+time i trade it like almost every single time which means i can take multiple time attempt
+entries at these certain plays example we fall the mhp it's got a high probability right 73 percent
+let's pretend we have no confluence and 27 percent chance of break oops 27 percent chance of break
+and i put in my trade and i fall to my stop loss and darn i'm out well i mean one out of four times
+it's likely to happen and then when it returns to there bounces above bounces right back down and i
+have the confluence right or even without the confluence it doesn't matter with the confluence
+to be closer to 90 without the confluence closer to 70 on the reclaim because it's the same probability
+that we close it's like playing that second game as lebron you guys understand this so when i try to buy
+the dip and it fails i don't get discouraged i just make sure that this loss and maybe 10 or 15 more
+losses again don't squeeze me out if i lose my next position my my account goes down a little bit
+my normal medium small sizes are slightly smaller and if i lose slightly smaller if i lose slightly
+smaller and as i gain slightly bigger gain slightly bigger each time i my normal maybe 10 contracts and i
+lose and take a stop then maybe my new normal is nine right you're naturally scaling down remember
+course two teaches you that as a ratio of your total account based on what you're setting your
+parameters to be to like how much you're willing to lose per day or per trade but every single time i
+want to attack this and i lose two or three times in a row the same trade should be less of a loss less
+of a loss less of a loss i wouldn't be 10 contracts lose 10 contracts lose 10 contracts lose because your
+account should be shrinking after so a couple losses it should be 10 9 8 you should be trading smaller
+ultimately when it finally does realize you might make a dent say that you know mhp breaks and then
+you reclaim and then it breaks again and you reclaim and then it goes and this should make something in
+these two are losers overall you probably lost but you lost small as you just taken two losses and you
+felt bad then you left because you felt bad not because you're playing the odds and then you missed out
+of the odds if that usually happens you might jump in at the high because you're like oh crap i was right
+and then take a third loss when you shouldn't have done that the idea becomes resistant i mean
+resilience to letting the market beat you up there's a time period in december of 2025 where the market did
+beat me up for a while went on this amazing streak before that and then there was a time when almost
+every trade there was a there was kind of a mechanic and i'll actually use that as a demonstration in
+this video there's a mechanic where something that had high probability failed for almost like
+maybe like a couple weeks straight multiple days there was a fail and the reclaim would fail
+and that particular setup was actually really bad for me because you know it's just not my ideal
+trading to have it fail without you know the odds kicking back in now the odds remember are over
+infinite number of counting or infinite number of days and a small subset the worst trading i had of the
+year now this is showing most of the year you know you might say okay you know the bull market you
+probably think you know matt usually does okay in bull markets right and you might think aha
+the worst i did if you guys would look at this and say where's the worst i did you might think it was
+here i actually turned out doing fairly well in this environment actually did mostly longing because
+i was doing the random challenge in this environment if you remember from the first example in the
+boot camp when i talked about it i was mostly longing through this the worst trading i had in
+my year was this right here it was extremely bad for me like i went on like a seven or eight i can't
+remember day losing streak it was lose lose lose lose lose and almost everything i tried to buy would
+fail and the reclaim would also fail that kind of sucks but ever since here i've pretty much won most
+of the days there's a there's a place where the market sort of detached from what it normally does
+probabilistically but that's kind of what happens this is an upset case something that should happen
+90 of the time didn't happen you know 10 times in a row i mean it was like like i said you know seven
+eight days i probably lost and some of those days i lost three trades in a row 10 plus so it was lose
+lose lose lose but i didn't go in there and doubt myself and i went back and between here and now
+i've made pretty much most everything uh that i lost back now okay this also brings me up to another
+topic making it back never say what i just said when it comes to your own trading this is just a
+psychological rule of thumb if you're taking notes never say made it back that is a psychological trap
+you never want to be in there's no such thing as making it back the market and the universe doesn't
+remember what you had and neither should you if you had a hundred thousand dollars and you lost 50
+percent of it and you're down at 50k to make it back is not the same thing as what you lost you
+lost 50 percent to go to 50k but to go from 50 to 100k you need to make 50 when you have 50 you make
+100 on the climb back up this is not the same it's the same dollar amount but it's a twice as hard climb
+on a percent basis double the size do we all understand that remember when you trade you're thinking
+about percentage gains your r and r and all that's based on percentage gains you need it you don't
+have it's not gaining 50 to go back up gaining 50 is only 25 grand so making it back is a concept i want
+you to never say you're in you're in a trade you've lost 10 you've lost 15 000 now you're in the long now
+it's up now you made eight your net is seven this is a rule of thumb okay you have this urge to see the
+day closes green you want to be greater than zero on your pnl don't get used to being okay accepting
+a smaller loss as a win this is a losing trade this is a winning trade you shouldn't think a day
+doesn't matter in the long scheme of things the market doesn't care about beginning and end of the
+day your pnl doesn't care either your pnl matters when you fill out your taxes how much did you end up
+really taking home right it's not going to matter whether you made the money between 1 and 2 p.m or
+8 p.m the next day or 4 p.m the next day right so when you lose learn to accept the loss and forget
+about it like it's not even there recalculate your position sizes um if you've hit thresholds where
+you've stopped for the day then stop for the day but it's very easy to get into a trap of you got to
+see it green every day there's so many times where i take a really big loss and i make a lesser loss
+and i'm like okay i'm cool with that tomorrow's a new day very very very strong part of taking
+control of your own emotions that way um yeah all in the past right everything i have in the past
+never think about it so anyways so don't say what i just said make it back so that was bad form there
+but anyways this was the worst trading i ever had uh i ever had this year and why what made it so bad
+it's not like it moved that far it's a really really really really weird environment
+uh and to explain what was going on um it was these days right here and you can see that there
+was a lot of like flip flop flip flop flip flop but it wasn't like a normal flip flop you'll notice
+that the downside moves fell held fell held fell held fell held fell fell held
+that's weird because when markets fall they usually get more volatile okay the v's get bigger
+instead the market fell and fell and fell and fell you notice that the v's are practically the same
+side volatility wasn't increasing normally if i take a loss i can make a scalp and make some money off of
+it but this environment was fall pause fall pause fall pause and this environment of selling off
+it's a weird thing and again we always talk about the stock market is random there are some effects i
+can describe there which probably a once in your career sort of thing but during that time in
+december when the market was falling and falling and falling and falling do you notice something
+about the vix the vix was barely as was barely moving as a matter of fact during that week
+the vix was still in decay how can the market fall non-volatile it's so rare that that happens
+and it is a circumstance that's kind of neat to talk about this environment during this time
+we went on this massive rally 2025 trump came into office announced tariffs market crash then hedge
+funds had the best year of their lives we had a government shutdown here that we didn't know how
+long was going to last and we were in the void of data for a long time no data was coming out
+so at the end of the year hedge funds were just taking profits all through here and locking it in
+so they can collect their bonuses they had made 50 for the year i'm done and they're not really going
+to return back until the beginning of the year as we thought also at this time there was a really
+really really really really really weird um massive tulip style rally in silver and gold and again this
+is a this is a logarithmic chart so let me show you what gold was doing at the time we had
+a big sell-off back in here um nasdaq this is where we were the weirdness started happening
+uh right at the beginning of december 12 8 is this last leg of the silver rally so at the end of the
+year people were just rushing into silver and sort of just dumping a few things a few traders that were
+left you can see how the volume even you had some selling off normally sell-off volume is really high
+y'all notice this right when traders are active when you start squeezing out long sell-off volume
+is very high however the selling off we experienced the peak was much less the high was higher than the
+bull side but it wasn't that much higher end of the year mechanic people locking in profits and taking
+a break till quarter one and the few people that were there were just rotating out of a few big stocks
+to chase silver and gold because of that you were seeing certain companies like nvidia sell off and
+at the time of these videos being recorded nvidia is the biggest company in the world or one of the
+biggest companies in the world one of the top three um and so when big tech and ai is is being sold off
+in this environment here you can see that ever since we had this big run-up in nvidia there's just like
+this natural decay while the market's trying to rally and so there was this weird effect that
+nothing else was selling off with the exception of just a handful of the big tech stocks but they
+waste so much the market was responding to it and i was trading the nasdaq at the time and so you were
+getting these days where we're like nvidia would just plunge and nothing else would and the market was
+just basically perfectly tracking it um like i think this is the wait let's see which friday
+this is let me load them up but anyways this is to show you how est um i think this was the day
+here friday this looks like the day maybe but essentially you would just get these days where
+like nvidia would just plunge and then stay put people were just dumping out of it and jumping in
+into silver and gold we saw that multiple days and every day that nvidia would just plunge and stay low
+the index would just plunge and stay low with no other move to go with it right there's the tuesday
+and then there's the wednesday to go with the wednesday market would just kind of drift up
+pre-market and then nvidia would just dump and stay there so you would get days where the market would
+just fall and hold and fall and hold and fall and hold now we haven't had the vix class to explain
+why volatility isn't going up volatility is based on the spx options the entire index but not the
+entire index was selling off most of the index was staying put but just a few stocks were just
+pricing lower so it's like the tracking algorithms were just jumping to chase that one stock that was
+devaluing but it wastes so much in the index it just yanked the index lower very quick without
+everything else being volatile so when you piece it all together people were just dumping some nvidia at
+the end of the year so they can buy silver and the index was just falling to one spot do we all see
+that so every time like i tried to buy and took a loss and buy and took a loss and then buy take a
+loss buy the reclaim take a loss buy the reclaim take a loss it was one of those this was the worst
+of all the days every single trade failed because there was no volatility into the air mechanic now
+you won't see that all the time but it didn't discourage me over the long haul i'm still trading and
+things are okay now but sometimes you're going to have a streak where it goes against you each loss
+i should trade smaller and smaller and then of course still take the attack now this is a weird
+mechanic that you don't normally see where the market sort of just uh you know desyncs from the
+structure and just plunges lower being at the end of the year and there's low volume and everyone's
+sort of cashed out for the year after that massive rally we had you're not seeing a lot of people
+daring to take risk at the end of the quarter because if they made 50 what's 52 they've already
+cashed in their bonus they don't need to take the risk what really matters is when they need to dive
+in at the first of the year because they now they start locking in some profits for quarter one
+first of the year the volume came back you have to think from like a hedge fund manager right
+standpoint anyways the point that kind of deviated from the class is to say nothing is a hundred percent
+but you know it is a hundred percent my application i still do the same thing no matter what
+and it seems like after we got out of that the market seems to be back on structure we're hitting
+pivots it's hitting pivots and bouncing it's not just falling through everything without stopping right
+so sometimes i'm going to take a lot and that day i took like five losses in a row it was pretty rough
+but it didn't change how i trade you know the stream was difficult i still stuck with it uh the
+trading was difficult but i still didn't change i'm 100 i know i'm the lebron and i need to keep
+playing to stick with my odds est let's get back to it what happened there was um i think it was mhp
+first mhp failed with no bounce liquidity pocket
+failed and then dd band failed and all those reclaims didn't happen sometimes it will happen
+just everything breaks structure but there's no structure and there's no traders right
+okay but normally i'll hit those trades every time and the reason i took five losses in a row because i
+hit them every time it'll happen but every other day turned out just fine january's been
+stellar for me right this is now january in time this video okay est i trade from bear zone top
+the bull zone bottom almost every single time because markets are liquid and a liquidity pocket
+and class liquid markets don't what type it in
+they don't crash they usually don't crash sometimes you'll fail a pocket then get out of the way i take
+a trade here every time without the confluence small with the confluence big and then i take my
+stop them out if it falls here and i take a stop and it reclaims there i reassess the confluence
+and then make a new decision there okay mhp same thing i buy every single time to the long side
+good confluence normal no confluence small to medium it's it depends on you i always like to take mhp
+pretty pretty heavy okay um dd band same thing we talked about percentage it's the same thing if i
+if i buy it bounces we're good i exit at the interrupts if it fails and reclaims i chase on
+the reclaim now let's talk about reclaims again if the market hits the level and falls and comes up like
+this i'm not chasing the trade there because it's broken instead i wait till it returns to the same
+level i was entering at and then i enter a second trade it's one stop out two same stop and then i
+bet that it holds for the end of the day because of the odds those particular days i showed you earlier
+multiple reclaim attempts failed but hey that's trading sometimes it'll just happen on on rare
+occasions you get those weird weeks like that okay when you enter a new territory from the first time
+an example we open here and we break out of bear zone oh i'm sorry let me start over um let's say
+that um we break into bull zone when there wasn't anything before i don't chase a bull side break
+because the market isn't supposed to break into new zones okay especially uh when it's illiquid and
+moving here every time i run into a bull side break i always let it go and then i wait for the
+retest i always want to conserve a bull side break or sorry i always want to attack a bull side break
+on the on the confirmation bounce every time this is my entry this if i'm trading to bull zone bottom i
+usually exit out just like on a liquidity pocket and then if it pushes through i wait and then attack
+it a second time so these kind of traits i take in two steps i don't hold for the break even though
+it can go through most of the time it doesn't or many of the times it doesn't instead i i close wait
+get back in go dd band upper okay upper green line dd band is the same thing we break through it i'm
+usually exiting there we wait for the bounce i get in on a second trade this particular trading day
+had that set up um let me load up nasdaq today right the one of the opening trades i made on this
+particular day is that the market opened and fell and then reclaimed dd and on that little dip i jumped
+in on the long i didn't chase into it i just long on the confirmation right and it did open above it so
+technically this was the reclaim but we don't do reclaims um onto the low probability side just the
+high probability side so what's expected to happen this is not expected to rally keep going it's a low
+probability event so i i'd still wait for that low probability thing to test that's kind of the
+takeaway there um back to the diagram um here if i'm trading through a bear zone however
+into bull zone bottom because this is an every single time trade approaching bear zone top from
+the bottom i don't just exit it and then re-enter it because from this point is every single time
+anyways so this special condition arises when you're on the bear bear zone side and you're approaching
+the bear zone top you actually hold through it to go to there the reason is because this leg is every
+single time now again we mentioned earlier in the course series is that when you approach a bear
+zone top and you don't have the confluence you have options you can try to take the short if the dd ratio
+is low enough and you're a bear that's your bear entry the dd ratio is very low and you're in a very
+heavy trade and you're still a bull you trim out to the small and hold through there there's really like
+a questionable approach there i tend to err to the greater market since bear zone top with negative
+or sorry with the counter confluence to the bull move negative dd ratio less than half i can't take
+a normal size short trade where i can hold a small long trade what's the correct answer unfortunately
+they're both the correct answer you can do both you kind of have to zoom out and decide what's your
+greater opinion is of the market to decide usually i will err to the bull side when liquid markets because
+i'll err to the liquid markets don't crash but in an environment where everything is greater market
+bearish and it falls to bear zone top and approaches there i might not choose the bull side small trade
+and instead take the normal short with a stop you guys all agree with that like if everything is
+bearish i'll probably lean to the bear option there but if some things are bullish i'll still lean to
+the short the long bull option if the dd ratio is the one in question where it is negative then you
+kind of have to like decide which one you want to do and then you're gonna have to use some other
+confluences there our strategy allows for both setups but anyways with that being said um
+bull zone bottom trades the next interrupt there's your interrupt illiquidity pockets we trade from
+bull zone bottom to bear zone top and it's a bigger trade bear zone top the bull zone bottom is a smaller
+trade because it's the interior part of the boxes when you start to put these two together you come up
+with something that's pretty neat now we've already covered every single time trades which is
+something that has a trade no matter what the confluence is now you come into the zone combination
+trade aka people started calling the bear zone and bull zone sandwich uh and in stream they started
+calling it the arby's trade because there's an inside joke about how much i don't like arby's because
+the the picture just looks weird even though the food probably tastes great so arby's it's a sandwich you
+got a bun and a meat in the middle when you have bull zone it's a bear zone illiquidity pocket you take
+every single time and you have a liquidity pocket that you take every single time especially when the
+confluence dd ratio is greater than half you will hold from bull zone to bull zone like this interrupt isn't
+even there okay so the the sandwiches you trade from zone to zone and skip this all together you just pretend
+it's not even there and the and the opposite side when the bull zone is sandwiched in the middle
+you take it in two trade just like i explained when you break to the bull side you close on the
+liquidity pockets edge wait retest and then you trade from here to here and of course at the bear
+zone top as earners another bull zone you hold it all the way to the bull zone as well this you reassess
+based on dd band so the sandwich people start calling this the arby's trade you'll see it but the
+sandwich basically it's that you have an illiquidity pocket that moves quick that lands in a liquidity
+pocket and stabilizes this portion of the trade i take every single time as well by putting two of
+the things from the previous diagram together this portion and if this is on top of here that other
+portion you guys understand that what creates an illiquidity pocket you need to go to the class number
+three somebody asks in chat where we go over these things okay what actually calculates this stuff
+all right so that really is how this works now some days you're going to get this really interesting
+bear zone bull zone ping pong where it plays between all of it i think i found that meta today
+has had this what causes this sort of transitional behavior why is it bear bull bear bull bear bull well that's
+just kind of what the market is that's where the structure is you have a lot of disagreeing traders
+as the direction of where meta is let's zoom out and look on a greater greater scale and just kind of
+look at the out the the um the daily chart as you see meta was trading really high and like it looks
+like probably after earnings or something it had dumped and that you see meta has sort of retraced a
+little bit that selling pressure and now has a huge gap from earnings to fill and it's now been sitting
+flat for pretty much a month it would make sense that because the market's sitting flat
+this sudden appearance of bull trader bear trader bull trader bear trader are kind of sporadically
+dispersed between it it's not like a trading and straight into the bull zone where everybody's
+bullish or trading in the bear zone everybody's bearish you sort of have mixed opinions because the
+market's flat and now you'll see mixed dispersion
+of zones now with this you get a pretty decent field day of picking up some of your trade setups
+now in this example meta opens at mhp which is a 90 percenter and a bear zone top that's two of them
+together two really strong confluences right here and it just so happened to bounce as we know
+i exit at the next interrupt which would be there now granted this we don't have the full remember
+we have reference data there's a green candle and a red candle right here you can sign a little a
+little piece of it but meta moving through here and then bouncing right there i'd long one more time
+to hold through the zone because this is the sandwich tray with bear zone in the middle
+est double confluent exit bounce here est again we fell to there another trade we fell to there
+another trade you see how it gets kind of trapped in the pocket ultimately it fails but you can see
+even one two three four that's why you call these are 90 percenters even if it doesn't make it all the
+way you can see that the market is trying really hard to hold that even when flat flat liquid market
+where bulls and bears are nearby this creates liquidity and liquid markets don't crash right
+it's a great example of that particular trade as you scalp the bulls you know have you the lebron
+trade you can trade that every game you play and make something make something make something make
+something here's your sandwich trade and here's your est long this is a perfect textbook example
+of how everything lines up do we all see that it's not always going to be so pretty
+um i didn't prepare with examples of times that it didn't fail other than the uh because i couldn't
+find any but the uh here's tesla ah tesla again bull zone bear zone bull zone hold to peak
+breakthrough hold and wait take take the test okay with a stop see if it runs see if it runs see if it
+runs take a small loss in the stop right um that's how i would have traded that as well
+or maybe decided up there's a bear zone maybe i won't take a loss i'll keep a small position in
+case it goes i'll double down or triple down at the bear zone and set my stop there to again take
+the pocket trade even better i would do that you guys are catching the gist of this right normally
+especially when we have when you hit a bull zone and you notice things are choppy like this you get
+very excited to take that trade all the way to the top usually i take the first one and that's
+my big profit for the day uh it's really neat when it happens because you usually get a really strong
+run and nasdaq you get two strike distances in qqq you made 80 points sap you get like a quick 20
+and it usually runs pretty quick because illiquidity pockets move fast and liquidity pockets move slow
+and the momentum of this just kind of keeps carrying through they kind of speed that up a little bit
+most times all right um and let me see if i can't um use the scanner let's go ahead and sort by let's
+find some liquidity map ways that are in pockets right let's just put this up here let me pop some
+of them on on the chart here see if we got any good actionable ones
+um nothing good there
+um yeah so the est you know bear zone top bullish conditions you know you have the bull zone and then
+you you know you hit that interrupt uh i might close out re-enter hold through that or if i'm
+thinking the market is very bullish i will have a position and then trim and then hold and then take
+profit wherever i end up wherever i decide my profit target is um oh kroger here's an example of
+the open fell to bull zone took a stop fell to mhp this is what i was looking for all right we got
+a good example of it okay interrupts i mean sorry uh sorry reclaims i long stop out long stop out oh my
+gosh i'm such a terrible trader nope reclaim long make some money the only real loss that i made is
+this distance
+uh in and in this distance and then this distance made a little bit more than that so i only lost
+like a portion from there do you see how in this instance sticking to my guns and taking the mhp reclaim
+was profit there you see how that works had i taken two losses and i'm scared of the market
+what i would normally do here is i long stop long stop and i oh man looks like it's bringing mhp
+i'm not thinking okay you know what let me chase the short i never really do that this is a stock
+now if i had it if the index i was trading that the index mhp res is tanked then yes i'll take the
+short but in the stock you don't have resilience to go with stocks this is only looking at the index
+right so i'm just basically trading off of the probability of staying on the same side every time
+i make my trade so i long stop long stop or long small long again if they're close enough i want
+to take both in this instance this is really close i might take both of them long long again
+stop reclaim long a second time if i was too scared to take the long or i just decided to jump
+in on the short at the bottom i'll miss out on the opportunity to stay to the same side if we opened
+in bull territory it's going to try to stay in that bull zone as we expect the market doesn't like
+to leave the zone it it starts off and more often than it stays in the same zone it likes to stay in
+the same zone more often than it leaves so i can tell myself at the end of the day it's going to try
+to make its way there i'm going to reclaims mhp jump back in on the long this is a is a key
+it's like a one of the key parts of my strategy to not flip my bias unless i have a really good reason
+to keep attacking the same trade because of the whole lebron thing ultimately the probability will
+work in my favor it takes i have to see that wall street is changing their mind before i change my
+mind too wait for the reclaim instead of chase the short and if the market just falls and falls
+and falls and falls and you have that itch like man i kind of want to get in on this don't just i took
+a loss took a loss and i'm okay with missing out i'll come back tomorrow things will be better
+maybe get what i'm saying everybody we're on the same page just getting to the end of the video
+stocks are a little different because stocks don't really have much confluence with them people buy
+ourselves stock for individual reasons related to the stock stock trading is so much harder
+because you don't have tricks like arbitrage indications to help you guide the index to a
+landing point stocks just do whatever they want to do i'd send them in trading stocks to bet that
+it stays on the same side of everything it opens up we open above mhp we close above mhp
+check we open in bull zone we close kind of at bull zone uh check minus right it got there but
+didn't make it back so i tend to use the same rules of thumb when trading stocks attack stop attack
+again to go it's gonna take me a lot to really become flipping my buyish to bearish and anything
+and so this is a good example of reclaim trades i'll try if i can find a few more
+good examples right
+no
+no
+no
+uh not a reclaim no i don't stop there
+let's see very good examples oh here's an example of approaching bear zone top from the bottom
+uh when you open illiquidity pocket and you break mhp and it keeps going see i'll just kind of push
+this through that bear zone top it doesn't bear zone tops aren't really rejection points
+that often um and so it just kind of waltzes through it which is what you'd expect that's
+why we those est here's the same thing it just waltzed through the bear zone like it wasn't there
+now this is unusual you don't normally see that retest but you would have held through it anyways
+but yeah you got this liquidity pocket this way now another thing um if there is no bull zone above it
+you assume that there's bull zone above it somewhere like at infinity you got a bull zone bottom
+so in this no man's land you're basically in an infinitely sized liquidity pocket you long to some
+other target whatever interrupt you can find so i'm trying to see if there's any more examples of
+some good reclaims today see there's another bear zone we just waltzed right through it
+um markets that's the blind monkey thing markets love to be bullish um here's an example uh i long
+maybe i stopped reclaimed longed made some cash longed took a stop maybe lost lost two made one you can
+see that continuing to attack it uh was the strategy right now i'm just randomly picking stocks that
+showed up on the list today uh that's it trying to find things in pockets but anyways hopefully this
+makes sense to you guys est is any setup that you have whether it's rocket scooter or not
+it has a high probability and the concept is you're trying to be lebron the more often you play when you
+have an edge the goal is to exploit a lot of large numbers saying that your edge will be realized the
+more you play casinos have an edge they give you drinks they give you free sweets they comp you to
+keep you to stay in there they take the windows out so you lose track of time
+so you play as much as you can because they have an advantage if somehow in whatever course of
+journey you take while trading you muster up some kind of setup that has a house advantage
+you must play as much as you can and your goal is to survive when you lose such that you have the
+capital to keep playing right does this make sense any edge you find here or otherwise
+edge is exploited over long periods of time it's not over streaks or small periods my example earlier
+of my like freaking 10 whatever trade lose however the losing streak was was not phasing me because i
+trust my timely performance over long periods of time like lebron's i got upset a few times and a lot
+in a row but it still didn't beat me up to the point that i just lost my cool that's it when you
+start to trade with any kind of edge whatever it is your goal is to survive through the weird streaks
+that go against you but knowing that you need to be in the game long enough to let the let the odds
+realize um and that's super important because if you pick and choose whenever you do want to trade
+it's a higher probability that the day you skipped out on was a day that you won example and this is
+the finalized video if you win one out of four times sorry win three out of four times win win win
+and then the fourth time you lose if your odds are 75 these are independent games each day you play
+has a 75 chance that you win if you happen to lose and lose and lose and lose again but you know over
+infinity times you've got a 75 chance of win rate if you just choose you know what i'm gonna not trade
+i've lost a lot i'm just done i feel like i don't want to trade is that because i lost a lot
+you're you have a higher probability that this day is actually a win than it is a loss
+you just do because you win three out of four times so every day you skip you're trying to avoid
+something that only has one quarter of a chance of happening there's no mathematical reasoning to do
+that it's all emotions at that point subsequent losses have scared you out of the market and when
+you're trading you have to learn how to not be scared of the market just because you're losing
+you will lose and you have to be okay with it but skipping a day because you've had repeated losses you
+didn't see me in december take you know i i'm again i don't even remember it was like seven to ten days
+i know i just lost that many days in a row you did not see me say you know what guys i've lost three or
+four days i'm just done trading for the year i did not because i know i have an edge that i can exploit to
+keep going i lost pretty decent amount but i didn't choose the low probability option of
+let me just sit out because because because i lost a couple of days in a row i don't want to trade this
+day then why every day the odds are in my favor to take the day you know what i'm saying this this is
+the i'm trying to teach your mentality right here um rather be wrong from the right place is still
+yeah wrong from the right place is still wrong but at least you're wrong smaller in a manageable
+sense right so the goal is is if you if you have in and this is in poker or any kind of game where
+you have an edge with the edge you must play every single time okay or try to play every single time
+which means manage your losses to be small and survive long enough for the odds to take over the odds
+things to realize
+you

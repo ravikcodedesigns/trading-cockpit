@@ -1,0 +1,400 @@
+okay guys uh today's class is on the pre-market setup and also how to
+estimate greater market before open now it's a couple of really cool tricks we've already kind
+of covered some of that other classes but it's a very simple process because you know pre-market
+obviously we've talked about the dynamic uh hedge pressure monthly hedge pressure overnight when you
+get those levels you know you have them and you want to make a greater decision as to maybe how you
+might want to trade pretend overnight you don't have all the information that comes out at rocket
+scooter 9 30 in the morning an example overnight i have a nasa chart up nasa chart has a hedge
+pressure monthly and weekly right here and i want to make a trade and i might want to say well
+for my greater bias is greater market also going to be bullish or bear so we will know until the
+morning right there's some pretty cool tricks that you can do to kind of guess greater market
+you'll have all the details in the morning you have dd ratio you have spy or sp sp above or below mhp
+and then you have monthly maps okay dd mhp and monthly maps as you learn in the vix class you have
+greater market now has two more considerations right as we covered in the vix class number four
+is it's going to be number four and number five or it's going to be vix futures above or below
+triple b so for bull market it would be below but it's not really bull market it's more like
+volatile market and then v vix right so we covered before v vix below 100 is good for a bull market or
+good for a non-volatile market let's start stop saying the wrong thing v vix less than 90 is golden
+for a non-volatile market so v vix less than 100 for bull side this is direction of market this is how
+the market's going to move you can be bullish or bearish and the market can move differently in both
+sides vix below the contango midpoint as we've covered before means that the market is less sensitive
+the news less sensitive the catalyst uh this is environment that we're in right now right uh vix
+is below this triple b that we have right now and of course you know any upsets you know trump threw
+some curveballs at the market today vix didn't fly off the handle let's make this bigger so you can see
+it but obviously when vix is above the triple b say this month here it was where my mouse is and then
+when we're above it you see how vix has the ability to fly off the chain much more when you're below
+the triple b like uh in this particular month i think it was here all month vix just sort of like
+had less response to events so you use that to kind of gauge how sensitive the market's going to be
+to news events cpi is coming out vix is below triple b okay well cpi is going to have to take a lot
+of time to crash that market right more so than it's up here it's so finicky the market's underpriced
+in that volatility and when it's realized the market falls much faster it's a much thinner market
+here so this is how the market's going to move this is what direction it's likely to move and you
+can kind of guess all of that pretty much pre-market as much as you can first of all uh this you do
+have vix vix is a futures thing you're going to have that already so check we've knocked that off the
+list um another thing is vvix right vvix is a an indicator that's the volatility of the vix itself
+remember vix is the volatility of and i need to re-record that class by the way um so y'all will
+see a different video when you watch this uh we'll do this one next time anyways back to this uh vix itself
+is based on spx options and those are only trading during the equity session okay so overnight you're
+not going to have that but what you can assume is that vvix is not going to move really far into that
+questionable territory above 100 is kind of like okay what this means is the vix itself is sensitive
+to change when the vix itself is sensitive to change the s&p could sell off with a faster curvature
+when vvix is really high it can fall off faster when vvix is low it'll fall off slower when vvix is
+golden it'll usually save that volatility so highest vvix is really bad vix sensitivity can go up when
+vvix is above 100 vix has the ability to fly off the handle really quick when vvix is below 100 and above
+90 vix sort of stays in check when vvix is below 90 then vix barely moves at all as we see with this
+example here okay so vvix you're not going to have what you can assume is that if you're below
+the triple b and vvix was below 100 then you can assume that it's also going to stay the same
+it takes a lot almost a whole day worth of movement to move vix into that danger zone so we're very very
+very very very close to it and even if i was trading like right below it into the close overnight i
+wouldn't assume it's jumping above it really quickly unless the vix just shows me that it's moving
+quicker and how would you judge the volatility of the vix the same way you judge the volatility of
+anything you're looking at the size of the v's so an example is if vvix is going up then your average
+size of the v would get bigger so if even if vix is trading up and the v's are pretty much the same
+you can assume vvix isn't moving if vix somehow moves up faster like this then you can assume vvix is
+now going higher so what you're looking for to estimate the vvix is those v's getting bigger
+and you're not seeing that right now like okay tonight we'll see if the market decides to
+dump overnight really quick and this does that and this and we'll assume vvix is basically where it was
+not going much higher so check now we have a way to exactly know this one and estimate that one it
+doesn't change that much and on that note some of the other ones don't change that much dd ratio
+unless the market has significantly jumped from one side to the other like today we lost bear
+terror bull territory about the bear territory around like a news event but nasdaq really didn't
+lose that and unless you have if you have a day where this is bullish and the market sells off
+just a little bit like maybe barely in a bear territory this is not going to jump to negative 30
+the next day this might be closer to 50 but that's it if this were to crash through here middle of the
+day and sell off and sell off and sell off and this deteriorated from like 90 to 50 to 60 to like 55 by
+the end of the day then you're going to assume okay probably maybe less than 50 overnight or by pre-market
+so pre-market especially before you're trading is to have a general idea of what these things are going
+to be rule of thumb dd ratio doesn't change that much unless there's a drastic turn of events
+in the market and nasdaq still traded up yes you know we didn't actually even though s&p sold off
+a little heavier nasdaq didn't so markets pretty much holding the fort we're at 73 it's likely to
+stay the same okay estimating pre-market you won't know what mhp is but you can take a guess and this
+is the mhp that's printed at 9 30 in the morning we are still very bullish on this so it's not likely
+to be closer to price unless you get closer to monthly expiration the rule of thumb with monthly
+hedge pressure is that at the start of the month if you're in a bull market here's here's price at the
+start of the month you're gonna be really far away from it relative and as price goes towards the end
+of the month let's say that that's there and say price goes nowhere then monthly hedge pressure will
+sort of like scoot really close to price by the end of the month it sort of curves in like this so
+the last week of the month monthly hedge pressure will be in the vicinity of a bull market in a bear
+market or a sell-off in a bull market you're going to see monthly hedge pressure sort of interacting
+with price most days you're gonna probably open below it and pop above it the next day you're
+there pop below it bear markets you flip-flop around monthly hedge pressure it's not as clean
+as your you know monthly hedge pressure is up here and then you're just resisting resisting resisting
+as we know in bear markets it's one day down one day up one day down one day up so you're not
+going to see like a bear market like a bull market where the monthly hedge pressure technically it
+could do that but you're not going to see us like below mhp below mhp below mhp for long periods of
+time it's going to mostly be in the vicinity of price more often than not in a bull market you'll
+see you're safely above it so in this example we're safely above it now then it's not the third
+friday of the month which is in seven trading days from now so i'm going to assume it's not inching that
+much closer to us as well if it was nearby but below and you got two days left in the trading month
+i might caution myself on that and use the overnight dynamic as a check just to make sure
+we above above or below it okay so you can make a strong estimate on s&p that it also doesn't change
+too much but only in that last maybe week of the month which is gonna be something you guess on so
+this doesn't change that much usually a drastic change will change your mind this monthly map same
+thing the monthly map is bullish uh unless you're dropping out of bull territory and into bear
+territory on the monthly map then you can assume that it's going to be pretty much the same the next
+day or the same ish without changing too much we sold off today let's double check let's go to the daily
+chart let's look at this monthly map how's it going we sold off today but man we are still clear for
+bull market for the rest of the month so this is not scary had we sold off today really hard
+and landed in tomorrow's bull territory that i might assume and be bearish tomorrow so you need
+a really drastic sell-off to clear into the next day's bear market for me to estimate bearish so now
+we've covered all five of them let's let's use today as an example let me use s&p and let's go ahead and
+make some guesses because i'm going to trade overnight and trade in the morning without knowing now the fact
+is you want to guess all of this so that you can maybe have a trade plan right when the market's opening
+in the in the two minutes of you thinking about what you're going to do when the data rolls in
+you already have an idea then you just have to adjust it's better to guess at five and then
+change one of them on the fly than to analyze all five of them at once does this make sense it's less
+work the reason you do this it's less work you don't have to catalog five different indicators
+every understand in chat at the same time get your best guess going forward and just look for changes
+so you can check it off really quick you're like uh okay you're already ready with your bull plan or
+whatever plan you're ready to go for then you're just double checking okay good good good good go
+it's not like wait what's mhp okay let me go to the monthly map oh okay let me load it you're already
+missing the trade at that point so the assumptions are going to give you strength and speed or strengthen
+your your judgment and speed meaning that when the data does come out you're going to remember very
+quickly and the order which it comes out we'll go we'll demonstrate that right now okay so you have
+an s&p regular chart we just sold off and now we're chilling now i'm going to make it pretend i have
+an mhp dynamic overnight right here smack dad below price okay cool so now i'm like okay we closed here
+i've got something bullishness there okay let me analyze what the market's going to do okay check
+dd73 did we sell off really hard today well that stayed in bull zone so not really this one kind of
+did bear zone but it still stayed 73 by the end of the day all right so i'm going to assume that we're
+going to be about 50 tomorrow check let me double check monthly maps though to make sure we didn't plow
+through some key levels there since the s&p sold off the most it's really the most important one and we
+did sell off but man we are still in liquidity pocket and then bullish on day three we're good there
+okay good not that bad let's double check nasdaq this is all done at night right i'm doing this now
+uh so that you know i'm ready for tomorrow and nasdaq oh pretty clean right you got bull side
+sloping down bear side top slipping down so nasdaq is clean and bullish going forward tomorrow great
+heck this market may open and continue to rally good all right so check and check let's check mhp
+let's go back to the daily chart remember mhp on the s&p let's go here let's load it up oh yeah we're
+so far away from it 96 64 that's 70 points okay and today is according to this the date of this video
+is january the 7th 2026 and expiration is the 16th which is uh two fridays from now so this isn't going
+to be rapidly closing in so we're probably bullish tomorrow so cool all greater markets bullish
+tomorrow probably with the exception of if i wake up in the morning and somehow we've crashed through
+that mhp and continue to sell off then i'm going to kind of toss all of that and not really follow my
+guess anymore right especially if we close overnight below yesterday's mhp then i'm going to probably not
+make the assumption that that bull side is pretty much strong there do we understand that just gauging
+the market right vix below triple b well we just showed that a second ago just reaffirm that check
+we're there cool and well bvix is well below 100 and you can see it takes a couple of days to move
+you know 10 points and for us to move another 10 points it's certainly not going to happen overnight
+without a drastic sell-off i'm gonna have to wake up tomorrow to essentially a market collapse for
+this to be up there so i'm gonna assume it's still good great all my greater bull market signals are
+there and non-volatile for tomorrow cool great now i can trade with confidence overnight that if i fall
+to support i'm ready to buy that's it that's how you do it and then if i wake up in the morning and
+the data comes out and uh you know pre-market we sort of sold off sold off sold off i might be a
+little hesitant to change that if pre-market were higher than yesterday's close and gapping up
+then i'm solid there it's probably not going to be in a worse condition so the overnight trading
+dictate that say the overnight trading traded off now i'm a little worried i'm going to kind of say
+well how far did it go i'm going to double check monthly maps and just kind of estimate are we close
+to that bear territory where it's probably going to be this is all before the real data comes out
+are we losing yesterday's mhp uh well then maybe i'm gonna when the market opens i'm not longing at
+the open let me just wait let all the data come through then make a decision but if we gap up gap
+up gap up and then all the state is bullish cool gapped up 10 points perfect i'm gonna long right at
+the open and then add to it on the on the gap fill as long as res is positive perfect and that's it
+and that's what you do now pre-market it just does some of your homework for you that way you're not
+doing it all in the market opens last thing you want to be doing is fumbling for five or ten minutes
+once the market opens have a plan and then adjust it rather than build it all right start okay
+cool now other pre-market things you can use this is kind of helpful first of all there's a handout
+i have my trades just like this as you see with the handout chart one chart two and a dom off to
+the right it's not shown right now but it's usually to the right on my stream chart one is for liquidity
+maps uh and this is the equivalent ticker for futures now this is an old handout i'm going to update this
+since this video has come out we now have futures conversions so left side nasdaq futures right side
+s&p futures i look at them side by side for clues and that's it you can do whatever you want you
+want to trade russell and dow you can add a four by four or you can you divide this however you want
+you click this button right here add as many as you want the way i do it because people always ask how
+i do it i just look at two s&p and nasdaq i keep it light off the side of my screen i keep my
+um i no longer do this either because now we have the conversions off to the side of the screen
+i use nq tick chart es tick chart so i can really just zoom in and watch the order flow so i use
+tick charts i use a 25 tick chart um on both of these um over here i got vx and over here i got vvx
+that's what i'm watching that's that four by four i always bring up on the screen so over here i've got
+see the tick chart is loaded here just so i can watch the orders they come in i like to gauge how
+far the tick chart moves left and right so i can sort of see how fast the orders are coming through
+makes sense okay so with that being said that's my that's my pre-market setup i got this on one screen
+just to kind of gauge this and this is flexible because vvx doesn't move that much
+so if it's cool i check it off the list and then i start to use this just to like
+flex i can i can move to like look at nvidia or something else like that i'm just watching for the
+day just a pop-up second i could put 20 charts up if i want i just try to keep it simple
+uh with what's important another thing to note uh is that we have um
+uh let me oops where did that go
+another series of browsers uh browser tabs that i use to help me out pre-market as well
+now first and foremost market calendar investing.com that's what i always i always have
+a little row of tabs open that i also use i keep that on another screen as well
+investing.com economic calendar is probably the best economic calendar out there because it does
+three things number one you as long as you log in you can make a profile and it can save your
+filters which you can choose which country you care about or countries you care about as a u.s
+equities trader i don't care about anything else so i'm going to leave that checked up now it's going
+to show just the u.s information that comes out sorted by date i can look at next week this week
+tomorrow today yesterday whatever
+so that's pretty cool another thing is that it'll tell me the importance of that event trading i've been
+trading for a while i'll tell you i know the importance because i've seen how the markets move
+relative to some of these things three star is the most two stars minimum and one star is
+ignorable now don't take it you know don't don't be so married to the idea that three stars is a big
+deal certain things don't really move the market all the time certain three stars don't move the
+market like this one doesn't really move the market that much it's just the manufacturing pmi
+right it's not not all pmi this is the s&p's version of the bmi and the services version
+uh again three stars but not silly going to be like a market crashing event the more you trade the more
+you'll learn which ones work now sometimes certain things move the market in certain environments and
+not others like there's some times where we might be sensitive pmi that comes with understanding the
+environment you're in you will know because it's starting to react to it like adp non-farm that didn't
+crash or sell the market today even though it's a big three star sometimes it matters sometimes it
+doesn't again this all stuff is random how traders react to some of the stuff your typical three stars
+that are always going to be a big deal are going to be your your your economic indicators on on the
+macro scale the biggest scale you got gdp inflation related numbers
+employment numbers like non-farm and unemployment rate and then fed interest rate changes those are
+your your and you know cpi pce and all that stuff yeah anything the fed looks at it's going to be
+something that the market's going to care heavily about that's going to be almost a three star every
+time um you and the other reason i use this and again this is a free service that's why i recommend it
+it's free uh there's probably a ton of other calendars out there but this is free the other
+reason that makes it cool you might say what is ism manufacturing pmi i'm a new trader what the heck
+even is that you can actually open it up and dive right in and investing is really cool at teaching you
+what that thing is well right now it's not very cool at loading it up quickly there we go
+it'll give you a really nice you can also go to ai chat gbt or something and ask what these things are
+but this is this has always been a good educator at this day and age tells you what it is ah it's a
+it's the institute of supply management oh okay when you might say well who is that and you can go
+to google and say like who is the ism uh institute of supply management google says the professional
+body for supply chain the international solid blah blah that's not that's another ism
+international safety management so tell me all of them the institute for supply management
+is the world's first and largest non-profit for supply chain professionals issuing economic
+reports at the manufacturing pmi cool so now i learned that this is a non-government entity it's
+a non-profit organization uh that gives me reports on business stuff and it's based on data compiled by
+monthly replies to questions asked of executives and over 400 companies cool all right cool so it's a
+professional non-profit organization that asks 400 companies purchasing managers a survey based on
+their own experience with all of this stuff and then they fill out this data that says how are your
+new orders doing by the way are you have a backlog of orders you have new export orders coming through
+any imports what's your production like what's your employment situation how about your prices what your
+inventory is like you just fill this all out and then this group takes all the data from the 400
+companies and then releases it oh look i learned something today right you don't have to ever pick
+up an economics textbook in reality to day trade you can learn what you need to that moves the market
+which is really all that matters i mean you can go for a you know a very heavy dose of learning the
+fundamentals of the economy but in reality as a trader you really just really can get by with surface
+data i'm just understanding what some of these things are and how important it is to the to the
+price action because it's really what you care about investing you're doing so this gives me some
+examples and this tells me like how to read it right and the more you you know the more you play with it
+the more you'll you'll you'll learn how to read it now another thing is you know you'll notice that
+it has three different sections previous forecast and actual um previous is the previous report that
+came out this looks like this comes out once every month previous tells me what came out last month
+forecast is something that they basically have a bunch of quant analysts from a bunch of different
+investment banks and firms and stuff that investing dot or not investing but everybody has an
+a forecast of what they think this data is going to be based on their own measurements
+and then investing.com and other types of um reporting outlets will aggregate all that data and give
+you the average of what everybody thinks then the actual data comes out against the forecast traditionally
+uh we call this when it comes in worse it's a miss if it comes in better it's a beat sometimes down
+is up sometimes down is good sometimes up is good sometimes like golf a lower score sometimes is
+better in this example a higher score is better um and it usually will tell you what's better or worse
+um this example you kind of would like for it to be like greater than 50 and it hasn't been so the
+example is well the data hasn't been coming in good and you can learn everything you need to know about
+how the market responds to some of this data by lining this up with a chart just to see good days
+bad days what happens on that excursion what happens on that dive does the market you know die or not
+down those days and just your experience trading around it as years go by you'll become an expert at
+the economy without ever having to pick up a textbook at least what moves the markets so economic calendar
+pick whichever one you want investing is free i like it earning season earnings go around the clock
+there's earning season when all the bigger companies are lumps lumped up right there's always
+some kind of earnings going on january 7th there's earnings today but in reality you want to know what's
+going on when earnings season is really big you can see that there's just four 16 8 10 zach's earnings
+calendar is fantastic when you get close to like big earnings season right let's just go forward in
+time so you can pop the big earnings you can see that you start to get you know many per day
+oh looks like it's having a hard time holding up oh look it's starting we have 100 companies
+reporting january the 29th okay oh yeah earnings season definitely started here so they're you know
+once a quarter you're gonna your big dogs you're gonna have earnings report what's cool about zach's
+is that it lists the companies have earnings for that day again another free service there's a there's a
+there's a trend here for these free services um you can sort by market cap you can find all the big
+ones right out the door clearly january the 29th is a scary day how you interpret this is apple
+company name market cap in time before market open after market close i don't know why they don't fill
+this out because it never really changes apple's always after market but uh maybe just because this
+doesn't populate till we get closer to that day but be either case this will give you when to expect
+the earnings report uh roll of thumb you know leading up into your top 10 tech stocks those are
+gonna be mag like your mag 7 or whatever you like to call it it's gonna be big movers in the market
+so you always have to be aware of that particular time of the of the quarter because the market can
+behave a little weird leading up into that earnings report and reacting from it so it's not just like
+oh the s&p has traded down let me buy the dip because i'm bullish the s&p well then you've got
+nvidia earnings that night okay make sure you're aware that you're gambling on a potential
+two percent move in the s&p on one earnings report by the one of the biggest companies out there right
+so keep this in front of you around earning season especially and you know once a morning
+double check these things right wake up what's the calendar okay today is wednesday january the 7th
+what's thursday okay jobless claims come out once a week uh anything else for the big feds balance
+sheet uh this is interesting yeah let me let me take a look at that one as well um and nothing
+really else big three star okay cool just to double check what about friday oh non-farms okay friday's
+gonna be big oh unemployment rate oh michigan never okay yeah friday's a big day so wednesday
+thursday not a big date friday pretty big day uh any earnings um clearly not you know nothing
+nothing nothing nothing big okay you can double check the days you want but nothing really big
+small companies um all right so last but not least on this one financial juice it's a news aggregator
+again it's free-ish but if you want the full capacity of it it's a one-time payment i don't i'm not
+affiliate of this i'm not trying to sell it to you but it's that good i bought it myself i bought it
+when they first came out i think i paid 500 when they were first launching to get lifetime it's
+probably less than a thousand bucks still but what you get out of this is you can either a go buy a
+monthly news service like bloomberg and get all the news in real time or and again a big monthly fee
+or you can maybe pay a one-time fee to get it like a minute or so delayed but get the headlines
+coming through as an aggregator what it does is it allows you to select all of these news sources
+that typically spit out news again delayed you get the bloomberg it's not necessarily as real time as
+it would be if you bought the service but it still comes out um pretty quick and you can select what
+you care about and just turn it on turn it on turn it on turn it on and i have like wall street journal
+market news technology i've got market watch a lot of this overlaps you don't have to have every
+single one of them turned on you don't want the same report from like five different outlets but
+market watch is good real-time headlines top stories wall street journal for like you know the business
+updates and stuff and then i've got cnbc for top news economy you get global news from here
+and then bloomberg just because bloomberg is awesome that's pretty much it you know you can choose
+pick one cheese whatever you want um then you save it well and then what it does is it just
+basically is a feed of all of those things you've selected that the blue dot is their own news and
+then you can follow these headlines as well so you're going to get dropped in news just to read it
+typically they're going to report the headlines that are important to trading more so than everyone else
+look i know trump's talking today when the market decided to turn around um and it comes through
+really nice and again it's it's it's you can aggregate it's an aggregate of all your favorite
+things in one spot it's like a twitter feed for all the news outlets uh and then they they kind of
+have the like ai pulls out need to know market risk and it tells you like these are the bigger things
+these are the big events for the day they write it out for you trump said something
+um china did something with nvidia chip orders and then uh the service pmi came in
+right so you get headlines at the top pre-market you're going to double check all of this plus
+this what happened overnight while i was sleeping also throughout the day financial juice is pretty
+cool and parsing out the serious stuff and they make it red big events they're smart enough to make
+it go red and there's an alert on here that goes whoo if you turn on the sound on the on your on
+your screen that way when you're across the room something big is happening based on what you're
+watching trying to tell us tech companies to halt nvidia 200 chip orders okay
+right that's big news and then so it will highlight the bigger news when j pal is talking
+during fed announcements for example while j pal is talking within a minute or less of time
+they're parsing out his words uh they're what he's saying they're just spitting it out in the red text
+or in the highlighted text so you're never going to really miss anything with this like i said i paid
+less than a thousand bucks for it for lifetime it's a lifetime service which is great um there's a
+free version but i don't know if it's real time i don't know what the limitations to it are i just
+want to support the company but free-ish because i'll have to go maintain an expensive bloomberg
+subscription one other thing that's kind of important but it's not as cool as it used to be
+um sector spdrs the spiders right the etfs that are owned by state street used to have their own
+website that was real-time updates of the etfs now state street lumped it back in so they can market
+it themselves in their own website and now it's no longer real time which kind of sucks but this
+will give you the tickers for all these sectors inside of the s&p so you've got health care energy
+financials whatever and if you want to know like what's in that sector you can click on that thing
+and then load up holdings and it will tell you like you know the heaviest market cap weight
+of the things meta google etc etc etc so if you care to see like is the sector performing well
+apple's dumping how are the rest of the stocks or are google's dumping how are the rest of the
+stocks doing well let me go check the what sector was this the xlc communications got all this
+information here okay let me just make a try to the xlc this is kind of important um
+you know i would use this so i can just at a glance look at all the tickers or all the all the
+sectors just to see what was up and what was down these days this is not in real time anymore i don't
+know why they did that kind of sucks if you want a trick use a use a watch list um
+in some other platform like here's thinkorswim i could just make a watch list with a different
+xlc you know xlk and if you care to watch the sectors in real time which is very important to
+see what's up and what's down just make yourself a watch list with all of them and then you'll have
+those update in real time but if you're curious like what is in the tech sector okay well i can just
+go here and find out again it's always good to know what's going on you can do liquidity maps for
+these sectors right how's the xlk doing today i don't know let's go look at it you know i can pop
+it up and say well xlk in general cool it's a bld so it's doing pretty well so tech as a whole
+is probably doing okay and the actual etf itself is doing okay as well just extra information to have
+that's useful to take with you be nice if this is real time like it used to be but maybe maybe by
+the time you watch this video it is last but not least commitment traders as we've talked about
+previously you're going to use this as a greater storybook of the market and your pre-market
+understanding it's always good to just to cycle back on this at least once a week just to reframe
+what's going on you don't have to look at this every day but you know once a week or so peek at
+it and just kind of understand what's going on currently right now bull side selling or long side
+liquidating short side liquidating so that's liquid market liquid markets don't crash dealers
+are negative okay so so far liquid markets don't crash and we're just nice steady bull market okay
+cool check check it off so pre-market now i'm armed right i can guess what all the data is going to
+look like as we went at the beginning of this video and then i've got all this information mostly free
+to just cycle through that it's a very quick process pre-market i'm already prepped in the morning
+i'm cycling through all this extra information what's on the calendar today uh okay cool any
+earnings today what's the major headlines um okay that's good too okay check boom armed and ready to
+go i'm here 30 minutes early an hour early whatever you choose to be early for the market be prepared
+now you got all information in front of you okay nothing crazy happened overnight no big news today
+all the bull data is probably still bullish tomorrow cool market's about to open great we're
+opening flat in the s&p cool pretend that this this morning all right so flat is pretty neat because
+now i have a trade plan to make pretend i'm like okay everything's bullish and we're good i've got
+69 89 and 69 99 my next interrupt target cool i've got 10 points and i got maybe a 10 point stop
+from 89 to 79 oh but i also have a bull zone there as well okay cool so i'm gonna just long right out
+the door betting that everything comes in bullish something small as i normally my my 1a trades are
+small and then maybe hit it pretty big with like you know three to four at the dip here
+i've got one in case it goes up i've got buying power in case it goes there i've calculated my entire
+stop loss on the five that i buy adequate adequate adequate check we're good cool i've got a one-to-one
+trade this way and i've got from here a two-to-one trade on the rest of that perfect cool ding ding ding
+ding market opens okay cool oh i bought oh crap it's going against me but i'm cool i haven't stopped
+yet okay okay haven't added okay okay good i'm good i'm good i'm good i'm sorry here two minutes
+in okay boom liquidity maps popped up remember resilience and and uh sorry uh redistribution
+zone pops up immediately resilience will pop up um it's funny that just disappeared because it
+at 5 p.m eastern it always resets um so boom here within a minute liquidity maps come out let me
+reformulate the plan sorry when i when i made this earlier i had assumed i'd already seen liquidity
+maps so i long at the open boom boom liquidity map show up plan the rest of it i buy one anticipate i
+can buy the dip okay oh bull zones nearby cool i'll add three or four there oh bull zones really far okay
+let me stage that stop there trade there perfect two trades instead of one whatever your plan is and
+then it's go and then i had the one it goes up it goes up goes up hits my target i can get out of
+the way and then close out or whatever in this example maybe that trade is what you did
+bought maybe you closed maybe you held maybe you bought again here
+boom and this trade was me firing one right at the open market opens boom just jump in on it
+right because you know it's we call this the b b plus b minus setup if resilience is really strong
+jump in on it like right here we popped up resilience was like greater than 10 20 okay cool
+but also in flat days uh you're not going to really have a lot of gap fill mechanic you're basically
+just flipping a coin on a flat day and if you have support nearby then i usually flip the coin
+small like really small and then just take the loss if i'm wrong like i'll just jump in at the
+open just to not miss out half the days go up half the days go down just get in small enough to avoid
+the chop and i trade flat days like that bigger days if you're gapping up 30 points 50 points in
+the s&p you might be more reluctant to long at the open and hold through the volatility you might long
+at the open and put a tight stop on it and then long if the gap fills or hit half gap and really and
+really bank on resilience give you the information flat days as we talked about resilience is not that
+good of a leading indicator because the stocks it's very sensitive to stocks in the middle and
+they're just flip-flopping so resilience is going to hug zero sometimes barcode a lot
+um and you're going to see that a lot so at that point you're just kind of picking your direction
+which direction do i pick well greater market was all bullish so i'm gonna flip my coin to the bull
+side blind monkey greater market indicators are all bullish and non-bolical environment cool i can
+hold through it's not gonna be that choppy 70 of days are green greater market bullish so
+usually when i take the coin flip on a flat market i'm usually gonna side to the bull side if
+everything was bullish does that make sense everybody pretty much it okay prepping pre-market
+is key if you show up to the trading day unprepared then you're fumbling at the open and then trading
+more in the dark my guess is better than your guess because i'm more prepared and your guess will
+be better than other people because you're more than prepared roll thumb prepare as much as you can
+and just modify your plan rather than build your plan on the fly your the nerves are high the markets
+open you're panicking you should already you should already adopt what you think is going to happen as
+close as you can and then modify it really quick based on what do my indicators say now check check check
+check check okay okay okay redefine my plan simple as that okay
