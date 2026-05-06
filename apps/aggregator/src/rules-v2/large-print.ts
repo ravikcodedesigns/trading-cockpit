@@ -18,6 +18,7 @@
 
 import { getRecentTrades } from './tick-client.js';
 import { logger } from '../logger.js';
+import { recordConfluenceSignal } from './confluence-tracker.js';
 import type { ConfluenceSignal, Symbol } from '@trading/contracts';
 
 // --- Session classifier ---
@@ -199,6 +200,9 @@ export async function detectLargePrint(
   }
 
   recordSignal(symbol, direction, nowMs);
+
+  // Write to confluence tracker so absorption can detect confirmation
+  recordConfluenceSignal(symbol, 'large-print', direction, score, nowMs);
 
   logger.info({
     symbol, session,

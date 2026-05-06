@@ -19,6 +19,7 @@
 
 import { getRecentTrades } from './tick-client.js';
 import { logger } from '../logger.js';
+import { recordConfluenceSignal } from './confluence-tracker.js';
 import type { ConfluenceSignal, Symbol } from '@trading/contracts';
 
 // --- Session classifier ---
@@ -186,6 +187,9 @@ export async function detectTapeSpeed(
     `${Math.round(aggressionPct * 100)}% ${aggrDesc} aggression.`;
 
   recordSignal(symbol, direction, nowMs);
+
+  // Write to confluence tracker so absorption can detect confirmation
+  recordConfluenceSignal(symbol, 'tape-speed', direction, score, nowMs);
 
   logger.info({
     symbol, session, urgencyRatio: urgencyRatio.toFixed(2),

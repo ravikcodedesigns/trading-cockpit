@@ -2,117 +2,86 @@ import type { ConfluenceSignal } from '@trading/contracts';
 
 // Signal Quality Tiers
 //
-// Centralized classifier that decides which signals get broadcast to
-// Discord + cockpit vs only logged to DB.
+// Calibrated against 1,351 matured signals through 2026-05-06.
 //
-// This is the ONE place to adjust signal-tier policy across the system.
-// Both Strategy A and Strategy B signals flow through here.
+// THREE ACTIVE GOLD TIER SIGNALS:
 //
-// Current thresholds (calibrated against outcome data through 2026-05-04):
+//   1. RTH absorption 70-79   n=15: hit30@15=47%, cln@15=27%, dd@5m=15.0
+//      Best overall signal. Trend filter applied (5-min HH/HL structure).
+//      Counter-trend requires score >= 80.
 //
-// Strategy A gold tier:
-//   - RTH sweep score >= 70       (n=23: 91% hit@30pts, 69% hit@40pts)
-//   - RTH divergence score >= 80  (n=9: 100% hit@20pts, 100% hit@30pts)
-//   - Overnight divergence >= 80  (n=2: kept by user choice, small sample)
+//   2. ON absorption 65-79    n=161: hit30@15=40%, cln@15=20%, dd@5m=10.5
+//      Best overnight signal. Lowered from 70 to 65 (n=115 at 60-69,
+//      37% hit30@15, 17% cln@15 -- meaningful enough for gold tier).
+//      No trend filter overnight (low dd@5m protects adequately).
 //
-// Strategy B gold tier (absorption):
-//   - RTH absorption score >= 60  (initial threshold, calibrate after 2 weeks)
-//   - Overnight absorption >= 70  (higher bar given lower overnight liquidity)
+//   3. RTH divergence 90+     n=16: hit30@15=44%, cln@15=13%, hit30@60=81%
+//      Slow burner, hold 45-60 min, 25pt stops.
 //
-// Silenced (DB only, for ongoing outcome validation):
-//   - All overnight sweeps (n=312, score doesn't predict outcomes)
-//   - RTH sweeps below 70
-//   - All divergences below 80
-//   - Absorption below threshold
+// ARCHIVED (DB only, never broadcast):
+//   All sweeps        -- high drawdown, reactive, incompatible with clean focus
+//   All tape-speed    -- 409 samples, no edge, degrades absorption confluence
+//   All large-print   -- 0% clean wins across all bands
+//   ON divergence     -- 0% clean wins
+//   RTH absorption 80+ -- too few samples (n=3 RTH 80-89)
+//   ON absorption 80+  -- archived pending more data (behavior changes at 80+)
+//   Absorption 90+     -- exhaustion signal, collapses at high scores
 
 type Session = 'overnight' | 'rth' | 'closed';
 
 function classifySession(tsMs: number): Session {
-  const d = new Date(tsMs);
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
   });
-  const parts = fmt.formatToParts(d);
+  const parts = fmt.formatToParts(new Date(tsMs));
   const get = (t: string) => parts.find(p => p.type === t)?.value ?? '';
   const weekday = get('weekday');
-  const minutesOfDay = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
-  const RTH_START = 570;
-  const RTH_END = 960;
-  const ON_RESUME = 1080;
+  const min = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
   const isWeekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(weekday);
-  if (isWeekday && minutesOfDay >= RTH_START && minutesOfDay < RTH_END) return 'rth';
+  if (isWeekday && min >= 570 && min < 960) return 'rth';
   if (isWeekday) {
-    if (minutesOfDay < RTH_START) return 'overnight';
-    if (weekday !== 'Fri' && minutesOfDay >= ON_RESUME) return 'overnight';
+    if (min < 570) return 'overnight';
+    if (weekday !== 'Fri' && min >= 1080) return 'overnight';
     return 'closed';
   }
-  if (weekday === 'Sun' && minutesOfDay >= ON_RESUME) return 'overnight';
+  if (weekday === 'Sun' && min >= 1080) return 'overnight';
   return 'closed';
 }
 
 export type QualityTier = 'gold' | 'silenced';
+export interface QualityDecision { tier: QualityTier; reason: string; }
 
-export interface QualityDecision {
-  tier: QualityTier;
-  reason: string;
-}
-
-// Strategy A thresholds (bar-based rules)
 function classifyStrategyA(rule: string, session: Session, score: number): QualityDecision {
-  if (rule === 'sweep' && session === 'rth' && score >= 70) {
-    return { tier: 'gold', reason: 'A: RTH sweep >=70' };
+  // Sweeps: archived -- DB only
+  if (rule === 'sweep') {
+    return { tier: 'silenced', reason: 'A: sweep archived' };
   }
-  if (rule === 'delta-divergence' && session === 'rth' && score >= 80) {
-    return { tier: 'gold', reason: 'A: RTH divergence >=80' };
-  }
-  if (rule === 'delta-divergence' && session === 'overnight' && score >= 80) {
-    return { tier: 'gold', reason: 'A: ON divergence >=80' };
+  // RTH divergence 90+ only -- slow burner, 81% hit@30 at 60min
+  if (rule === 'delta-divergence' && session === 'rth' && score >= 90) {
+    return { tier: 'gold', reason: 'A: RTH divergence >=90' };
   }
   return { tier: 'silenced', reason: `A: ${rule} ${session} score=${score} below threshold` };
 }
 
-// Strategy B thresholds (tick-based rules)
-// Conservative initially -- tighten or loosen based on outcome data after 2 weeks.
 function classifyStrategyB(rule: string, session: Session, score: number): QualityDecision {
-  // Absorption: validated overnight, conservative RTH threshold pending data
-  if (rule === 'absorption' && session === 'rth' && score >= 60) {
-    return { tier: 'gold', reason: 'B: RTH absorption >=60' };
+  // RTH absorption 70-79 -- trend filter applied in absorption.ts
+  // Counter-trend signals with score < 80 are already filtered before reaching here
+  if (rule === 'absorption' && session === 'rth' && score >= 70 && score <= 79) {
+    return { tier: 'gold', reason: 'B: RTH absorption 70-79' };
   }
-  if (rule === 'absorption' && session === 'overnight' && score >= 70) {
-    return { tier: 'gold', reason: 'B: ON absorption >=70' };
+  // ON absorption 65-79 -- lowered from 70 based on 60-69 data (n=115, 37% hit30@15)
+  if (rule === 'absorption' && session === 'overnight' && score >= 65 && score <= 79) {
+    return { tier: 'gold', reason: 'B: ON absorption 65-79' };
   }
-
-  // Tape speed: higher bar since unvalidated -- only very strong urgency signals
-  if (rule === 'tape-speed' && session === 'rth' && score >= 70) {
-    return { tier: 'gold', reason: 'B: RTH tape-speed >=70' };
-  }
-  if (rule === 'tape-speed' && session === 'overnight' && score >= 75) {
-    return { tier: 'gold', reason: 'B: ON tape-speed >=75' };
-  }
-
-  // Large print: high bar since single-print signals need confirmation
-  if (rule === 'large-print' && session === 'rth' && score >= 70) {
-    return { tier: 'gold', reason: 'B: RTH large-print >=70' };
-  }
-  if (rule === 'large-print' && session === 'overnight' && score >= 75) {
-    return { tier: 'gold', reason: 'B: ON large-print >=75' };
-  }
-
-  return { tier: 'silenced', reason: `B: ${rule} ${session} score=${score} below threshold` };
+  // Everything else silenced
+  return { tier: 'silenced', reason: `B: ${rule} ${session} below threshold` };
 }
 
 export function classifySignalQuality(signal: ConfluenceSignal): QualityDecision {
   const session = classifySession(signal.ts);
   const strategy = signal.strategyVersion ?? 'A';
-
-  if (strategy === 'A') {
-    return classifyStrategyA(signal.ruleId, session, signal.score);
-  }
-  if (strategy === 'B') {
-    return classifyStrategyB(signal.ruleId, session, signal.score);
-  }
-
-  // Fallback: silence unknown strategies
+  if (strategy === 'A') return classifyStrategyA(signal.ruleId, session, signal.score);
+  if (strategy === 'B') return classifyStrategyB(signal.ruleId, session, signal.score);
   return { tier: 'silenced', reason: `unknown strategy ${strategy}` };
 }

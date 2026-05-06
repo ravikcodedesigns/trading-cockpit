@@ -49,7 +49,11 @@ const stmtInsertSignal = _db.prepare(
 );
 const stmtCountEvents = _db.prepare('SELECT COUNT(*) AS c FROM events');
 const stmtRecentSignals = _db.prepare(
-  'SELECT payload FROM signals ORDER BY ts DESC LIMIT ?'
+  // Pre-filter to gold-tier candidate rules before applying the limit.
+  // This prevents high-frequency silenced rules (tape-speed, sweep) from
+  // crowding out low-frequency gold rules (absorption, divergence) in the
+  // snapshot window. The quality gate still applies in state.ts.
+  'SELECT payload FROM signals WHERE rule_id IN (\'absorption\', \'delta-divergence\', \'large-print\') OR (rule_id = \'sweep\' AND score >= 60) ORDER BY ts DESC LIMIT ?'
 );
 const stmtRecentEvents = _db.prepare(
   'SELECT payload FROM events ORDER BY ts DESC LIMIT ?'
