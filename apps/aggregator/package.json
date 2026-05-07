@@ -15,6 +15,7 @@
     "compare": "tsx scripts/compare_strategies.ts",
     "backfill:absorption": "tsx scripts/backfill_absorption.ts",
     "backfill:conviction": "tsx scripts/backfill_conviction.ts",
+    "backfill:strategy-d": "tsx scripts/backfill_strategy_d.ts",
     "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
     "levels:add": "tsx scripts/levels_cli.ts",
     "context:set": "tsx scripts/context_set.ts set",

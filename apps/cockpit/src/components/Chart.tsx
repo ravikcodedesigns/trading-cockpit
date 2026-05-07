@@ -456,7 +456,19 @@ export function Chart() {
     // that exact candle.
     const bucketSecs = (tsMs: number) => Math.floor(tsMs / 60000) * 60;
 
-    const symbolSignals = recentSignals.filter((s) => s.symbol === selectedSymbol);
+    const symbolSignals = recentSignals
+      .filter((s) => s.symbol === selectedSymbol)
+      .filter((s) => {
+        const ruleId = (s as any).ruleId;
+        // Strategy D: compression-breakout → 15m chart only
+        if (ruleId === 'compression-breakout') return selectedTimeframe === 15;
+        // Strategy E 15m: bear bar absorption → 15m chart only
+        if (ruleId === 'absorption-scalp-15m') return selectedTimeframe === 15;
+        // Strategy E 5m: bull bar absorption → 5m chart only
+        if (ruleId === 'absorption-scalp') return selectedTimeframe === 5;
+        // A/B/C signals → 1m chart only
+        return selectedTimeframe === 1;
+      });
 
     // No dedup: every signal becomes a marker. Multiple markers at the same
     // time will stack vertically on the candle automatically.
@@ -476,6 +488,15 @@ export function Chart() {
         if (sig.ruleId === 'delta-divergence') {
           shape = 'circle';
           label = `DIV·${sig.score}`;
+        } else if (sig.ruleId === 'compression-breakout') {
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          label = `COMP`;
+        } else if (sig.ruleId === 'absorption-scalp') {
+          shape = 'arrowUp';
+          label = `SCALP`;
+        } else if (sig.ruleId === 'absorption-scalp-15m') {
+          shape = 'arrowUp';
+          label = `SCALP`;
         } else {
           shape = isLong ? 'arrowUp' : 'arrowDown';
           const conviction = (sig as any).conviction;
@@ -545,6 +566,33 @@ export function Chart() {
           </button>
         ))}
       </div>
+
+      {/* Scroll to latest — bottom right, above the time axis */}
+      <button
+        onClick={() => {
+          const chart = chartRef.current;
+          if (chart) chart.timeScale().scrollToRealTime();
+        }}
+        title="Go to latest"
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          right: 16,
+          zIndex: 20,
+          background: 'var(--bg-2, #2a2a3a)',
+          border: '1px solid var(--border, #555)',
+          borderRadius: 4,
+          color: '#ccc',
+          cursor: 'pointer',
+          padding: '5px 9px',
+          fontSize: 16,
+          fontWeight: 'bold',
+          lineHeight: 1,
+          userSelect: 'none',
+        }}
+      >
+        »
+      </button>
     </div>
   );
 }

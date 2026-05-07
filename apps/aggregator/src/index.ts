@@ -5,6 +5,7 @@ import { startRulesEngine } from './rules/index.js';
 import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
 import { startStrategyC, stopStrategyC } from './rules-v2/strategy-c-index.js';
 import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
+import { startStrategyE, stopStrategyE } from './rules-v2/strategy-e-index.js';
 import { getRecentTrades } from './rules-v2/tick-client.js';
 import { state } from './state.js';
 import { logger } from './logger.js';
@@ -68,6 +69,11 @@ async function main() {
   if (config.activeStrategy === 'D' || config.activeStrategy === 'ALL') {
     startStrategyD();
     logger.info('strategy-D started (15-min compression → 5-min entry)');
+  }
+
+  if (config.activeStrategy === 'E' || config.activeStrategy === 'ALL') {
+    startStrategyE();
+    logger.info('strategy-E started (5-min absorption scalp — observe only)');
   }
 
   // Then the server (sources and cockpit can connect)

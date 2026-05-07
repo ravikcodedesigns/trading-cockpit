@@ -9,7 +9,7 @@ const repoRoot = path.resolve(process.cwd(), '../..');
 // 'C' = RS level watcher only
 // 'BOTH' = run A and B in parallel
 // 'ALL'  = run A, B, and C
-export type ActiveStrategy = 'A' | 'B' | 'C' | 'D' | 'BOTH' | 'ALL';
+export type ActiveStrategy = 'A' | 'B' | 'C' | 'D' | 'E' | 'BOTH' | 'ALL';
 
 export const config = {
   port: parseInt(process.env.AGGREGATOR_PORT ?? '8787', 10),

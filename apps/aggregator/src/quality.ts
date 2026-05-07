@@ -87,5 +87,6 @@ export function classifySignalQuality(signal: ConfluenceSignal): QualityDecision
   // Minimum score 50 is enforced inside strategy-c.ts before emission.
   if (strategy === 'C') return { tier: 'gold', reason: `C: rs-level-absorption score=${signal.score}` };
   if (strategy === 'D') return { tier: 'gold', reason: `D: compression-breakout score=${signal.score}` };
+  if (strategy === 'E') return { tier: 'gold', reason: `E: absorption-scalp observe-only` };
   return { tier: 'silenced', reason: `unknown strategy ${strategy}` };
 }
