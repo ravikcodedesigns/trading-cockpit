@@ -44,15 +44,173 @@ export async function startServer(): Promise<FastifyInstance> {
   // updates start streaming. Without this, a browser refresh wipes the
   // chart and bars only repopulate from current minute onward.
   app.get('/history/bars', async (req) => {
-    const q = req.query as { symbol?: string; minutes?: string };
+    const q = req.query as { symbol?: string; minutes?: string; interval?: string };
     const symbol = q.symbol ?? 'NQ';
-    // Cap at 30 days (43200 minutes). The standing default is 1 week
-    // (10080 min) per project preference. Cap exists to prevent runaway
-    // queries; bump higher if you need longer windows.
-    const minutes = Math.max(1, Math.min(43200, parseInt(q.minutes ?? '60', 10) || 60));
+    const minutes = Math.max(1, Math.min(43200, parseInt(q.minutes ?? '10080', 10) || 10080));
+    const intervalMin = parseInt(q.interval ?? '1', 10) || 1; // 1, 5, or 15
     const sinceMs = Date.now() - minutes * 60 * 1000;
-    const bars = db.recentBars(symbol, sinceMs);
-    return { symbol, minutes, count: bars.length, bars };
+
+    if (intervalMin === 1) {
+      // Standard 1-min bars from existing logic
+      const bars = db.recentBars(symbol, sinceMs);
+      return { symbol, minutes, interval: 1, count: bars.length, bars };
+    }
+
+    // Aggregate 1-min bars into 5-min or 15-min bars
+    const intervalMs = intervalMin * 60 * 1000;
+    const rawBars = db.query<{ payload: string }>(`
+      SELECT payload FROM events
+      WHERE source = 'bookmap'
+        AND type = 'bar'
+        AND symbol = ?
+        AND ts >= ?
+      ORDER BY ts ASC
+    `, [symbol, sinceMs]);
+
+    const buckets = new Map<number, {
+      ts: number; open: number; high: number; low: number; close: number;
+      volume: number; buyVolume: number; sellVolume: number;
+    }>();
+
+    for (const row of rawBars) {
+      try {
+        const b = JSON.parse(row.payload) as any;
+        const bucket = Math.floor(b.ts / intervalMs) * intervalMs;
+        if (!buckets.has(bucket)) {
+          buckets.set(bucket, {
+            ts: bucket, open: b.open, high: b.high,
+            low: b.low, close: b.close,
+            volume: b.volume ?? 0,
+            buyVolume: b.buyVolume ?? 0,
+            sellVolume: b.sellVolume ?? 0,
+          });
+        } else {
+          const agg = buckets.get(bucket)!;
+          agg.high  = Math.max(agg.high, b.high);
+          agg.low   = Math.min(agg.low,  b.low);
+          agg.close = b.close;
+          agg.volume    += b.volume ?? 0;
+          agg.buyVolume  += b.buyVolume ?? 0;
+          agg.sellVolume += b.sellVolume ?? 0;
+        }
+      } catch { /* skip malformed */ }
+    }
+
+    const bars = Array.from(buckets.values())
+      .sort((a, b) => a.ts - b.ts);
+
+    return { symbol, minutes, interval: intervalMin, count: bars.length, bars };
+  });
+
+  // Returns historical post-entry classification markers for ++ short signals.
+  // Used by the cockpit chart on load to backfill FAST/MID/SLOW/FAIL markers
+  // without waiting for live signals to fire.
+  app.get('/history/post-entry-markers', async (req) => {
+    const q = req.query as { symbol?: string };
+    const symbol = q.symbol ?? 'NQ';
+
+    // Query all ++ short absorption signals with matured outcomes
+    const rows = db.query<{
+      id: number; ts: number; score: number; rationale: string;
+      conviction: string; mv5: number; adv5: number;
+      mv15: number; adv15: number; mv60: number;
+    }>(`
+      SELECT
+        s.id,
+        s.ts,
+        s.score,
+        json_extract(s.payload, '$.rationale') AS rationale,
+        json_extract(s.payload, '$.conviction') AS conviction,
+        som.w5_max_gain      AS mv5,
+        som.w5_max_drawdown  AS adv5,
+        som.w15_max_gain     AS mv15,
+        som.w15_max_drawdown AS adv15,
+        som.w60_max_gain     AS mv60
+      FROM signals s
+      LEFT JOIN signal_outcomes_matured som ON som.signal_id = s.id
+      WHERE s.symbol = ?
+        AND s.rule_id = 'absorption'
+        AND s.direction = 'short'
+        AND json_extract(s.payload, '$.conviction') = '++'
+        AND s.score BETWEEN 65 AND 79
+      ORDER BY s.ts
+    `, [symbol]);
+
+    if (!rows.length) return { markers: [] };
+
+    const markers = [];
+
+    for (const row of rows) {
+      // Extract entry price from rationale
+      const priceMatch = row.rationale?.match(/absorbed at ([0-9.]+)/);
+      if (!priceMatch) continue;
+
+      const mv5  = row.mv5  ?? 0;
+      const adv5 = row.adv5 ?? 0;
+      const mv60 = row.mv60 ?? 0;
+      const mv15 = row.mv15 ?? 0;
+
+      // 90s checkpoint: approximate using w5 data
+      // We use w5 as a proxy — if moved fast in 5min it was likely fast in 90s
+      let label90s: string;
+      let color90s: string;
+
+      if (mv5 >= 10 && adv5 < 5) {
+        label90s = 'MID'; color90s = '#3b82f6';
+      } else if (mv5 >= 10 && adv5 >= 5) {
+        label90s = 'FAST?'; color90s = '#f59e0b';
+      } else if (adv5 > mv5 && adv5 > 5) {
+        label90s = 'HOLD'; color90s = '#a855f7';
+      } else {
+        label90s = 'SLOW?'; color90s = '#6366f1';
+      }
+
+      // 5min checkpoint classification
+      let label5m: string;
+      let color5m: string;
+
+      if (mv5 >= 20) {
+        // Fast enough to hit 20 in 5min
+        if (mv5 >= 30) {
+          label5m = 'FAST ✓'; color5m = '#10b981';
+        } else {
+          label5m = 'MID ✓'; color5m = '#3b82f6';
+        }
+      } else if (mv5 < 20 && adv5 > 15) {
+        label5m = 'FAIL ✗'; color5m = '#ef4444';
+      } else if (mv60 >= 40) {
+        // Slow grinder — didn't hit 20 in 5min but eventually got there
+        label5m = 'SLOW ~'; color5m = '#f59e0b';
+      } else {
+        label5m = 'WAIT'; color5m = '#6b7280';
+      }
+
+      // Time buckets: snap to minute bars
+      const ts90s = Math.floor((row.ts + 30_000)  / 60_000) * 60;
+      const ts5m  = Math.floor((row.ts + 120_000) / 60_000) * 60;
+
+      markers.push({
+        id: `${row.ts}-90s`,
+        symbol,
+        time: ts90s,
+        label: label90s,
+        color: color90s,
+        checkpoint: '90s',
+        signalTs: row.ts,
+      });
+
+      markers.push({
+        id: `${row.ts}-5m`,
+        symbol,
+        time: ts5m,
+        label: label5m,
+        color: color5m,
+        checkpoint: '5m',
+        signalTs: row.ts,
+      });
+    }
+
+    return { symbol, count: markers.length, markers };
   });
 
   // --- Source ingest endpoint ---

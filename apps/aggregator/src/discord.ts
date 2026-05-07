@@ -94,14 +94,53 @@ class DiscordAlerter {
   signal(sig: ConfluenceSignal) {
     const color = sig.direction === 'long' ? COLOR.longSignal : COLOR.shortSignal;
     const arrow = sig.direction === 'long' ? '▲' : '▼';
+    const ext = sig as ConfluenceSignal & {
+      rsLevel?: string; tp1?: { label: string; price: number; pts: number };
+      tp2?: { label: string; price: number; pts: number };
+      rsContext?: string; greaterMarketAligned?: boolean;
+      conviction?: '++' | '+' | null;
+    };
+
+    // Conviction suffix in title — separate from score
+    const convictionSuffix = ext.conviction ? ` ${ext.conviction}` : '';
+
+    const fields = [
+      { name: 'Time', value: new Date(sig.ts).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ET', inline: true },
+      { name: 'Score', value: `${sig.score}/100`, inline: true },
+      { name: 'Strategy', value: `${sig.strategyVersion ?? 'A'} / ${(sig as any).ruleVersion ?? sig.ruleId}`, inline: true },
+    ];
+
+    // RS level proximity
+    if (ext.rsLevel) {
+      fields.push({ name: 'RS Level', value: `📍 ${ext.rsLevel}`, inline: false });
+    }
+
+    // Exit targets
+    if (ext.tp1) {
+      const tp1Str = `${ext.tp1.label} @ ${ext.tp1.price} (+${ext.tp1.pts}pts)`;
+      const tp2Str = ext.tp2 ? `\n${ext.tp2.label} @ ${ext.tp2.price} (+${ext.tp2.pts}pts)` : '';
+      fields.push({ name: 'Exit Targets', value: `TP1: ${tp1Str}${tp2Str}`, inline: false });
+    }
+
+    // Greater market alignment
+    if (ext.greaterMarketAligned !== undefined) {
+      fields.push({
+        name: 'GM Alignment',
+        value: ext.greaterMarketAligned ? '✅ Aligned' : '⚠️ Counter-GM',
+        inline: true,
+      });
+    }
+
+    // RS context summary
+    if (ext.rsContext) {
+      fields.push({ name: 'Market Context', value: ext.rsContext, inline: false });
+    }
+
     this.send({
-      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (score ${sig.score})`,
+      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (${sig.score})${convictionSuffix}`,
       description: sig.rationale,
       color,
-      fields: [
-        { name: 'Mode', value: sig.observeOnly ? 'OBSERVE-ONLY' : 'TRIGGER', inline: true },
-        { name: 'Time', value: new Date(sig.ts).toLocaleTimeString(), inline: true },
-      ],
+      fields,
     });
   }
 }

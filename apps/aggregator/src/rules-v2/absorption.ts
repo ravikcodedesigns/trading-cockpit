@@ -18,7 +18,9 @@ import { getRecentTrades } from './tick-client.js';
 import { logger } from '../logger.js';
 import { checkTapeSpeedConfirmed, checkLargePrintConfirmed, getConfluenceRules } from './confluence-tracker.js';
 import { db } from '../db.js';
-import type { ConfluenceSignal, Symbol } from '@trading/contracts';
+import { scoreRSLevels, formatRSContext, formatExitTargets } from './rs-level-scorer.js';
+import { scoreConviction } from './conviction.js';
+import type { ConfluenceSignal, Symbol, DailyLevels } from '@trading/contracts';
 
 // --- Session classifier ---
 
@@ -216,7 +218,8 @@ interface AbsorptionResult {
 
 export async function detectAbsorption(
   symbol: Symbol,
-  nowMs: number
+  nowMs: number,
+  levels?: DailyLevels
 ): Promise<AbsorptionResult | null> {
   const session = classifySession(nowMs);
   if (session === 'closed') return null;
@@ -347,10 +350,43 @@ export async function detectAbsorption(
   const largePrintConfirmed = checkLargePrintConfirmed(symbol, direction, nowMs);
   const confluenceRules = getConfluenceRules(symbol, direction, nowMs);
 
+  // RS level scoring: proximity bonus + hard filters + exit targets
+  // currentPrice = bestPrice (the absorption level IS the current price)
+  const rs = scoreRSLevels(bestPrice, direction, levels, bestPrice);
+
+  // Hard filter: DD band rules
+  if (rs.hardFiltered) {
+    logger.debug({ symbol, direction, reason: rs.filterReason }, 'absorption hard-filtered by RS rules');
+    return null;
+  }
+
+  // Apply RS bonuses and penalties to score
+  const rsBonus = rs.proximityBonus + rs.greaterMarketBonus;
+  const rsPenalty = rs.greaterMarketPenalty;
+  const finalScore = Math.min(100, Math.max(0, score + rsBonus - rsPenalty));
+
+  // Build RS context note for rationale
+  let rsNote = '';
+  if (rs.nearestMatch) {
+    rsNote = ` AT ${rs.nearestMatch.label} (${rs.nearestMatch.isEST ? 'EST 90%' : 'RS pivot'}, +${rs.proximityBonus}pts).`;
+  }
+  if (rs.greaterMarketAligned) rsNote += ` GM-ALIGNED (+${rs.greaterMarketBonus}pts).`;
+  if (rsPenalty > 0) rsNote += ` COUNTER-GM (-${rsPenalty}pts).`;
+  if (rs.volatilityNote) rsNote += ` [${rs.volatilityNote}]`;
+
+  // Build exit target note
+  const exitNote = (rs.tp1 || rs.tp2) ? ` Targets: ${formatExitTargets(rs.tp1, rs.tp2)}` : '';
+
+  // Conviction rating: pre-signal behavior analysis
+  const conviction = await scoreConviction(symbol, direction, 'absorption', nowMs);
+
   logger.info({
     symbol, session, price: bestPrice, volume: bestTotalVol,
     priceRangeTicks, aggressionPct: Math.round(aggressionPct * 100),
-    durationMs, direction, score, trend, trendAligned,
+    durationMs, direction,
+    score, rsBonus, rsPenalty, finalScore,
+    rsLevel: rs.nearestMatch?.label ?? 'none',
+    trend, trendAligned, conviction,
   }, 'absorption detected');
 
   const signal: ConfluenceSignal = {
@@ -359,9 +395,9 @@ export async function detectAbsorption(
     type: 'confluence',
     symbol,
     ruleId: 'absorption',
-    score,
+    score: finalScore,
     direction,
-    rationale,
+    rationale: rationale + rsNote + exitNote,
     strategyVersion: 'B',
     ruleVersion: 'absorption-v1',
     tapeSpeedConfirmed,
@@ -369,9 +405,20 @@ export async function detectAbsorption(
     confluenceRules,
     trend,
     trendAligned,
+    rsLevel: rs.nearestMatch?.label ?? null,
+    rsBonus,
+    tp1: rs.tp1,
+    tp2: rs.tp2,
+    greaterMarketAligned: rs.greaterMarketAligned,
+    rsContext: formatRSContext(),
+    conviction,
   } as ConfluenceSignal & {
     tapeSpeedConfirmed: boolean; largePrintConfirmed: boolean;
     confluenceRules: string[]; trend: Trend; trendAligned: boolean;
+    rsLevel: string | null; rsBonus: number;
+    tp1: typeof rs.tp1; tp2: typeof rs.tp2;
+    greaterMarketAligned: boolean; rsContext: string;
+    conviction: typeof conviction;
   };
 
   return {

@@ -26,11 +26,14 @@ export function Chart() {
     open: number; high: number; low: number; close: number;
   }>>>({ NQ: new Map(), ES: new Map() });
 
-  const selectedSymbol = useStore((s) => s.selectedSymbol);
-  const levelsByDay = useStore((s) => s.levelsByDay);
-  const flashAlpha = useStore((s) => s.flashAlpha[s.selectedSymbol]);
-  const recentEvents = useStore((s) => s.recentEvents);
-  const recentSignals = useStore((s) => s.recentSignals);
+  const selectedSymbol    = useStore((s) => s.selectedSymbol);
+  const selectedTimeframe = useStore((s) => s.selectedTimeframe);
+  const setTimeframe      = useStore((s) => s.setTimeframe);
+  const levelsByDay    = useStore((s) => s.levelsByDay);
+  const flashAlpha     = useStore((s) => s.flashAlpha[s.selectedSymbol]);
+  const recentEvents   = useStore((s) => s.recentEvents);
+  const recentSignals  = useStore((s) => s.recentSignals);
+  const postEntryMarkers = useStore((s) => s.postEntryMarkers);
 
   // Init chart once
   useEffect(() => {
@@ -201,7 +204,7 @@ export function Chart() {
       try {
         // Default chart history: 1 week (10080 minutes). User confirmed
         // this is the standing preference. Don't change without asking.
-        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=10080`;
+        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=10080&interval=${selectedTimeframe}`;
         const res = await fetch(url);
         if (!res.ok) return;
         const data = (await res.json()) as {
@@ -238,7 +241,7 @@ export function Chart() {
     return () => {
       cancelled = true;
     };
-  }, [selectedSymbol]);
+  }, [selectedSymbol, selectedTimeframe]);
 
   // When recentEvents updates, push new bar events for the selected symbol into the chart.
   useEffect(() => {
@@ -252,8 +255,23 @@ export function Chart() {
     for (const ev of recentEvents) {
       if (ev.source !== 'bookmap' || ev.type !== 'bar') continue;
       if (ev.symbol !== selectedSymbol) continue;
-      const t = Math.floor(ev.ts / 1000);
-      history.set(t, { open: ev.open, high: ev.high, low: ev.low, close: ev.close });
+
+      // Aggregate into selected timeframe
+      const intervalMs = selectedTimeframe * 60 * 1000;
+      const bucket = Math.floor(ev.ts / intervalMs) * intervalMs;
+      const t = Math.floor(bucket / 1000);
+
+      const existing = history.get(t);
+      if (!existing) {
+        history.set(t, { open: ev.open, high: ev.high, low: ev.low, close: ev.close });
+      } else {
+        history.set(t, {
+          open:  existing.open,
+          high:  Math.max(existing.high, ev.high),
+          low:   Math.min(existing.low,  ev.low),
+          close: ev.close,
+        });
+      }
       updated = true;
     }
     if (!updated) return;
@@ -270,7 +288,7 @@ export function Chart() {
 
     // No auto-fit. With fixed barSpacing the chart naturally shows the most
     // recent bars at a sensible width and the user can scroll/zoom freely.
-  }, [recentEvents, selectedSymbol]);
+  }, [recentEvents, selectedSymbol, selectedTimeframe]);
 
   // Sync per-day level lines when levelsByDay or FA changes.
   // Each level on each day is rendered as a tiny LineSeries with two data
@@ -460,7 +478,9 @@ export function Chart() {
           label = `DIV·${sig.score}`;
         } else {
           shape = isLong ? 'arrowUp' : 'arrowDown';
-          label = `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}`;
+          const conviction = (sig as any).conviction;
+          const convSuffix = conviction ? ` ${conviction}` : '';
+          label = `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}${convSuffix}`;
         }
 
         return {
@@ -471,13 +491,60 @@ export function Chart() {
           text: label,
         };
       })
-      .filter((m): m is NonNullable<typeof m> => m !== null)
+      .filter((m): m is NonNullable<typeof m> => m !== null);
+
+    // Post-entry classification markers — FAST/MID/SLOW/FAIL/HOLD
+    // Appear at 90s and 5min after ++ short signals as circles above bar
+    const postMarkers = postEntryMarkers
+      .filter((m) => m.symbol === selectedSymbol && history.has(m.time))
+      .map((m) => ({
+        time: m.time as UTCTimestamp,
+        position: 'aboveBar' as const,
+        color: m.color,
+        shape: 'circle' as const,
+        text: m.label,
+      }));
+
+    const allMarkers = [...markers, ...postMarkers]
       .sort((a, b) => (a.time as number) - (b.time as number));
 
-    series.setMarkers(markers);
-  }, [recentSignals, recentSignals.length, recentEvents, selectedSymbol]);
+    series.setMarkers(allMarkers);
+  }, [recentSignals, recentSignals.length, recentEvents, postEntryMarkers, selectedSymbol]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />
+
+      {/* Timeframe switcher */}
+      <div style={{
+        position: 'absolute', top: 8, left: 8,
+        display: 'flex', gap: 4, zIndex: 10,
+      }}>
+        {([1, 5, 15] as const).map((tf) => (
+          <button
+            key={tf}
+            onClick={() => {
+              // Clear bar history so it re-fetches at new timeframe
+              barHistoryRef.current[selectedSymbol] = new Map();
+              setTimeframe(tf);
+            }}
+            style={{
+              padding: '3px 10px',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: 0.5,
+              cursor: 'pointer',
+              border: 'none',
+              borderRadius: 3,
+              background: selectedTimeframe === tf ? 'var(--accent, #5a9bff)' : 'var(--bg-2, #2a2a3a)',
+              color: selectedTimeframe === tf ? '#fff' : 'var(--text-1, #888)',
+              transition: 'background 0.15s',
+            }}
+          >
+            {tf}m
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

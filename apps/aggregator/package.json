@@ -10,15 +10,16 @@
     "typecheck": "tsc --noEmit",
     "score": "tsx scripts/score_outcomes.ts",
     "score:report": "tsx scripts/score_report.ts",
-    "levels:add": "tsx scripts/levels_cli.ts",
-    "rescore": "tsx scripts/rescore_signals.ts",
-    "backfill": "tsx scripts/backfill_signals.ts",
-    "migrate:rename-outcome-columns": "tsx scripts/migrate_rename_columns.ts",
-    "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
+    "score:report:a": "tsx scripts/score_report.ts --strategy A",
+    "score:report:b": "tsx scripts/score_report.ts --strategy B",
     "compare": "tsx scripts/compare_strategies.ts",
     "backfill:absorption": "tsx scripts/backfill_absorption.ts",
-    "score:report:a": "tsx scripts/score_report.ts --strategy A",
-    "score:report:b": "tsx scripts/score_report.ts --strategy B"
+    "backfill:conviction": "tsx scripts/backfill_conviction.ts",
+    "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
+    "levels:add": "tsx scripts/levels_cli.ts",
+    "context:set": "tsx scripts/context_set.ts set",
+    "context:show": "tsx scripts/context_set.ts show",
+    "context:resilience": "tsx scripts/context_set.ts resilience"
   },
   "dependencies": {
     "@fastify/websocket": "^10.0.1",

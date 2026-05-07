@@ -83,5 +83,9 @@ export function classifySignalQuality(signal: ConfluenceSignal): QualityDecision
   const strategy = signal.strategyVersion ?? 'A';
   if (strategy === 'A') return classifyStrategyA(signal.ruleId, session, signal.score);
   if (strategy === 'B') return classifyStrategyB(signal.ruleId, session, signal.score);
+  // Strategy C: all signals are gold — the level watcher is the quality gate.
+  // Minimum score 50 is enforced inside strategy-c.ts before emission.
+  if (strategy === 'C') return { tier: 'gold', reason: `C: rs-level-absorption score=${signal.score}` };
+  if (strategy === 'D') return { tier: 'gold', reason: `D: compression-breakout score=${signal.score}` };
   return { tier: 'silenced', reason: `unknown strategy ${strategy}` };
 }

@@ -137,6 +137,12 @@ export const db = {
   close() {
     _db.close();
   },
+
+  // Generic read-only query for ad-hoc SQL in server routes.
+  // Use sparingly — prefer named prepared statements for hot paths.
+  query<T = unknown>(sql: string, params: unknown[] = []): T[] {
+    return _db.prepare(sql).all(...params) as T[];
+  },
 };
 
 logger.info({ path: config.dbPath }, 'database ready');

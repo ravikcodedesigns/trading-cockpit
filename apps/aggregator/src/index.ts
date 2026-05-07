@@ -3,44 +3,71 @@ import { startLevelsWatcher } from './sources/levels.js';
 import { startFlashAlphaPoller } from './sources/flashalpha.js';
 import { startRulesEngine } from './rules/index.js';
 import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
+import { startStrategyC, stopStrategyC } from './rules-v2/strategy-c-index.js';
+import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
+import { getRecentTrades } from './rules-v2/tick-client.js';
 import { state } from './state.js';
 import { logger } from './logger.js';
 import { discord } from './discord.js';
 import { db } from './db.js';
 import { config } from './config.js';
+import { loadContext } from './rs-context.js';
 import type { Symbol, DailyLevels, FlashAlphaSnapshot } from '@trading/contracts';
 import { tradingDayFor } from '@trading/contracts';
 
-// Accessors for rules engine to read current materialized state
 const snapshot = () => state.snapshot();
 const getLevels = (s: Symbol): DailyLevels | undefined => {
-  // Look up the trading day for "now" and return that day's levels for the
-  // symbol. After the per-day levels refactor, state holds a date-keyed
-  // map instead of a single levels object.
   const today = tradingDayFor(Date.now());
   return state.levelsForDay(today)?.[s];
 };
 const getFlashAlpha = (s: Symbol): FlashAlphaSnapshot | undefined => snapshot().flashAlpha[s];
 
+// Current price: last trade from tick-store (Strategy C needs this)
+const _lastPrice: Partial<Record<Symbol, number>> = {};
+async function refreshPrices(): Promise<void> {
+  for (const sym of ['NQ', 'ES'] as Symbol[]) {
+    const trades = await getRecentTrades(sym, 5000).catch(() => []);
+    if (trades.length) _lastPrice[sym] = trades[trades.length - 1].price;
+  }
+}
+const getPrice = (s: Symbol): number | undefined => _lastPrice[s];
+
 async function main() {
   logger.info({ activeStrategy: config.activeStrategy }, 'booting aggregator');
 
-  // Start sources first so they can begin populating state immediately
+  // Load RS morning context (set via: pnpm context:set)
+  const rsCtx = loadContext();
+  logger.info({
+    greaterMarket: rsCtx.greaterMarket,
+    ddRatio: rsCtx.ddRatio,
+    vxAboveBBB: rsCtx.vxAboveBBB,
+    isRational: rsCtx.isRational,
+  }, 'RS context active');
+
   startLevelsWatcher();
   startFlashAlphaPoller();
 
-  // Strategy A: bar-based rules (sweep + divergence)
-  // Always starts unless explicitly set to B-only
   if (config.activeStrategy === 'A' || config.activeStrategy === 'BOTH') {
     startRulesEngine(getLevels, getFlashAlpha);
     logger.info('strategy-A started (bar-based: sweep + divergence)');
   }
 
-  // Strategy B: tick-based rules (absorption + sub-second patterns)
-  // Reads from tick-store HTTP API on a polling loop
-  if (config.activeStrategy === 'B' || config.activeStrategy === 'BOTH') {
-    startStrategyB();
+  if (config.activeStrategy === 'B' || config.activeStrategy === 'BOTH' || config.activeStrategy === 'ALL') {
+    startStrategyB(getLevels);
     logger.info('strategy-B started (tick-based: absorption)');
+  }
+
+  if (config.activeStrategy === 'C' || config.activeStrategy === 'ALL') {
+    // Start price refresh loop before Strategy C
+    setInterval(refreshPrices, 1000);
+    await refreshPrices();
+    startStrategyC(getLevels, getPrice);
+    logger.info('strategy-C started (RS level watcher)');
+  }
+
+  if (config.activeStrategy === 'D' || config.activeStrategy === 'ALL') {
+    startStrategyD();
+    logger.info('strategy-D started (15-min compression → 5-min entry)');
   }
 
   // Then the server (sources and cockpit can connect)

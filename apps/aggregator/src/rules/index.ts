@@ -1,6 +1,7 @@
 import { state } from '../state.js';
 import { logger } from '../logger.js';
 import { currentSweepThresholds, currentDivergenceThresholds } from './thresholds.js';
+import { scoreConviction } from '../rules-v2/conviction.js';
 import type {
   AbsorptionEvent,
   AggregatorEvent,
@@ -195,12 +196,12 @@ function ruleSweep(
 // at deltaDiff >= 100 (raw); the rule layer decides which deserve confluence
 // signals based on session and additional context.
 
-function ruleDeltaDivergence(
+async function ruleDeltaDivergence(
   event: DeltaDivergenceEvent,
   ctx: RuleContext,
   getLevels: (s: Symbol) => DailyLevels | undefined,
   getFlashAlpha: (s: Symbol) => FlashAlphaSnapshot | undefined
-): ConfluenceSignal | null {
+): Promise<ConfluenceSignal | null> {
   const { session, thresholds } = currentDivergenceThresholds(event.ts);
   if (event.magnitude < thresholds.minMagnitude) return null;
   if (event.deltaDiff < thresholds.minDeltaDiff) return null;
@@ -259,6 +260,8 @@ function ruleDeltaDivergence(
     zoneNote +
     (fa ? ` Regime: ${fa.gammaRegime}.` : '');
 
+  const conviction = await scoreConviction(event.symbol, direction, 'delta-divergence', event.ts);
+
   return {
     ts: event.ts,
     source: 'rules',
@@ -271,7 +274,8 @@ function ruleDeltaDivergence(
     rationale,
     observeOnly: true,
     strategyVersion: 'A' as const,
-  };
+    conviction,
+  } as any;
 }
 
 // --- Engine ---
@@ -282,7 +286,7 @@ export function startRulesEngine(
 ): void {
   const ctx: RuleContext = { recentSignalKeys: new Map() };
 
-  state.onEvent((event: AggregatorEvent) => {
+  state.onEvent(async (event: AggregatorEvent) => {
     try {
       if (event.source === 'bookmap' && event.type === 'absorption') {
         const sig = ruleAbsorptionAtZone(event, ctx, getLevels, getFlashAlpha);
@@ -299,7 +303,7 @@ export function startRulesEngine(
         }
       }
       if (event.source === 'bookmap' && event.type === 'delta_divergence') {
-        const sig = ruleDeltaDivergence(event, ctx, getLevels, getFlashAlpha);
+        const sig = await ruleDeltaDivergence(event, ctx, getLevels, getFlashAlpha);
         if (sig) {
           logger.info({ ruleId: sig.ruleId, score: sig.score, direction: sig.direction, deltaDiff: event.deltaDiff }, 'signal fired');
           state.applySignal(sig);

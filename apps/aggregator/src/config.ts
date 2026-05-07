@@ -6,8 +6,10 @@ const repoRoot = path.resolve(process.cwd(), '../..');
 // Which strategy engine(s) to run.
 // 'A' = bar-based (sweep + divergence) only
 // 'B' = tick-based (absorption + sub-second divergence) only
-// 'BOTH' = run A and B in parallel for side-by-side comparison
-export type ActiveStrategy = 'A' | 'B' | 'BOTH';
+// 'C' = RS level watcher only
+// 'BOTH' = run A and B in parallel
+// 'ALL'  = run A, B, and C
+export type ActiveStrategy = 'A' | 'B' | 'C' | 'D' | 'BOTH' | 'ALL';
 
 export const config = {
   port: parseInt(process.env.AGGREGATOR_PORT ?? '8787', 10),
