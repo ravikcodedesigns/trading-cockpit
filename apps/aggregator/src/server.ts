@@ -1,13 +1,173 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import websocket from '@fastify/websocket';
+import fastifyStatic from '@fastify/static';
+import Database from 'better-sqlite3';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { state } from './state.js';
 import { ingest } from './ingest.js';
 import { db } from './db.js';
-import type { CockpitMessage, SourceName } from '@trading/contracts';
+import { getTodayEvents, getUpcomingEvents } from './economic-calendar.js';
+import { getTradesInRange } from './rules-v2/tick-client.js';
+import { saveContext, getContext } from './rs-context.js';
+import { scoreRSLevels } from './rules-v2/rs-level-scorer.js';
+import { discord } from './discord.js';
+import type { CockpitMessage, SourceName, TickTrade } from '@trading/contracts';
+import { tradingDayFor } from '@trading/contracts';
 
-const VALID_SOURCES: SourceName[] = ['bookmap', 'flashalpha', 'tradovate'];
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TICKS_DB_PATH = path.join(path.dirname(config.dbPath), 'ticks.db');
+
+// Open ticks.db read-only for post-entry historical analysis.
+// Wrapped so a missing file at startup doesn't crash the server.
+let _ticksDb: Database.Database | null = null;
+try { _ticksDb = new Database(TICKS_DB_PATH, { readonly: true }); } catch { /* ticks.db not yet present */ }
+
+// ── RTH helper ────────────────────────────────────────────────────────────────
+function isRTH(tsMs: number): boolean {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+  const parts = fmt.formatToParts(new Date(tsMs));
+  const wd  = parts.find(p => p.type === 'weekday')?.value ?? '';
+  const h   = parseInt(parts.find(p => p.type === 'hour')?.value   ?? '0');
+  const m   = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0');
+  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(wd) && (h * 60 + m) >= 570 && (h * 60 + m) < 960;
+}
+
+// ── Order-flow analysis ───────────────────────────────────────────────────────
+// Pure function: given raw trades for a post-entry window, compute delta /
+// volume-split / stacked-levels and classify into GO/WAIT/WARN (30s) or
+// HIT/MOVE/SLOW/FAIL (2m) for a given direction.
+
+interface TickPoint { ts: number; price: number; size: number; isBidAggressor: boolean; }
+
+interface OrderFlowResult {
+  label: string; color: string; checkpoint: '30s' | '2m';
+  cumulativeDelta: number;
+  volAboveEntry: number; volAtEntry: number; volBelowEntry: number;
+  maxFavorable: number; maxAdverse: number;
+  stackedDirectionalLevels: number;
+  deltaFirstHalf: number; deltaSecondHalf: number;
+  totalVolume: number; tradeCount: number;
+}
+
+function analyzeOrderFlow(
+  trades: TickPoint[],
+  entryPrice: number,
+  direction: 'long' | 'short',
+  checkpoint: '30s' | '2m',
+): OrderFlowResult {
+  const TICK = 0.25;
+  const isShort = direction === 'short';
+  const empty = (): OrderFlowResult => ({
+    label: checkpoint === '30s' ? 'WAIT' : 'SLOW', color: '#6b7280', checkpoint,
+    cumulativeDelta: 0, volAboveEntry: 0, volAtEntry: 0, volBelowEntry: 0,
+    maxFavorable: 0, maxAdverse: 0, stackedDirectionalLevels: 0,
+    deltaFirstHalf: 0, deltaSecondHalf: 0, totalVolume: 0, tradeCount: 0,
+  });
+  if (!trades.length) return empty();
+
+  const midTs = trades[0]!.ts + (trades[trades.length - 1]!.ts - trades[0]!.ts) / 2;
+  let cumulativeDelta = 0, deltaFirstHalf = 0, deltaSecondHalf = 0;
+  let volAboveEntry = 0, volAtEntry = 0, volBelowEntry = 0;
+  let maxFavorable = 0, maxAdverse = 0, totalVolume = 0;
+  const byLevel = new Map<number, { buyVol: number; sellVol: number }>();
+
+  for (const t of trades) {
+    const buyAgg  = t.isBidAggressor ? 0 : t.size;
+    const sellAgg = t.isBidAggressor ? t.size : 0;
+    const td = buyAgg - sellAgg;
+
+    cumulativeDelta += td;
+    if (t.ts <= midTs) deltaFirstHalf += td; else deltaSecondHalf += td;
+    totalVolume += t.size;
+
+    if      (t.price > entryPrice + TICK / 2) volAboveEntry += t.size;
+    else if (t.price < entryPrice - TICK / 2) volBelowEntry += t.size;
+    else                                       volAtEntry    += t.size;
+
+    const fav = isShort ? entryPrice - t.price : t.price - entryPrice;
+    const adv = isShort ? t.price - entryPrice : entryPrice - t.price;
+    if (fav > maxFavorable) maxFavorable = fav;
+    if (adv > maxAdverse)   maxAdverse   = adv;
+
+    const level = Math.round(t.price / TICK) * TICK;
+    const l = byLevel.get(level) ?? { buyVol: 0, sellVol: 0 };
+    l.buyVol += buyAgg; l.sellVol += sellAgg;
+    byLevel.set(level, l);
+  }
+
+  // Count consecutive ticks in the favorable direction where the directional
+  // aggression dominates — this is "stacked sell/buy levels".
+  let stackedDirectionalLevels = 0;
+  let scanPrice = isShort
+    ? Math.round((entryPrice - TICK) / TICK) * TICK
+    : Math.round((entryPrice + TICK) / TICK) * TICK;
+  for (let i = 0; i < 30; i++) {
+    const l = byLevel.get(scanPrice);
+    if (!l) break;
+    const dominant = isShort ? l.sellVol > l.buyVol : l.buyVol > l.sellVol;
+    if (!dominant) break;
+    stackedDirectionalLevels++;
+    scanPrice = isShort ? scanPrice - TICK : scanPrice + TICK;
+  }
+
+  // ── Classification ───────────────────────────────────────────────────────
+  let label: string; let color: string;
+
+  if (checkpoint === '30s') {
+    // For absorption signals: positive delta at 30s is often "last wave of buyers
+    // still being absorbed" — not a failure indicator. Focus on price action only.
+    if (maxFavorable >= 20) {
+      // T1 hit within 30s — immediate strong move
+      label = 'GO'; color = '#10b981';
+    } else if (maxAdverse >= 12) {
+      // Hard break above absorption level — approaching stop territory
+      label = 'WARN'; color = '#ef4444';
+    } else if (maxFavorable >= 5 && maxAdverse < 6) {
+      // Price already moving toward target with minimal bounce — clean start
+      label = 'GO'; color = '#10b981';
+    } else if (maxAdverse >= 7 && maxFavorable < 3) {
+      // Price exclusively moving against with no favorable response
+      label = 'WARN'; color = '#ef4444';
+    } else {
+      // Normal oscillation — absorption still processing, wait for 2m check
+      label = 'WAIT'; color = '#6b7280';
+    }
+  } else {
+    // 2m checkpoint — has the absorption result played out?
+    const volFavoring = isShort ? volBelowEntry > volAboveEntry : volAboveEntry > volBelowEntry;
+
+    if (maxFavorable >= 20) {
+      label = 'HIT'; color = '#10b981';
+    } else if (maxAdverse >= 15) {
+      // Significant adverse — approaching or through stop
+      label = 'FAIL'; color = '#ef4444';
+    } else if (maxFavorable >= 8 && volFavoring && maxAdverse < 10) {
+      // Moving in right direction, volume on right side, not threatened
+      label = 'MOVE'; color = '#3b82f6';
+    } else {
+      // Not enough follow-through yet, or mixed signals
+      label = 'SLOW'; color = '#f59e0b';
+    }
+  }
+
+  return {
+    label, color, checkpoint,
+    cumulativeDelta, volAboveEntry, volAtEntry, volBelowEntry,
+    maxFavorable, maxAdverse, stackedDirectionalLevels,
+    deltaFirstHalf, deltaSecondHalf, totalVolume, tradeCount: trades.length,
+  };
+}
+
+const VALID_SOURCES: SourceName[] = ['bookmap', 'bookmap-es', 'flashalpha', 'tradovate'];
+
+// Path to the cockpit's production build (apps/cockpit/dist/).
+// Exists after `pnpm --filter @trading/cockpit build`.
+const COCKPIT_DIST = path.resolve(__dirname, '../../cockpit/dist');
 
 export async function startServer(): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
@@ -18,11 +178,27 @@ export async function startServer(): Promise<FastifyInstance> {
     },
   });
 
-  // CORS for the cockpit (Vite dev server on port 5173 calling aggregator
-  // on port 8787 = cross-origin). Without this, browsers silently drop
-  // fetch responses even when the server returns 200. Permissive policy
-  // is fine here because the aggregator only binds to 127.0.0.1; nothing
-  // outside the local machine can reach it.
+  // Serve the built cockpit SPA when the dist folder exists.
+  // In dev mode Vite handles this; in production the aggregator is the only server.
+  const fs = await import('node:fs');
+  if (fs.existsSync(COCKPIT_DIST)) {
+    await app.register(fastifyStatic, {
+      root: COCKPIT_DIST,
+      // Serve index.html for any unknown route so the SPA handles navigation.
+      setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'no-cache');
+      },
+    });
+    // SPA catch-all: unknown GET routes serve index.html
+    app.setNotFoundHandler(async (_req, reply) => {
+      return reply.sendFile('index.html');
+    });
+    logger.info({ path: COCKPIT_DIST }, 'serving cockpit static files');
+  }
+
+  // CORS — needed when Vite dev server (port 5173) calls this server (port 8787).
+  // In production both are on the same origin so this is a no-op for the cockpit,
+  // but kept to allow external tooling (CLI, scripts) to call the API.
   app.addHook('onRequest', async (req, reply) => {
     reply.header('Access-Control-Allow-Origin', '*');
     reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -37,6 +213,67 @@ export async function startServer(): Promise<FastifyInstance> {
     uptimeSec: Math.floor(process.uptime()),
     eventsLogged: db.eventCount(),
     connections: state.connectionStatus(),
+  }));
+
+  // VX/VVIX live update — called by the Claude Code cron bridge every minute.
+  // Body: { vx: number, vvix: number }
+  app.post('/context/vx', async (req, reply) => {
+    const body = req.body as { vx?: unknown; vvix?: unknown };
+    const vx   = typeof body.vx   === 'number' ? body.vx   : NaN;
+    const vvix = typeof body.vvix === 'number' ? body.vvix : NaN;
+    if (isNaN(vx) || isNaN(vvix)) {
+      return reply.code(400).send({ error: 'vx and vvix must be numbers' });
+    }
+    const ctx = saveContext({ vx, vvix });
+    logger.info({ vx, vvix, vxAboveBBB: ctx.vxAboveBBB, vvixGolden: ctx.vvixGolden }, 'VX/VVIX updated via bridge');
+    return { ok: true, vx: ctx.vx, vvix: ctx.vvix, vxAboveBBB: ctx.vxAboveBBB, vvixGolden: ctx.vvixGolden };
+  });
+
+  app.get('/context/rs', async () => getContext());
+
+  // Test signal — fires a scored signal through the full RS pipeline and
+  // pushes it live to the cockpit. Bypasses quality gate.
+  app.post('/test/signal', async (req, reply) => {
+    const body = req.body as { symbol?: unknown; price?: unknown; direction?: unknown; discord?: unknown };
+    const symbol  = body.symbol === 'ES' ? 'ES' : 'NQ';
+    const price   = typeof body.price === 'number' ? body.price : NaN;
+    const dir     = body.direction === 'short' ? 'short' : 'long';
+    const notify  = body.discord === true;
+    if (isNaN(price)) return reply.code(400).send({ error: 'price must be a number' });
+
+    const today  = tradingDayFor(Date.now());
+    const levels = state.levelsForDay(today)?.[symbol];
+    const recentBars = (db.recentBars(symbol, Date.now() - 60 * 60_000) as { high: number; low: number }[]);
+    const rs = scoreRSLevels(price, dir, levels, price, recentBars);
+
+    const signal: import('@trading/contracts').ConfluenceSignal = {
+      ts: Date.now(),
+      source: 'rules-v2' as const,
+      type: 'confluence' as const,
+      symbol,
+      ruleId: 'test',
+      strategyVersion: 'B' as const,
+      ruleVersion: 'test-v1',
+      score: 75,
+      direction: dir,
+      rationale: `Test signal at ${price} (${dir})`,
+      observeOnly: true,
+      rsScore:        rs.score,
+      rsTier:         rs.tier,
+      rsComponents:   rs.components,
+      rsMatchedLevel: rs.matchedLevel?.label,
+      rsLabelLine:    rs.labelLine,
+    };
+
+    state.broadcastTestSignal(signal);
+    if (notify) discord.signal(signal);
+    logger.info({ price, dir, symbol, rsScore: rs.score, rsTier: rs.tier, discord: notify }, 'test signal broadcast');
+    return { ok: true, rsScore: rs.score, rsTier: rs.tier, rsLabelLine: rs.labelLine, matchedLevel: rs.matchedLevel };
+  });
+
+  app.get('/econ/today', async () => ({
+    today: getTodayEvents(),
+    upcoming: getUpcomingEvents(7),
   }));
 
   // Returns deduplicated bar history for a symbol. Used by the cockpit
@@ -60,7 +297,7 @@ export async function startServer(): Promise<FastifyInstance> {
     const intervalMs = intervalMin * 60 * 1000;
     const rawBars = db.query<{ payload: string }>(`
       SELECT payload FROM events
-      WHERE source = 'bookmap'
+      WHERE source IN ('bookmap', 'bookmap-es')
         AND type = 'bar'
         AND symbol = ?
         AND ts >= ?
@@ -102,112 +339,93 @@ export async function startServer(): Promise<FastifyInstance> {
     return { symbol, minutes, interval: intervalMin, count: bars.length, bars };
   });
 
-  // Returns historical post-entry classification markers for ++ short signals.
-  // Used by the cockpit chart on load to backfill FAST/MID/SLOW/FAIL markers
-  // without waiting for live signals to fire.
+  // Live post-entry order-flow analysis.
+  // Called by cockpit ws.ts at 30s and 2m after an RTH absorption signal fires.
+  // Fetches the tick window from the tick-store and classifies into
+  // GO/WAIT/WARN (30s) or HIT/MOVE/SLOW/FAIL (2m).
+  app.get('/post-entry/analysis', async (req) => {
+    const q = req.query as {
+      symbol?: string; from?: string; to?: string;
+      entryPrice?: string; direction?: string; checkpoint?: string;
+    };
+    const symbol     = q.symbol    ?? 'NQ';
+    const from       = parseInt(q.from       ?? '0', 10);
+    const to         = parseInt(q.to         ?? '0', 10);
+    const entryPrice = parseFloat(q.entryPrice ?? '0');
+    const direction  = (q.direction  ?? 'short') as 'long' | 'short';
+    const checkpoint = (q.checkpoint ?? '30s')   as '30s' | '2m';
+
+    if (!from || !to || !entryPrice) {
+      return { label: checkpoint === '30s' ? 'WAIT' : 'SLOW', color: '#6b7280', error: 'missing params' };
+    }
+
+    const raw = await getTradesInRange(symbol, from, to);
+    const trades: TickPoint[] = raw.map((t: TickTrade) => ({
+      ts: t.ts, price: t.price, size: t.size, isBidAggressor: t.isBidAggressor,
+    }));
+    return analyzeOrderFlow(trades, entryPrice, direction, checkpoint);
+  });
+
+  // Historical post-entry markers — tick-based, RTH NQ absorption signals.
+  // Replaces the old w5_max_gain proxy with actual order-flow classification
+  // using ticks.db directly.
   app.get('/history/post-entry-markers', async (req) => {
     const q = req.query as { symbol?: string };
     const symbol = q.symbol ?? 'NQ';
 
-    // Query all ++ short absorption signals with matured outcomes
-    const rows = db.query<{
-      id: number; ts: number; score: number; rationale: string;
-      conviction: string; mv5: number; adv5: number;
-      mv15: number; adv15: number; mv60: number;
-    }>(`
-      SELECT
-        s.id,
-        s.ts,
-        s.score,
-        json_extract(s.payload, '$.rationale') AS rationale,
-        json_extract(s.payload, '$.conviction') AS conviction,
-        som.w5_max_gain      AS mv5,
-        som.w5_max_drawdown  AS adv5,
-        som.w15_max_gain     AS mv15,
-        som.w15_max_drawdown AS adv15,
-        som.w60_max_gain     AS mv60
+    if (!_ticksDb) return { markers: [] };
+
+    const rows = db.query<{ ts: number; rationale: string; direction: string; conviction: string }>(`
+      SELECT s.ts,
+        json_extract(s.payload, '$.rationale')  AS rationale,
+        s.direction,
+        json_extract(s.payload, '$.conviction') AS conviction
       FROM signals s
-      LEFT JOIN signal_outcomes_matured som ON som.signal_id = s.id
-      WHERE s.symbol = ?
-        AND s.rule_id = 'absorption'
-        AND s.direction = 'short'
-        AND json_extract(s.payload, '$.conviction') = '++'
-        AND s.score BETWEEN 65 AND 79
+      WHERE s.symbol    = ?
+        AND s.rule_id   = 'absorption'
+        AND json_extract(s.payload, '$.conviction') = '+'
+        AND s.score     >= 65
+        AND (s.meta IS NULL OR json_extract(s.meta, '$.filtered') IS NOT 1)
       ORDER BY s.ts
     `, [symbol]);
 
     if (!rows.length) return { markers: [] };
 
-    const markers = [];
+    const markers: object[] = [];
 
     for (const row of rows) {
-      // Extract entry price from rationale
-      const priceMatch = row.rationale?.match(/absorbed at ([0-9.]+)/);
-      if (!priceMatch) continue;
+      if (!isRTH(row.ts)) continue;
 
-      const mv5  = row.mv5  ?? 0;
-      const adv5 = row.adv5 ?? 0;
-      const mv60 = row.mv60 ?? 0;
-      const mv15 = row.mv15 ?? 0;
+      const m = row.rationale?.match(/absorbed at ([0-9.]+)/);
+      if (!m) continue;
+      const entryPrice = parseFloat(m[1]!);
+      const direction = row.direction as 'long' | 'short';
 
-      // 90s checkpoint: approximate using w5 data
-      // We use w5 as a proxy — if moved fast in 5min it was likely fast in 90s
-      let label90s: string;
-      let color90s: string;
+      // ── 30s window ────────────────────────────────────────────────────────
+      const raw30 = _ticksDb.prepare(
+        `SELECT ts, price, size, is_bid_aggressor FROM trades WHERE symbol=? AND ts>? AND ts<=? ORDER BY ts ASC`
+      ).all(symbol, row.ts, row.ts + 30_000) as { ts:number; price:number; size:number; is_bid_aggressor:number }[];
 
-      if (mv5 >= 10 && adv5 < 5) {
-        label90s = 'MID'; color90s = '#3b82f6';
-      } else if (mv5 >= 10 && adv5 >= 5) {
-        label90s = 'FAST?'; color90s = '#f59e0b';
-      } else if (adv5 > mv5 && adv5 > 5) {
-        label90s = 'HOLD'; color90s = '#a855f7';
-      } else {
-        label90s = 'SLOW?'; color90s = '#6366f1';
-      }
+      const trades30: TickPoint[] = raw30.map(t => ({
+        ts: t.ts, price: t.price, size: t.size, isBidAggressor: t.is_bid_aggressor === 1,
+      }));
+      const a30 = analyzeOrderFlow(trades30, entryPrice, direction, '30s');
 
-      // 5min checkpoint classification
-      let label5m: string;
-      let color5m: string;
+      // ── 2m window ─────────────────────────────────────────────────────────
+      const raw2m = _ticksDb.prepare(
+        `SELECT ts, price, size, is_bid_aggressor FROM trades WHERE symbol=? AND ts>? AND ts<=? ORDER BY ts ASC`
+      ).all(symbol, row.ts, row.ts + 120_000) as { ts:number; price:number; size:number; is_bid_aggressor:number }[];
 
-      if (mv5 >= 20) {
-        // Fast enough to hit 20 in 5min
-        if (mv5 >= 30) {
-          label5m = 'FAST ✓'; color5m = '#10b981';
-        } else {
-          label5m = 'MID ✓'; color5m = '#3b82f6';
-        }
-      } else if (mv5 < 20 && adv5 > 15) {
-        label5m = 'FAIL ✗'; color5m = '#ef4444';
-      } else if (mv60 >= 40) {
-        // Slow grinder — didn't hit 20 in 5min but eventually got there
-        label5m = 'SLOW ~'; color5m = '#f59e0b';
-      } else {
-        label5m = 'WAIT'; color5m = '#6b7280';
-      }
+      const trades2m: TickPoint[] = raw2m.map(t => ({
+        ts: t.ts, price: t.price, size: t.size, isBidAggressor: t.is_bid_aggressor === 1,
+      }));
+      const a2m = analyzeOrderFlow(trades2m, entryPrice, direction, '2m');
 
-      // Time buckets: snap to minute bars
-      const ts90s = Math.floor((row.ts + 30_000)  / 60_000) * 60;
-      const ts5m  = Math.floor((row.ts + 120_000) / 60_000) * 60;
+      const ts30 = Math.floor((row.ts + 30_000)  / 60_000) * 60;
+      const ts2m  = Math.floor((row.ts + 120_000) / 60_000) * 60;
 
-      markers.push({
-        id: `${row.ts}-90s`,
-        symbol,
-        time: ts90s,
-        label: label90s,
-        color: color90s,
-        checkpoint: '90s',
-        signalTs: row.ts,
-      });
-
-      markers.push({
-        id: `${row.ts}-5m`,
-        symbol,
-        time: ts5m,
-        label: label5m,
-        color: color5m,
-        checkpoint: '5m',
-        signalTs: row.ts,
-      });
+      markers.push({ id: `${row.ts}-30s`, symbol, time: ts30, label: a30.label, color: a30.color, checkpoint: '30s', signalTs: row.ts });
+      markers.push({ id: `${row.ts}-2m`,  symbol, time: ts2m,  label: a2m.label, color: a2m.color, checkpoint: '2m',  signalTs: row.ts });
     }
 
     return { symbol, count: markers.length, markers };
@@ -314,7 +532,7 @@ export async function startServer(): Promise<FastifyInstance> {
     });
   });
 
-  await app.listen({ port: config.port, host: '127.0.0.1' });
-  logger.info({ port: config.port }, 'server listening');
+  await app.listen({ port: config.port, host: config.host });
+  logger.info({ port: config.port, host: config.host }, 'server listening');
   return app;
 }

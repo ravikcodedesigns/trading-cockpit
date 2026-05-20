@@ -6,6 +6,7 @@ import { state } from '../state.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import { runStrategyD, getStrategyDWatchStatus } from './strategy-d.js';
+import { withRSScore } from './rs-attach.js';
 import type { Symbol } from '@trading/contracts';
 
 const POLL_MS = 60_000; // poll every minute
@@ -25,7 +26,7 @@ async function runOnce(): Promise<void> {
       const result = await runStrategyD(symbol, nowMs);
       if (result) {
         _signalCount++;
-        state.applySignal({ ...result, strategyVersion: 'D' as any });
+        state.applySignal(withRSScore({ ...result, strategyVersion: 'D' as any }, symbol, nowMs));
       }
     } catch (err) {
       logger.warn({ err, symbol }, 'strategy-D: poll error');

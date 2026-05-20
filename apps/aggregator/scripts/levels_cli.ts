@@ -13,9 +13,20 @@
  *      --bear-low 27185.40 --bear-high 27193.70 \
  *      --dd-upper 27849 --dd-lower 27347 \
  *      --hp 27069.70 \
+ *      --mhp 26945.70 \
  *      --qqq-open 27491.25 --qqq-close 27577 \
- *      --hg 27413.88 --mhp 26945.70 \
+ *      --hg 27413.88 \
  *      --on-mhp 27444.97 --on-hp 27404.86
+ *
+ *    After RTH open, add --open-price to trigger auto LM code computation:
+ *    pnpm --filter aggregator levels:add update \
+ *      --date 2026-05-07 \
+ *      --open-price 27310.50
+ *
+ *    Or override LM code manually (for LP/IP edge cases):
+ *    pnpm --filter aggregator levels:add update \
+ *      --date 2026-05-07 \
+ *      --lm-code BLD
  *
  * 2) Mid-day update of an existing day's overnight values:
  *    pnpm --filter aggregator levels:add update \
@@ -74,17 +85,25 @@ function printHelp() {
 Usage:
   levels:add new --date YYYY-MM-DD --bull-low N --bull-high N \\
                  --bear-low N --bear-high N --dd-upper N --dd-lower N \\
-                 --hp N [--qqq-open N --qqq-close N --hg N --mhp N \\
-                 --on-mhp N --on-hp N] [--symbol NQ]
+                 --hp N --mhp N \\
+                 [--qqq-open N --qqq-close N --hg N --on-mhp N --on-hp N] \\
+                 [--open-price N] [--lm-code BLD] [--symbol NQ]
 
-  levels:add update --date YYYY-MM-DD [--dd-upper N --dd-lower N \\
-                    --qqq-close N --on-mhp N --on-hp N]
+  levels:add update --date YYYY-MM-DD
+                 [--dd-upper N --dd-lower N]
+                 [--mhp N]           -- update Monthly Hedge Pressure
+                 [--open-price N]    -- set RTH open; triggers LM code auto-compute
+                 [--lm-code CODE]    -- manual LM code override (LP/IP edge cases)
+                                        valid: BLD BLU BSD BSU BrLD BrLU BrSD BrSU
+                 [--qqq-close N --on-mhp N --on-hp N [--hg N]]
+                   (HG auto-computed as midpoint of QQQ Open + QQQ Close; --hg overrides)
 
   levels:add show
   levels:add validate
 
-  All numbers are floating-point.
-  --symbol defaults to NQ.
+  All numbers are floating-point.  --symbol defaults to NQ.
+  --mhp is Monthly Hedge Pressure (first-class field, NOT in additionalLevels).
+  --open-price + --mhp together enable LM code auto-computation in the aggregator.
 `);
 }
 
@@ -96,6 +115,9 @@ interface RawLevel {
   bearZone: { low: number; high: number };
   ddBands: { upper: number; lower: number };
   hedgePressure: number;
+  mhp?: number;        // Monthly Hedge Pressure — dedicated first-class field
+  openPrice?: number;  // RTH 09:30 open — triggers LM code auto-computation
+  lmCode?: string;     // manual override for LP/IP edge cases
   additionalLevels?: AdditionalLevel[];
   notes?: string;
 }
@@ -164,19 +186,18 @@ function num(flags: Record<string, string>, key: string, required = false): numb
 
 function buildAdditionalLevels(flags: Record<string, string>): AdditionalLevel[] {
   const out: AdditionalLevel[] = [];
-  const qqqOpen = num(flags, 'qqq-open');
+  const qqqOpen  = num(flags, 'qqq-open');
   const qqqClose = num(flags, 'qqq-close');
-  const hg = num(flags, 'hg');
-  const mhp = num(flags, 'mhp');
-  const onMhp = num(flags, 'on-mhp');
-  const onHp = num(flags, 'on-hp');
+  const hg       = num(flags, 'hg');
+  const onMhp    = num(flags, 'on-mhp');
+  const onHp     = num(flags, 'on-hp');
 
-  if (qqqOpen !== undefined) out.push({ price: qqqOpen, label: 'QQQ Open',  color: '#ffffff', style: 'solid',        width: 2 });
+  // MHP is a first-class RawLevel field — do NOT add it to additionalLevels
+  if (qqqOpen  !== undefined) out.push({ price: qqqOpen,  label: 'QQQ Open',  color: '#ffffff', style: 'solid',        width: 2 });
   if (qqqClose !== undefined) out.push({ price: qqqClose, label: 'QQQ Close', color: '#ffffff', style: 'solid',        width: 2 });
-  if (onMhp !== undefined) out.push({ price: onMhp,    label: 'ON MHP',    color: '#f2a633', style: 'solid',        width: 2 });
-  if (hg !== undefined) out.push({ price: hg,       label: 'HG',        color: '#ffffff', style: 'large-dashed', width: 2 });
-  if (onHp !== undefined) out.push({ price: onHp,     label: 'ON HP',     color: '#f2a633', style: 'solid',        width: 2 });
-  if (mhp !== undefined) out.push({ price: mhp,      label: 'MHP',       color: '#f2a633', style: 'solid',        width: 2 });
+  if (onMhp    !== undefined) out.push({ price: onMhp,    label: 'ON MHP',    color: '#f2a633', style: 'solid',        width: 2 });
+  if (hg       !== undefined) out.push({ price: hg,       label: 'HG',        color: '#ffffff', style: 'large-dashed', width: 2 });
+  if (onHp     !== undefined) out.push({ price: onHp,     label: 'ON HP',     color: '#f2a633', style: 'solid',        width: 2 });
 
   return out.sort((a, b) => b.price - a.price);
 }
@@ -190,6 +211,10 @@ function cmdNew(flags: Record<string, string>) {
     process.exit(1);
   }
   const symbol = flags.symbol ?? 'NQ';
+
+  const mhp        = num(flags, 'mhp');
+  const openPrice  = num(flags, 'open-price');
+  const lmCode     = flags['lm-code'];
 
   const level: RawLevel = {
     symbol,
@@ -206,6 +231,9 @@ function cmdNew(flags: Record<string, string>) {
       lower: num(flags, 'dd-lower', true)!,
     },
     hedgePressure: num(flags, 'hp', true)!,
+    ...(mhp       !== undefined && { mhp }),
+    ...(openPrice !== undefined && { openPrice }),
+    ...(lmCode    !== undefined && { lmCode }),
     additionalLevels: buildAdditionalLevels(flags),
     notes: flags.notes ?? `${date} levels`,
   };
@@ -241,18 +269,30 @@ function cmdUpdate(flags: Record<string, string>) {
 
   let modified = 0;
 
-  // DD bands
-  const ddU = num(flags, 'dd-upper');
-  const ddL = num(flags, 'dd-lower');
-  if (ddU !== undefined) { level.ddBands.upper = ddU; modified++; }
-  if (ddL !== undefined) { level.ddBands.lower = ddL; modified++; }
+  // Top-level fields
+  const ddU       = num(flags, 'dd-upper');
+  const ddL       = num(flags, 'dd-lower');
+  const mhp       = num(flags, 'mhp');
+  const openPrice = num(flags, 'open-price');
+  const lmCode    = flags['lm-code'];
 
-  // Mid-day updatable fields in additionalLevels: ON MHP, ON HP, QQQ Close
-  const onMhp = num(flags, 'on-mhp');
-  const onHp = num(flags, 'on-hp');
+  if (ddU       !== undefined) { level.ddBands.upper = ddU;   modified++; }
+  if (ddL       !== undefined) { level.ddBands.lower = ddL;   modified++; }
+  if (mhp       !== undefined) { level.mhp       = mhp;       modified++; }
+  if (openPrice !== undefined) { level.openPrice = openPrice; modified++; }
+  if (lmCode    !== undefined) { level.lmCode    = lmCode;    modified++; }
+
+  // Evening/morning updatable fields in additionalLevels
+  const onMhp    = num(flags, 'on-mhp');
+  const onHp     = num(flags, 'on-hp');
   const qqqClose = num(flags, 'qqq-close');
+  const hg       = num(flags, 'hg');
 
   level.additionalLevels = level.additionalLevels ?? [];
+
+  // Ensure MHP is not in additionalLevels — it's a top-level field now
+  level.additionalLevels = level.additionalLevels.filter(a => a.label.toLowerCase().trim() !== 'mhp');
+
   const upsert = (label: string, price: number | undefined, color: string, style: string, width: number) => {
     if (price === undefined) return;
     const existing = level.additionalLevels!.find(a => a.label === label);
@@ -263,15 +303,26 @@ function cmdUpdate(flags: Record<string, string>) {
     }
     modified++;
   };
-  upsert('ON MHP', onMhp, '#f2a633', 'solid', 2);
-  upsert('ON HP', onHp, '#f2a633', 'solid', 2);
-  upsert('QQQ Close', qqqClose, '#ffffff', 'solid', 2);
+  upsert('ON MHP',    onMhp,    '#f2a633', 'solid',        2);
+  upsert('ON HP',     onHp,     '#f2a633', 'solid',        2);
+  upsert('QQQ Close', qqqClose, '#ffffff', 'solid',        2);
+
+  // Auto-compute HG = midpoint(QQQ Open, QQQ Close) when qqq-close is provided.
+  // An explicit --hg flag overrides this.
+  const autoHg = (() => {
+    if (hg !== undefined) return hg;
+    if (qqqClose === undefined) return undefined;
+    const qqqOpenEntry = level.additionalLevels!.find(a => a.label === 'QQQ Open');
+    if (!qqqOpenEntry) return undefined;
+    return Math.round(((qqqOpenEntry.price + qqqClose) / 2) * 100) / 100;
+  })();
+  upsert('HG', autoHg, '#ffffff', 'large-dashed', 2);
 
   // Re-sort additional levels by price
   level.additionalLevels.sort((a, b) => b.price - a.price);
 
   if (modified === 0) {
-    console.error('No fields specified to update. Pass at least one of --dd-upper, --dd-lower, --on-mhp, --on-hp, --qqq-close');
+    console.error('No fields specified to update. Pass at least one of: --dd-upper, --dd-lower, --mhp, --open-price, --lm-code, --on-mhp, --on-hp, --qqq-close, --hg');
     process.exit(1);
   }
 
@@ -294,6 +345,9 @@ function cmdShow() {
       console.log(`    bearZone: ${lv.bearZone.low} - ${lv.bearZone.high}`);
       console.log(`    ddBands:  ${lv.ddBands.lower} - ${lv.ddBands.upper}`);
       console.log(`    HP: ${lv.hedgePressure}`);
+      if (lv.mhp       !== undefined) console.log(`    MHP: ${lv.mhp}`);
+      if (lv.openPrice !== undefined) console.log(`    openPrice: ${lv.openPrice}`);
+      if (lv.lmCode    !== undefined) console.log(`    lmCode: ${lv.lmCode} (manual override)`);
       if (lv.additionalLevels) {
         for (const al of lv.additionalLevels) {
           console.log(`    ${al.label}: ${al.price}`);

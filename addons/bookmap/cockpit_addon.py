@@ -1,26 +1,4 @@
-"""
-Cockpit Bookmap Addon - v1.6
-
-Targets bookmap library 0.1.2.
-
-What changed in v1.6:
-    - Added delta divergence detection.
-    - Tracks cumulative delta (running buyer-aggression minus seller-aggression).
-    - Detects swing peaks and troughs in price using a 2-tick swing definition.
-    - At each new peak/trough, compares cumulative delta vs the prior peak/trough.
-    - Emits 'delta_divergence' events when:
-        * New higher high in price BUT lower delta than prior peak (bearish), OR
-        * New lower low in price BUT higher delta than prior trough (bullish).
-    - Cool-down: once a divergence fires, the detector waits 60s before
-      emitting another for the same direction on the same symbol.
-    - Rolling window: 45 minutes. Peaks/troughs older than that are dropped.
-
-Existing functionality preserved from v1.5:
-    - 1-minute bars with partial-update emission every second.
-    - Sweep detection with same-side burst tracking.
-    - Heartbeats every 5 seconds.
-    - WebSocket auto-reconnect.
-"""
+# Cockpit Bookmap Addon v1.10 - sweeps + delta divergence + tick capture
 
 import bookmap as bm
 import websocket
@@ -160,18 +138,14 @@ class WSSender(threading.Thread):
 #     it auto-evicts the oldest events (FIFO eviction).
 #
 class TickBuffer:
-    def __init__(self, send_queue,
-                 max_events=TICK_BATCH_MAX_EVENTS,
-                 flush_ms=TICK_BATCH_FLUSH_MS):
+    def __init__(self, send_queue, max_events=TICK_BATCH_MAX_EVENTS, flush_ms=TICK_BATCH_FLUSH_MS):
         self.send_queue = send_queue
         self.max_events = max_events
         self.flush_interval_sec = flush_ms / 1000.0
         self.buffer = collections.deque(maxlen=TICK_QUEUE_MAX_SIZE)
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
-        self._flusher = threading.Thread(
-            target=self._run, daemon=True, name="cockpit-tick-flusher",
-        )
+        self._flusher = threading.Thread(target=self._run, daemon=True, name="cockpit-tick-flusher")
 
     def start(self):
         self._flusher.start()
@@ -224,8 +198,7 @@ class TickBuffer:
         try:
             self.send_queue.put_nowait(msg)
         except queue.Full:
-            print("[cockpit] tick send queue full, dropped batch of "
-                  + str(len(events)))
+            print("[cockpit] tick send queue full, dropped batch of " + str(len(events)))
 
     def _run(self):
         while not self.stop_event.is_set():
@@ -262,8 +235,7 @@ class SweepBurst:
 
 
 class SwingExtreme:
-    """A confirmed swing peak (high) or trough (low) with the cumulative
-    delta value at the time it was confirmed."""
+    # A confirmed swing peak (high) or trough (low) with the cumulative delta value at the time it was confirmed.
     def __init__(self, kind, price, delta, ts_ms):
         self.kind = kind          # 'peak' or 'trough'
         self.price = price
@@ -272,9 +244,7 @@ class SwingExtreme:
 
 
 class DeltaDivergenceState:
-    """Tracks running cumulative delta and confirmed swing extremes for one
-    symbol. Detects bearish/bullish divergence between consecutive peaks or
-    troughs respectively."""
+    # Tracks running cumulative delta and confirmed swing extremes for one symbol. Detects bearish/bullish divergence between consecutive peaks or troughs respectively.
     def __init__(self, pips):
         self.pips = pips
         self.cum_delta = 0
@@ -483,16 +453,16 @@ def _check_burst_timeout_unlocked(state, now_ms):
 # =========================================================================
 
 def _prune_swing_window_unlocked(dd, now_ms):
-    """Drop peaks/troughs older than the rolling window."""
+    # Drop peaks/troughs older than the rolling window.
     cutoff = now_ms - DELTA_WINDOW_SEC * 1000
     dd.peaks = [p for p in dd.peaks if p.ts_ms >= cutoff]
     dd.troughs = [t for t in dd.troughs if t.ts_ms >= cutoff]
 
 
 def _check_divergence_unlocked(state, kind):
-    """Compare the most recent swing extreme to the prior one of same kind.
-    If divergence threshold met and cooldown elapsed, emit an event.
-    Caller holds _lock."""
+    # Compare the most recent swing extreme to the prior one of same kind.
+    # If divergence threshold met and cooldown elapsed, emit an event.
+    # Caller holds _lock.
     dd = state.dd
     now = _now_ms()
     series = dd.peaks if kind == 'peak' else dd.troughs
@@ -544,8 +514,8 @@ def _check_divergence_unlocked(state, kind):
 
 
 def _track_delta_unlocked(state, ts_ms, price, size, is_aggressor_buy):
-    """Update cumulative delta and run swing peak/trough detection.
-    Caller holds _lock."""
+    # Update cumulative delta and run swing peak/trough detection.
+    # Caller holds _lock.
     dd = state.dd
 
     # Update cumulative delta
@@ -679,8 +649,7 @@ def on_trade(addon, alias, price, size, is_otc, is_bid_aggressor,
         # is_bid_aggressor as received from Bookmap: True means the seller
         # crossed the bid (sell aggression). We pass this through unchanged
         # to preserve ground-truth in the captured stream.
-        _tick_buffer.append_trade(now, symbol_name, real_price, real_size,
-                                  bool(is_bid_aggressor))
+        _tick_buffer.append_trade(now, symbol_name, real_price, real_size, bool(is_bid_aggressor))
 
     except Exception:
         print("[cockpit] on_trade crashed: " + traceback.format_exc())
@@ -708,8 +677,7 @@ def on_depth(addon, alias, is_bid, price_level, size_level):
         # Append OUTSIDE the lock. CQG MBP feed uses replace-at-level
         # semantics: every event represents the new size at that price
         # level (or 0 for removal). Hence is_replace=True always.
-        _tick_buffer.append_depth(now, symbol_name, bool(is_bid),
-                                  real_price, real_size, is_replace=True)
+        _tick_buffer.append_depth(now, symbol_name, bool(is_bid), real_price, real_size, True)
     except Exception:
         print("[cockpit] on_depth crashed: " + traceback.format_exc())
 
@@ -745,7 +713,7 @@ def on_interval(addon, alias):
 # =========================================================================
 
 def main():
-    print("[cockpit] addon starting (v1.10 - sweeps + delta divergence + tick capture)")
+    print("[cockpit] addon starting (v1.6 - sweeps + delta divergence)")
 
     addon = bm.create_addon()
 

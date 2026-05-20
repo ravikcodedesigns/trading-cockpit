@@ -77,10 +77,22 @@ const args = process.argv.slice(2);
 const strategyArg = args[args.indexOf('--strategy') + 1] ?? 'BOTH';
 const strategyFilter = strategyArg === 'BOTH'
   ? ''
-  : `WHERE strategy_version = '${strategyArg === 'A' ? 'A' : 'B'}'`;
+  : `WHERE m.strategy_version = '${strategyArg}'`;
 
-const all = db.prepare(`SELECT * FROM signal_outcomes_matured ${strategyFilter} ORDER BY signal_ts`).all() as MaturedRow[];
-const partialCount = (db.prepare(`SELECT COUNT(*) AS c FROM signal_outcomes_partial ${strategyFilter}`).get() as { c: number }).c;
+// For strategy H, exclude time-gate-suppressed signals via rs_hard_filtered
+const hardFilterClause = strategyArg === 'H'
+  ? ` AND (s.rs_hard_filtered IS NULL OR s.rs_hard_filtered = 0)`
+  : '';
+
+const all = db.prepare(`
+  SELECT m.* FROM signal_outcomes_matured m
+  LEFT JOIN signals s ON s.id = m.signal_id
+  ${strategyFilter}${hardFilterClause}
+  ORDER BY m.signal_ts
+`).all() as MaturedRow[];
+
+const partialStratFilter = strategyArg === 'BOTH' ? '' : `WHERE strategy_version = '${strategyArg}'`;
+const partialCount = (db.prepare(`SELECT COUNT(*) AS c FROM signal_outcomes_partial ${partialStratFilter}`).get() as { c: number }).c;
 
 console.log('========================================');
 console.log('   SIGNAL OUTCOMES REPORT');

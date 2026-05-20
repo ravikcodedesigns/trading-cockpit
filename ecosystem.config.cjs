@@ -10,16 +10,10 @@ module.exports = {
       min_uptime: '10s',
       env: {
         NODE_ENV: 'production',
+        // Bind to all interfaces so the Cloudflare/Tailscale tunnel can reach it.
+        // The cockpit SPA is served from the same port (no separate cockpit process).
+        AGGREGATOR_HOST: '0.0.0.0',
       },
-    },
-    {
-      name: 'cockpit',
-      cwd: './apps/cockpit',
-      script: 'pnpm',
-      args: 'run preview',
-      autorestart: true,
-      max_restarts: 10,
-      min_uptime: '10s',
     },
     {
       name: 'bookmap-addon',

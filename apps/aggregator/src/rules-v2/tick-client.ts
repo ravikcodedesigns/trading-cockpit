@@ -55,6 +55,28 @@ export async function getRecentTrades(
   }
 }
 
+export async function getTradesInRange(
+  symbol: string,
+  fromMs: number,
+  toMs: number
+): Promise<TickTrade[]> {
+  const key = cacheKey('trades', symbol, Math.floor(fromMs / 500) * 500, Math.floor(toMs / 500) * 500);
+  const cached = _cache.get(key);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return cached.data as TickTrade[];
+  }
+  try {
+    const url = `${BASE}/trades?symbol=${symbol}&from=${fromMs}&to=${toMs}`;
+    const body = await fetchWithRetry(url) as { trades: TickTrade[] };
+    const data = body.trades ?? [];
+    _cache.set(key, { ts: Date.now(), data });
+    return data;
+  } catch (err) {
+    logger.warn({ err, symbol, fromMs, toMs }, 'tick-store range fetch failed');
+    return [];
+  }
+}
+
 export async function getRecentDepth(
   symbol: string,
   windowMs: number

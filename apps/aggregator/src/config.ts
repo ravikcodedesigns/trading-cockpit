@@ -9,10 +9,12 @@ const repoRoot = path.resolve(process.cwd(), '../..');
 // 'C' = RS level watcher only
 // 'BOTH' = run A and B in parallel
 // 'ALL'  = run A, B, and C
-export type ActiveStrategy = 'A' | 'B' | 'C' | 'D' | 'E' | 'BOTH' | 'ALL';
+export type ActiveStrategy = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'BOTH' | 'ALL';
 
 export const config = {
   port: parseInt(process.env.AGGREGATOR_PORT ?? '8787', 10),
+  // '127.0.0.1' = localhost only (dev). Set AGGREGATOR_HOST=0.0.0.0 for remote access.
+  host: process.env.AGGREGATOR_HOST ?? '127.0.0.1',
   dbPath: process.env.DB_PATH
     ? path.resolve(process.env.DB_PATH)
     : path.join(repoRoot, 'data', 'trading.db'),

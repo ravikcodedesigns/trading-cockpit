@@ -2,7 +2,7 @@
 // Sources emit events conforming to these shapes.
 // The cockpit consumes these via the cockpit WebSocket.
 
-export type SourceName = 'bookmap' | 'flashalpha' | 'levels' | 'tradovate' | 'rules';
+export type SourceName = 'bookmap' | 'bookmap-es' | 'flashalpha' | 'levels' | 'tradovate' | 'rules' | 'rules-v2';
 export type Symbol = 'NQ' | 'ES';
 export type Side = 'bid' | 'ask';
 export type Direction = 'long' | 'short';
@@ -103,12 +103,31 @@ export interface FlashAlphaSnapshot extends BaseEvent {
 
 export interface ZoneRange { low: number; high: number; }
 
+// Liquidity Map code — determined at RTH open from open price vs HP/MHP placement.
+//   Prefix: B = open in Bull Zone, Br = open in Bear Zone
+//   L/S:    open > HP (Long side) / open < HP (Short side)
+//   D/U:    MHP > HP (Down orientation) / HP > MHP (Up orientation)
+// LP/IP edge cases (open between zones) must be set manually.
+export type LmCode = 'BLD' | 'BLU' | 'BSD' | 'BSU' | 'BrLD' | 'BrLU' | 'BrSD' | 'BrSU';
+
+// RS score conviction tier.
+export type RSTier = 'PRIME' | 'HIGH' | 'MODERATE' | 'WEAK' | 'PASS';
+
 export interface AdditionalLevel {
   price: number;
   label: string;                       // short label shown in axis (<=12 chars renders best)
   color?: string;                      // hex e.g. '#5a9bff'; defaults applied client-side
   style?: 'solid' | 'dashed' | 'dotted' | 'large-dashed' | 'sparse-dotted';  // defaults to 'dashed'
   width?: 1 | 2 | 3 | 4;               // defaults to 1; 2 = bold
+}
+
+// Secondary zone clusters beyond the primary bullZone/bearZone pair.
+// Each entry is one Liquidity Pocket: brzt is the Bear Zone Top (EST long),
+// bzb is the Bull Zone Bottom (EST long target / IP bounce level).
+// Ordered top-to-bottom (highest brzt first).
+export interface ExtraZone {
+  bzb: number;   // Bull Zone Bottom — EST long level
+  brzt: number;  // Bear Zone Top — EST long level (LP trade fires here)
 }
 
 export interface DailyLevels extends BaseEvent {
@@ -119,11 +138,15 @@ export interface DailyLevels extends BaseEvent {
   // in NY time. Trading day = 09:30 ET on Day N -> 09:30 ET on Day N+1.
   // Friday's trading day extends across the weekend gap to Monday 09:30.
   tradingDay: string;
-  bullZone: ZoneRange;
-  bearZone: ZoneRange;
+  bullZone: ZoneRange;   // primary Bull Zone; low = BZB (EST level), high = zone top (same as low if out of range)
+  bearZone: ZoneRange;   // primary Bear Zone; high = BrZT (EST level), low = zone bottom (same as high if out of range)
   ddBands: { upper: number; lower: number };
-  hedgePressure: number;
-  additionalLevels?: AdditionalLevel[];  // RS reference lines (QQQ Open/Close, HG, MHP, etc.)
+  hedgePressure: number; // HP — Weekly Hedge Pressure (cyan line)
+  mhp?: number;          // MHP — Monthly Hedge Pressure (orange line); required for LM code auto-computation
+  additionalLevels?: AdditionalLevel[];  // RS reference lines (QQQ Open/Close, HG, ON HP, etc.)
+  extraZones?: ExtraZone[];              // secondary zone clusters, ordered top-to-bottom
+  openPrice?: number;                    // RTH 09:30 open price — required for LM code auto-computation
+  lmCode?: LmCode;                       // Liquidity Map code — auto-derived if openPrice + mhp are set
   notes?: string;
 }
 
@@ -145,13 +168,19 @@ export interface ConfluenceSignal extends BaseEvent {
   type: 'confluence';
   symbol: Symbol;
   ruleId: string;
-  score: number;          // 0-100
+  score: number;          // 0-100 signal quality (tick data, CVD, absorption)
   direction: Direction;
   contextEventIds?: number[];
   rationale: string;
   observeOnly?: boolean;  // v1: always true
   strategyVersion: 'A' | 'B';  // A=bar-based, B=tick-based
   ruleVersion?: string;         // e.g. 'sweep-v1', 'absorption-v1'
+  // RS scoring — independent dimension from signal score
+  rsScore?: number;       // 0-100 RS confluence score
+  rsTier?: RSTier;        // PRIME | HIGH | MODERATE | WEAK | PASS
+  rsComponents?: { level: number; context: number; confirm: number };
+  rsMatchedLevel?: string;   // label of nearest RS level
+  rsLabelLine?: string;      // one-line display summary e.g. "BZB · First test · GM bull · BLD"
 }
 
 // --- Union of everything that flows through the aggregator ---

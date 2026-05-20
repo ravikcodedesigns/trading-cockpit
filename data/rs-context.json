@@ -1,0 +1,17 @@
+{
+  "greaterMarket": "bull",
+  "ddRatio": 0.76,
+  "mhpResilience": -1,
+  "hpResilience": -1,
+  "redistResilience": 1,
+  "resilience": 1,
+  "vx": 19.5,
+  "bbb": 18.97,
+  "vvix": 92,
+  "setAt": "2026-05-19T11:15:03.501Z",
+  "tradingDay": "2026-05-19",
+  "vxAboveBBB": true,
+  "vvixElevated": false,
+  "vvixGolden": false,
+  "isRational": false
+}

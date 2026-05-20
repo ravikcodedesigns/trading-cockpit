@@ -1,45 +1,115 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { connect, useStore } from './lib/ws';
 import { StatusBar } from './components/StatusBar';
 import { Chart } from './components/Chart';
 import { SignalFeed } from './components/SignalFeed';
 import { tradingDayFor } from '@trading/contracts';
 
+// Reactive narrow-screen detector — re-renders on window resize.
+function subscribe(cb: () => void) {
+  window.addEventListener('resize', cb);
+  return () => window.removeEventListener('resize', cb);
+}
+function useIsMobile() {
+  return useSyncExternalStore(subscribe, () => window.innerWidth < 768);
+}
+
 export function App() {
   useEffect(() => { connect(); }, []);
+
+  const isMobile  = useIsMobile();
+  const [tab, setTab] = useState<'chart' | 'signals'>('chart');
 
   const wsStatus = useStore((s) => s.wsStatus);
   const selectedSymbol = useStore((s) => s.selectedSymbol);
   const levelsByDay = useStore((s) => s.levelsByDay);
   const flashAlpha = useStore((s) => s.flashAlpha[s.selectedSymbol]);
-  // Pick the levels for the current trading day to surface in the context strip.
   const today = tradingDayFor(Date.now());
   const levels = levelsByDay[today]?.[selectedSymbol];
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
-      <StatusBar />
+  const disconnectBanner = wsStatus !== 'open' && (
+    <div style={{
+      padding: '6px 16px',
+      background: 'var(--bg-2)',
+      borderBottom: '1px solid var(--border)',
+      fontSize: 11,
+      color: 'var(--warn)',
+      flexShrink: 0,
+    }}>
+      {wsStatus === 'connecting' ? 'Connecting to aggregator…' : 'Disconnected from aggregator. Retrying…'}
+    </div>
+  );
 
-      {wsStatus !== 'open' && (
-        <div style={{
-          padding: '6px 16px',
-          background: 'var(--bg-2)',
-          borderBottom: '1px solid var(--border)',
-          fontSize: 11,
-          color: 'var(--warn)',
-        }}>
-          {wsStatus === 'connecting' ? 'Connecting to aggregator…' : 'Disconnected from aggregator. Retrying…'}
+  // ── Desktop layout ─────────────────────────────────────────────────────────
+  if (!isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
+        <StatusBar />
+        {disconnectBanner}
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <Chart />
+            <ContextStrip levels={levels} flashAlpha={flashAlpha} symbol={selectedSymbol} />
+          </div>
+          <SignalFeed />
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
-        <div style={{ position: 'relative', overflow: 'hidden' }}>
+  // ── Mobile layout — tabbed fullscreen ──────────────────────────────────────
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
+      <StatusBar />
+      {disconnectBanner}
+
+      {/* Main content area */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {/* Chart tab */}
+        <div style={{ display: tab === 'chart' ? 'block' : 'none', height: '100%', position: 'relative' }}>
           <Chart />
           <ContextStrip levels={levels} flashAlpha={flashAlpha} symbol={selectedSymbol} />
         </div>
-        <SignalFeed />
+        {/* Signals tab */}
+        <div style={{ display: tab === 'signals' ? 'flex' : 'none', height: '100%', flexDirection: 'column' }}>
+          <SignalFeed />
+        </div>
+      </div>
+
+      {/* Bottom tab bar */}
+      <div style={{
+        display: 'flex',
+        borderTop: '1px solid var(--border)',
+        background: 'var(--bg-1)',
+        flexShrink: 0,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        <TabButton label="Chart" active={tab === 'chart'} onClick={() => setTab('chart')} />
+        <TabButton label="Signals" active={tab === 'signals'} onClick={() => setTab('signals')} />
       </div>
     </div>
+  );
+}
+
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1,
+        padding: '10px 0',
+        background: 'none',
+        border: 'none',
+        borderTop: `2px solid ${active ? 'var(--accent)' : 'transparent'}`,
+        color: active ? 'var(--text-0)' : 'var(--text-2)',
+        fontSize: 12,
+        fontWeight: active ? 600 : 400,
+        cursor: 'pointer',
+        letterSpacing: 0.5,
+      }}
+    >
+      {label}
+    </button>
   );
 }
 

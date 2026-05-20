@@ -1,0 +1,175 @@
+{
+  "2026-01-09": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "First Friday — employment situation" }
+  ],
+  "2026-01-14": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Dec 2025 PPI" }
+  ],
+  "2026-01-15": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Dec 2025 CPI" }
+  ],
+  "2026-01-29": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-01-30": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Dec 2025 PCE — Fed's preferred inflation gauge" }
+  ],
+  "2026-02-06": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Jan 2026 employment situation" }
+  ],
+  "2026-02-12": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Jan 2026 CPI" }
+  ],
+  "2026-02-13": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Jan 2026 PPI" }
+  ],
+  "2026-02-27": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Jan 2026 PCE" }
+  ],
+  "2026-03-06": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Feb 2026 employment situation" }
+  ],
+  "2026-03-12": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Feb 2026 CPI" }
+  ],
+  "2026-03-13": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Feb 2026 PPI" }
+  ],
+  "2026-03-19": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-03-27": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Feb 2026 PCE" }
+  ],
+  "2026-04-03": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Mar 2026 employment situation" }
+  ],
+  "2026-04-10": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Mar 2026 CPI" }
+  ],
+  "2026-04-11": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Mar 2026 PPI" }
+  ],
+  "2026-04-30": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Mar 2026 PCE" },
+    { "name": "GDP Advance Estimate", "short": "GDP", "time_et": "08:30", "impact": "HIGH", "note": "Q1 2026 advance GDP" }
+  ],
+  "2026-05-01": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Apr 2026 employment situation" }
+  ],
+  "2026-05-07": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-05-12": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Apr 2026 PPI" }
+  ],
+  "2026-05-13": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Apr 2026 CPI" }
+  ],
+  "2026-05-29": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Apr 2026 PCE" }
+  ],
+  "2026-06-05": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "May 2026 employment situation" }
+  ],
+  "2026-06-12": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "May 2026 PPI" }
+  ],
+  "2026-06-11": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "May 2026 CPI" }
+  ],
+  "2026-06-18": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-06-26": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "May 2026 PCE" }
+  ],
+  "2026-07-09": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Jun 2026 employment situation" }
+  ],
+  "2026-07-14": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Jun 2026 PPI" }
+  ],
+  "2026-07-15": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Jun 2026 CPI" }
+  ],
+  "2026-07-30": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" },
+    { "name": "GDP Advance Estimate", "short": "GDP", "time_et": "08:30", "impact": "HIGH", "note": "Q2 2026 advance GDP" }
+  ],
+  "2026-07-31": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Jun 2026 PCE" }
+  ],
+  "2026-08-07": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Jul 2026 employment situation" }
+  ],
+  "2026-08-13": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Jul 2026 PPI" }
+  ],
+  "2026-08-14": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Jul 2026 CPI" }
+  ],
+  "2026-08-28": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Jul 2026 PCE" }
+  ],
+  "2026-09-04": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Aug 2026 employment situation" }
+  ],
+  "2026-09-11": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Aug 2026 PPI" }
+  ],
+  "2026-09-10": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Aug 2026 CPI" }
+  ],
+  "2026-09-17": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-09-25": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Aug 2026 PCE" }
+  ],
+  "2026-10-02": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Sep 2026 employment situation" }
+  ],
+  "2026-10-13": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Sep 2026 CPI" }
+  ],
+  "2026-10-14": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Sep 2026 PPI" }
+  ],
+  "2026-10-29": [
+    { "name": "GDP Advance Estimate", "short": "GDP", "time_et": "08:30", "impact": "HIGH", "note": "Q3 2026 advance GDP" }
+  ],
+  "2026-10-30": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Sep 2026 PCE" }
+  ],
+  "2026-11-05": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-11-06": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Oct 2026 employment situation" }
+  ],
+  "2026-11-12": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Oct 2026 CPI" }
+  ],
+  "2026-11-13": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Oct 2026 PPI" }
+  ],
+  "2026-11-25": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Oct 2026 PCE" }
+  ],
+  "2026-12-04": [
+    { "name": "Non-Farm Payrolls", "short": "NFP", "time_et": "08:30", "impact": "HIGH", "note": "Nov 2026 employment situation" }
+  ],
+  "2026-12-10": [
+    { "name": "Consumer Price Index", "short": "CPI", "time_et": "08:30", "impact": "HIGH", "note": "Nov 2026 CPI" }
+  ],
+  "2026-12-11": [
+    { "name": "Producer Price Index", "short": "PPI", "time_et": "08:30", "impact": "HIGH", "note": "Nov 2026 PPI" }
+  ],
+  "2026-12-17": [
+    { "name": "FOMC Rate Decision", "short": "FOMC", "time_et": "14:00", "impact": "HIGH", "note": "Fed funds rate decision + press conference 14:30" }
+  ],
+  "2026-12-23": [
+    { "name": "PCE Price Index", "short": "PCE", "time_et": "08:30", "impact": "HIGH", "note": "Nov 2026 PCE" }
+  ]
+}

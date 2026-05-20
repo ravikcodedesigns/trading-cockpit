@@ -5,6 +5,7 @@
 import { state } from '../state.js';
 import { logger } from '../logger.js';
 import { runStrategyE } from './strategy-e.js';
+import { withRSScore } from './rs-attach.js';
 import type { Symbol } from '@trading/contracts';
 
 const POLL_MS = 60_000;
@@ -21,7 +22,7 @@ async function tick(): Promise<void> {
       const results = await runStrategyE(symbol, nowMs);
       for (const result of results) {
         _signalCount++;
-        state.applySignal({ ...result, strategyVersion: 'E' as any });
+        state.applySignal(withRSScore({ ...result, strategyVersion: 'E' as any }, symbol, nowMs));
         logger.info({ symbol, ruleVersion: (result as any).ruleVersion, total: _signalCount },
           'strategy-E signal fired');
       }

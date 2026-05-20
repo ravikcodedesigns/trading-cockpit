@@ -18,7 +18,6 @@ import { getRecentTrades } from './tick-client.js';
 import { logger } from '../logger.js';
 import { checkTapeSpeedConfirmed, checkLargePrintConfirmed, getConfluenceRules } from './confluence-tracker.js';
 import { db } from '../db.js';
-import { scoreRSLevels, formatRSContext, formatExitTargets } from './rs-level-scorer.js';
 import { scoreConviction } from './conviction.js';
 import type { ConfluenceSignal, Symbol, DailyLevels } from '@trading/contracts';
 
@@ -90,11 +89,11 @@ function buildFiveMinBars(symbol: Symbol, nowMs: number): FiveMinBar[] {
   for (let i = 0; i + 4 < recent.length; i += 5) {
     const group = recent.slice(i, i + 5);
     fiveMins.push({
-      ts: group[0].ts,
-      open: group[0].open,
-      high: Math.max(...group.map(b => b.high)),
-      low: Math.min(...group.map(b => b.low)),
-      close: group[group.length - 1].close,
+      ts:    group[0]!.ts,
+      open:  group[0]!.open,
+      high:  Math.max(...group.map(b => b.high)),
+      low:   Math.min(...group.map(b => b.low)),
+      close: group[group.length - 1]!.close,
     });
   }
 
@@ -108,7 +107,8 @@ export function classifyTrend(symbol: Symbol, nowMs: number): Trend {
   if (bars.length < 3) return 'neutral';
 
   // Use the 3 most recent bars
-  const [b1, b2, b3] = bars.slice(-3);
+  const recent3 = bars.slice(-3);
+  const [b1, b2, b3] = [recent3[0]!, recent3[1]!, recent3[2]!];
 
   // Uptrend: each bar's high AND low is higher than the previous
   const higherHighs = b2.high > b1.high && b3.high > b2.high;
@@ -178,31 +178,104 @@ function recordSignal(symbol: string, direction: string, nowMs: number): void {
 
 // --- Scoring ---
 //
-// Base 50. Bonuses:
-//   Volume 1.5x threshold: +10
-//   Volume 2.0x threshold: +20
-//   Zero price range:      +10
-//   Aggression >= 80%:     +5
-//   Duration < 1s:         +5
-//   Trend-aligned signal:  +5
+// Three components, each independently meaningful:
+//
+//   Speed (0-40):   How fast the absorption happened. Sub-100ms = single
+//                   institutional block. 4000ms+ = scattered retail noise.
+//
+//   Purity (0-30):  Aggression % with full granularity. 98%+ = nobody on
+//                   the other side; the passive order absorbed everything.
+//
+//   Context (0-30): Was this a clean setup or noisy? Rewards exhaustion
+//                   approach, trend alignment. Penalizes signal clusters
+//                   (level is failing) and RTH opening noise.
 
 function scoreAbsorption(
-  volume: number,
-  minVolume: number,
-  priceRangeTicks: number,
   aggressionPct: number,
   durationMs: number,
-  trendAligned: boolean
+  trendAligned: boolean,
+  approachBars: number,
+  isCluster2nd: boolean,
+  isCluster3rdPlus: boolean,
+  isOpeningPeriod: boolean,
 ): number {
-  let score = 50;
-  const volumeRatio = volume / minVolume;
-  if (volumeRatio >= 2.0) score += 20;
-  else if (volumeRatio >= 1.5) score += 10;
-  if (priceRangeTicks === 0) score += 10;
-  if (aggressionPct >= 0.80) score += 5;
-  if (durationMs < 1000) score += 5;
-  if (trendAligned) score += 5;
-  return Math.min(100, score);
+  // Speed score (0–40)
+  let speedScore: number;
+  if      (durationMs < 100)  speedScore = 40;
+  else if (durationMs < 500)  speedScore = 30;
+  else if (durationMs < 2000) speedScore = 15;
+  else if (durationMs < 4000) speedScore = 5;
+  else                        speedScore = 0;
+
+  // Purity score (0–30)
+  let purityScore: number;
+  if      (aggressionPct >= 0.98) purityScore = 30;
+  else if (aggressionPct >= 0.90) purityScore = 20;
+  else if (aggressionPct >= 0.80) purityScore = 12;
+  else if (aggressionPct >= 0.70) purityScore = 5;
+  else                            purityScore = 0;
+
+  // Context score (base 15, range 0–30)
+  let contextScore = 15;
+  if      (approachBars >= 3) contextScore += 10; // exhaustion run into level
+  else if (approachBars >= 1) contextScore += 5;
+  if (trendAligned)           contextScore += 5;
+  if (isCluster3rdPlus)       contextScore -= 20; // level actively failing
+  else if (isCluster2nd)      contextScore -= 10; // level retesting, weakening
+  if (isOpeningPeriod)        contextScore -= 5;  // RTH open noise
+  contextScore = Math.max(0, contextScore);
+
+  return Math.min(100, speedScore + purityScore + contextScore);
+}
+
+// Count consecutive 1-min bars pressing into the absorption level
+// immediately before the signal. Used to detect exhaustion approach.
+// SHORT (absorbing buyers): consecutive up-close bars = buy pressure
+// LONG  (absorbing sellers): consecutive down-close bars = sell pressure
+function countApproachBars(symbol: Symbol, direction: 'long' | 'short', nowMs: number): number {
+  const sinceMs = nowMs - 7 * 60 * 1000;
+  const raw = db.recentBars(symbol, sinceMs) as Array<{
+    ts: number; open: number; high: number; low: number; close: number;
+  }>;
+  // Deduplicate: events table stores multiple updates per bar; keep the last.
+  const byTs = new Map<number, { ts: number; open: number; close: number }>();
+  for (const b of raw) byTs.set(b.ts, b);
+  const bars = Array.from(byTs.values()).sort((a, b) => a.ts - b.ts);
+
+  const completed = bars.filter(b => nowMs - b.ts >= 60_000);
+  if (!completed.length) return 0;
+  let count = 0;
+  for (let i = completed.length - 1; i >= 0; i--) {
+    const b = completed[i]!;
+    const pressing = direction === 'short' ? b.close > b.open : b.close < b.open;
+    if (!pressing) break;
+    count++;
+  }
+  return count;
+}
+
+// Check if prior absorption signals at this price level fired recently,
+// indicating a signal cluster (level under repeated assault = weakening).
+function checkSignalCluster(
+  symbol: Symbol,
+  direction: string,
+  price: number,
+  nowMs: number,
+): { is2nd: boolean; is3rdPlus: boolean } {
+  const rows = db.query<{ ts: number }>(`
+    SELECT ts FROM signals
+    WHERE symbol = ?
+      AND rule_id = 'absorption'
+      AND direction = ?
+      AND ts >= ? AND ts < ?
+      AND ABS(CAST(COALESCE(
+            json_extract(payload, '$.entry'),
+            CAST(SUBSTR(payload, INSTR(payload,'absorbed at ')+12,
+                 INSTR(SUBSTR(payload,INSTR(payload,'absorbed at ')+12),' ')-1) AS REAL)
+          ) AS REAL) - ?) <= 5.0
+    ORDER BY ts ASC
+  `, [symbol, direction, nowMs - 10 * 60_000, nowMs, price]);
+  return { is2nd: rows.length === 1, is3rdPlus: rows.length >= 2 };
 }
 
 // --- Main detection function ---
@@ -282,6 +355,16 @@ export async function detectAbsorption(
   const direction: 'long' | 'short' = isBuyAggression ? 'short' : 'long';
   const absorptionSide = isBuyAggression ? 'sell' : 'buy';
 
+  // Structural stop: 1 tick beyond the furthest price reached during absorption.
+  // For SHORT: buyers pushed to maxAbsPrice — if they break through that, signal fails.
+  // For LONG: sellers pushed to minAbsPrice — if they break through that, signal fails.
+  const absPrices = byPrice.get(bestPrice)?.prices ?? [bestPrice];
+  const maxAbsPrice = Math.max(...absPrices);
+  const minAbsPrice = Math.min(...absPrices);
+  const entry = bestPrice;
+  const stopLevel = direction === 'short' ? maxAbsPrice + TICK_SIZE : minAbsPrice - TICK_SIZE;
+  const stopDist  = Math.abs(entry - stopLevel);
+
   if (isCoolingDown(symbol, direction, nowMs, thresholds.cooldownMs)) return null;
 
   // --- Trend filter (RTH and overnight) ---
@@ -304,14 +387,12 @@ export async function detectAbsorption(
       (trend === 'down' && direction === 'short');
 
     if (isCounterTrend) {
-      // Pre-score to check if this counter-trend signal is strong enough
-      const preScore = scoreAbsorption(
-        bestTotalVol, thresholds.minVolume, priceRangeTicks,
-        aggressionPct, bestTimes.length > 1
-          ? Math.max(...bestTimes) - Math.min(...bestTimes)
-          : thresholds.windowMs,
-        false
-      );
+      // Pre-score (no approach/cluster context yet) to check if this
+      // counter-trend signal has enough raw speed+purity to warrant firing.
+      const preDuration = bestTimes.length > 1
+        ? Math.max(...bestTimes) - Math.min(...bestTimes)
+        : thresholds.windowMs;
+      const preScore = scoreAbsorption(aggressionPct, preDuration, false, 0, false, false, false);
       if (preScore < COUNTER_TREND_MIN_SCORE) {
         logger.debug({
           symbol, session, direction, trend, preScore,
@@ -331,9 +412,21 @@ export async function detectAbsorption(
     ? Math.max(...bestTimes) - Math.min(...bestTimes)
     : thresholds.windowMs;
 
+  const approachBars   = countApproachBars(symbol, direction, nowMs);
+  const cluster        = checkSignalCluster(symbol, direction, bestPrice, nowMs);
+  const isOpeningPeriod = session === 'rth' && (() => {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+    const parts = fmt.formatToParts(new Date(nowMs));
+    const h = parseInt(parts.find(p => p.type === 'hour')?.value   ?? '0');
+    const m = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0');
+    return (h * 60 + m) < 585; // before 9:45 ET
+  })();
+
   const score = scoreAbsorption(
-    bestTotalVol, thresholds.minVolume, priceRangeTicks,
-    aggressionPct, durationMs, trendAligned
+    aggressionPct, durationMs, trendAligned,
+    approachBars, cluster.is2nd, cluster.is3rdPlus, isOpeningPeriod,
   );
 
   const aggressionDesc = isBuyAggression ? 'buy aggression' : 'sell aggression';
@@ -350,43 +443,17 @@ export async function detectAbsorption(
   const largePrintConfirmed = checkLargePrintConfirmed(symbol, direction, nowMs);
   const confluenceRules = getConfluenceRules(symbol, direction, nowMs);
 
-  // RS level scoring: proximity bonus + hard filters + exit targets
-  // currentPrice = bestPrice (the absorption level IS the current price)
-  const rs = scoreRSLevels(bestPrice, direction, levels, bestPrice);
+  if (score < 80) return null;
 
-  // Hard filter: DD band rules
-  if (rs.hardFiltered) {
-    logger.debug({ symbol, direction, reason: rs.filterReason }, 'absorption hard-filtered by RS rules');
-    return null;
-  }
-
-  // Apply RS bonuses and penalties to score
-  const rsBonus = rs.proximityBonus + rs.greaterMarketBonus;
-  const rsPenalty = rs.greaterMarketPenalty;
-  const finalScore = Math.min(100, Math.max(0, score + rsBonus - rsPenalty));
-
-  // Build RS context note for rationale
-  let rsNote = '';
-  if (rs.nearestMatch) {
-    rsNote = ` AT ${rs.nearestMatch.label} (${rs.nearestMatch.isEST ? 'EST 90%' : 'RS pivot'}, +${rs.proximityBonus}pts).`;
-  }
-  if (rs.greaterMarketAligned) rsNote += ` GM-ALIGNED (+${rs.greaterMarketBonus}pts).`;
-  if (rsPenalty > 0) rsNote += ` COUNTER-GM (-${rsPenalty}pts).`;
-  if (rs.volatilityNote) rsNote += ` [${rs.volatilityNote}]`;
-
-  // Build exit target note
-  const exitNote = (rs.tp1 || rs.tp2) ? ` Targets: ${formatExitTargets(rs.tp1, rs.tp2)}` : '';
-
-  // Conviction rating: pre-signal behavior analysis
-  const conviction = await scoreConviction(symbol, direction, 'absorption', nowMs);
+  // Conviction: boolean — true if pre-signal behavior confirms direction
+  const conviction = (await scoreConviction(symbol, direction, 'absorption', nowMs)) !== null;
 
   logger.info({
     symbol, session, price: bestPrice, volume: bestTotalVol,
     priceRangeTicks, aggressionPct: Math.round(aggressionPct * 100),
-    durationMs, direction,
-    score, rsBonus, rsPenalty, finalScore,
-    rsLevel: rs.nearestMatch?.label ?? 'none',
-    trend, trendAligned, conviction,
+    durationMs, direction, score,
+    approachBars, clusterIs2nd: cluster.is2nd, clusterIs3rd: cluster.is3rdPlus,
+    isOpeningPeriod, trend, trendAligned, conviction,
   }, 'absorption detected');
 
   const signal: ConfluenceSignal = {
@@ -395,30 +462,25 @@ export async function detectAbsorption(
     type: 'confluence',
     symbol,
     ruleId: 'absorption',
-    score: finalScore,
+    score,
     direction,
-    rationale: rationale + rsNote + exitNote,
+    rationale,
     strategyVersion: 'B',
-    ruleVersion: 'absorption-v1',
+    ruleVersion: 'absorption-v2',
     tapeSpeedConfirmed,
     largePrintConfirmed,
     confluenceRules,
     trend,
     trendAligned,
-    rsLevel: rs.nearestMatch?.label ?? null,
-    rsBonus,
-    tp1: rs.tp1,
-    tp2: rs.tp2,
-    greaterMarketAligned: rs.greaterMarketAligned,
-    rsContext: formatRSContext(),
     conviction,
+    entry,
+    stopLevel,
+    stopDist,
   } as ConfluenceSignal & {
     tapeSpeedConfirmed: boolean; largePrintConfirmed: boolean;
     confluenceRules: string[]; trend: Trend; trendAligned: boolean;
-    rsLevel: string | null; rsBonus: number;
-    tp1: typeof rs.tp1; tp2: typeof rs.tp2;
-    greaterMarketAligned: boolean; rsContext: string;
-    conviction: typeof conviction;
+    conviction: boolean;
+    entry: number; stopLevel: number; stopDist: number;
   };
 
   return {

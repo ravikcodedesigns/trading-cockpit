@@ -1,8 +1,9 @@
 import { config } from './config.js';
 import { logger } from './logger.js';
+import { getTodayEvents, getUpcomingEvents, type EconEvent } from './economic-calendar.js';
 import type { ConfluenceSignal } from '@trading/contracts';
 
-interface Embed {
+export interface Embed {
   title: string;
   description?: string;
   color?: number;
@@ -24,7 +25,7 @@ class DiscordAlerter {
   private queue: Embed[] = [];
   private flushing = false;
 
-  private async post(embeds: Embed[]) {
+  private async _post(embeds: Embed[]) {
     if (!this.url) {
       logger.debug('discord webhook not configured');
       return;
@@ -50,11 +51,12 @@ class DiscordAlerter {
     setTimeout(async () => {
       const batch = this.queue.splice(0, 10);
       this.flushing = false;
-      if (batch.length > 0) await this.post(batch);
+      if (batch.length > 0) await this._post(batch);
       if (this.queue.length > 0) this.scheduleFlush();
     }, 250);
   }
 
+  // Public: enqueue any embed directly (used by morning-brief, etc.)
   send(embed: Embed) {
     this.queue.push({ ...embed, timestamp: new Date().toISOString() });
     this.scheduleFlush();
@@ -91,28 +93,76 @@ class DiscordAlerter {
     });
   }
 
+  morningBriefing() {
+    const events = getTodayEvents();
+    const upcoming = getUpcomingEvents(5).filter(u => {
+      const d = new Date(u.date + 'T12:00:00Z');
+      return d.getTime() > Date.now();
+    });
+
+    if (events.length === 0 && upcoming.length === 0) return;
+
+    const fields: { name: string; value: string; inline?: boolean }[] = [];
+
+    if (events.length > 0) {
+      const todayLines = events.map(e =>
+        `**${e.short}** (${e.time_et} ET) — ${e.note}`
+      ).join('\n');
+      fields.push({ name: '⚠️ TODAY', value: todayLines });
+    }
+
+    if (upcoming.length > 0) {
+      const upLines = upcoming.map(u =>
+        `**${u.date}**: ${u.events.map(e => e.short).join(', ')}`
+      ).join('\n');
+      fields.push({ name: 'Upcoming', value: upLines });
+    }
+
+    const hasToday = events.length > 0;
+    this.send({
+      title: hasToday
+        ? `📅 Pre-Market: ${events.map(e => e.short).join(' + ')} day`
+        : '📅 Pre-Market: No major events today',
+      description: hasToday
+        ? 'High-impact release today — expect wider ranges, stop early spikes. Reduce size on CONT signals. Avoid trading the initial 8:30 spike.'
+        : undefined,
+      color: hasToday ? COLOR.warn : COLOR.info,
+      fields,
+    });
+  }
+
   signal(sig: ConfluenceSignal) {
     const color = sig.direction === 'long' ? COLOR.longSignal : COLOR.shortSignal;
     const arrow = sig.direction === 'long' ? '▲' : '▼';
     const ext = sig as ConfluenceSignal & {
-      rsLevel?: string; tp1?: { label: string; price: number; pts: number };
+      tp1?: { label: string; price: number; pts: number };
       tp2?: { label: string; price: number; pts: number };
-      rsContext?: string; greaterMarketAligned?: boolean;
-      conviction?: '++' | '+' | null;
+      conviction?: '+' | null;
     };
 
-    // Conviction suffix in title — separate from score
     const convictionSuffix = ext.conviction ? ` ${ext.conviction}` : '';
+    const tierSuffix = sig.rsTier && sig.rsTier !== 'PASS' ? ` · ${sig.rsTier}` : '';
 
     const fields = [
-      { name: 'Time', value: new Date(sig.ts).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ET', inline: true },
-      { name: 'Score', value: `${sig.score}/100`, inline: true },
+      { name: 'Time',     value: new Date(sig.ts).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ET', inline: true },
+      { name: 'Score',    value: `${sig.score}/100`, inline: true },
       { name: 'Strategy', value: `${sig.strategyVersion ?? 'A'} / ${(sig as any).ruleVersion ?? sig.ruleId}`, inline: true },
     ];
 
-    // RS level proximity
-    if (ext.rsLevel) {
-      fields.push({ name: 'RS Level', value: `📍 ${ext.rsLevel}`, inline: false });
+    // RS score + components
+    if (sig.rsScore !== undefined && sig.rsTier) {
+      const comp = sig.rsComponents;
+      const compStr = comp ? `  \`level=${comp.level} · ctx=${comp.context} · confirm=${comp.confirm}\`` : '';
+      fields.push({
+        name: `RS Score — ${sig.rsTier}`,
+        value: `**${sig.rsScore}/100**${compStr}`,
+        inline: false,
+      });
+    }
+
+    // RS label line (matched level · test count · GM · LM code · B&R)
+    if (sig.rsLabelLine) {
+      fields.push({ name: 'RS Context', value: sig.rsLabelLine, inline: false });
     }
 
     // Exit targets
@@ -122,22 +172,15 @@ class DiscordAlerter {
       fields.push({ name: 'Exit Targets', value: `TP1: ${tp1Str}${tp2Str}`, inline: false });
     }
 
-    // Greater market alignment
-    if (ext.greaterMarketAligned !== undefined) {
-      fields.push({
-        name: 'GM Alignment',
-        value: ext.greaterMarketAligned ? '✅ Aligned' : '⚠️ Counter-GM',
-        inline: true,
-      });
-    }
-
-    // RS context summary
-    if (ext.rsContext) {
-      fields.push({ name: 'Market Context', value: ext.rsContext, inline: false });
+    // Economic calendar warning
+    const todayEvents = getTodayEvents();
+    if (todayEvents.length > 0) {
+      const label = todayEvents.map(e => `${e.short} ${e.time_et} ET`).join(' · ');
+      fields.push({ name: '⚠️ News Day', value: label, inline: false });
     }
 
     this.send({
-      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (${sig.score})${convictionSuffix}`,
+      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (${sig.score})${tierSuffix}${convictionSuffix}`,
       description: sig.rationale,
       color,
       fields,

@@ -89,9 +89,12 @@ const flashAlphaSchema = baseEventSchema.extend({
   putWalls: z.array(z.number()),
 });
 
+const bookmapSchema = z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema, sweepSchema, deltaDivergenceSchema]);
+
 const SCHEMAS_BY_SOURCE: Record<string, z.ZodTypeAny> = {
-  bookmap: z.union([heartbeatSchema, absorptionSchema, icebergSchema, barSchema, sweepSchema, deltaDivergenceSchema]),
-  tradovate: tickSchema,
+  bookmap:    bookmapSchema,
+  'bookmap-es': bookmapSchema,
+  tradovate:  tickSchema,
   flashalpha: flashAlphaSchema,
 };
 

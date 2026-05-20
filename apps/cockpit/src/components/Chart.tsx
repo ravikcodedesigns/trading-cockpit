@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { OpeningBias } from './OpeningBias';
+import { RSContextBar } from './RSContextBar';
 import {
   createChart,
   type IChartApi,
   type ISeriesApi,
+  type IPriceLine,
   type UTCTimestamp,
   ColorType,
   LineStyle,
@@ -10,6 +13,25 @@ import {
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
 import { tradingDayFor } from '@trading/contracts';
+import type { ConfluenceSignal } from '@trading/contracts';
+import { SignalChartCard } from './SignalFeed';
+
+// Each absorption signal instance gets a unique color so back-to-back signals
+// and their 30s/2m follow-up markers are visually grouped and don't blur together.
+const ABSORPTION_PALETTE = [
+  '#e879f9', // fuchsia
+  '#38bdf8', // sky blue
+  '#fb923c', // orange
+  '#a78bfa', // violet
+  '#22d3ee', // cyan
+  '#f472b6', // pink
+  '#818cf8', // indigo
+  '#fde047', // yellow
+];
+
+function getSignalPaletteColor(ts: number): string {
+  return ABSORPTION_PALETTE[Math.abs(ts) % ABSORPTION_PALETTE.length]!;
+}
 
 export function Chart() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,11 +42,27 @@ export function Chart() {
   // We track them so we can clean up on level updates / symbol switches.
   const levelLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
   const flashAlphaLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
+  // TP/DD price lines drawn per signal — rebuilt whenever the markers effect runs.
+  // Using IPriceLine (attached to the candlestick series) instead of separate
+  // LineSeries so that add/remove doesn't trigger chart view recalculation.
+  const signalLinesRef = useRef<IPriceLine[]>([]);
 
   // Per-symbol bar history kept in a ref so it survives re-renders.
   const barHistoryRef = useRef<Record<string, Map<number, {
     open: number; high: number; low: number; close: number;
   }>>>({ NQ: new Map(), ES: new Map() });
+
+  // Incremented after historical bars finish loading so the markers effect
+  // re-runs with a populated barHistoryRef (post-entry markers arrive via a
+  // separate fast fetch that often completes before the bar history).
+  const [barsVersion, setBarsVersion] = useState(0);
+
+  const [cardPositions, setCardPositions] = useState<
+    { sig: ConfluenceSignal; x: number; y: number; id: string }[]
+  >([]);
+  // Stable ref so the chart's subscribeVisibleLogicalRangeChange subscription
+  // always calls the latest closure without needing to re-subscribe.
+  const computeCardsRef = useRef<() => void>(() => {});
 
   const selectedSymbol    = useStore((s) => s.selectedSymbol);
   const selectedTimeframe = useStore((s) => s.selectedTimeframe);
@@ -33,7 +71,6 @@ export function Chart() {
   const flashAlpha     = useStore((s) => s.flashAlpha[s.selectedSymbol]);
   const recentEvents   = useStore((s) => s.recentEvents);
   const recentSignals  = useStore((s) => s.recentSignals);
-  const postEntryMarkers = useStore((s) => s.postEntryMarkers);
 
   // Init chart once
   useEffect(() => {
@@ -102,6 +139,7 @@ export function Chart() {
       crosshair: { mode: CrosshairMode.Normal },
     });
     chartRef.current = chart;
+    (window as any).__cockpitChart = chart;  // CDP navigation hook
     seriesRef.current = chart.addCandlestickSeries({
       upColor: '#2bb673',
       downColor: '#d64545',
@@ -109,6 +147,10 @@ export function Chart() {
       borderDownColor: '#d64545',
       wickUpColor: '#2bb673',
       wickDownColor: '#d64545',
+    });
+
+    chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+      computeCardsRef.current();
     });
 
     const onResize = () => {
@@ -202,9 +244,8 @@ export function Chart() {
     let cancelled = false;
     (async () => {
       try {
-        // Default chart history: 1 week (10080 minutes). User confirmed
-        // this is the standing preference. Don't change without asking.
-        const url = `http://127.0.0.1:8787/history/bars?symbol=${selectedSymbol}&minutes=10080&interval=${selectedTimeframe}`;
+        // Chart history: 1 month (43200 minutes).
+        const url = `/history/bars?symbol=${selectedSymbol}&minutes=43200&interval=${selectedTimeframe}`;
         const res = await fetch(url);
         if (!res.ok) return;
         const data = (await res.json()) as {
@@ -233,6 +274,21 @@ export function Chart() {
           .sort((a, b) => a[0] - b[0])
           .map(([time, ohlc]) => ({ time: time as UTCTimestamp, ...ohlc }));
         series.setData(seriesData);
+
+        // After bulk-loading history, keep the view anchored to recent data.
+        // Without this, lightweight-charts auto-fits ALL bars into the viewport,
+        // which compresses months of data into a tiny view. We scroll to the
+        // right edge while capping the visible window at 7 days so the user
+        // sees recent context at a readable zoom and can scroll left for history.
+        const chart = chartRef.current;
+        if (chart && seriesData.length > 0) {
+          const nowSec = Math.floor(Date.now() / 1000) as UTCTimestamp;
+          const sevenDaysAgoSec = (nowSec - 7 * 24 * 60 * 60) as UTCTimestamp;
+          chart.timeScale().setVisibleRange({ from: sevenDaysAgoSec, to: nowSec });
+        }
+        // Signal that bar history is populated so post-entry markers
+        // re-evaluate their history.has() check with a full barHistoryRef.
+        setBarsVersion(v => v + 1);
       } catch {
         // History fetch is best-effort; live WS updates will still work.
       }
@@ -253,7 +309,7 @@ export function Chart() {
 
     let updated = false;
     for (const ev of recentEvents) {
-      if (ev.source !== 'bookmap' || ev.type !== 'bar') continue;
+      if ((ev.source !== 'bookmap' && ev.source !== 'bookmap-es') || ev.type !== 'bar') continue;
       if (ev.symbol !== selectedSymbol) continue;
 
       // Aggregate into selected timeframe
@@ -278,7 +334,6 @@ export function Chart() {
 
     const data = Array.from(history.entries())
       .sort((a, b) => a[0] - b[0])
-      .slice(-1800)
       .map(([t, b]) => ({
         time: t as UTCTimestamp,
         open: b.open, high: b.high, low: b.low, close: b.close,
@@ -441,6 +496,13 @@ export function Chart() {
   // re-render when new bars come in or new signals fire.
   useEffect(() => {
     const series = seriesRef.current;
+
+    // Always tear down previous TP/DD price lines before rebuilding (or bailing).
+    for (const pl of signalLinesRef.current) {
+      try { series?.removePriceLine(pl); } catch { /* already gone */ }
+    }
+    signalLinesRef.current = [];
+
     if (!series) return;
 
     // We must only show markers whose time matches a bar we actually have on
@@ -459,13 +521,17 @@ export function Chart() {
     const symbolSignals = recentSignals
       .filter((s) => s.symbol === selectedSymbol)
       .filter((s) => {
-        const ruleId = (s as any).ruleId;
+        const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? "";
         // Strategy D: compression-breakout → 15m chart only
         if (ruleId === 'compression-breakout') return selectedTimeframe === 15;
         // Strategy E 15m: bear bar absorption → 15m chart only
         if (ruleId === 'absorption-scalp-15m') return selectedTimeframe === 15;
         // Strategy E 5m: bull bar absorption → 5m chart only
         if (ruleId === 'absorption-scalp') return selectedTimeframe === 5;
+        // EXPL → 1m chart only
+        if (ruleId === 'expl') return selectedTimeframe === 1;
+        // CLEAN → 1m chart only
+        if (ruleId === 'clean-impulse') return selectedTimeframe === 1;
         // A/B/C signals → 1m chart only
         return selectedTimeframe === 1;
       });
@@ -479,29 +545,67 @@ export function Chart() {
       .map((sig) => {
         const bucket = bucketSecs(sig.ts);
         if (!history.has(bucket)) return null;
-        const isLong = sig.direction === 'long';
+        const isLong = sig.direction?.toLowerCase() === 'long';
         const color = isLong ? '#2bb673' : '#d64545';
         const position = (isLong ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar';
 
+        // Normalize camelCase (live) vs snake_case (historical DB signals)
+        const ruleId = sig.ruleId ?? (sig as any).rule_id ?? "unknown";
+
         let shape: 'arrowUp' | 'arrowDown' | 'circle';
         let label: string;
-        if (sig.ruleId === 'delta-divergence') {
+        if (ruleId === 'delta-divergence') {
           shape = 'circle';
           label = `DIV·${sig.score}`;
-        } else if (sig.ruleId === 'compression-breakout') {
+        } else if (ruleId === 'compression-breakout') {
           shape = isLong ? 'arrowUp' : 'arrowDown';
           label = `COMP`;
-        } else if (sig.ruleId === 'absorption-scalp') {
+        } else if (ruleId === 'absorption-scalp') {
           shape = 'arrowUp';
           label = `SCALP`;
-        } else if (sig.ruleId === 'absorption-scalp-15m') {
+        } else if (ruleId === 'absorption-scalp-15m') {
           shape = 'arrowUp';
           label = `SCALP`;
+        } else if (ruleId === 'expl') {
+          shape = 'arrowUp';
+          label = `EXPL🚀·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#00ff88',
+            shape,
+            text: label,
+            size: 3,
+          };
+        } else if (ruleId === 'clean-impulse') {
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          label = isLong ? `CLEAN ↑ FLIP` : `CLEAN ↓ FLIP`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#f59e0b',   // amber — distinct from green absorption and teal EXPL
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'absorption') {
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          const conviction = (sig as any).conviction;
+          const convSuffix = conviction ? ` ${conviction}` : '';
+          label = `ABSO·${sig.score}${convSuffix}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: getSignalPaletteColor(sig.ts),
+            shape,
+            text: label,
+            size: 2,
+          };
         } else {
           shape = isLong ? 'arrowUp' : 'arrowDown';
           const conviction = (sig as any).conviction;
           const convSuffix = conviction ? ` ${conviction}` : '';
-          label = `${sig.ruleId.toUpperCase().slice(0, 4)}·${sig.score}${convSuffix}`;
+          label = `${ruleId.toUpperCase().slice(0, 4)}·${sig.score}${convSuffix}`;
         }
 
         return {
@@ -514,23 +618,137 @@ export function Chart() {
       })
       .filter((m): m is NonNullable<typeof m> => m !== null);
 
-    // Post-entry classification markers — FAST/MID/SLOW/FAIL/HOLD
-    // Appear at 90s and 5min after ++ short signals as circles above bar
-    const postMarkers = postEntryMarkers
-      .filter((m) => m.symbol === selectedSymbol && history.has(m.time))
-      .map((m) => ({
-        time: m.time as UTCTimestamp,
-        position: 'aboveBar' as const,
-        color: m.color,
-        shape: 'circle' as const,
-        text: m.label,
-      }));
-
-    const allMarkers = [...markers, ...postMarkers]
+    const allMarkers = [...markers]
       .sort((a, b) => (a.time as number) - (b.time as number));
 
     series.setMarkers(allMarkers);
-  }, [recentSignals, recentSignals.length, recentEvents, postEntryMarkers, selectedSymbol]);
+
+    // Draw TP1/TP2/DD1/DD2 price lines only for today's signals.
+    // Historical signals from previous sessions get their markers but no level lines.
+    const todayRthStart = (() => {
+      const now = Date.now();
+      const datePart = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date(now));
+      const [mm, dd, yyyy] = datePart.split('/');
+      return Date.parse(`${yyyy}-${mm}-${dd}T09:30:00-04:00`);
+    })();
+
+    // Only the most recent today's signal gets TP/DD lines.
+    const todaySignals = symbolSignals.filter(s => s.ts >= todayRthStart);
+    const latestSig = todaySignals.length > 0
+      ? todaySignals.reduce((a, b) => a.ts > b.ts ? a : b)
+      : null;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (latestSig) {
+      const sig = latestSig;
+      const bucket = bucketSecs(sig.ts);
+      const bar = history.get(bucket);
+      if (bar) {
+        const entry  = bar.close;
+        const isLong = sig.direction?.toLowerCase() === 'long';
+        const sign   = isLong ? 1 : -1;
+        const isRecent = nowSec - bucket < 4 * 3600;
+        const addPriceLine = (offset: number, color: string, title: string, style: LineStyle) => {
+          const pl = series.createPriceLine({
+            price: entry + sign * offset,
+            color, lineWidth: 1, lineStyle: style,
+            axisLabelVisible: isRecent, title,
+          });
+          signalLinesRef.current.push(pl);
+        };
+        addPriceLine( 20, '#2bb673', 'TP1', LineStyle.Dashed);
+        addPriceLine( 40, '#2bb673', 'TP2', LineStyle.SparseDotted);
+        addPriceLine(-10, '#d64545', 'DD1', LineStyle.Dashed);
+        addPriceLine(-20, '#d64545', 'DD2', LineStyle.SparseDotted);
+      }
+    }
+  }, [recentSignals, recentSignals.length, recentEvents, selectedSymbol, barsVersion]);
+
+  // Keep computeCardsRef up-to-date; also fire immediately when inputs change.
+  // The chart's subscribeVisibleLogicalRangeChange subscription calls this ref
+  // on every pan/zoom so cards track the bars they're anchored to.
+  useEffect(() => {
+    const BUCKET_SECS = (tsMs: number) => Math.floor(tsMs / 60000) * 60;
+
+    computeCardsRef.current = () => {
+      const chart  = chartRef.current;
+      const series = seriesRef.current;
+      if (!chart || !series) return;
+
+      const history = barHistoryRef.current[selectedSymbol];
+
+      const relevantSignals = recentSignals
+        .filter((s) => s.symbol === selectedSymbol)
+        .filter((s) => {
+          const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? '';
+          if (ruleId === 'clean-impulse')      return selectedTimeframe === 1;
+          if (ruleId === 'expl')               return selectedTimeframe === 1;
+          if (ruleId === 'compression-breakout') return selectedTimeframe === 15;
+          if (ruleId === 'absorption-scalp')   return selectedTimeframe === 5;
+          if (ruleId === 'absorption-scalp-15m') return selectedTimeframe === 15;
+          return selectedTimeframe === 1;
+        })
+        .slice(0, 5);
+
+      const containerWidth = containerRef.current?.clientWidth ?? 800;
+      const positions: { sig: ConfluenceSignal; x: number; y: number; id: string }[] = [];
+      let fallbackY = 80;
+
+      for (const sig of relevantSignals) {
+        const bucket = BUCKET_SECS(sig.ts);
+        const bar    = history?.get(bucket);
+        const isLong = sig.direction === 'long';
+        let x: number | null = null;
+        let y: number | null = null;
+
+        if (bar) {
+          const xCoord = chart.timeScale().timeToCoordinate(bucket as UTCTimestamp);
+          // Anchor 50 pts below entry for longs, 50 pts above for shorts,
+          // so the card sits well clear of the signal candle.
+          const anchorPrice = isLong ? bar.close - 50 : bar.close + 50;
+          const priceY = series.priceToCoordinate(anchorPrice);
+          if (xCoord !== null && priceY !== null) {
+            x = Math.min(xCoord, containerWidth - 295);
+            // For shorts the card hangs above, so shift up by card height (~160px)
+            y = isLong ? priceY : priceY - 160;
+          }
+        }
+
+        if (x === null || y === null) {
+          x = containerWidth - 295;
+          y = fallbackY;
+          fallbackY += 126;
+        }
+
+        positions.push({
+          sig,
+          x,
+          y,
+          id: `${sig.ts}-${(sig as any).ruleId ?? (sig as any).rule_id}`,
+        });
+      }
+
+      // Resolve vertical overlaps: sort by y then push any card down that
+      // would overlap a card already placed nearby on the x axis.
+      const CARD_H   = 158; // estimated rendered card height in px
+      const CARD_GAP = 6;
+      const CARD_W   = 300; // cards are maxWidth 320, treat as ~300 for overlap test
+      positions.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < positions.length; i++) {
+        for (let j = 0; j < i; j++) {
+          if (Math.abs(positions[i].x - positions[j].x) > CARD_W) continue;
+          const minY = positions[j].y + CARD_H + CARD_GAP;
+          if (positions[i].y < minY) positions[i].y = minY;
+        }
+      }
+
+      setCardPositions(positions);
+    };
+
+    computeCardsRef.current();
+  }, [recentSignals, selectedSymbol, selectedTimeframe, barsVersion]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -567,6 +785,19 @@ export function Chart() {
         ))}
       </div>
 
+      {/* RS context strip — below timeframe buttons, top-left */}
+      <div style={{
+        position: 'absolute', top: 36, left: 8, zIndex: 10,
+        padding: '3px 8px',
+        background: 'rgba(10,10,12,0.7)',
+        borderRadius: 3,
+        border: '1px solid var(--border)',
+      }}>
+        <RSContextBar />
+      </div>
+
+      <OpeningBias symbol={selectedSymbol} barHistoryRef={barHistoryRef} barsVersion={barsVersion} />
+
       {/* Scroll to latest — bottom right, above the time axis */}
       <button
         onClick={() => {
@@ -593,6 +824,15 @@ export function Chart() {
       >
         »
       </button>
+
+      {/* Signal overlay cards — hidden for now, re-enable by removing the `false &&` */}
+      {false && cardPositions.map(({ sig, x, y, id }) => (
+        <div key={id} style={{
+          position: 'absolute', left: x, top: y, zIndex: 15, pointerEvents: 'none',
+        }}>
+          <SignalChartCard sig={sig} />
+        </div>
+      ))}
     </div>
   );
 }

@@ -11,25 +11,20 @@
 // This preserves clean comparison: score = pattern strength,
 // conviction = pre-signal context quality.
 //
-// Patterns identified (see pre-signal analysis, May 7 2026):
+// Patterns (single conviction marker — present or absent):
 //
-// LONG signals (ON absorption long, RTH absorption long):
-//   ++ Delta positive AND diverging (weakening in 2nd half) AND vol contracting
-//   +  Delta diverging only
+// LONG absorption:
+//   + Sellers were dominant in first half (delta < -100) AND visibly
+//     exhausting by second half (second-half delta meaningfully less negative)
+//     — seller dry-up approaching the level
 //
-// SHORT signals (ON absorption short, RTH divergence short):
-//   ++ Delta diverging AND price already rolling over (velocity < -1pt/min last 3min)
-//   +  Delta diverging only
-//
-// RTH divergence SHORT specific:
-//   ++ Price accelerating up (>+2pts/min) AND delta positive AND delta diverging
-//      (classic distribution: retail FOMO into institutional selling)
-//   +  Delta diverging only
+// SHORT absorption / RTH divergence:
+//   + Delta diverging (first half stronger than second half in direction of move)
 
 import { getRecentTrades } from './tick-client.js';
 import type { Symbol } from '@trading/contracts';
 
-export type ConvictionRating = '++' | '+' | null;
+export type ConvictionRating = '+' | null;
 
 const WINDOW_MS = 15 * 60 * 1000;  // 15 minutes
 
@@ -136,31 +131,20 @@ export async function scoreConviction(
   const isDiv   = ruleId === 'delta-divergence';
 
   if (isLong) {
-    // Long conviction not yet validated — insufficient sample for ++ longs,
-    // and high drawdown observed. Disabled until recalibrated.
-    return null;
+    // Seller exhaustion approaching the level:
+    // first half strongly negative (sellers dominant) but second half
+    // meaningfully less negative (sellers drying up).
+    const sellersWereDominant  = m.firstHalfDelta < -100;
+    const sellersExhausting    = m.secondHalfDelta > m.firstHalfDelta * 0.6;
+    return (sellersWereDominant && sellersExhausting) ? '+' : null;
   }
 
   if (isShort && isDiv) {
-    // RTH divergence SHORT: price accelerating up + delta positive + delta diverging
-    // = distribution into retail FOMO
-    const priceAccelerating = m.velocityLast3m > 2.0;
-    const deltaPositive     = m.totalDelta > 100;
-    const deltaDiverging    = m.deltaIsDiverging;
-
-    if (priceAccelerating && deltaPositive && deltaDiverging) return '++';
-    if (deltaDiverging) return '+';
-    return null;
+    return m.deltaIsDiverging ? '+' : null;
   }
 
   if (isShort) {
-    // Absorption SHORT: delta diverging + price already rolling over
-    const deltaDiverging  = m.deltaIsDiverging;
-    const rollingOver     = m.velocityLast3m < -1.0;
-
-    if (deltaDiverging && rollingOver) return '++';
-    if (deltaDiverging) return '+';
-    return null;
+    return m.deltaIsDiverging ? '+' : null;
   }
 
   return null;
@@ -210,18 +194,10 @@ export function scoreConvictionFromTicks(
   const isDiv  = ruleId === 'delta-divergence';
 
   if (isLong) {
-    // Long conviction disabled — not yet validated.
-    return null;
+    const sellersWereDominant = firstHalfDelta < -100;
+    const sellersExhausting   = secondHalfDelta > firstHalfDelta * 0.6;
+    return (sellersWereDominant && sellersExhausting) ? '+' : null;
   }
 
-  if (!isLong && isDiv) {
-    if (velocityLast3m > 2.0 && totalDelta > 100 && deltaIsDiverging) return '++';
-    if (deltaIsDiverging) return '+';
-    return null;
-  }
-
-  // absorption short
-  if (deltaIsDiverging && velocityLast3m < -1.0) return '++';
-  if (deltaIsDiverging) return '+';
-  return null;
+  return deltaIsDiverging ? '+' : null;
 }
