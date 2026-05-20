@@ -158,7 +158,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
 
   return (
     <div style={{
-      position: 'absolute', top: 48, left: 8, zIndex: 10,
+      position: 'absolute', top: 70, left: 8, zIndex: 10,
       background: 'rgba(10,10,11,0.85)',
       backdropFilter: 'blur(4px)',
       border: '1px solid #28282f',
