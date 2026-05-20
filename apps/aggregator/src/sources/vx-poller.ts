@@ -9,8 +9,9 @@
 import { saveContext } from '../rs-context.js';
 import { logger } from '../logger.js';
 
-const POLL_MS  = 5 * 60_000; // 5 minutes
-const YAHOO_URL = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EVIX,%5EVVIX';
+const POLL_MS   = 5 * 60_000; // 5 minutes
+const VIX_URL   = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=1d';
+const VVIX_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVVIX?interval=1d&range=1d';
 
 function isRTH(): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -26,26 +27,23 @@ function isRTH(): boolean {
     && minOfDay <  960;  // 16:00 ET
 }
 
-async function pollOnce(): Promise<void> {
-  if (!isRTH()) return;
-
-  const res = await fetch(YAHOO_URL, {
+async function fetchPrice(url: string): Promise<number | undefined> {
+  const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' },
     signal: AbortSignal.timeout(10_000),
   });
-
-  if (!res.ok) {
-    logger.warn({ status: res.status }, 'vx-poller: Yahoo Finance non-2xx');
-    return;
-  }
-
+  if (!res.ok) return undefined;
   const data = await res.json() as {
-    quoteResponse?: { result?: { symbol: string; regularMarketPrice?: number }[] };
+    chart?: { result?: { meta?: { regularMarketPrice?: number } }[] };
   };
+  const price = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+  return typeof price === 'number' ? price : undefined;
+}
 
-  const rows  = data.quoteResponse?.result ?? [];
-  const vx    = rows.find(r => r.symbol === '^VIX')?.regularMarketPrice;
-  const vvix  = rows.find(r => r.symbol === '^VVIX')?.regularMarketPrice;
+async function pollOnce(): Promise<void> {
+  if (!isRTH()) return;
+
+  const [vx, vvix] = await Promise.all([fetchPrice(VIX_URL), fetchPrice(VVIX_URL)]);
 
   if (typeof vx !== 'number' || typeof vvix !== 'number') {
     logger.warn({ vx, vvix }, 'vx-poller: missing prices in Yahoo response');
