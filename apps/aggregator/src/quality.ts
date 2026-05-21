@@ -276,8 +276,8 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
       reason: `CONT: observe-only (n=11, 45% WR) — ${signal.direction} +${ext.extensionPts?.toFixed(0) ?? '?'}pt parent ${parentAgoMin}m ago retrace=${((ext.retracePct ?? 0) * 100).toFixed(0)}%`,
     };
   }
-  // Strategy J: absorbed spike. Detection is the quality gate — all signals that
-  // reach here passed tick-level spike + recovery + level-hold confirmation.
-  if (strategy === 'J') return { tier: 'gold', reason: `J: TRAP ${signal.direction} cvd15=${(signal as any).cvd15 ?? '?'} spike=${(signal as any).spikeDelta ?? '?'} recovery=${(signal as any).recoveryDelta ?? '?'}` };
+  // Strategy J: silenced pending structural pre-filter (RS level proximity + session context).
+  // Backtested across all CVD/spike/recovery/buffer combos — no profitable configuration found.
+  if (strategy === 'J') return { tier: 'silenced', reason: `J: TRAP silenced — no edge without structural pre-filter` };
   return { tier: 'silenced', reason: `unknown strategy ${strategy}` };
 }

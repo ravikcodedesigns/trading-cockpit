@@ -38,7 +38,6 @@ function signalDisplayName(ruleId: string, direction: 'long' | 'short'): string 
   const arrow = direction === 'long' ? '↑' : '↓';
   const map: Record<string, string> = {
     'clean-impulse':        `Clean ${arrow} Flip`,
-    'trap':                 `Trap ${arrow}`,
     'passive-seller':       `Passive Seller ↓`,
     'absorption-scalp':     `Absorption ↑`,
     'absorption-scalp-15m': `Absorption ↑`,
