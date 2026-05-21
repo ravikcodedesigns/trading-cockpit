@@ -118,8 +118,8 @@ function isRTH(tsMs: number): boolean {
 }
 
 // Returns false during windows where LONG signals have poor historical win rates:
-//   before 10:45 ET  — market hasn't established direction yet (30% win rate)
-//   14:00–16:00 ET   — afternoon trend continuation zone, including late-session fades (65% pass rate)
+//   before 09:54 ET  — opening volatility, 43% WR
+//   14:30–16:00 ET   — late session, 28% WR (-13.9pts/trade)
 function isLongTimeAllowed(tsMs: number): boolean {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
@@ -128,9 +128,31 @@ function isLongTimeAllowed(tsMs: number): boolean {
   const parts = fmt.formatToParts(new Date(tsMs));
   const get = (t: string) => parts.find(p => p.type === t)?.value ?? '';
   const etMin = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
-  if (etMin < 645)              return false;  // before 10:45 ET
-  if (etMin >= 840 && etMin < 960) return false;  // 14:00–16:00 ET
+  if (etMin < 594)               return false;  // before 09:54 ET
+  if (etMin >= 870 && etMin < 960) return false;  // 14:30–16:00 ET
   return true;
+}
+
+// Returns true only when the last complete 1h bar is red (close < open).
+// SHORT flip signals fired into a green 1h bar have 13% WR (-33.8pts/trade);
+// fired into a red 1h bar they have 82% WR (+56.4pts/trade).
+function isShortHourlyAligned(symbol: Symbol, tsMs: number): boolean {
+  const HR1 = 60 * 60_000;
+  const ticksDb = new Database(TICKS_DB_PATH, { readonly: true });
+  try {
+    // Last complete 1h bar = the one whose close time (ts + HR1) <= tsMs
+    const barStart = Math.floor(tsMs / HR1) * HR1 - HR1;  // previous hour bucket
+    const trades = ticksDb.prepare(
+      `SELECT price FROM trades WHERE symbol=? AND ts >= ? AND ts < ? ORDER BY ts ASC`
+    ).all(symbol, barStart, barStart + HR1) as { price: number }[];
+
+    if (trades.length < 2) return true;  // not enough data — allow through
+    const open  = trades[0]!.price;
+    const close = trades[trades.length - 1]!.price;
+    return close < open;  // red bar = short is aligned with hourly direction
+  } finally {
+    ticksDb.close();
+  }
 }
 
 function buildBars(symbol: Symbol, sinceMs: number): OHLCBar[] {
@@ -304,6 +326,11 @@ export async function runStrategyH(
 
   if (hit.direction === 'long' && !isLongTimeAllowed(nowMs)) {
     logger.info({ symbol, nowMs }, 'strategy-H: LONG suppressed by time-of-day gate');
+    return null;
+  }
+
+  if (hit.direction === 'short' && !isShortHourlyAligned(symbol, nowMs)) {
+    logger.info({ symbol, nowMs }, 'strategy-H: SHORT suppressed — 1h bar not red (82% WR requires red 1h)');
     return null;
   }
 
