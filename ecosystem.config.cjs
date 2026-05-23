@@ -16,6 +16,27 @@ module.exports = {
       },
     },
     {
+      name: 'trader',
+      cwd: './apps/trader',
+      script: 'pnpm',
+      args: 'run start',
+      autorestart: true,
+      max_restarts: 5,
+      min_uptime: '30s',
+      // Trader is NOT started by default — start manually after paper-trading setup.
+      // pm2 start ecosystem.config.cjs --only trader
+      stop_exit_codes: [0],
+    },
+    {
+      name: 'dd-logger',
+      cwd: './apps/aggregator',
+      script: 'node',
+      args: 'node_modules/tsx/dist/cli.mjs scripts/dd_logger.ts',
+      autorestart: true,
+      max_restarts: 20,
+      min_uptime: '10s',
+    },
+    {
       name: 'bookmap-addon',
       script: 'python3',
       args: 'addons/bookmap/addon.py',

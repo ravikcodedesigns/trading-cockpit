@@ -94,66 +94,71 @@ for(let t=minTs;t<=maxTs;t+=POLL_STEP){if(isRTH(t))rthTs.push(t);}
 process.stdout.write(`RTH poll points: ${rthTs.length.toLocaleString()}\n\n`);
 
 // Threshold combos to test
-const CVD_VALS  = [1500, 2000, 2500, 3000];
-const SPK_VALS  = [100, 200, 300];
-const REC_VALS  = [50, 100, 150];
+const CVD_VALS      = [2000, 3000];
+const SPK_VALS      = [200, 300];
+const REC_VALS      = [100, 150];
+const STOP_BUF_VALS = [2, 5, 8, 12];   // pts beyond spike extreme
 
-console.log(`${'CVD'.padStart(5)} ${'SPK'.padStart(5)} ${'REC'.padStart(5)}  ${'N'.padStart(4)}  ${'W'.padStart(3)} ${'L'.padStart(3)} ${'WR%'.padStart(5)}  ${'PnL'.padStart(7)}  ${'Avg'.padStart(6)}  Sig/day`);
-console.log('-'.repeat(72));
+console.log(`${'CVD'.padStart(5)} ${'SPK'.padStart(5)} ${'REC'.padStart(5)} ${'BUF'.padStart(4)}  ${'N'.padStart(4)}  ${'W'.padStart(3)} ${'L'.padStart(3)} ${'WR%'.padStart(5)}  ${'PnL'.padStart(7)}  ${'Avg'.padStart(6)}  Sig/day`);
+console.log('-'.repeat(80));
 
 for(const CVD of CVD_VALS){
   for(const SPK of SPK_VALS){
     for(const REC of REC_VALS){
-      interface Sig{ts:number;sym:string;dir:'long'|'short';entry:number;stop:number;t1:number;t2:number;risk:number;}
-      const signals:Sig[]=[];
+      for(const BUF of STOP_BUF_VALS){
+        interface Sig{ts:number;sym:string;dir:'long'|'short';entry:number;stop:number;t1:number;t2:number;risk:number;}
+        const signals:Sig[]=[];
 
-      for(const sym of SYMBOLS){
-        const ticks=allTicks.get(sym)!;
-        const last=new Map<string,number>();
-        for(const t of rthTs){
-          const lc=(last.get('long')??0)+COOLDOWN_MS>t,sc=(last.get('short')??0)+COOLDOWN_MS>t;
-          if(lc&&sc)continue;
-          const w=(MACRO_N+2)*MIN_1;
-          const sl=sliceTs(ticks,t-w,t);
-          const hit=detect(sl,t,CVD,SPK,REC);
-          if(!hit)continue;
-          if((last.get(hit.dir)??0)+COOLDOWN_MS>t)continue;
-          last.set(hit.dir,t);
-          const isL=hit.dir==='long',stop=isL?hit.spikeLo-2:hit.spikeHi+2;
-          signals.push({ts:t,sym,dir:hit.dir,entry:hit.entry,stop,
-            t1:isL?hit.entry+20:hit.entry-20,t2:isL?hit.entry+40:hit.entry-40,
-            risk:Math.abs(hit.entry-stop)});
-        }
-      }
-
-      let wins=0,losses=0,pnl=0;
-      for(const sig of signals){
-        const ticks=allTicks.get(sig.sym)!;
-        const fwd=sliceTs(ticks,sig.ts+1,sig.ts+LOOKFWD);
-        let out='OPEN';
-        for(const t of fwd){
-          if(sig.dir==='long'){
-            if(t.price<=sig.stop){out='STOP';break;}
-            if(t.price>=sig.t2){out='T2';break;}
-            if(t.price>=sig.t1){out='T1';break;}
-          }else{
-            if(t.price>=sig.stop){out='STOP';break;}
-            if(t.price<=sig.t2){out='T2';break;}
-            if(t.price<=sig.t1){out='T1';break;}
+        for(const sym of SYMBOLS){
+          const ticks=allTicks.get(sym)!;
+          const last=new Map<string,number>();
+          for(const t of rthTs){
+            const lc=(last.get('long')??0)+COOLDOWN_MS>t,sc=(last.get('short')??0)+COOLDOWN_MS>t;
+            if(lc&&sc)continue;
+            const w=(MACRO_N+2)*MIN_1;
+            const sl=sliceTs(ticks,t-w,t);
+            const hit=detect(sl,t,CVD,SPK,REC);
+            if(!hit)continue;
+            if((last.get(hit.dir)??0)+COOLDOWN_MS>t)continue;
+            last.set(hit.dir,t);
+            const isL=hit.dir==='long',stop=isL?hit.spikeLo-BUF:hit.spikeHi+BUF;
+            const risk=Math.abs(hit.entry-stop);
+            if(risk>30)continue;  // skip degenerate wide stops
+            signals.push({ts:t,sym,dir:hit.dir,entry:hit.entry,stop,
+              t1:isL?hit.entry+20:hit.entry-20,t2:isL?hit.entry+40:hit.entry-40,
+              risk});
           }
         }
-        if(out==='T1'||out==='T2'){wins++;pnl+=out==='T2'?40:20;}
-        else if(out==='STOP'){losses++;pnl-=sig.risk;}
-      }
 
-      const tot=wins+losses,wr=tot>0?(wins/tot*100):0;
-      const days=9,spd=(signals.length/days).toFixed(1);
-      const avg=tot>0?(pnl/tot).toFixed(1):'?';
-      console.log(
-        `${String(CVD).padStart(5)} ${String(SPK).padStart(5)} ${String(REC).padStart(5)}  `+
-        `${String(signals.length).padStart(4)}  ${String(wins).padStart(3)} ${String(losses).padStart(3)} ${wr.toFixed(0).padStart(5)}%  `+
-        `${(pnl>=0?'+':'')+pnl.toFixed(1).padStart(6)}  ${(Number(avg)>=0?'+':'')+String(avg).padStart(5)}  ${spd}/day`
-      );
+        let wins=0,losses=0,pnl=0;
+        for(const sig of signals){
+          const ticks=allTicks.get(sig.sym)!;
+          const fwd=sliceTs(ticks,sig.ts+1,sig.ts+LOOKFWD);
+          let out='OPEN';
+          for(const t of fwd){
+            if(sig.dir==='long'){
+              if(t.price<=sig.stop){out='STOP';break;}
+              if(t.price>=sig.t2){out='T2';break;}
+              if(t.price>=sig.t1){out='T1';break;}
+            }else{
+              if(t.price>=sig.stop){out='STOP';break;}
+              if(t.price<=sig.t2){out='T2';break;}
+              if(t.price<=sig.t1){out='T1';break;}
+            }
+          }
+          if(out==='T1'||out==='T2'){wins++;pnl+=out==='T2'?40:20;}
+          else if(out==='STOP'){losses++;pnl-=sig.risk;}
+        }
+
+        const tot=wins+losses,wr=tot>0?(wins/tot*100):0;
+        const days=9,spd=(signals.length/days).toFixed(1);
+        const avg=tot>0?(pnl/tot).toFixed(1):'?';
+        console.log(
+          `${String(CVD).padStart(5)} ${String(SPK).padStart(5)} ${String(REC).padStart(5)} ${String(BUF).padStart(4)}  `+
+          `${String(signals.length).padStart(4)}  ${String(wins).padStart(3)} ${String(losses).padStart(3)} ${wr.toFixed(0).padStart(5)}%  `+
+          `${(pnl>=0?'+':'')+pnl.toFixed(1).padStart(6)}  ${(Number(avg)>=0?'+':'')+String(avg).padStart(5)}  ${spd}/day`
+        );
+      }
     }
   }
 }

@@ -6,6 +6,7 @@ interface RSContext {
   mhpResilience: -1 | 0 | 1;
   hpResilience: -1 | 0 | 1;
   redistResilience: -1 | 0 | 1;
+  resilience: -1 | 0 | 1;
   vx: number;
   bbb: number;
   vvix: number;
@@ -83,7 +84,7 @@ export function RSContextBar() {
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
         <span style={{ color: 'var(--text-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>RES</span>
-        <span style={{ color: resColor(ctx.redistResilience), fontSize: 13, fontWeight: 800 }}>{resLabel(ctx.redistResilience)}</span>
+        <span style={{ color: resColor(ctx.resilience), fontSize: 13, fontWeight: 800 }}>{resLabel(ctx.resilience)}</span>
       </span>
     </div>
   );

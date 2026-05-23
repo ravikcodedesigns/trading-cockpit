@@ -19,6 +19,7 @@ export function App() {
 
   const isMobile  = useIsMobile();
   const [tab, setTab] = useState<'chart' | 'signals'>('chart');
+  const [signalPanelOpen, setSignalPanelOpen] = useState(true);
 
   const wsStatus = useStore((s) => s.wsStatus);
   const selectedSymbol = useStore((s) => s.selectedSymbol);
@@ -46,12 +47,42 @@ export function App() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}>
         <StatusBar />
         {disconnectBanner}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
+        <div style={{
+          flex: 1, overflow: 'hidden',
+          display: 'grid',
+          gridTemplateColumns: signalPanelOpen ? '1fr 14px 360px' : '1fr 14px',
+        }}>
+          {/* Chart area */}
           <div style={{ position: 'relative', overflow: 'hidden' }}>
             <Chart />
             <ContextStrip levels={levels} flashAlpha={flashAlpha} symbol={selectedSymbol} />
           </div>
-          <SignalFeed />
+
+          {/* Toggle strip — its own column, never clipped */}
+          <div
+            onClick={() => setSignalPanelOpen(o => !o)}
+            title={signalPanelOpen ? 'Collapse signals' : 'Expand signals'}
+            style={{
+              background: '#141418',
+              borderLeft: '1px solid #222228',
+              borderRight: signalPanelOpen ? '1px solid #222228' : 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#444',
+              fontSize: 12,
+              userSelect: 'none',
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#1e1e28'; (e.currentTarget as HTMLDivElement).style.color = '#999'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = '#141418'; (e.currentTarget as HTMLDivElement).style.color = '#444'; }}
+          >
+            {signalPanelOpen ? '›' : '‹'}
+          </div>
+
+          {/* Signals panel */}
+          {signalPanelOpen && <SignalFeed />}
         </div>
       </div>
     );

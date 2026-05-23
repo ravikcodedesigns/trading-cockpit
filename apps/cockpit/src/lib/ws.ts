@@ -21,8 +21,10 @@ interface CockpitStore {
   uptimeSec: number;
   selectedSymbol: Sym;
   selectedTimeframe: 1 | 5 | 15;
+  soundOn: boolean;
   setSymbol: (s: Sym) => void;
   setTimeframe: (t: 1 | 5 | 15) => void;
+  setSoundOn: (v: boolean) => void;
 }
 
 const MAX_EVENTS = 200;
@@ -38,8 +40,10 @@ export const useStore = create<CockpitStore>((set) => ({
   uptimeSec: 0,
   selectedSymbol: 'NQ',
   selectedTimeframe: 1,
+  soundOn: true,
   setSymbol: (s) => set({ selectedSymbol: s }),
   setTimeframe: (t) => set({ selectedTimeframe: t }),
+  setSoundOn: (v) => set({ soundOn: v }),
 }));
 
 
@@ -136,7 +140,8 @@ export function connect() {
     return;
   }
   useStore.setState({ wsStatus: 'connecting' });
-  const url = `ws://${window.location.host}/ws/cockpit`;
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const url = `${proto}://${window.location.host}/ws/cockpit`;
   socket = new WebSocket(url);
 
   socket.onopen = () => {
