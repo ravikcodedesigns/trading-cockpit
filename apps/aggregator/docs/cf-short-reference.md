@@ -27,75 +27,161 @@ CF Short pairs with CF Long as the symmetric side of the `clean-impulse / strate
 
 The SHORT FLIP is detected in `apps/aggregator/src/rules-v2/strategy-h.ts` → `detect()`.
 
-### 7 Conditions
+Seven conditions must all pass simultaneously on **1-minute OHLCV bars built from raw tick data** (not external bar feeds), so delta is computed from actual bid/ask aggressor flags.
 
-| # | Condition | Constant / Value |
-|---|-----------|-----------------|
-| 1 | Bar body (open − close) ≥ minimum | `BODY_MIN = 5 pts` |
-| 2 | Upper wick (high − open) ≥ minimum | `FLIP_WICK_MIN_SHORT = 15 pts` |
-| 3 | Bar HIGH position in 30-bar macro range ≥ lower bound | `FLIP_COMP_MIN_SHORT_HIGH = 0.50` |
-| 4 | Bar HIGH position in 30-bar macro range ≤ upper bound | `FLIP_COMP_MAX_SHORT_HIGH = 1.00` |
-| 5 | Prior-bar net buy delta (priorImpulse) ≥ threshold | `FLIP_PRIOR_IMPULSE_SHORT = 1400` |
-| 6 | Reversal bar deltaT ≤ max (buyers absorbed, not dominant) | `FLIP_DELTA_T_SHORT_MAX = 300` |
-| 7 | Bar total range ≥ minimum | `FLIP_BAR_RANGE_MIN_SHORT = 22 pts` |
+| # | Condition | Threshold | What it measures |
+|---|-----------|-----------|-----------------|
+| 1 | Bear bar body `(open − close)` | ≥ 5 pts | Must be a real bearish bar, not a doji |
+| 2 | Upper wick `(high − close)` | ≥ 15 pts | Strong rejection — price reached up and got pushed back hard |
+| 3 | `compPosHigh` ≥ lower bound | ≥ 0.50 | Bar HIGH is in the **upper 50%** of the trailing 30-bar range — exhaustion at elevated price |
+| 4 | `compPosHigh` ≤ upper bound | ≤ 1.00 | Bar is **not** making a fresh 30-bar breakout — that's continuation, not reversal |
+| 5 | `priorImpulse` (max of prev 2 bars' delta) | ≥ 1400 | Prior bars had aggressive buying — the trap is set |
+| 6 | Reversal bar `deltaT` | ≤ +300 | Buyers weakened on the reversal bar — not aggressively bullish |
+| 7 | Bar total range `(high − low)` | ≥ 22 pts | Filters noise/doji bars — must be a real range bar |
+
+**`compPosHigh`** = `(bar.high − macro30Low) / (macro30High − macro30Low)`. Unlike CF Long which uses the bar's LOW, CF Short uses the bar's **HIGH** — the wick reached the top of the range, not the body.
+
+**Entry**: `cur.close`
+**Stop (structural)**: `cur.high` (stored as `stopLevel` in payload, ranges 15–65 pts from entry in practice)
+**Backtest SL**: 105 pts above entry (fixed, for consistent comparison)
+
+**Scoring bonuses** (additive, starts at 80):
+- `bodyShort ≥ 15` → +5 (large bearish body = conviction)
+- `upperWick ≥ 20` → +5 (very strong rejection)
+- `compPosHigh ≥ 0.80` → +5 (deep into top of range)
+- `priorImpulse ≥ 2000` → +5 (extremely strong prior push)
 
 ### Key computed values stored in payload
 
 | Field | Formula | Role |
 |-------|---------|------|
-| `compPos` | `(cur.low − macroLow) / (macroHigh − macroLow)` | Position of bar LOW in 30-bar range |
-| `compPosHigh` | `(cur.high − macroLow) / (macroHigh − macroLow)` | Position of bar HIGH — SHORT uses this |
+| `compPos` | `(cur.high − macroLow) / (macroHigh − macroLow)` | Stored as compPos — actually compPosHigh for SHORT |
 | `deltaT` | Net buy-sell delta for the reversal bar | Condition 6 |
 | `delta5` | Net delta over last 5 bars | Quality gate (≥ +1000) |
-| `delta15` | Net delta over last 15 bars | Quality gate |
+| `delta15` | Net delta over last 15 bars | Context |
 | `deltaLast3` | Net delta over prior 3 bars | Context |
-| `priorImpulse` | deltaT of the prior bar | Condition 5 |
-| `stopLevel` | `cur.high` | Actual bar-high stop (tight) |
+| `priorImpulse` | max(prevBar.delta, prev2Bar.delta) | Condition 5 |
+| `stopLevel` | `cur.high` | Actual bar-high stop (tight structural) |
 | `stopDist` | `cur.high − cur.close` | Distance to bar high |
-
-### Entry & Stop
-
-- **Entry**: `cur.close` (close of the reversal candle, short entry)
-- **Stop**: `cur.high` (bar high — the structural invalidation level)
-- **Payload stopLevel** = bar high (ranges 15–65 pts from entry in practice)
-- **Backtest SL** = 105 pts above entry (fixed, for consistent comparison)
-
-### Hourly Alignment Gate
-
-Before signaling, `isShortHourlyAligned()` checks that the **last complete 1H bar is red** (close < open):
-- Green 1H = 13% WR (signal suppressed at generation)
-- Red 1H = 82% WR (signal passes)
-
-This gate runs inside `detect()`, not in `classifySignalQuality()`.
-
-### Cooldown & Stale Guards
-
-- Cooldown: 15 minutes between consecutive SHORT FLIP signals (`COOLDOWN_MS = 900_000`)
-- Stale: signals older than 2 minutes are discarded (`STALE_MS = 120_000`)
 
 ---
 
-## 3. Three Filter Layers
+## 3. Full Filter Pipeline (in execution order)
 
-Identical pipeline to CF Long (see cf-long-reference.md §3).
+A CF Short signal must survive all stages in sequence before it reaches the chart and Discord. A failure at any stage drops the signal.
 
-### Layer 1 — `rs_hard_filtered` (time gate)
-- `isLongTimeAllowed()`: blocks before 09:54 ET and 14:30–16:00 ET  
-- CF short inherits the same time gate (no separate short time gate in the code)
-- SQL: `rs_hard_filtered IS NOT 1`
+### Stage 1 — RTH Guard (`isRTH`)
 
-### Layer 2 — `meta.filtered` (comp_pos / directional quality)
-- `classifySignalQuality()` in `quality.ts` applies:
-  - **delta5 gate**: `delta5 >= +1000` (buyers dominant in last 5 bars)
-  - **delta15 gate**: `delta15 >= threshold` (buyers in background)
-  - **EXPL conflict check**: opposing EXPL long in 60-min window silences if `|opp_dT| / max(|opp_d5|, 1) > 0.25`
-- SQL: `json_extract(meta,'$.filtered') IS NOT 1`
+Must be Monday–Friday between **09:30 and 16:00 ET**. Nothing runs outside regular trading hours. Hard coded; no override.
 
-### Layer 3 — Pattern gate
-- SQL: `json_extract(payload,'$.pattern') = 'FLIP'`
-- AND: `CAST(json_extract(payload,'$.delta5') AS REAL) >= 1000`
+---
 
-### Canonical SQL (all 3 layers)
+### Stage 2 — FLIP Pattern Detection (`detect()`)
+
+The seven conditions above (§2) must all pass on the last completed 1-minute bar. The bar must also have closed within the **last 2 minutes** (`STALE_MS = 2 min`) — prevents stale signals firing on old bars.
+
+---
+
+### Stage 3 — 1H Hourly Alignment (`isShortHourlyAligned`)
+
+CF Short has a **1H alignment gate instead of a time-of-day clock** (CF Long uses a clock gate instead). Checks the **last complete 1H bar** (the one whose close time is before the current minute):
+
+| Last 1H bar | Outcome | Historical WR |
+|-------------|---------|--------------|
+| Red (close < open) | Signal passes ✓ | **82% WR** (+56.4 pts/trade) |
+| Green (close ≥ open) | **Suppressed** | 13% WR (−33.8 pts/trade) |
+
+This is the single most powerful filter on CF Short — it alone cuts the raw detection rate by ~87%. A suppressed signal here leaves **no DB record**.
+
+---
+
+### Stage 4 — Cooldown Guard (`isCooling`)
+
+Two separate cooldowns:
+
+| Rule | Duration | Direction |
+|------|----------|-----------|
+| Same-direction cooldown | 15 min | No two CF Shorts within 15 min on the same symbol |
+| Cross-direction suppression | 45 min | After a CF Short fires, CF Long is suppressed for 45 min |
+| Inverse | None | A CF Long does **not** suppress CF Short |
+
+The asymmetry is intentional: a short signal is more structurally bearish, so longs are suppressed afterward. But a long signal does not suppress shorts — tops and bottoms are treated as independent events.
+
+---
+
+### Stage 5 — ORM Gate (`isSignalAllowed` from regime.ts)
+
+An Operational Risk Management gate checked after cooldowns clear. If this returns false, the signal is logged and dropped. Operates at the symbol+direction level.
+
+---
+
+### Stage 6 — Quality Classification (`classifySignalQuality` in quality.ts)
+
+Applied live in `state.ts → applySignal()`. The signal exists at this point but has not been broadcast. Three checks apply to CF Short FLIP (in order):
+
+#### 6a. EXPL Conflict Check (`checkExplConflict`)
+
+Looks at all EXPL signals for this symbol in the **last 60 minutes** (`EXPL_LOOKBACK_MS = 60 * 60_000`).
+
+If the **most recent EXPL is in the opposite direction** (EXPL Long fired recently while we want to go short):
+
+```
+ratio = |deltaT| / max(|delta5|, |deltaLast3|)
+```
+
+- `ratio > 0.25` → **silenced** (opposing EXPL Long may still be in control)
+- `ratio ≤ 0.25` → **allowed through** (the CF short bar was a genuine exhaustion of the EXPL Long itself)
+
+If the most recent EXPL is a **Short** (same direction), no conflict.
+
+#### 6b. Delta5 Gate (directional)
+
+Checks that **buyers were actually dominant** in the 5 bars before the reversal bar:
+
+```
+delta5 ≥ +1000 → passes  (buyers were pushing up — correct context for short exhaustion)
+delta5  < +1000 → silenced
+
+Exception: same-direction EXPL Short in 60-min window → threshold relaxes to +800
+```
+
+The gate is **directional** (not absolute value). A CF Short with `delta5 = −1085` (sellers dominant) would fail — that's the wrong setup for a buyer-exhaustion reversal. The ABS version was a live bug that allowed one wrong-direction signal (May 15 09:41) to broadcast. Fixed to use signed value.
+
+#### 6c. Delta15 Gate
+
+**Does NOT apply to CF Short.** This gate only runs for CF Long direction (checks that sellers were dominant in the 15-bar background). CF Short has no delta15 gate in `classifySignalQuality()`.
+
+#### 6d. Regime Gate
+
+**Currently disabled.** Framework exists but is commented out pending threshold calibration.
+
+---
+
+### Stage 7 — `rs_hard_filtered` (RS Scoring Layer)
+
+A relative-strength context layer scores signals against nearby key levels (daily levels, prior highs/lows, overnight levels). Signals that fail RS quality criteria are stored in the DB with `rs_hard_filtered = 1` and never broadcast.
+
+Cockpit SQL filter: `AND rs_hard_filtered IS NOT 1`
+
+---
+
+### Summary: What Gets to the Chart
+
+A CF Short signal reaches broadcast only if it survives **all of the following**:
+
+```
+1. RTH hours (09:30–16:00 ET, Mon–Fri)
+2. All 7 FLIP SHORT pattern conditions (detect())
+3. Last complete 1H bar is RED
+4. 15-min same-direction cooldown cleared
+5. 45-min cross-direction cooldown cleared (from last CF Long)
+6. ORM gate passes
+7. EXPL conflict ratio ≤ 0.25 (or no opposing EXPL in 60m)
+8. delta5 ≥ +1000 (buyers must have been pushing up before the reversal)
+9. rs_hard_filtered = 0
+```
+
+### Canonical SQL (all layers)
 
 ```sql
 SELECT *
@@ -244,20 +330,29 @@ Actionable: The time gate analysis already flags 13:00–14:29. Silencing CF sho
 
 ---
 
-## 8. Comparison with CF Long
+## 8. CF Short vs CF Long — Side-by-Side
 
-| Metric | CF Long | CF Short |
-|--------|---------|---------|
-| n (signals) | 26 | 11 |
-| Win rate | 72% | **81.8%** |
-| Sharpe (baseline) | 0.682 | 0.650 |
-| Optimal Sharpe | 1.104 (TP=70/SL=55) | — |
-| Losses | 7 | **2** |
-| TP structural max | ∼80 pts | **80 pts** (hard ceiling) |
-| SL (backtest) | 55 pts | 105 pts |
-| PnL/100 trades | $84,400 (TP=80) | $92,727 (TP=80) |
+| | CF Short | CF Long |
+|--|---------|---------|
+| **Thesis** | Buyer exhaustion at the top | Seller exhaustion at the bottom |
+| **Range anchor** | Bar HIGH in upper 50–100% (`compPosHigh ∈ [0.50, 1.00]`) | Bar LOW in bottom 30% (`compPos ≤ 0.30`) |
+| **Prior pressure condition** | `priorImpulse ≥ 1400` (1–2 bars of strong buying) | `deltaLast3 ≤ −100` (3 bars of selling) |
+| **Reversal bar delta** | `deltaT ≤ +300` (buyers just stopped — sellers don't need to push yet) | `deltaT ≥ +300` (buyers absorbed hard) |
+| **Upper wick requirement** | ≥ 15 pts (the failed breakout IS the signal) | Not required |
+| **Bar range requirement** | ≥ 22 pts | Not required |
+| **Stage 3 gate** | Last complete 1H bar must be red | Time-of-day clock (block before 09:54, after 14:30) |
+| **Cross-direction suppression** | Does not suppress CF Long | Suppressed 45 min after a CF Short fires |
+| **delta15 gate** | ✗ Not applied | ✓ Yes — `delta15 < +500` required |
+| **delta5 gate** | `delta5 ≥ +1000` (buyers dominant) | `delta5 ≤ −1000` (sellers dominant) |
+| **Structural SL** | Bar high | Bar low |
+| **Backtest SL (fixed)** | 105 pts | 55 pts |
+| **Backtest TP** | 80 pts (structural ceiling) | 80 pts (70 optimal) |
+| **Signals (n)** | 11 | 26 |
+| **Win rate** | **81.8%** | 72% (TP=80) / 85% (TP=70) |
+| **Sharpe** | 0.650 | 0.682 (TP=80) / 1.104 (TP=70) |
+| **PnL/100 trades** | $92,727 | $84,400 (TP=80) / $101,538 (TP=70) |
 
-CF Short has fewer losses (2 vs 7) but a wider backtest SL (105 vs 55). Both hit 80pts as structural TP. The CF Short has a higher WR but similar Sharpe. The smaller sample makes CF Short harder to filter systematically.
+**The structural difference**: CF Short's exhaustion evidence is mostly in the **prior bars** — the big buy impulse traps buyers, and the reversal bar just needs to show a wick and weakening delta. CF Long's exhaustion evidence requires the **reversal bar itself** to show strong buyer absorption (`deltaT ≥ +300`). NQ tops form passively (buyers stop), NQ bottoms form actively (new buyers step in hard).
 
 ---
 
