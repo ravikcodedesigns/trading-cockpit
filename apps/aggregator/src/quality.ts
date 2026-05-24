@@ -249,13 +249,18 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
         }
       }
 
-      const absd5 = Math.abs(ext.delta5 ?? 0);
+      const d5 = ext.delta5 ?? 0;
       const hasSameDirExpl = (ctx.recentExpls ?? []).some(e => e.direction === signal.direction);
       const d5Threshold = hasSameDirExpl ? 800 : 1000;
-      if (absd5 < d5Threshold) {
+      // Directional check: CF short needs buyers dominant (d5 > 0), CF long needs sellers dominant (d5 < 0).
+      // ABS would pass a short with d5=-1085 (sellers dominant) — conceptually wrong for buyer exhaustion.
+      const d5Passes = signal.direction === 'short'
+        ? d5 >= d5Threshold          // buyers must have been pushing UP before the reversal
+        : d5 <= -d5Threshold;        // sellers must have been pushing DOWN before the reversal
+      if (!d5Passes) {
         return {
           tier: 'silenced',
-          reason: `H: FLIP ${signal.direction} weak background delta5=${ext.delta5 ?? 0} (need |d5|>=${d5Threshold}${hasSameDirExpl ? ' EXPL-zone' : ''})`,
+          reason: `H: FLIP ${signal.direction} wrong-direction background delta5=${d5} (short needs d5>=${d5Threshold}, long needs d5<=-${d5Threshold}${hasSameDirExpl ? ' EXPL-zone' : ''})`,
         };
       }
 
