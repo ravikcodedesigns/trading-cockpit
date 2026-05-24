@@ -8,6 +8,76 @@ It is NOT a trend-following signal. It fires *against* the prevailing selling di
 
 ---
 
+## Core Concept — Why It Works
+
+Built on one idea: **sellers have exhausted themselves, so a bounce is likely.**
+
+1. **Sellers took control** — Over the last 15 bars (delta15 strongly negative), sellers dominated. Price has been dropping.
+2. **The selling accelerated into a flush** — In the last 5 bars (delta5 ≤ −1000), selling became even more intense. A sharp, aggressive down move where sellers pile in.
+3. **The flush is the exhaustion, not the continuation** — When sellers rush in all at once, they run out of fuel. Nobody left to sell. Buyers waiting on the sidelines see an attractive price and step in.
+4. **Price flips** — The FLIP pattern fires at the exact bar where buyers take over.
+5. **Catch the bounce** — Enter long at the flip, target 70–80 pts (TP), stop 55 pts below in case selling resumes.
+
+Think of it like a rubber band stretched too far by sellers — at some point it snaps back.
+
+---
+
+## The FLIP Pattern — Exact Detection Logic
+
+The FLIP is confirmed when a **single 1-minute bar** satisfies all four conditions simultaneously (code: `strategy-h.ts → detect()`):
+
+### Condition 1 — Bar is at the bottom of the 30-bar range (`compPos ≤ 0.30`)
+
+```
+compPos = (bar.low − macroLow) / (macroHigh − macroLow)
+```
+
+Look at the last 30 bars — find the highest high and lowest low. The current bar's LOW must be in the **bottom 30%** of that range (`compPos ≤ 0.30`). Price dipped into an extreme low zone, not mid-range.
+
+- `compPos ≤ 0.15` = deep extreme → score bonus (+5)
+- `compPos < −0.05` = breakdown below the macro range → rejected (not a reversal, it's a breakdown)
+
+### Condition 2 — The bar is a real bullish bar (`close − open ≥ 5 pts`)
+
+The 1-minute bar must close higher than it opened — a genuine green candle. Price actually reversed *within that bar*. Opens in selling territory, buyers push it up before the bar closes. Doji bars (body < 5 pts) are rejected.
+
+- `body ≥ 15 pts` → score bonus (+5)
+
+### Condition 3 — Buyers showed up on this bar (`deltaT ≥ +300`)
+
+The net buy/sell volume *on this exact bar* must be net-positive (≥ +300 contracts of buying). Buyers didn't just stop selling — they actively stepped in and bought aggressively on this bar.
+
+- `deltaT ≥ 500` → score bonus (+10)
+- `deltaT ≥ 400` → score bonus (+5)
+
+### Condition 4 — The 3 prior bars were bearish (`deltaLast3 ≤ −100`)
+
+The 3 bars immediately before the flip bar were net-seller dominated. Confirms there was actual selling pressure building into the reversal — not a quiet drift. Sellers exhausted themselves right before buyers arrived.
+
+### Score
+
+Base score = 80. Bonuses for deeper extreme, larger body, stronger deltaT. Max = 100.
+
+### Entry and Stop
+
+- **Entry**: close price of the reversal bar (buyers already showed up, enter as the bar closes)
+- **Stop**: low of the reversal bar (if buyers were genuine, price shouldn't revisit where they stepped in)
+
+### Constants (from `strategy-h.ts`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `FLIP_COMP_MAX_LONG` | 0.30 | Bar low must be in bottom 30% of 30-bar range |
+| `FLIP_COMP_MIN_LONG` | −0.05 | Reject breakdowns below the macro range |
+| `FLIP_DELTA_T_LONG` | +300 | Min buy aggression on the reversal bar |
+| `FLIP_PRIOR3_LONG` | −100 | Prior 3-bar delta must be net-bearish |
+| `BODY_MIN` | 5 pts | Min bar body — rejects doji/noise bars |
+| `MACRO_N` | 30 | Number of bars for the range calculation |
+| `COOLDOWN_MS` | 15 min | Minimum gap between two CF long signals |
+| `STALE_MS` | 2 min | Bar must have closed within last 2 minutes |
+
+---
+
 ## Signal Payload Fields
 
 Stored in the `signals` table in `trading.db` as JSON in the `payload` column:
