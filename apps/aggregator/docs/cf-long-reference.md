@@ -130,45 +130,148 @@ Tick range available: **May 4 – May 22, 2026** (33.5M NQ ticks).
 
 ---
 
-## Three Filtering Layers
+## Full Filter Pipeline (in execution order)
 
-Signals go through three independent gates before reaching the chart and Discord. Every layer must pass. Listed in order of application:
+A CF Long signal must survive all stages in sequence before it reaches the chart and Discord. A failure at any stage drops the signal — it does not fall through to the next gate.
 
-### Layer 1 — `rs_hard_filtered` (set at signal creation in `strategy-h.ts`)
+### Stage 1 — RTH Guard (`isRTH`)
 
-Stored as `rs_hard_filtered = 1` in the DB. Applied in `isLongTimeAllowed()`:
-- **Before 09:54 ET**: blocked (market too volatile at open)
-- **14:30–16:00 ET**: blocked (end-of-day, no edge)
+Must be Monday–Friday between **09:30 and 16:00 ET**. Nothing runs outside regular trading hours. Hard coded; no override.
 
-Filter in SQL: `AND rs_hard_filtered IS NOT 1`
+---
 
-### Layer 2 — `meta.filtered` (set post-creation)
+### Stage 2 — FLIP Pattern Detection (`detect()`)
 
-Stored as `json_extract(meta, '$.filtered') = true`. Applied by the comp_pos filter after signal creation.
+Five conditions must all pass simultaneously. These run on **1-minute OHLCV bars built from raw tick data** (not external bar feeds), so delta is computed from actual bid/ask aggressor flags.
 
-Filter in SQL: `AND json_extract(meta, '$.filtered') IS NOT 1`
+| # | Condition | Threshold | What it measures |
+|---|-----------|-----------|-----------------|
+| 1 | Bull bar body `(close − open)` | ≥ 5 pts | Must be a real bullish bar, not a doji |
+| 2 | Reversal bar `deltaT` | ≥ +300 | Buyers aggressively absorbed sellers on this bar |
+| 3 | `compPos` ≥ lower bound | ≥ −0.05 | Bar LOW is not breaking *below* the 30-bar macro range (not a fresh breakdown) |
+| 4 | `compPos` ≤ upper bound | ≤ 0.30 | Bar LOW is in the **bottom 30%** of the macro range — exhaustion at a structural low |
+| 5 | `deltaLast3` | ≤ −100 | Prior 3 bars were net sellers — the pressure that created the exhaustion |
 
-### Layer 3 — `classifySignalQuality()` in `quality.ts` (in-memory, just before broadcast)
+**`compPos`** = `(bar.low − macro30Low) / (macro30High − macro30Low)`. CF Long uses the bar's **LOW** — buyers stepped in at the bottom, which is where the wick reached.
 
-Applied live in `state.ts → applySignal()`. Three sub-gates:
+**Entry**: `cur.close`
+**Stop (structural)**: `cur.low` (stored as `stopLevel` in payload)
 
-**3a. EXPL conflict check** (`checkExplConflict()`):
-- Look back 60 minutes (`EXPL_LOOKBACK_MS = 60 * 60_000`)
-- If the most recent EXPL in the window is a SHORT (opposing) AND no same-direction EXPL is more recent → potential conflict
-- Compute `ratio = |deltaT| / max(|delta5|, |delta_last3|, 1)` using the EXPL signal's own values
-- If `ratio > 0.25` → silenced (active opposing EXPL momentum)
-- If `ratio ≤ 0.25` → allowed through (structural exhaustion of the EXPL itself)
+**Scoring bonuses** (additive, starts at 80):
+- `deltaT ≥ 500` → +10 (very strong buy absorption)
+- `deltaT ≥ 400` → +5
+- `bodyLong ≥ 15` → +5 (large bullish body = conviction)
+- `compPos ≤ 0.15` → +5 (deep into the bottom = stronger reversal signal)
 
-**3b. delta15 gate** (LONG only):
-- `delta15 >= 500` → silenced (buyers still dominant in background, no exhaustion to reverse)
-- `delta15 < 500` (or null) → passes
+---
 
-**3c. delta5 gate**:
-- Without same-direction EXPL in window: `|delta5| >= 1000` required
-- With same-direction EXPL in window: `|delta5| >= 800` required (zone confirmation substitutes for raw magnitude)
-- Note: the live code uses `ABS(delta5) >= threshold` — but for longs, all signals in practice have negative delta5, so directional check (`delta5 <= -1000`) is equivalent and more correct
+### Stage 3 — Time-of-Day Gate (`isLongTimeAllowed`)
 
-**3d. Regime gate**: Currently **DISABLED** in production (`quality.ts` line ~262). See regime section below.
+CF Long has a **time gate instead of a 1H alignment gate** (CF Short uses hourly alignment instead). Two windows are blocked based on historical WR:
+
+| Window | Blocked? | Historical WR |
+|--------|----------|--------------|
+| Before 09:54 ET | **Blocked** | 43% WR — opening volatility |
+| 14:30–16:00 ET | **Blocked** | 28% WR (−13.9 pts/trade) |
+| 09:54–14:30 ET | Allowed | ✓ |
+
+A signal suppressed here is stored in the DB with `rs_hard_filtered = 1` and never broadcast.
+
+---
+
+### Stage 4 — Cooldown Guard (`isCooling`)
+
+Two separate cooldowns:
+
+| Rule | Duration | Direction |
+|------|----------|-----------|
+| Same-direction cooldown | 15 min | No two CF Longs within 15 min on the same symbol |
+| Cross-direction suppression | 45 min | After a CF **Short** fires, CF Long is suppressed for 45 min |
+| Inverse | None | A CF Long does **not** suppress CF Short |
+
+The asymmetry is intentional: a short signal is more structurally bearish, so longs are suppressed afterward. Tops and bottoms are treated as independent events in one direction but not the other.
+
+---
+
+### Stage 5 — ORM Gate (`isSignalAllowed` from regime.ts)
+
+An Operational Risk Management gate checked after cooldowns clear. If this returns false, the signal is logged and dropped. Operates at the symbol+direction level.
+
+---
+
+### Stage 6 — Quality Classification (`classifySignalQuality` in quality.ts)
+
+Applied live in `state.ts → applySignal()`. The signal exists at this point but has not been broadcast. Four sub-gates, all applied in order:
+
+#### 6a. EXPL Conflict Check (`checkExplConflict`)
+
+Looks at all EXPL signals for this symbol in the **last 60 minutes** (`EXPL_LOOKBACK_MS = 60 * 60_000`).
+
+If the **most recent EXPL is in the opposite direction** (EXPL Short is most recent while we want to go long):
+
+```
+ratio = |deltaT| / max(|delta5|, |deltaLast3|)
+```
+
+- `ratio > 0.25` → **silenced** (opposing EXPL may still be in control)
+- `ratio ≤ 0.25` → **allowed through** (the CF long bar was a genuine exhaustion of the EXPL Short itself)
+
+If the most recent EXPL is a **Long** (same direction), no conflict.
+
+#### 6b. Delta15 Gate (CF Long only — does not apply to CF Short)
+
+Checks the net delta of the **15 bars before the reversal bar**:
+
+```
+delta15 ≥ +500 → silenced  (buyers still dominant — no exhaustion to reverse)
+delta15 < +500 → passes
+```
+
+The logic: if buyers have been net positive for 15 minutes, there's no accumulated seller pressure to exhaust. Calibrated against the May 12 09:53 failure which had `delta15 = +1726`.
+
+#### 6c. Delta5 Gate (directional)
+
+Checks that **sellers were actually dominant** in the 5 bars before the reversal bar:
+
+```
+delta5 ≤ −1000 → passes  (sellers were pushing down — correct context for long exhaustion)
+delta5  > −1000 → silenced
+
+Exception: same-direction EXPL Long in 60-min window → threshold relaxes to −800
+```
+
+The gate is **directional** (not absolute value). A CF Long with `delta5 = +1200` (buyers dominant) would fail — that's the wrong setup for a seller-exhaustion reversal. The code was fixed to use the signed value instead of `|delta5|` after empirical review confirmed the ABS version could pass wrong-direction signals.
+
+#### 6d. Regime Gate
+
+**Currently disabled.** Framework exists in `isRegimeBearish()` (2-of-3 CVD conditions) but is commented out pending threshold calibration. See Regime Backtest section below for status.
+
+---
+
+### Stage 7 — `rs_hard_filtered` (RS Scoring Layer)
+
+A relative-strength context layer scores signals against nearby key levels (daily levels, prior highs/lows, overnight levels). Signals that fail RS quality criteria are stored in the DB with `rs_hard_filtered = 1` and never broadcast.
+
+Cockpit SQL filter: `AND rs_hard_filtered IS NOT 1`
+
+---
+
+### Summary: What Gets to the Chart
+
+A CF Long signal reaches broadcast only if it survives **all of the following**:
+
+```
+1. RTH hours (09:30–16:00 ET, Mon–Fri)
+2. All 5 FLIP LONG pattern conditions (detect())
+3. Time-of-day: 09:54–14:30 ET only
+4. 15-min same-direction cooldown cleared
+5. 45-min cross-direction cooldown cleared (from last CF Short)
+6. ORM gate passes
+7. EXPL conflict ratio ≤ 0.25 (or no opposing EXPL in 60m)
+8. delta15 < +500 (sellers must have been dominant in background)
+9. delta5 ≤ −1000 (sellers must have been dominant in last 5 bars)
+10. rs_hard_filtered = 0
+```
 
 ---
 
@@ -363,6 +466,32 @@ The regime filter for CF long is a **hypothesis under observation**. Current evi
 - Losses clustered in BULL STRONG/WEAK — regime does not protect against them
 
 Re-evaluate when dataset reaches 15–20 BEAR STRONG CF long signals.
+
+---
+
+## CF Long vs CF Short — Side-by-Side
+
+| | CF Long | CF Short |
+|--|---------|---------|
+| **Thesis** | Seller exhaustion at the bottom | Buyer exhaustion at the top |
+| **Range anchor** | Bar LOW in bottom 30% (`compPos ≤ 0.30`) | Bar HIGH in upper 50–100% (`compPosHigh ∈ [0.50, 1.00]`) |
+| **Prior pressure condition** | `deltaLast3 ≤ −100` (3 bars of selling) | `priorImpulse ≥ 1400` (1–2 bars of strong buying) |
+| **Reversal bar delta** | `deltaT ≥ +300` (buyers absorbed hard) | `deltaT ≤ +300` (buyers just stopped — sellers don't need to push yet) |
+| **Upper wick requirement** | Not required | ≥ 15 pts (the failed breakout IS the signal) |
+| **Bar range requirement** | Not required | ≥ 22 pts |
+| **Stage 3 gate** | Time-of-day clock (block before 09:54, after 14:30) | Last complete 1H bar must be red |
+| **Cross-direction suppression** | Suppressed 45 min after a CF Short fires | Does not suppress CF Short |
+| **delta15 gate** | ✓ Yes — `delta15 < +500` required | ✗ Not applied |
+| **delta5 gate** | `delta5 ≤ −1000` (sellers dominant) | `delta5 ≥ +1000` (buyers dominant) |
+| **Structural SL** | Bar low | Bar high |
+| **Backtest SL (fixed)** | 55 pts | 105 pts |
+| **Backtest TP** | 80 pts (70 optimal) | 80 pts (structural ceiling) |
+| **Signals (n)** | 26 | 11 |
+| **Win rate** | 72% (TP=80) / 85% (TP=70) | 81.8% |
+| **Sharpe** | 0.682 (TP=80) / 1.104 (TP=70) | 0.650 |
+| **PnL/100 trades** | $84,400 (TP=80) / $101,538 (TP=70) | $92,727 |
+
+**The structural difference**: CF Short's exhaustion evidence is mostly in the **prior bars** — the big buy impulse is what traps buyers, and the reversal bar just needs to show a wick and a weakening delta. CF Long's exhaustion evidence requires the **reversal bar itself** to show strong buyer absorption (`deltaT ≥ +300`). NQ tops form passively (buyers stop), NQ bottoms form actively (new buyers step in hard).
 
 ---
 
