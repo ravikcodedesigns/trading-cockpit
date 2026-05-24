@@ -193,12 +193,16 @@ ORDER BY ts;
 | Losses | 7 | 4 |
 | Open at EOD | 1 | 0 |
 | **Win rate** | **72%** | **85%** |
-| **EV/trade** | **+42.2 pts** | **+50.8 pts** |
+| **Mean PnL/trade** | **+42.2 pts** | **+50.8 pts** |
+| **Std deviation** | 61.86 pts | 45.99 pts |
+| **Sharpe ratio** | **0.682** | **1.104** |
 | **PnL/100 trades** | **+$84,400** | **+$101,538** |
 
-At $20/pt per 1 NQ contract.
+At $20/pt per 1 NQ contract. Sharpe = mean PnL per trade / std deviation (per-trade, no risk-free rate).
 
-**TP=70 is strictly better** — 3 May 22 afternoon losses had MFE of 70–78 pts before reversing, so they hit TP=70 before SL=55. The 4 remaining losses (MFE 24–41 pts) never reached 70 regardless.
+**TP=70 is strictly better on every metric.** Higher mean, lower std dev, higher Sharpe. The Sharpe improvement (0.68 → 1.10) comes from both a higher average return and a tighter distribution — converting 3 near-miss losses (MFE 70–78) into wins reduces outcome variance significantly. A Sharpe above 1.0 is generally considered good; above 2.0 is excellent.
+
+**TP=70 mechanics:** 3 May 22 afternoon losses had MFE of 70–78 pts before reversing, so they hit TP=70 before SL=55. The 4 remaining losses (MFE 24–41 pts) never reached 70 regardless.
 
 ### Time-Window WR (TP=80, SL=55)
 
