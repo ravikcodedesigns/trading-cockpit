@@ -38,6 +38,12 @@ export function withRSScore(
     rsComponents:   rs.components,
     rsMatchedLevel: rs.matchedLevel?.label,
     rsLabelLine:    rs.labelLine,
+    resContext: {
+      res:        ctx.redistResilience,
+      hpRes:      ctx.hpResilience,
+      mhpRes:     ctx.mhpResilience,
+      isRational: ctx.isRational,
+    },
     // Internal fields for DB persistence (stripped before sending to cockpit/Discord)
     _rsResult:  rs,
     _rsContext: ctx,

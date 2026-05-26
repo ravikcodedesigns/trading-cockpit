@@ -181,6 +181,13 @@ export interface ConfluenceSignal extends BaseEvent {
   rsComponents?: { level: number; context: number; confirm: number };
   rsMatchedLevel?: string;   // label of nearest RS level
   rsLabelLine?: string;      // one-line display summary e.g. "BZB · First test · GM bull · BLD"
+  // Resilience snapshot at signal time — conviction context for the cockpit
+  resContext?: {
+    res:       number;  // redistribution resilience (gray/white) — tiebreaker inside Open/HG/Close box
+    hpRes:     number;  // HP resilience (blue)  — tiebreaker at HP level
+    mhpRes:    number;  // MHP resilience (orange) — tiebreaker at MHP level
+    isRational: boolean; // false = irrational rules apply, resilience is not reliable
+  };
 }
 
 // --- Union of everything that flows through the aggregator ---

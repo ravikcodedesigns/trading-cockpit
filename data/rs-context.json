@@ -1,17 +1,17 @@
 {
   "greaterMarket": "bull",
   "ddRatio": 0.76,
-  "mhpResilience": -1,
-  "hpResilience": -1,
-  "redistResilience": 1,
-  "resilience": 1,
-  "vx": 19.5,
+  "mhpResilience": -40.0,
+  "hpResilience": 55.7,
+  "redistResilience": -11.3,
+  "resilience": -11.3,
+  "vx": 16.98,
   "bbb": 18.97,
-  "vvix": 92,
-  "setAt": "2026-05-19T11:15:03.501Z",
-  "tradingDay": "2026-05-19",
-  "vxAboveBBB": true,
+  "vvix": 89.39,
+  "setAt": "2026-05-26T19:57:26.326Z",
+  "tradingDay": "2026-05-26",
+  "vxAboveBBB": false,
   "vvixElevated": false,
-  "vvixGolden": false,
-  "isRational": false
+  "vvixGolden": true,
+  "isRational": true
 }

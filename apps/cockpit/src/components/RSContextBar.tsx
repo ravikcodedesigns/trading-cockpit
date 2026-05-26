@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 interface RSContext {
   greaterMarket: 'bull' | 'bear' | 'neutral';
   ddRatio: number;
-  mhpResilience: -1 | 0 | 1;
-  hpResilience: -1 | 0 | 1;
-  redistResilience: -1 | 0 | 1;
-  resilience: -1 | 0 | 1;
+  mhpResilience: number;
+  hpResilience: number;
+  redistResilience: number;
+  resilience: number;
   vx: number;
   bbb: number;
   vvix: number;
@@ -17,12 +17,14 @@ interface RSContext {
   setAt: string;
 }
 
-function resLabel(v: -1 | 0 | 1): string {
-  return v === 1 ? '+1' : v === -1 ? '-1' : '0';
+function resLabel(v: number): string {
+  if (v === 0) return '0';
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${v % 1 === 0 ? v : v.toFixed(1)}`;
 }
 
-function resColor(v: -1 | 0 | 1): string {
-  return v === 1 ? 'var(--long)' : v === -1 ? 'var(--short)' : 'var(--text-2)';
+function resColor(v: number): string {
+  return v > 0 ? 'var(--long)' : v < 0 ? 'var(--short)' : 'var(--text-2)';
 }
 
 const POLL_MS = 30_000;

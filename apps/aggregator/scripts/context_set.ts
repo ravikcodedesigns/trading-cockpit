@@ -9,9 +9,9 @@
  * set  [flags]                      Full morning setup (all in one command)
  *   --greater-market bull|bear|neutral
  *   --dd-ratio    N                 DD Ratio (0-1, >0.5 = bullish)
- *   --mhp-res     1|0|-1            MHP resilience (orange)
- *   --hp-res      1|0|-1            HP resilience (blue)
- *   --res         1|0|-1            Redistribution resilience (white/HG)
+ *   --mhp-res     N                 MHP resilience (orange) — actual RS value e.g. -40.0
+ *   --hp-res      N                 HP resilience (blue)    — actual RS value e.g. +55.7
+ *   --res         N                 Redistribution resilience (white/HG) — actual RS value e.g. -11.3
  *   --vx          N                 /VX futures price
  *   --bbb         N                 BBB contango/backwardation midpoint
  *   --vvix        N                 VVIX value
@@ -19,12 +19,12 @@
  * bbb  <value>                      9 AM update — refresh BBB only
  *   pnpm context:set bbb 20.5
  *
- * res  <field>  <value>             Intraday — flip a single resilience
+ * res  <field>  <value>             Intraday — update a single resilience
  *   field: mhp | hp | resilience
- *   value: 1 (bullish) | 0 (neutral) | -1 (bearish)
- *   pnpm context:res mhp -1
- *   pnpm context:res hp  1
- *   pnpm context:res resilience 0
+ *   value: actual RS platform float e.g. -40.0, +55.7, 0
+ *   pnpm context:res mhp -40.0
+ *   pnpm context:res hp   55.7
+ *   pnpm context:res resilience -11.3
  */
 
 import fs from 'node:fs';
@@ -37,16 +37,16 @@ const CONTEXT_PATH = path.resolve(__dirname, '../../../data/rs-context.json');
 // ---------- types ----------
 
 type GreaterMarket = 'bull' | 'bear' | 'neutral';
-type Resilience = 1 | 0 | -1;
+type Resilience = number; // actual float from RS platform e.g. -11.3, +55.7
 type ResField = 'mhp' | 'hp' | 'resilience';
 
 interface RSContext {
   greaterMarket: GreaterMarket;
   ddRatio: number;
-  mhpResilience: Resilience;
-  hpResilience: Resilience;
-  redistResilience: Resilience;
-  resilience: Resilience;           // backward-compat, mirrors redistResilience
+  mhpResilience: number;
+  hpResilience: number;
+  redistResilience: number;
+  resilience: number;               // backward-compat, mirrors redistResilience
   vx: number;
   bbb: number;
   vvix: number;
@@ -94,10 +94,9 @@ function parseNum(s: string, label: string): number {
 }
 
 function parseRes(s: string): Resilience {
-  if (s === '1' || s === '+1') return 1;
-  if (s === '0') return 0;
-  if (s === '-1') return -1;
-  die(`Resilience value must be 1, 0, or -1 — got: ${s}`);
+  const n = parseFloat(s);
+  if (Number.isNaN(n)) die(`Resilience value must be a number (e.g. -11.3, +55.7, 0) — got: ${s}`);
+  return n;
 }
 
 function die(msg: string): never {
@@ -105,8 +104,10 @@ function die(msg: string): never {
   process.exit(1);
 }
 
-function resLabel(v: Resilience): string {
-  return v === 1 ? 'bullish (+1)' : v === -1 ? 'bearish (-1)' : 'neutral (0)';
+function resLabel(v: number): string {
+  const sign = v > 0 ? '+' : '';
+  const dir  = v > 0 ? 'bullish' : v < 0 ? 'bearish' : 'neutral';
+  return `${dir} (${sign}${v})`;
 }
 
 function printContext(ctx: RSContext) {
@@ -161,10 +162,10 @@ function cmdSet(argv: string[]) {
   const ctx = derive({
     greaterMarket,
     ddRatio,
-    mhpResilience: mhpRes as Resilience,
-    hpResilience: hpRes as Resilience,
-    redistResilience: redistRes as Resilience,
-    resilience: redistRes as Resilience,
+    mhpResilience: mhpRes,
+    hpResilience: hpRes,
+    redistResilience: redistRes,
+    resilience: redistRes,
     vx,
     bbb,
     vvix,
@@ -218,8 +219,8 @@ function cmdRes(argv: string[]) {
 
   save(updated);
 
-  const fieldName = field === 'mhp' ? 'MHP        (orange)' : field === 'hp' ? 'HP         (blue)  ' : 'Resilience (white) ';
-  console.log(`\n✓ ${fieldName} resilience: ${resLabel(prev)} → ${resLabel(value)}`);
+  const fieldName = field === 'mhp' ? 'MHP   (orange)' : field === 'hp' ? 'HP    (blue)  ' : 'Res   (white) ';
+  console.log(`\n✓ ${fieldName}: ${resLabel(prev)} → ${resLabel(value)}`);
 }
 
 // ---------- flag parser ----------
@@ -249,9 +250,9 @@ RS Context CLI
   set [flags]                       Full morning setup (all in one command)
     --greater-market bull|bear|neutral
     --dd-ratio N                    DD Ratio (0-1, >0.5 = bullish)
-    --mhp-res  1|0|-1               MHP resilience (orange)
-    --hp-res   1|0|-1               HP resilience (blue)
-    --res      1|0|-1               Redistribution resilience (white/HG)
+    --mhp-res  N                    MHP resilience (orange) e.g. -40.0
+    --hp-res   N                    HP resilience (blue)    e.g. +55.7
+    --res      N                    Redistribution resilience (white/HG) e.g. -11.3
     --vx N                          /VX price
     --bbb N                         BBB midpoint
     --vvix N                        VVIX value

@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONTEXT_PATH = path.resolve(__dirname, '../../../data/rs-context.json');
 
 export type GreaterMarket = 'bull' | 'bear' | 'neutral';
-export type Resilience = 1 | 0 | -1; // 1=bullish, 0=neutral, -1=bearish
+export type Resilience = number; // actual float from RS platform (e.g. -11.3, +55.7). Sign is all that matters for direction.
 
 export interface RSContext {
   // Greater market (3 indicators: DD ratio + SPY vs MHP + Monthly Maps)
@@ -129,8 +129,8 @@ export function watchContext(): void {
 }
 
 // Update a specific resilience in real-time without full context reset.
-// field: 'mhp' | 'hp' | 'redist'
-export function setResilience(field: 'mhp' | 'hp' | 'redist', value: Resilience): void {
+// field: 'mhp' | 'hp' | 'redist', value: actual float from RS platform (e.g. -11.3, +55.7)
+export function setResilience(field: 'mhp' | 'hp' | 'redist', value: number): void {
   const key = field === 'mhp' ? 'mhpResilience'
             : field === 'hp'  ? 'hpResilience'
             :                   'redistResilience';

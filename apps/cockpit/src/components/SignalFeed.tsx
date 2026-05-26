@@ -32,18 +32,64 @@ function RSOrbs({ tier }: { tier: RSTier }) {
   );
 }
 
+// ── Resilience conviction helpers ─────────────────────────────────────────────
+
+function resFmt(v: number): string {
+  if (v === 0) return '0';
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${Math.abs(v) % 1 === 0 ? v : v.toFixed(1)}`;
+}
+
+function ResConviction({ resContext, direction }: {
+  resContext: NonNullable<ConfluenceSignal['resContext']>;
+  direction: 'long' | 'short';
+}) {
+  const { res, hpRes, mhpRes, isRational } = resContext;
+
+  const markers = [
+    { label: 'MHP', value: mhpRes, lineColor: '#f2a633' },  // orange
+    { label: 'HP',  value: hpRes,  lineColor: '#4a8fdc' },  // blue
+    { label: 'Res', value: res,    lineColor: '#9ca3af' },  // gray
+  ];
+
+  return (
+    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {!isRational && (
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--short)', letterSpacing: 0.5, marginBottom: 2 }}>
+          IRRATIONAL — res unreliable
+        </span>
+      )}
+      {markers.map(({ label, value, lineColor }) => {
+        const agrees  = direction === 'long' ? value > 0 : value < 0;
+        const neutral = value === 0;
+        const valueColor = neutral ? 'var(--text-2)' : agrees ? 'var(--long)' : 'var(--short)';
+        return (
+          <div key={label} style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: lineColor, letterSpacing: 0.5, width: 28 }}>
+              {label}
+            </span>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: valueColor }}>
+              {resFmt(value)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Signal name + rationale helpers ───────────────────────────────────────────
 
 function signalDisplayName(ruleId: string, direction: 'long' | 'short'): string {
   const arrow = direction === 'long' ? '↑' : '↓';
   const map: Record<string, string> = {
-    'clean-impulse':        `Clean ${arrow} Flip`,
-    'passive-seller':       `Passive Seller ↓`,
-    'absorption-scalp':     `Absorption ↑`,
-    'absorption-scalp-15m': `Absorption ↑`,
-    'compression-breakout': `Compression ${arrow}`,
-    'absorption':           `Absorption ${arrow}`,
-    'expl':                 `EXPL ${arrow}`,
+    'clean-impulse':        `Flip`,
+    'passive-seller':       `Passive Seller`,
+    'absorption-scalp':     `Absorption`,
+    'absorption-scalp-15m': `Absorption`,
+    'compression-breakout': `Compression`,
+    'absorption':           `Absorption`,
+    'expl':                 `EXPL`,
   };
   return map[ruleId] ?? ruleId;
 }
@@ -115,7 +161,12 @@ function SignalCard({ sig }: { sig: ConfluenceSignal }) {
         </div>
       )}
 
-      {/* Row 4: rationale */}
+      {/* Row 4: MHP ±N▲▼  HP ±N▲▼  Res ±N▲▼ */}
+      {sig.resContext && (
+        <ResConviction resContext={sig.resContext} direction={sig.direction} />
+      )}
+
+      {/* Row 5: rationale */}
       {rationale && (
         <div style={{ marginTop: 5, fontSize: 12, fontWeight: 500, color: 'var(--text-1)', lineHeight: 1.5 }}>
           {rationale}
@@ -355,7 +406,12 @@ export function SignalChartCard({ sig }: { sig: ConfluenceSignal }) {
         </div>
       )}
 
-      {/* Row 4: rationale */}
+      {/* Row 4: MHP ±N▲▼  HP ±N▲▼  Res ±N▲▼ */}
+      {sig.resContext && (
+        <ResConviction resContext={sig.resContext} direction={sig.direction} />
+      )}
+
+      {/* Row 5: rationale */}
       {rationale && (
         <div style={{ marginTop: 5, fontSize: 12, fontWeight: 500, color: 'var(--text-1)', lineHeight: 1.5 }}>
           {rationale}
