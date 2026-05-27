@@ -14,6 +14,16 @@ const BAR_CLOSE_BUFFER_MS = 100;
 const COOLDOWN_MS = 15 * 60 * 1000;   // 15 min — persisted via DB across restarts
 const SYMBOLS: Symbol[] = ['NQ'];
 
+// 14:30–16:00 ET dead zone: historically 18% WR on EXPL longs — signals still fire but are marked.
+function isDeadZone(ms: number): boolean {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date(ms));
+  const etMin = parseInt(parts.find(p => p.type === 'hour')!.value, 10) * 60
+              + parseInt(parts.find(p => p.type === 'minute')!.value, 10);
+  return etMin >= 870 && etMin < 960; // 14:30–16:00 ET
+}
+
 let _running     = false;
 let _timer: ReturnType<typeof setTimeout> | null = null;
 let _signalCount = 0;
@@ -30,6 +40,7 @@ async function runOnce(): Promise<void> {
         if (result) {
           _signalCount++;
 
+          const deadZone = isDeadZone(nowMs);
           const rationale =
             `EXPL-LONG [RTH]: ${result.score}/5 confluences — ` +
             result.conditions.join(' | ');
@@ -47,6 +58,7 @@ async function runOnce(): Promise<void> {
             strategyVersion: 'EXPL' as any,
             ruleVersion:     'expl-v1',
             observeOnly:     true,
+            deadZone,
             profile:         result.profile,
             rangeLow:        result.rangeLow,
             rangeHigh:       result.rangeHigh,
@@ -79,6 +91,7 @@ async function runOnce(): Promise<void> {
         if (result) {
           _signalCount++;
 
+          const deadZone = isDeadZone(nowMs);
           const rationale =
             `EXPL-SHORT [RTH]: ${result.score}/5 confluences — ` +
             result.conditions.join(' | ');
@@ -96,6 +109,7 @@ async function runOnce(): Promise<void> {
             strategyVersion: 'EXPL' as any,
             ruleVersion:     'expl-v1',
             observeOnly:     true,
+            deadZone,
             profile:         result.profile,
             rangeLow:        result.rangeLow,
             rangeHigh:       result.rangeHigh,

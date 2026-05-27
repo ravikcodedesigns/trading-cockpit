@@ -116,6 +116,7 @@ function SignalCard({ sig }: { sig: ConfluenceSignal }) {
   const name      = signalDisplayName(sig.ruleId, sig.direction);
   const labelLine = buildLabelLine(sig);
   const rationale = stripRationalePrefix(sig.rationale ?? '');
+  const deadZone  = (sig as any).deadZone === true;
 
   return (
     <div style={{
@@ -124,11 +125,20 @@ function SignalCard({ sig }: { sig: ConfluenceSignal }) {
       background: 'var(--bg-2)',
       marginBottom: 6,
     }}>
-      {/* Row 1: NQ.LONG.CLEAN ↑ FLIP  91  |  12:34:01 */}
+      {/* Row 1: NQ.LONG.EXPL  91  [DT]  |  12:34:01 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-        <span className="mono" style={{ color: tone, fontWeight: 700, fontSize: 13, letterSpacing: 0.4 }}>
-          {sig.symbol}.{sig.direction.toUpperCase()}.{name.toUpperCase()}
-          <span style={{ color: 'var(--text-0, #e8e8ec)', fontWeight: 600 }}>{'  '}{sig.score}</span>
+        <span className="mono" style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+          <span style={{ color: tone, fontWeight: 700, fontSize: 13, letterSpacing: 0.4 }}>
+            {sig.symbol}.{sig.direction.toUpperCase()}.{name.toUpperCase()}
+            <span style={{ color: 'var(--text-0, #e8e8ec)', fontWeight: 600 }}>{'  '}{sig.score}</span>
+          </span>
+          {deadZone && (
+            <span style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: 0.8,
+              color: '#f59e0b', background: 'rgba(245,158,11,0.12)',
+              padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(245,158,11,0.35)',
+            }}>DT</span>
+          )}
         </span>
         <span className="mono" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', flexShrink: 0 }}>
           {fmtTime(sig.ts)}
@@ -358,6 +368,7 @@ export function SignalChartCard({ sig }: { sig: ConfluenceSignal }) {
   const name      = signalDisplayName(sig.ruleId, sig.direction);
   const labelLine = buildLabelLine(sig);
   const rationale = stripRationalePrefix(sig.rationale ?? '');
+  const deadZone  = (sig as any).deadZone === true;
 
   return (
     <div style={{
@@ -369,11 +380,20 @@ export function SignalChartCard({ sig }: { sig: ConfluenceSignal }) {
       maxWidth: 320,
       pointerEvents: 'none',
     }}>
-      {/* Row 1: NQ.LONG.CLEAN ↑ FLIP  91  |  12:34:01 */}
+      {/* Row 1: NQ.LONG.EXPL  91  [DT]  |  12:34:01 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-        <span className="mono" style={{ color: tone, fontWeight: 700, fontSize: 13, letterSpacing: 0.4 }}>
-          {sig.symbol}.{sig.direction.toUpperCase()}.{name.toUpperCase()}
-          <span style={{ color: 'var(--text-0, #e8e8ec)', fontWeight: 600 }}>{'  '}{sig.score}</span>
+        <span className="mono" style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
+          <span style={{ color: tone, fontWeight: 700, fontSize: 13, letterSpacing: 0.4 }}>
+            {sig.symbol}.{sig.direction.toUpperCase()}.{name.toUpperCase()}
+            <span style={{ color: 'var(--text-0, #e8e8ec)', fontWeight: 600 }}>{'  '}{sig.score}</span>
+          </span>
+          {deadZone && (
+            <span style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: 0.8,
+              color: '#f59e0b', background: 'rgba(245,158,11,0.12)',
+              padding: '1px 5px', borderRadius: 3, border: '1px solid rgba(245,158,11,0.35)',
+            }}>DT</span>
+          )}
         </span>
         <span className="mono" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)', flexShrink: 0 }}>
           {fmtTime(sig.ts)}
