@@ -135,13 +135,20 @@ function levelBaseScore(type: LevelType, direction: 'long' | 'short', ctx: RSCon
   const ddLong = ctx.ddRatio > 0.5;
 
   switch (type) {
-    case 'bzb':        return 50;
-    case 'brzt':       return 50;
-    case 'extra-bzb':  return 44;
-    case 'extra-brzt': return 44;
+    // BZB is canonical support — full score for LONG, penalised for counter-direction SHORT
+    case 'bzb':        return direction === 'long'  ? 50 : 36;
+    // BrZT is canonical resistance — full score for SHORT, penalised for counter-direction LONG
+    case 'brzt':       return direction === 'short' ? 50 : 36;
+    case 'extra-bzb':  return direction === 'long'  ? 44 : 30;
+    case 'extra-brzt': return direction === 'short' ? 44 : 30;
 
-    case 'mhp':
-      return ctx.mhpResilience > 0 ? 40 : ctx.mhpResilience === 0 ? 37 : 33;
+    case 'mhp': {
+      const aligned = (direction === 'long'  && ctx.mhpResilience > 0) ||
+                      (direction === 'short' && ctx.mhpResilience < 0);
+      const opposed = (direction === 'long'  && ctx.mhpResilience < 0) ||
+                      (direction === 'short' && ctx.mhpResilience > 0);
+      return aligned ? 40 : ctx.mhpResilience === 0 ? 37 : opposed ? 28 : 37;
+    }
 
     case 'dd-lower':
       // Full score only when DD-long and signal is long (floating off lower band)
@@ -150,15 +157,35 @@ function levelBaseScore(type: LevelType, direction: 'long' | 'short', ctx: RSCon
       // Full score only when DD-short and signal is short (floating off upper band)
       return (!ddLong && direction === 'short') ? 38 : 20;
 
-    case 'hp':
-      return ctx.hpResilience > 0 ? 34 : ctx.hpResilience === 0 ? 31 : 28;
+    case 'hp': {
+      const aligned = (direction === 'long'  && ctx.hpResilience > 0) ||
+                      (direction === 'short' && ctx.hpResilience < 0);
+      const opposed = (direction === 'long'  && ctx.hpResilience < 0) ||
+                      (direction === 'short' && ctx.hpResilience > 0);
+      return aligned ? 34 : ctx.hpResilience === 0 ? 31 : opposed ? 24 : 31;
+    }
 
-    case 'hg':
-      return ctx.redistResilience > 0 ? 38 : ctx.redistResilience === 0 ? 26 : 22;
-    case 'qqq-open':
-      return ctx.redistResilience > 0 ? 34 : ctx.redistResilience === 0 ? 20 : 18;
-    case 'qqq-close':
-      return ctx.redistResilience > 0 ? 30 : ctx.redistResilience === 0 ? 18 : 16;
+    case 'hg': {
+      const aligned = (direction === 'long'  && ctx.redistResilience > 0) ||
+                      (direction === 'short' && ctx.redistResilience < 0);
+      const opposed = (direction === 'long'  && ctx.redistResilience < 0) ||
+                      (direction === 'short' && ctx.redistResilience > 0);
+      return aligned ? 38 : ctx.redistResilience === 0 ? 26 : opposed ? 18 : 26;
+    }
+    case 'qqq-open': {
+      const aligned = (direction === 'long'  && ctx.redistResilience > 0) ||
+                      (direction === 'short' && ctx.redistResilience < 0);
+      const opposed = (direction === 'long'  && ctx.redistResilience < 0) ||
+                      (direction === 'short' && ctx.redistResilience > 0);
+      return aligned ? 34 : ctx.redistResilience === 0 ? 20 : opposed ? 14 : 20;
+    }
+    case 'qqq-close': {
+      const aligned = (direction === 'long'  && ctx.redistResilience > 0) ||
+                      (direction === 'short' && ctx.redistResilience < 0);
+      const opposed = (direction === 'long'  && ctx.redistResilience < 0) ||
+                      (direction === 'short' && ctx.redistResilience > 0);
+      return aligned ? 30 : ctx.redistResilience === 0 ? 18 : opposed ? 12 : 18;
+    }
 
     case 'on-mhp': return 15;
     case 'on-hp':  return 11;
@@ -239,13 +266,31 @@ function computeContextScore(
   if (ddAligned) score += 6;
   else if (ctx.ddRatio !== 0.5) score -= 4;
 
-  // Resilience positive for the matched level type (+4)
+  // Resilience bonus/penalty for the matched level — direction-aware
+  // Aligned = resilience sign matches trade direction (+6); Opposed = opposite (-5)
   if (matched) {
-    const resPositive =
-      (matched.type === 'mhp' && ctx.mhpResilience > 0) ||
-      (matched.type === 'hp'  && ctx.hpResilience  > 0) ||
-      (['hg', 'qqq-open', 'qqq-close'].includes(matched.type) && ctx.redistResilience > 0);
-    if (resPositive) score += 4;
+    const resAligned =
+      (matched.type === 'mhp' &&
+        ((direction === 'long'  && ctx.mhpResilience > 0) ||
+         (direction === 'short' && ctx.mhpResilience < 0))) ||
+      (matched.type === 'hp' &&
+        ((direction === 'long'  && ctx.hpResilience > 0) ||
+         (direction === 'short' && ctx.hpResilience < 0))) ||
+      (['hg', 'qqq-open', 'qqq-close'].includes(matched.type) &&
+        ((direction === 'long'  && ctx.redistResilience > 0) ||
+         (direction === 'short' && ctx.redistResilience < 0)));
+    const resOpposed =
+      (matched.type === 'mhp' &&
+        ((direction === 'long'  && ctx.mhpResilience < 0) ||
+         (direction === 'short' && ctx.mhpResilience > 0))) ||
+      (matched.type === 'hp' &&
+        ((direction === 'long'  && ctx.hpResilience < 0) ||
+         (direction === 'short' && ctx.hpResilience > 0))) ||
+      (['hg', 'qqq-open', 'qqq-close'].includes(matched.type) &&
+        ((direction === 'long'  && ctx.redistResilience < 0) ||
+         (direction === 'short' && ctx.redistResilience > 0)));
+    if (resAligned)      score += 6;
+    else if (resOpposed) score -= 5;
   }
 
   // Volatility environment
