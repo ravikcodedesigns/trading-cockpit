@@ -2,6 +2,11 @@ node_modules/
 .DS_Store
 *.log
 data/trading.db*
+data/ticks.db*
+data/ticks_corrupted_backup.db
 dist/
 .turbo/
 .vite/
+.env
+apps/aggregator/data/trading.db*
+
