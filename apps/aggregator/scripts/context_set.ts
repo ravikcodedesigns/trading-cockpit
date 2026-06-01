@@ -151,6 +151,7 @@ function cmdSet(argv: string[]) {
   const bbb           = flags['bbb']            !== undefined ? parseNum(flags['bbb'], '--bbb')             : (existing.bbb ?? 20);
   const vvix          = flags['vvix']           !== undefined ? parseNum(flags['vvix'], '--vvix')           : (existing.vvix ?? 95);
   const greaterMarket = (flags['greater-market'] as GreaterMarket | undefined) ?? (existing.greaterMarket ?? 'neutral');
+  const lmCode        = flags['lm-code'] !== undefined ? flags['lm-code'] : (existing as any).lmCode;
   const mhpRes        = flags['mhp-res']   !== undefined ? parseRes(flags['mhp-res'])   : (existing.mhpResilience   ?? 0);
   const hpRes         = flags['hp-res']    !== undefined ? parseRes(flags['hp-res'])    : (existing.hpResilience    ?? 0);
   const redistRes     = flags['res']       !== undefined ? parseRes(flags['res'])       : (existing.redistResilience ?? 0);
@@ -162,6 +163,7 @@ function cmdSet(argv: string[]) {
   const ctx = derive({
     greaterMarket,
     ddRatio,
+    ...(lmCode !== undefined ? { lmCode } : {}),
     mhpResilience: mhpRes,
     hpResilience: hpRes,
     redistResilience: redistRes,

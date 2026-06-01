@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events';
-import { db } from './db.js';
+import { config } from './config.js';
+import { db, type V3Decision } from './db.js';
 import { discord } from './discord.js';
 import { logger } from './logger.js';
 import { classifySignalQuality } from './quality.js';
 import type { QualityContext } from './quality.js';
+import { cvdSession } from './cvd-session.js';
+import { tradeManager, type CloseEvent } from './trade-manager.js';
 import type {
   AggregatorEvent,
   ConfluenceSignal,
@@ -90,6 +93,83 @@ function buildRegimeContext(signal: { symbol: string; direction: string; ts: num
 const RECENT_EVENT_BUFFER = 200;
 const startTime = Date.now();
 
+// ── V3 helpers ────────────────────────────────────────────────────────────
+//
+// These are no-ops when config.v3.activeMode === 'off'.
+
+/**
+ * Is this signal a V3 entry-rule candidate (would be eligible to open or
+ * close a V3 trade)? Independent of qualification — used by the exit-check
+ * path which considers even silenced signals.
+ */
+function isV3EntryRule(signal: ConfluenceSignal): boolean {
+  if (signal.ruleId === 'absorption') return true;
+  if (signal.ruleId === 'expl')       return true;
+  if (signal.ruleId === 'clean-impulse' && (signal as any).pattern === 'FLIP') return true;
+  return false;
+}
+
+/**
+ * Pattern field for V3 entries that need one (currently only FLIP).
+ */
+function v3PatternFor(signal: ConfluenceSignal): string | null {
+  if (signal.ruleId === 'clean-impulse' && (signal as any).pattern === 'FLIP') return 'FLIP';
+  return null;
+}
+
+/**
+ * Resolve a usable entry price for a signal at V3 open time.
+ *
+ * - absorption / FLIP: payload has 'entry' (always populated by rule engine).
+ * - expl: no entry field — fall back to the most recent tick price for the
+ *   symbol at-or-before the signal ts (matches backtest behavior).
+ * - Returns null if no price can be resolved (signal is then SKIPPED).
+ */
+function resolveEntryForOpen(signal: ConfluenceSignal): number | null {
+  const entry = (signal as any).entry as number | undefined;
+  if (entry && entry > 0) return entry;
+  // EXPL fallback: latest tick at/before signal ts
+  if (signal.ruleId === 'expl') {
+    return latestTickPriceAtOrBefore(signal.symbol, signal.ts);
+  }
+  return null;
+}
+
+/**
+ * Look up the last trade tick at-or-before tsMs in ticks.db.
+ * Used by V3 for EXPL entry fallback and for OPP_SIG_EXIT close-price.
+ * Returns null if no tick is available (e.g. data outage).
+ */
+let _ticksDb: import('better-sqlite3').Database | null = null;
+function getTicksDb(): import('better-sqlite3').Database | null {
+  if (_ticksDb) return _ticksDb;
+  try {
+    const Database = require('better-sqlite3');
+    const path = require('node:path');
+    const ticksPath = path.join(path.dirname(config.dbPath), 'ticks.db');
+    _ticksDb = new Database(ticksPath, { readonly: true });
+    return _ticksDb;
+  } catch (err) {
+    logger.warn({ err: String(err) }, 'V3: ticks.db unavailable for price lookup');
+    return null;
+  }
+}
+function latestTickPriceAtOrBefore(symbol: string, tsMs: number): number | null {
+  const x = getTicksDb();
+  if (!x) return null;
+  const row = x.prepare(
+    `SELECT price FROM trades WHERE symbol=? AND ts<=? ORDER BY ts DESC LIMIT 1`
+  ).get(symbol, tsMs) as { price: number } | undefined;
+  return row?.price ?? null;
+}
+
+/** Compose a V3Decision row from the per-signal evaluation. */
+function logV3Decision(d: V3Decision) {
+  try { db.v3.logDecision(d); } catch (err) {
+    logger.error({ err: String(err) }, 'V3: failed to log decision');
+  }
+}
+
 class State {
   private bus = new EventEmitter();
   private connections = new Map<SourceName, ConnectionStatus>();
@@ -102,6 +182,63 @@ class State {
 
   constructor() {
     this.bus.setMaxListeners(50);
+
+    // Always subscribe to TradeManager close events. The handler internally
+    // checks config.v3.activeMode and short-circuits if 'off'. Subscribing
+    // unconditionally means runtime mode changes (tests, ops flips) still
+    // see close events without restarting the process.
+    tradeManager.onClose((evt) => this.handleTradeClose(evt));
+
+    // One-time hydration at boot — only if V3 is on at startup. Cost: small
+    // one-time ticks.db scan. If mode is flipped on later via SIGHUP/restart,
+    // hydration happens then. Within a single process lifetime, this is
+    // fine: in-memory state stays consistent because applySignalV3 keeps
+    // CvdSession in sync from ticks (Task #47) and TradeManager in sync
+    // from applySignal calls.
+    if (config.v3.activeMode !== 'off') {
+      try {
+        cvdSession.hydrate(config.v3.symbols);
+        tradeManager.hydrate();
+        logger.info({ mode: config.v3.activeMode, symbols: config.v3.symbols }, 'V3 initialized');
+      } catch (err) {
+        logger.error({ err: String(err) }, 'V3 init failed; falling back to off mode');
+      }
+    }
+  }
+
+  /**
+   * Handler for TradeManager close events. In live mode, broadcasts to cockpit
+   * and Discord. In shadow mode, just logs (close events fire on TP/SL ticks
+   * regardless of mode, but we only show the user in live mode).
+   */
+  private handleTradeClose(evt: CloseEvent) {
+    const mode = config.v3.activeMode;
+    if (mode === 'off') return;
+
+    // Audit log to v3_decisions regardless of mode.
+    logV3Decision({
+      ts: evt.exitTs,
+      symbol: evt.trade.symbol,
+      signalId: evt.closingSignalId,
+      ruleId: evt.trade.ruleId,
+      pattern: evt.trade.pattern,
+      direction: evt.trade.direction,
+      qualified: true,                          // open-trade entries were qualified V3 opens
+      activeMode: mode === 'live' ? 'live' : 'shadow',
+      action: 'CLOSE',
+      reason: `${evt.reason} px=${evt.exitPx} pnl=${evt.pnlPts.toFixed(1)}`,
+      exitPrice: evt.exitPx,
+      exitOutcome: evt.reason === 'TP_HIT' ? 'WIN' : evt.reason === 'SL_HIT' ? 'LOSS' : evt.reason as any,
+      pnlPts: evt.pnlPts,
+      openTradeId: evt.trade.signalId,
+      entry: evt.trade.entry,
+    });
+
+    if (mode !== 'live') return;
+    // Live mode: forward to cockpit bus and Discord.
+    // The cockpit will get a 'trade-close' message; Chart.tsx renders a close marker.
+    this.bus.emit('trade-close', evt);
+    try { (discord as any).tradeClose?.(evt); } catch { /* discord helper optional */ }
   }
 
   // --- Connection tracking ---
@@ -151,14 +288,24 @@ class State {
     // to know when (or whether) to revisit the gold-tier thresholds.
     const id = db.logSignal(signal);
 
-    // Quality gate for broadcast paths (Discord + cockpit). Only gold-tier
-    // signals reach the human attention layer. See quality.ts for current
-    // tier definitions; thresholds are calibrated against outcome data.
+    // Compute the quality decision once. Both the legacy and V3 paths need it.
     const recentExpls = db.explInWindow(signal.symbol, signal.ts - EXPL_LOOKBACK_MS, signal.ts);
     const regimeCtx = buildRegimeContext(signal);
     const lastFlip = db.lastFlipInWindow(signal.symbol, signal.ts - FLIP_LOOKBACK_MS, signal.ts);
     const decision = classifySignalQuality(signal, { recentExpls, lastFlip, ...regimeCtx });
-    if (decision.tier === 'gold') {
+    const isGold = decision.tier === 'gold';
+
+    // ── V3 active path. Engages when (a) V3 is on and (b) the symbol is in
+    //    config.v3.symbols. Otherwise we fall through to the legacy broadcast.
+    const v3Active = config.v3.activeMode !== 'off'
+                  && (config.v3.symbols as readonly string[]).includes(signal.symbol);
+    if (v3Active) {
+      this.applySignalV3(signal, id, isGold, decision.reason);
+      return id;
+    }
+
+    // ── Legacy path (unchanged from pre-V3). Quality gate for broadcast.
+    if (isGold) {
       this.bus.emit('signal', signal);
       discord.signal(signal);
       logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
@@ -168,6 +315,134 @@ class State {
                    'silenced signal (DB only)');
     }
     return id;
+  }
+
+  /**
+   * V3 broadcast and trade-management pipeline. Called only when V3 is active.
+   *
+   * Two responsibilities:
+   *   1. CHECK FOR EXIT — if a V3 trade is open and this opposite-direction
+   *      signal is eligible to close it (per asymmetric rule), close it.
+   *      Runs BEFORE the gold-tier broadcast decision so silenced opposite
+   *      signals can still close short trades.
+   *   2. DECIDE WHETHER TO BROADCAST / OPEN — apply V3 filters:
+   *        - must be gold-tier
+   *        - must be a V3 entry rule (absorption / FLIP / EXPL)
+   *        - drop FLIP shorts
+   *        - CVD regime gate
+   *        - cooldown (no open trade)
+   *
+   * Behavior by mode:
+   *   - 'shadow': decisions are written to v3_decisions for the daily diff
+   *               script. The actual broadcast falls back to the legacy
+   *               gold-tier rule so the chart and Discord behave as they do
+   *               today. TradeManager state IS updated so that close events
+   *               can be observed end-to-end in shadow.
+   *   - 'live'  : V3 decisions gate the broadcast. Filtered signals do NOT
+   *               reach the chart or Discord. TradeManager state is updated
+   *               and close events flow to the bus.
+   */
+  private applySignalV3(signal: ConfluenceSignal, id: number, isGold: boolean, qualityReason: string): void {
+    const mode = config.v3.activeMode as 'shadow' | 'live';   // 'off' was filtered out before
+    const direction = signal.direction as 'long' | 'short';
+    const symbol = signal.symbol;
+    const pattern = v3PatternFor(signal);
+    const isV3Rule = isV3EntryRule(signal);
+    const cvd = cvdSession.get(symbol);
+    const baseDecision: Omit<V3Decision, 'action' | 'reason'> = {
+      ts: signal.ts, symbol, signalId: id, ruleId: signal.ruleId, pattern,
+      direction, qualified: isGold, activeMode: mode,
+      cvdSession: cvd,
+      entry: (signal as any).entry ?? undefined,
+    };
+
+    // ── Step 1: Check whether this signal should close an open trade.
+    const openTrade = tradeManager.getOpen(symbol);
+    let didClose = false;
+    if (openTrade && isV3Rule && tradeManager.shouldExitOnSignal(symbol, direction, isGold)) {
+      const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
+      if (exitPx != null) {
+        // closeTrade also emits a 'trade-close' event handled by handleTradeClose.
+        tradeManager.closeTrade(symbol, exitPx, signal.ts, 'OPP_SIG_EXIT', id);
+        didClose = true;
+      } else {
+        logger.warn({ symbol, signalId: id }, 'V3: opposite signal arrived but no exit price available; skip close');
+      }
+    }
+
+    // ── Step 2: Determine whether this signal can OPEN a new trade.
+    // Sequence of gates: not-V3-rule → silenced → flip-short → CVD → cooldown → OPEN.
+    let action: V3Decision['action'] = 'OPEN';
+    let reason = qualityReason;
+
+    if (!isV3Rule) { action = 'SKIP_NOT_V3_RULE'; reason = `not a V3 entry rule (${signal.ruleId})`; }
+    else if (!isGold) { action = 'SKIP_SILENCED'; reason = `silenced: ${qualityReason}`; }
+    else if (config.v3.dropFlipShorts && signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'short') {
+      action = 'SKIP_FLIP_SHORT'; reason = 'V3 drops qualified FLIP shorts';
+    }
+    else if (direction === 'long'  && cvd <= config.v3.cvdLongFloor) {
+      action = 'SKIP_CVD'; reason = `cvdSession=${cvd} <= longFloor=${config.v3.cvdLongFloor}`;
+    }
+    else if (direction === 'short' && cvd >= config.v3.cvdShortFloor) {
+      action = 'SKIP_CVD'; reason = `cvdSession=${cvd} >= shortFloor=${config.v3.cvdShortFloor}`;
+    }
+    else if (tradeManager.getOpen(symbol)) {
+      // Either we didn't close above (same-dir signal), or the close completed
+      // and we'd be re-opening — but a re-open in this path means the closer
+      // was an entry-eligible opposite signal. We already closed the prior
+      // trade; only allow opening a new one if the slot is empty after close.
+      // Belt-and-suspenders: if still open, skip.
+      action = 'SKIP_COOLDOWN'; reason = 'V3 cooldown: a trade is already open';
+    }
+
+    // ── Log the entry decision.
+    logV3Decision({ ...baseDecision, action, reason });
+
+    // ── Step 3: Apply broadcast + open by mode.
+    if (mode === 'live') {
+      if (action === 'OPEN') {
+        const entry = resolveEntryForOpen(signal);
+        if (entry == null) {
+          logger.warn({ symbol, signalId: id, rule: signal.ruleId }, 'V3 live: cannot resolve entry price; skip open');
+        } else {
+          // Open the trade and broadcast normally.
+          tradeManager.openTrade({
+            symbol, signalId: id,
+            ruleId: signal.ruleId, pattern, direction,
+            entry, openTs: signal.ts,
+          });
+          this.bus.emit('signal', signal);
+          discord.signal(signal);
+          logger.info({ ruleId: signal.ruleId, score: signal.score, reason: qualityReason }, 'V3 live: signal broadcast + trade opened');
+        }
+      } else {
+        logger.debug({ ruleId: signal.ruleId, action, reason }, 'V3 live: signal not broadcast');
+      }
+    } else {
+      // Shadow: broadcast follows the legacy gold-tier path; V3 decisions are
+      // recorded but do not alter what the user sees.
+      if (isGold) {
+        this.bus.emit('signal', signal);
+        discord.signal(signal);
+        logger.info({ ruleId: signal.ruleId, score: signal.score, v3Action: action }, 'V3 shadow: legacy broadcast (V3 decision logged)');
+      }
+      // In shadow mode we also keep TradeManager in sync so close events are
+      // observable end-to-end — but only OPEN if V3 said OPEN, never override
+      // the legacy broadcast.
+      if (action === 'OPEN' && !tradeManager.getOpen(symbol)) {
+        const entry = resolveEntryForOpen(signal);
+        if (entry != null) {
+          tradeManager.openTrade({
+            symbol, signalId: id,
+            ruleId: signal.ruleId, pattern, direction,
+            entry, openTs: signal.ts,
+          });
+        }
+      }
+    }
+
+    // didClose just suppresses an unused-var warning in some lint configs.
+    void didClose;
   }
 
   // Bulk-replace all levels with a fresh set from the levels file.

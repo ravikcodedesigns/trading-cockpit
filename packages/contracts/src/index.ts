@@ -239,12 +239,25 @@ export interface CockpitConnectionPush {
 export type CockpitMessage = CockpitSnapshot | CockpitEventPush | CockpitSignalPush | CockpitConnectionPush;
 
 // --- Trading day helper ---
-// Trading day boundary is 09:30 ET on Day N -> 09:30 ET on Day N+1.
-// Friday's trading day extends through the weekend (Sat closed, Sun 18:00
-// reopen still belongs to Friday until Monday 09:30 RTH open).
 //
-// Returns YYYY-MM-DD for the trading day that contains the given timestamp.
-// Returns null if the timestamp is before any 09:30 boundary on a weekday.
+// Session-naming convention (LEVELS-side, not signal-side):
+//   A "trading session" runs from the prior weekday's 16:00 ET close
+//   (or Sun 18:00 ET for Monday's session) to the named day's 16:00 ET close.
+//   The session is named by its ENDING date:
+//
+//     Mon's session: Sun 18:00 → Mon 16:00 ET (≈22h, special weekend reopen)
+//     Tue's session: Mon 16:00 → Tue 16:00 ET (24h)
+//     Wed's session: Tue 16:00 → Wed 16:00 ET (24h)
+//     Thu's session: Wed 16:00 → Thu 16:00 ET (24h)
+//     Fri's session: Thu 16:00 → Fri 16:00 ET (24h)
+//     Weekend gap:   Fri 16:00 → Sun 18:00 ET (no session; mapped to next Mon)
+//
+// IMPORTANT: this boundary is for chart level rendering + daily_levels.json
+// entries only. The RTH signal-gate convention (09:30 → 16:00 ET) is
+// independent and unchanged — see classifySession() in apps/aggregator/src/quality.ts.
+//
+// Returns YYYY-MM-DD for the trading session that contains the given timestamp.
+// Weekend-gap timestamps map to the next upcoming Monday session.
 export function tradingDayFor(tsMs: number): string {
   const d = new Date(tsMs);
   const fmt = new Intl.DateTimeFormat('en-CA', {
@@ -263,42 +276,31 @@ export function tradingDayFor(tsMs: number): string {
   const minutesOfDay = hour * 60 + minute;
 
   const today = `${year}-${month}-${day}`;
-  const RTH_OPEN = 9 * 60 + 30; // 09:30 ET in minutes
+  const SESSION_END_MIN = 16 * 60;     // 16:00 ET = session close
+  const SUNDAY_REOPEN_MIN = 18 * 60;   // 18:00 ET Sun = futures reopen
 
-  // Helper to subtract days from a YYYY-MM-DD string.
-  const minusDays = (dateStr: string, days: number): string => {
-    const dt = new Date(dateStr + 'T12:00:00Z'); // noon UTC to avoid TZ edge cases
-    dt.setUTCDate(dt.getUTCDate() - days);
+  const plusDays = (dateStr: string, days: number): string => {
+    const dt = new Date(dateStr + 'T12:00:00Z');
+    dt.setUTCDate(dt.getUTCDate() + days);
     return dt.toISOString().slice(0, 10);
   };
 
-  // Determine prior trading day based on current weekday.
-  // After 09:30 ET on a weekday: today's trading day = today.
-  // Before 09:30 ET on a weekday: today's trading day = previous weekday.
-  // Saturday/Sunday/before-Sunday-18:00: trading day = previous Friday.
+  // Sat → next Mon (weekend gap)
+  if (weekday === 'Sat') return plusDays(today, 2);
 
-  if (weekday === 'Sat') {
-    // Always Friday's trading day
-    return minusDays(today, 1);
+  // Sun before 18:00 → next Mon (weekend gap continues)
+  // Sun after 18:00 → Mon (next day; Monday's session in progress)
+  if (weekday === 'Sun') return plusDays(today, 1);
+
+  // Fri before 16:00 → today (Friday session)
+  // Fri after 16:00 → next Mon (weekend gap)
+  if (weekday === 'Fri') {
+    return (minutesOfDay < SESSION_END_MIN) ? today : plusDays(today, 3);
   }
-  if (weekday === 'Sun') {
-    // Always Friday's trading day (regardless of time, since Sun 18:00 reopen
-    // is still part of Friday's day until Mon 09:30)
-    return minusDays(today, 2);
-  }
-  if (weekday === 'Mon') {
-    if (minutesOfDay < RTH_OPEN) {
-      // Pre-market Monday = still Friday's trading day
-      return minusDays(today, 3);
-    }
-    return today;
-  }
-  // Tue-Fri
-  if (minutesOfDay < RTH_OPEN) {
-    // Pre-market = previous weekday's trading day
-    return minusDays(today, 1);
-  }
-  return today;
+
+  // Mon/Tue/Wed/Thu before 16:00 → today's session
+  // Mon/Tue/Wed/Thu after 16:00 → tomorrow's session
+  return (minutesOfDay < SESSION_END_MIN) ? today : plusDays(today, 1);
 }
 
 // --- Tick stream types (Phase 1: tick-store) ---

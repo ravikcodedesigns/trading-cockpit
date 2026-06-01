@@ -75,6 +75,16 @@ function playSignalSound(ac: AudioContext, direction: string, ruleId: string): v
       const [f1, f2] = direction === 'long' ? [440, 660] : [660, 440];
       tone(f1, t,        0.18);
       tone(f2, t + 0.18, 0.28);
+    } else if (ruleId === 'reject-resistance') {
+      // descending three-tone — distinct from FLIP and EXPL
+      tone(800, t,         0.14);
+      tone(600, t + 0.14,  0.14);
+      tone(400, t + 0.28,  0.22);
+    } else if (ruleId === 'ala-bounce' || ruleId === 'ala-reclaim' || ruleId === 'ala-zone-reclaim') {
+      // ascending three-tone — long bias signal at hedge-pressure / zone level
+      tone(400, t,         0.14);
+      tone(600, t + 0.14,  0.14);
+      tone(800, t + 0.28,  0.22);
     } else {
       tone(direction === 'long' ? 528 : 396, t, 0.35);
     }
@@ -884,33 +894,46 @@ export function Chart() {
     }
     flashAlphaLinesRef.current = [];
 
-    // Helper: compute the [start, end] timestamps for a trading day in
+    // Helper: compute the [start, end] timestamps for a trading session in
     // seconds since epoch, suitable for lightweight-charts UTCTimestamp.
-    // Trading day = 09:30 ET on Day N -> 09:30 ET on Day N+1 (with weekend
-    // gap handling: Friday's day extends to Monday 09:30).
+    //
+    // Session boundaries (matches tradingDayFor() in contracts):
+    //   Mon's session: Sun 18:00 → Mon 16:00 ET (special weekend reopen)
+    //   Tue–Fri:       prior-day 16:00 → named-day 16:00 ET
+    //
+    // For Sat/Sun dates (shouldn't appear in practice with new tradingDayFor,
+    // but defensive): treat as Mon's-style range.
     const dayBoundsSeconds = (tradingDay: string): { start: number; end: number } => {
-      // Parse YYYY-MM-DD as a Date in NY timezone.
-      // We construct an ISO string in UTC that represents 09:30 NY time on
-      // that date. NY is UTC-4 (EDT) or UTC-5 (EST); use a heuristic by
-      // building a Date and asking what offset NY had then.
-      const [y, m, d] = tradingDay.split('-').map(Number);
-      const naiveLocal = new Date(Date.UTC(y, m - 1, d, 13, 30, 0)); // 13:30 UTC ~= 09:30 EDT
-      // Cross-check by formatting back; if the resulting NY hour isn't 9
-      // we're off by an hour (DST), shift accordingly.
-      const fmt = new Intl.DateTimeFormat('en-US', {
+      const parts = tradingDay.split('-').map(Number);
+      const y = parts[0]!, m = parts[1]!, d = parts[2]!;
+
+      // Determine weekday of this date in ET
+      const probeNoon = new Date(Date.UTC(y, m - 1, d, 16, 0, 0)); // ~noon ET
+      const dayFmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', weekday: 'short',
+      });
+      const weekday = dayFmt.format(probeNoon);
+
+      // DST-aware helper: epoch ms for a given ET wall-clock hour on (yy,mm,dd).
+      const hourFmt = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/New_York', hour: '2-digit', hour12: false,
       });
-      const nyHour = parseInt(fmt.format(naiveLocal), 10);
-      const offsetCorrection = (9 - nyHour) * 60 * 60 * 1000;
-      const start = naiveLocal.getTime() + offsetCorrection;
+      const tsForEt = (yy: number, mm: number, dd: number, etHour: number): number => {
+        // Anchor at UTC = etHour+4 (EDT default); if NY hour comes back wrong (EST),
+        // correct by the drift.
+        const naive = new Date(Date.UTC(yy, mm - 1, dd, etHour + 4, 0, 0));
+        const nyHour = parseInt(hourFmt.format(naive), 10);
+        return naive.getTime() + (etHour - nyHour) * 60 * 60 * 1000;
+      };
 
-      // End = 09:30 ET on next trading day.
-      // For Friday's trading day, end = Monday 09:30 ET.
-      const dt = new Date(start);
-      const startWeekday = dt.getUTCDay(); // 0=Sun .. 6=Sat
-      let daysForward = 1;
-      if (startWeekday === 5) daysForward = 3; // Fri -> Mon
-      const end = start + daysForward * 24 * 60 * 60 * 1000;
+      // End = 16:00 ET on tradingDay
+      const end = tsForEt(y, m, d, 16);
+
+      // Start = prior calendar day's 16:00 ET, except Mon/Sat/Sun (defensive) → Sun 18:00 ET
+      const isMonLike = (weekday === 'Mon' || weekday === 'Sat' || weekday === 'Sun');
+      const startHour = isMonLike ? 18 : 16;
+      const priorDay = new Date(Date.UTC(y, m - 1, d - 1, 12, 0, 0));
+      const start = tsForEt(priorDay.getUTCFullYear(), priorDay.getUTCMonth() + 1, priorDay.getUTCDate(), startHour);
 
       return { start: Math.floor(start / 1000), end: Math.floor(end / 1000) };
     };
@@ -1090,6 +1113,10 @@ export function Chart() {
         if (ruleId === 'expl') return selectedTimeframe === 1;
         // CLEAN → 1m chart only
         if (ruleId === 'clean-impulse') return selectedTimeframe === 1;
+        // RR → 1m chart only
+        if (ruleId === 'reject-resistance') return selectedTimeframe === 1;
+        // ALA (BOUNCE + RECLAIM + ZONE_RECLAIM) → 1m chart only
+        if (ruleId === 'ala-bounce' || ruleId === 'ala-reclaim' || ruleId === 'ala-zone-reclaim') return selectedTimeframe === 1;
         // A/B/C signals → 1m chart only
         return selectedTimeframe === 1;
       });
@@ -1139,11 +1166,65 @@ export function Chart() {
         } else if (ruleId === 'clean-impulse') {
           shape = isLong ? 'arrowUp' : 'arrowDown';
           const cfWarning = regimeAlignment('clean-impulse', sig.direction, sig.ts, regimeCheckpoints) === 'against';
-          label = (isLong ? 'CLEAN ↑ FLIP' : 'CLEAN ↓ FLIP') + (cfWarning ? ' !' : '');
+          const rsScore = (sig as any).rsScore ?? (sig as any).rs_score;
+          const rsStr = rsScore != null ? ` ${rsScore}` : '';
+          label = (isLong ? 'FLIP ↑' : 'FLIP ↓') + rsStr + (cfWarning ? ' !' : '');
           return {
             time: bucket as UTCTimestamp,
             position,
             color: cfWarning ? '#fb923c' : '#f59e0b',
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'ala-bounce') {
+          shape = 'arrowUp';
+          const lvSource = (sig as any).levelSource ?? (sig as any).level_source ?? '';
+          const lvSuffix = lvSource ? `·${lvSource}` : '';
+          label = `BNC${lvSuffix}·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#06b6d4',           // cyan — clean support bounce
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'ala-reclaim') {
+          shape = 'arrowUp';
+          const lvSource = (sig as any).levelSource ?? (sig as any).level_source ?? '';
+          const lvSuffix = lvSource ? `·${lvSource}` : '';
+          label = `RCL${lvSuffix}·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#10b981',           // emerald — failed breakdown / reclaim
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'ala-zone-reclaim') {
+          shape = 'arrowUp';
+          const lvSource = (sig as any).levelSource ?? (sig as any).level_source ?? '';
+          const lvSuffix = lvSource ? `·${lvSource}` : '';
+          label = `ZRC${lvSuffix}·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#f59e0b',           // amber — zone reclaim at BZB/BrZT
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'reject-resistance') {
+          shape = 'arrowDown';
+          const lvSource = (sig as any).levelSource ?? (sig as any).level_source ?? '';
+          const lvSuffix = lvSource ? `·${lvSource}` : '';
+          label = `RR${lvSuffix}·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#a855f7',           // purple — distinct from FLIP (amber) and EXPL (green)
             shape,
             text: label,
             size: 2,
@@ -1153,7 +1234,7 @@ export function Chart() {
           const conviction = (sig as any).conviction;
           const convSuffix = conviction ? ` ${conviction}` : '';
           const abWarning = regimeAlignment('absorption', sig.direction, sig.ts, regimeCheckpoints) === 'against';
-          label = `ABSO·${sig.score}${convSuffix}${abWarning ? ' !' : ''}`;
+          label = `ABSO·Q·${sig.score}${convSuffix}${abWarning ? ' !' : ''}`;
           return {
             time: bucket as UTCTimestamp,
             position,

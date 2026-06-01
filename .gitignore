@@ -10,3 +10,8 @@ dist/
 .env
 apps/aggregator/data/trading.db*
 
+
+# Local data + screenshots (not committed)
+daily-rs-levels/
+explosive-moves/
+snapshots/

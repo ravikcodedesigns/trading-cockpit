@@ -24,7 +24,8 @@
     "context:show": "tsx scripts/context_set.ts show",
     "context:bbb": "tsx scripts/context_set.ts bbb",
     "context:res": "tsx scripts/context_set.ts res",
-    "context:resilience": "tsx scripts/context_set.ts res"
+    "context:resilience": "tsx scripts/context_set.ts res",
+    "qualify": "tsx scripts/reapply_quality_gates.ts"
   },
   "dependencies": {
     "@fastify/static": "^7.0.4",

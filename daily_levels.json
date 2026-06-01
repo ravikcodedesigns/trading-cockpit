@@ -1,5 +1,96 @@
 {
   "days": {
+    "2026-06-01": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30108.10,
+            "high": 30108.10
+          },
+          "bearZone": {
+            "low": 30066.80,
+            "high": 30066.80
+          },
+          "ddBands": {
+            "upper": 30562.25,
+            "lower": 30063
+          },
+          "hedgePressure": 29736.4,
+          "mhp": 29529.8,
+          "additionalLevels": [
+            { "price": 30452,    "label": "ON HP",     "color": "#f2a633", "style": "solid",        "width": 2 },
+            { "price": 30344.25, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
+            { "price": 30060,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
+            { "price": 29777.70, "label": "Bull2",     "color": "#444444", "style": "solid",        "width": 2 },
+            { "price": 29736.40, "label": "Bear2",     "color": "#444444", "style": "solid",        "width": 2 }
+          ],
+          "notes": "2026-06-01 NQ Monday session (Sun 5/31 18:00 → Mon 6/1 16:00 ET) | ON HP 30452 ON MHP 30060 (from user Sun eve) | MHP 29529.8 HP 29736.4 DD 30562.25/30063 BZB 30108.10 BrZT 30066.80 HG 30344.25 Bull2 29777.70 Bear2 29736.40 — all carried forward from Fri 2026-05-29 | QQQ Open TBD at Mon 09:30 ET | QQQ Close TBD (= Fri close) | regime context to be set Mon morning"
+        }
+      ]
+    },
+    "2026-05-29": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30108.10,
+            "high": 30108.10
+          },
+          "bearZone": {
+            "low": 30066.80,
+            "high": 30066.80
+          },
+          "ddBands": {
+            "upper": 30562.25,
+            "lower": 30063
+          },
+          "hedgePressure": 29736.4,
+          "mhp": 29529.8,
+          "additionalLevels": [
+            { "price": 30382.25, "label": "QQQ Open",  "color": "#ffffff", "style": "solid",        "width": 2 },
+            { "price": 30344.25, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
+            { "price": 30306.25, "label": "QQQ Close", "color": "#ffffff", "style": "solid",        "width": 2 },
+            { "price": 30180,    "label": "ON HP",     "color": "#f2a633", "style": "solid",        "width": 2 },
+            { "price": 29952,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
+            { "price": 29777.70, "label": "Bull2",     "color": "#444444", "style": "solid",        "width": 2 },
+            { "price": 29736.40, "label": "Bear2",     "color": "#444444", "style": "solid",        "width": 2 }
+          ],
+          "notes": "2026-05-29 NQ | BZB 30108.10 BrZT 30066.80 | HP 29736.4 MHP 29529.8 | DD 30562.25/30063 ratio 0.72 bullish | MRes +72.8 WRes -19.8 Res -2.8 | ON HP 30180 ON MHP 29952 | GM BULL LM BLU | VX 17.50 VVIX 86"
+        }
+      ]
+    },
+    "2026-05-28": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30022.90,
+            "high": 30022.90
+          },
+          "bearZone": {
+            "low": 29981.80,
+            "high": 29981.80
+          },
+          "ddBands": {
+            "upper": 30374,
+            "lower": 29876
+          },
+          "hedgePressure": 29549,
+          "mhp": 29343,
+          "additionalLevels": [
+            { "price": 30125,    "label": "ON HP",     "color": "#f2a633", "style": "solid",         "width": 2 },
+            { "price": 30053,    "label": "QQQ Open",  "color": "#ffffff", "style": "solid",         "width": 2 },
+            { "price": 30050.13, "label": "HG",        "color": "#ffffff", "style": "large-dashed",  "width": 2 },
+            { "price": 30047.25, "label": "QQQ Close", "color": "#ffffff", "style": "solid",         "width": 2 },
+            { "price": 29899.40, "label": "Bull2",     "color": "#444444", "style": "solid",         "width": 2 },
+            { "price": 29858.20, "label": "Bear2",     "color": "#444444", "style": "solid",         "width": 2 },
+            { "price": 29674,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",         "width": 2 }
+          ],
+          "notes": "2026-05-28 NQ | BZB 30022.90 BrZT 29981.80 | HP 29549 MHP 29343 | DD 30374/29876 ratio 0.86 bullish | MRes +49.1 WRes -12.7 Res +19.5 | ON HP 30125 ON MHP 29674 | VX 18.27 VVIX 86.92"
+        }
+      ]
+    },
     "2026-04-30": {
       "levels": [
         {
@@ -491,6 +582,79 @@
             }
           ],
           "notes": "2026-05-19 NQ | BZB 28827.40 BrZT 28786.60 | HP 28655 MHP 27727 | DD bands tight 28873-28879 (inside bear zone) | open 28850.25 above BZB → LM BLU | extra zones: 28623/28582, 28541"
+        }
+      ]
+    },
+    "2026-05-27": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 29612.50,
+            "high": 29643.0
+          },
+          "bearZone": {
+            "low": 29540.0,
+            "high": 29571.40
+          },
+          "ddBands": {
+            "upper": 30293.92,
+            "lower": 29794.58
+          },
+          "hedgePressure": 29653.7,
+          "mhp": 29241.9,
+          "additionalLevels": [
+            {
+              "price": 30187.5,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30133.38,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30079.25,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29949,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29537,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29241.9,
+              "label": "MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "extraZones": [
+            {
+              "bzb": 29283.10,
+              "brzt": 29241.90
+            }
+          ],
+          "lmCode": "BLU",
+          "notes": "2026-05-27 NQ | BZB 29612.50 BrZT 29571.40 | HP 29653.7 MHP 29241.9 | DD 30293/29794 ratio 0.69 bullish | MRes +33.7 WRes +18.2 Res +6.2 | ON HP 29949 ON MHP 29537 | extra zones: BZB-2 29283.10 BrZT-2 29241.90 | LM BLU"
         }
       ]
     },

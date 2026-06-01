@@ -12,8 +12,12 @@ import { startStrategyEXPL, stopStrategyEXPL } from './rules-v2/strategy-expl-in
 import { startStrategyI, stopStrategyI } from './rules-v2/strategy-i-index.js';
 import { startStrategyJ, stopStrategyJ } from './rules-v2/strategy-j-index.js';
 import { startStrategyCONT, stopStrategyCONT } from './rules-v2/strategy-cont-index.js';
+import { startStrategyRR, stopStrategyRR } from './rules-v2/strategy-rr-index.js';
+import { startStrategyALA, stopStrategyALA } from './rules-v2/strategy-ala-index.js';
 import { startExplShortObserver, stopExplShortObserver } from './observers/expl-short-observer.js';
 import { getRecentTrades } from './rules-v2/tick-client.js';
+import { v3TickRouter } from './v3-tick-router.js';
+import { v3RthTimer } from './v3-rth-timer.js';
 import { state } from './state.js';
 import { logger } from './logger.js';
 import { discord } from './discord.js';
@@ -177,10 +181,22 @@ async function main() {
     logger.info('strategy-J started (TRAP: tick-level seller/buyer trap detector)');
     startStrategyCONT();
     logger.info('strategy-CONT started (trend continuation re-entry)');
+    startStrategyRR();
+    logger.info('strategy-RR started (Reject Resistance: short broken-support-becomes-resistance)');
+    startStrategyALA();
+    logger.info('strategy-ALA started (Absorption at Level: long bias on MHP/HP/ON_MHP/ON_HP absorption)');
   }
 
   // Passive observers (data collection, no signals emitted)
   startExplShortObserver();
+
+  // V3 tick router — drains live trade ticks into CvdSession and TradeManager
+  // so the session CVD and any open V3 trade's TP/SL stay current. No-op when
+  // config.v3.activeMode === 'off'.
+  v3TickRouter.start();
+  // V3 RTH-close timer — at config.v3.rthCloseEt (default 15:54 ET), force-close
+  // any open V3 trade at the latest tick price. No-op when V3 is 'off'.
+  v3RthTimer.start();
 
   // Then the server (sources and cockpit can connect)
   const app = await startServer();
@@ -201,8 +217,12 @@ async function main() {
         stopStrategyI();
         stopStrategyJ();
         stopStrategyCONT();
+        stopStrategyRR();
+        stopStrategyALA();
       }
       stopExplShortObserver();
+      v3TickRouter.stop();
+      v3RthTimer.stop();
       await app.close();
       db.close();
     } catch (err) {

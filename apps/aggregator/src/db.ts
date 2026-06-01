@@ -167,6 +167,66 @@ _db.exec(`
   CREATE INDEX IF NOT EXISTS idx_signals_ctx_lm_code ON signals(ctx_lm_code);
 `);
 
+// Migration: add delta15 percentile columns to qualified_signals.
+// These are observational flags — signals are never removed based on them.
+for (const [col, type] of [
+  ['delta15_pct_rank', 'REAL'],
+  ['delta15_caution',  'INTEGER'],
+] as [string, string][]) {
+  try { _db.exec(`ALTER TABLE qualified_signals ADD COLUMN ${col} ${type}`); } catch { /* already exists */ }
+}
+
+// ── V3 tables ──────────────────────────────────────────────────────────────
+//
+// open_trades: one row per symbol with an active V3 trade.
+//   - signal_id  : the signal that opened the trade (FK → signals.id)
+//   - rule_id    : 'absorption' | 'clean-impulse' | 'expl'
+//   - pattern    : 'FLIP' for clean-impulse FLIPs; NULL otherwise
+//   - tp_pts/sl_pts : configured at trade-open time (per-rule, per-direction)
+//
+// v3_decisions: append-only audit log. Every signal that runs through the V3
+// pipeline (shadow OR live) writes one row here. Used by the daily diff script
+// to verify the live decisions exactly match the offline backtest.
+//
+// Both tables are V3-only. If V3 is later removed, drop these two tables and
+// no other system is affected.
+_db.exec(`
+  CREATE TABLE IF NOT EXISTS open_trades (
+    symbol      TEXT    PRIMARY KEY,
+    signal_id   INTEGER NOT NULL,
+    rule_id     TEXT    NOT NULL,
+    pattern     TEXT,
+    direction   TEXT    NOT NULL,
+    entry       REAL    NOT NULL,
+    tp_pts      REAL    NOT NULL,
+    sl_pts      REAL    NOT NULL,
+    open_ts     INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS v3_decisions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts          INTEGER NOT NULL,
+    symbol      TEXT    NOT NULL,
+    signal_id   INTEGER,
+    rule_id     TEXT    NOT NULL,
+    pattern     TEXT,
+    direction   TEXT    NOT NULL,
+    qualified   INTEGER NOT NULL,
+    active_mode TEXT    NOT NULL,    -- 'shadow' | 'live'
+    action      TEXT    NOT NULL,    -- 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED'
+    reason      TEXT    NOT NULL,
+    cvd_session REAL,
+    entry       REAL,
+    exit_price  REAL,                -- set on CLOSE rows
+    exit_outcome TEXT,               -- 'WIN' | 'LOSS' | 'OPP_SIG_EXIT' | 'CLOSE_AT_BELL'
+    pnl_pts     REAL,
+    open_trade_id INTEGER            -- the open_trades row this acted on (CLOSE/SKIP_COOLDOWN)
+  );
+  CREATE INDEX IF NOT EXISTS idx_v3_decisions_ts        ON v3_decisions(ts);
+  CREATE INDEX IF NOT EXISTS idx_v3_decisions_symbol_ts ON v3_decisions(symbol, ts);
+  CREATE INDEX IF NOT EXISTS idx_v3_decisions_action    ON v3_decisions(action);
+`);
+
 const stmtInsertEvent = _db.prepare(
   'INSERT INTO events (ts, source, type, symbol, payload) VALUES (?, ?, ?, ?, ?)'
 );
@@ -441,6 +501,102 @@ export const db = {
   query<T = unknown>(sql: string, params: unknown[] = []): T[] {
     return _db.prepare(sql).all(...params) as T[];
   },
+
+  // ── V3 helpers ───────────────────────────────────────────────────────────
+  v3: {
+    upsertOpenTrade(t: V3OpenTrade): void {
+      stmtV3UpsertOpenTrade.run(
+        t.symbol, t.signalId, t.ruleId, t.pattern ?? null,
+        t.direction, t.entry, t.tpPts, t.slPts, t.openTs,
+      );
+    },
+    getOpenTrade(symbol: string): V3OpenTrade | null {
+      const row = stmtV3GetOpenTrade.get(symbol) as any;
+      if (!row) return null;
+      return {
+        symbol: row.symbol, signalId: row.signal_id, ruleId: row.rule_id,
+        pattern: row.pattern, direction: row.direction, entry: row.entry,
+        tpPts: row.tp_pts, slPts: row.sl_pts, openTs: row.open_ts,
+      };
+    },
+    getAllOpenTrades(): V3OpenTrade[] {
+      const rows = stmtV3GetAllOpenTrades.all() as any[];
+      return rows.map(row => ({
+        symbol: row.symbol, signalId: row.signal_id, ruleId: row.rule_id,
+        pattern: row.pattern, direction: row.direction, entry: row.entry,
+        tpPts: row.tp_pts, slPts: row.sl_pts, openTs: row.open_ts,
+      }));
+    },
+    deleteOpenTrade(symbol: string): void {
+      stmtV3DeleteOpenTrade.run(symbol);
+    },
+    logDecision(d: V3Decision): number {
+      const res = stmtV3InsertDecision.run(
+        d.ts, d.symbol, d.signalId ?? null, d.ruleId, d.pattern ?? null,
+        d.direction, d.qualified ? 1 : 0, d.activeMode, d.action, d.reason,
+        d.cvdSession ?? null, d.entry ?? null,
+        d.exitPrice ?? null, d.exitOutcome ?? null, d.pnlPts ?? null,
+        d.openTradeId ?? null,
+      );
+      return Number(res.lastInsertRowid);
+    },
+  },
 };
+
+// V3 types and prepared statements
+export interface V3OpenTrade {
+  symbol: string;
+  signalId: number;
+  ruleId: string;
+  pattern: string | null;
+  direction: 'long' | 'short';
+  entry: number;
+  tpPts: number;
+  slPts: number;
+  openTs: number;
+}
+
+export interface V3Decision {
+  ts: number;
+  symbol: string;
+  signalId: number | null;
+  ruleId: string;
+  pattern: string | null;
+  direction: 'long' | 'short';
+  qualified: boolean;
+  activeMode: 'shadow' | 'live';
+  action: 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED' | 'SKIP_NOT_V3_RULE';
+  reason: string;
+  cvdSession?: number;
+  entry?: number;
+  exitPrice?: number;
+  exitOutcome?: 'WIN' | 'LOSS' | 'OPP_SIG_EXIT' | 'CLOSE_AT_BELL';
+  pnlPts?: number;
+  openTradeId?: number;
+}
+
+const stmtV3UpsertOpenTrade = _db.prepare(`
+  INSERT INTO open_trades (symbol, signal_id, rule_id, pattern, direction, entry, tp_pts, sl_pts, open_ts)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ON CONFLICT(symbol) DO UPDATE SET
+    signal_id = excluded.signal_id,
+    rule_id   = excluded.rule_id,
+    pattern   = excluded.pattern,
+    direction = excluded.direction,
+    entry     = excluded.entry,
+    tp_pts    = excluded.tp_pts,
+    sl_pts    = excluded.sl_pts,
+    open_ts   = excluded.open_ts
+`);
+const stmtV3GetOpenTrade     = _db.prepare(`SELECT * FROM open_trades WHERE symbol = ?`);
+const stmtV3GetAllOpenTrades = _db.prepare(`SELECT * FROM open_trades`);
+const stmtV3DeleteOpenTrade  = _db.prepare(`DELETE FROM open_trades WHERE symbol = ?`);
+const stmtV3InsertDecision   = _db.prepare(`
+  INSERT INTO v3_decisions (
+    ts, symbol, signal_id, rule_id, pattern, direction, qualified,
+    active_mode, action, reason, cvd_session, entry,
+    exit_price, exit_outcome, pnl_pts, open_trade_id
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
 
 logger.info({ path: config.dbPath }, 'database ready');

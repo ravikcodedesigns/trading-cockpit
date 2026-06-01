@@ -21,6 +21,7 @@ export interface RSContext {
   // Greater market (3 indicators: DD ratio + SPY vs MHP + Monthly Maps)
   greaterMarket: GreaterMarket;    // 'bull' | 'bear' | 'neutral'
   ddRatio: number;                  // 0-1, >0.5 = bullish
+  lmCode?: string;                  // LM code for the day: BLU / BLD / BSD / BrD etc.
   // Three resilience readings — each is a tiebreaker at its respective level
   mhpResilience: Resilience;        // orange — MHP resilience. tiebreaker at MHP. >0 = 90% bounce, <0 = ~73%
   hpResilience: Resilience;         // blue   — HP/weekly resilience. tiebreaker at HP.

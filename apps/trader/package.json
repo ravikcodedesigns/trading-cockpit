@@ -1,0 +1,26 @@
+{
+  "name": "@trading/trader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trading/contracts": "workspace:*",
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.5",
+    "pino": "^9.1.0",
+    "pino-pretty": "^11.1.0",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/node": "^20.12.12",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}

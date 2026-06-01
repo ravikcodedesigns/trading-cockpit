@@ -472,8 +472,9 @@ export function scoreRSLevels(
   // Component 1: level proximity
   const { score: lScore, matched, distancePts } = computeLevelScore(signalPrice, direction, allLevels, ctx);
 
-  // Component 2: context
-  const { score: cScore, gmAligned, ddAligned, lmAligned } = computeContextScore(direction, matched, levels.lmCode, ctx);
+  // Component 2: context — lmCode from daily levels, falling back to RSContext if not set there
+  const effectiveLmCode = levels.lmCode ?? (ctx.lmCode as any);
+  const { score: cScore, gmAligned, ddAligned, lmAligned } = computeContextScore(direction, matched, effectiveLmCode, ctx);
 
   // Component 3: confirmation (reads test count BEFORE recording this test)
   const testCount = matched ? (_testCounts.get(matched.label) ?? 0) : 0;
@@ -493,7 +494,7 @@ export function scoreRSLevels(
   total = Math.round(total);
 
   const { tp1, tp2 } = findExitTargets(signalPrice, direction, allLevels);
-  const labelLine = buildLabelLine(matched, testCount, gmAligned, ddAligned, lmAligned, levels.lmCode, ctx, breakAndReturn);
+  const labelLine = buildLabelLine(matched, testCount, gmAligned, ddAligned, lmAligned, effectiveLmCode, ctx, breakAndReturn);
 
   return {
     score: total,

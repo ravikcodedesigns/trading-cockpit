@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 interface RSContext {
   greaterMarket: 'bull' | 'bear' | 'neutral';
   ddRatio: number;
+  lmCode?: string;
   mhpResilience: number;
   hpResilience: number;
   redistResilience: number;
@@ -68,6 +69,12 @@ export function RSContextBar() {
       flexWrap: 'nowrap', whiteSpace: 'nowrap',
     }}>
       {chip('GM', ctx.greaterMarket.toUpperCase(), gmColor)}
+      {ctx.lmCode && (
+        <>
+          <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+          {chip('LM', ctx.lmCode, ctx.lmCode.startsWith('Br') ? 'var(--short)' : 'var(--long)')}
+        </>
+      )}
       <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
       {chip('VX', ctx.vx.toFixed(2), vxColor)}
       {chip('BBB', ctx.bbb.toFixed(2), 'var(--text-1)')}
