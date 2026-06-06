@@ -21,6 +21,12 @@ export const config = {
   levelsPath: process.env.LEVELS_PATH
     ? path.resolve(process.env.LEVELS_PATH)
     : path.join(repoRoot, 'daily_levels.json'),
+  // Extra per-instrument levels files merged on top of the primary file.
+  // 2026-06-03: ES Step 1 expansion — separate file lets us iterate on ES
+  // without polluting the NQ-centric daily_levels.json.
+  levelsExtraPaths: [
+    path.join(repoRoot, 'daily_levels_es.json'),
+  ] as string[],
   discordWebhook: process.env.DISCORD_WEBHOOK ?? '',
   flashAlpha: {
     url: process.env.FLASHALPHA_URL ?? '',
@@ -69,15 +75,53 @@ export const config = {
     cvdShortFloor: 3000,   // SHORT entries blocked when cvdSession ≥ this
 
     // Direction-specific behavior baked in from backtest findings:
-    dropFlipShorts: true,                  // qualified FLIP shorts → not traded
+    // dropFlipShorts: 2026-06-04 flipped TRUE → FALSE after 30-day analysis showed
+    // qualified FLIP-SHORTs at 77.8% WR / +38.9 EV / +700 pts (n=18) — strongest single
+    // signal in the system. Previous TRUE setting was leaving ~$3,500/short on the table.
+    dropFlipShorts: false,                 // qualified FLIP shorts now ELIGIBLE for V3 OPEN
     requireQualifiedExitsLongs: true,      // only qualified opp signals close LONG trades
-    requireQualifiedExitsShorts: false,    // any opposite signal closes SHORT trades
+    // closeShortsOnlyOnFlipLong: 2026-06-04 — when ON, an open SHORT can ONLY be closed
+    // by a qualified FLIP-LONG signal (clean-impulse rule_id, FLIP pattern). Prevents
+    // weak opposing signals (tape-speed, large-print, absorption) from exiting profitable
+    // shorts early. Overrides requireQualifiedExitsShorts when ON.
+    closeShortsOnlyOnFlipLong: true,
+    requireQualifiedExitsShorts: false,    // (legacy — superseded by closeShortsOnlyOnFlipLong)
+
+    // forceShadowRules: rules in this list are evaluated by V3 (decisions logged
+    // to v3_decisions) but NEVER open a trade — even when V3 is in 'live' mode.
+    // Used for rules that need OOS sample accumulation before going live.
+    //   - cont-reentry (2026-06-03): n=24 / 67% WR / +30.5 EV. Needs ~50+ OOS sigs.
+    //   - es-flip (2026-06-03): n=41 test / 60.7% LONG / 50% SHORT WR. Needs OOS.
+    //   - expl (2026-06-04): SILENCED + force-shadow. LONG 30% WR / -19 EV / -1,130 pts;
+    //     SHORT 4% WR / -62 EV / -3,018 pts. Both losing; detector kept for research.
+    forceShadowRules: ['cont-reentry', 'es-flip', 'expl'] as string[],
 
     // Per-rule TP/SL points. Number → both directions; { long, short } → asymmetric.
     perRule: {
-      'absorption':          { tp: 80, sl: 140 },
-      'clean-impulse-FLIP':  { tp: 80, sl: { long: 55, short: 105 } },
-      'expl':                { tp: 80, sl: 70 },
+      'absorption':              { tp: 80, sl: 140 },
+      'clean-impulse-FLIP':      { tp: 80, sl: { long: 55, short: 105 } },
+      'expl':                    { tp: 80, sl: 70 },
+      'wall-broken-fade':        { tp: 20, sl: 10 },
+      // 2026-06-03: compression+real-wall+capitulation. SHADOW only — single-day
+      // MBO produced zero qualifying setups (no confluence formed on bull-trend day).
+      // R:R 1:4 strict. Re-validate when 2+ weeks of MBO accumulated.
+      'compression-realwall':    { tp: 24, sl: 6 },
+      // 2026-06-03: flip-long-pmcore. FLIP-long filtered to 10:30-13:30 ET window +
+      // deltaLast3 ≤ -300 (strong prior bearish). Backtested on 41 historical signals
+      // (60-day window) achieving 69.6% WR (16W/7L/8 BE-scratch) at TP=60/SL=40 R:R 1.5.
+      // Per-trade slipped ~+21 pts. SHADOW pending live validation.
+      'flip-long-pmcore':        { tp: 60, sl: 40 },
+      // 2026-06-03: cont-reentry (Strategy CONT). SHADOW pending more signal accumulation.
+      // Empirical analysis on n=24 (May 20 – Jun 3) at TP=80/SL=70 → 66.7% WR, +30.5 EV/sig,
+      // +733 pts total. Wide stops required — median time-to-peak 73 min, median DD on
+      // losers 72pt. Rule's shipped stopDist=25pt would kill 7/17 winners.
+      'cont-reentry':            { tp: 80, sl: 70 },
+      // 2026-06-03: es-flip (ES-tuned FLIP detector). SHADOW pending OOS validation.
+      // Derived via labelled-swing analysis on 8 train days, validated on 8 test days.
+      // LONG K=4 / SHORT K=5 with swing-confirmation gate (±5 bars).
+      // Test results: LONG 60.7% WR / +2.9 EV / 7.2 sig/day; SHORT 50% WR / +2.7 EV / 1.5 sig/day.
+      // Symmetric TP=20/SL=20 for simplicity.
+      'es-flip':                 { tp: 20, sl: 20 },
     } as const,
   },
 };

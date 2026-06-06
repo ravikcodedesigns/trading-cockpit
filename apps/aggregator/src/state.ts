@@ -103,9 +103,19 @@ const startTime = Date.now();
  * path which considers even silenced signals.
  */
 function isV3EntryRule(signal: ConfluenceSignal): boolean {
-  if (signal.ruleId === 'absorption') return true;
+  // ABSO removed 2026-06-02 — no clear edge in historical WR, hidden from UI,
+  // and no longer triggers V3 OPENs. Detection + qualified_signals logging
+  // continues for future research; absorption is also excluded from the
+  // opposing-signal exit set further below.
   if (signal.ruleId === 'expl')       return true;
   if (signal.ruleId === 'clean-impulse' && (signal as any).pattern === 'FLIP') return true;
+  if (signal.ruleId === 'wall-broken-fade') return true;
+  if (signal.ruleId === 'compression-realwall') return true;
+  // cont-reentry (2026-06-03): SHADOW — logs V3 decisions but doesn't trade in live mode
+  // either, since the rule still needs OOS sample size. Visible on chart for monitoring.
+  if (signal.ruleId === 'cont-reentry') return true;
+  // es-flip (2026-06-03): SHADOW — ES-tuned FLIP detector, forceShadowRules-gated.
+  if (signal.ruleId === 'es-flip') return true;
   return false;
 }
 
@@ -359,7 +369,7 @@ class State {
     // ── Step 1: Check whether this signal should close an open trade.
     const openTrade = tradeManager.getOpen(symbol);
     let didClose = false;
-    if (openTrade && isV3Rule && tradeManager.shouldExitOnSignal(symbol, direction, isGold)) {
+    if (openTrade && isV3Rule && tradeManager.shouldExitOnSignal(symbol, direction, isGold, signal.ruleId, pattern)) {
       const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
       if (exitPx != null) {
         // closeTrade also emits a 'trade-close' event handled by handleTradeClose.
@@ -377,6 +387,12 @@ class State {
 
     if (!isV3Rule) { action = 'SKIP_NOT_V3_RULE'; reason = `not a V3 entry rule (${signal.ruleId})`; }
     else if (!isGold) { action = 'SKIP_SILENCED'; reason = `silenced: ${qualityReason}`; }
+    else if (config.v3.forceShadowRules.includes(signal.ruleId)) {
+      // Per-rule shadow override: rule is observed (decision logged) but never opens
+      // a trade — even when V3 is in 'live' mode. Used for OOS-accumulation rules.
+      action = 'SKIP_FORCE_SHADOW';
+      reason = `force-shadow rule (${signal.ruleId}) — observed but not traded`;
+    }
     else if (config.v3.dropFlipShorts && signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'short') {
       action = 'SKIP_FLIP_SHORT'; reason = 'V3 drops qualified FLIP shorts';
     }
@@ -529,6 +545,15 @@ class State {
   onConnection(fn: (m: { source: SourceName; status: ConnectionStatus }) => void): () => void {
     this.bus.on('connection', fn);
     return () => { this.bus.off('connection', fn); };
+  }
+
+  // V3 trade-close events. Emitted when V3 closes a position (TP_HIT, SL_HIT,
+  // OPP_SIG_EXIT, CLOSE_AT_BELL). Broadcast to cockpit WS so the trader app
+  // can listen for V3-driven exits (e.g. opposing-signal exit on FLIP-LONG
+  // closing an open FLIP-SHORT). Live mode only — handleTradeClose gates this.
+  onTradeClose(fn: (evt: any) => void): () => void {
+    this.bus.on('trade-close', fn);
+    return () => { this.bus.off('trade-close', fn); };
   }
 }
 

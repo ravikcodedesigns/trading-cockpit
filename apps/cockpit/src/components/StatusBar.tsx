@@ -1,6 +1,8 @@
 import { useStore } from '../lib/ws';
 import type { ConnectionStatus, SourceName } from '@trading/contracts';
 import { RSContextBar } from './RSContextBar';
+import { KillSwitch } from './KillSwitch';
+import { TraderStatus } from './TraderStatus';
 
 const SOURCES: SourceName[] = ['bookmap', 'flashalpha', 'levels', 'tradovate'];
 
@@ -120,6 +122,12 @@ export function StatusBar() {
         >
           {soundOn ? '🔔' : '🔕'}
         </button>
+
+        {/* Trader state badge (open position + pnl + errors) */}
+        <TraderStatus />
+
+        {/* Trader kill-switch */}
+        <KillSwitch />
 
         {/* Source dots + uptime — pushed to the right */}
         <div style={{ display: 'flex', gap: 14, marginLeft: 'auto', flexShrink: 0 }}>

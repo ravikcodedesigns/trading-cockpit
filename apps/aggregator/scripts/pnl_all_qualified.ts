@@ -115,11 +115,15 @@ function simulate(ts: number, ep: number, dir: 'long' | 'short', sl: number): Tr
 }
 
 // ── Load all qualified signals ───────────────────────────────────────────────
-
+// ABSO excluded 2026-06-02: per user direction, absorption is no longer counted
+// in WR/PnL aggregates for V3/qualified-eligible signals. Detection and
+// qualified_signals logging continue — use scripts/abso_*.ts for ABSO-only
+// analyses. This script's "all qualified" intentionally excludes ABSO now.
 const rows = trDb.prepare(`
   SELECT q.signal_id, q.signal_ts, q.symbol, q.rule_id, q.direction, q.score, s.payload
   FROM qualified_signals q
   JOIN signals s ON s.id = q.signal_id
+  WHERE q.rule_id != 'absorption'
   ORDER BY q.signal_ts ASC
 `).all() as any[];
 

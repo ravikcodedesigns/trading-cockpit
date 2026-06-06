@@ -12,7 +12,8 @@ import { withRSScore } from './rs-attach.js';
 import type { Symbol } from '@trading/contracts';
 
 const BAR_CLOSE_BUFFER_MS = 100;  // 100ms after :00 — enough for last ticks to flush to DB
-const SYMBOLS: Symbol[] = ['NQ', 'ES'];
+// strategy-h is NQ-tuned. ES uses strategy-es-flip with ES-derived thresholds.
+const SYMBOLS: Symbol[] = ['NQ'];
 
 let _running     = false;
 let _timer: ReturnType<typeof setTimeout> | null = null;

@@ -19,8 +19,10 @@ const CVD_LONG_FLOOR  = -3000;
 const CVD_SHORT_FLOOR = +3000;
 
 const rules: RuleSpec[] = [
-  { ruleId: 'absorption',                     tp: 80, sl: 140,
-    entryPriceFromRationale: /absorbed at (\d+\.?\d*)/ },
+  // ABSO removed from V3 backtest 2026-06-02 — no clear edge in historical WR,
+  // muted from V3 (entry + opp-exit) and Discord. Detection + qualified_signals
+  // logging continue for future research. Use scripts/abso_*.ts for ABSO-only
+  // analysis; this script's V3 aggregate intentionally excludes it.
   { ruleId: 'clean-impulse', pattern: 'FLIP', tp: 80, sl: { long: 55, short: 105 } },
   { ruleId: 'expl',                           tp: 80, sl: 70, fallbackToTickPriceAtTs: true },
 ];

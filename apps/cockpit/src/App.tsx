@@ -170,9 +170,18 @@ function ContextStrip({
       <div style={{ color: 'var(--text-0)', fontWeight: 500, letterSpacing: 0.5, marginBottom: 4 }}>{symbol}</div>
       {levels ? (
         <div className="mono" style={{ fontSize: 11, lineHeight: 1.5 }}>
-          <div>bull <span style={{ color: 'var(--long)' }}>{levels.bullZone.low}–{levels.bullZone.high}</span></div>
-          <div>bear <span style={{ color: 'var(--short)' }}>{levels.bearZone.low}–{levels.bearZone.high}</span></div>
-          <div>HP <span style={{ color: 'var(--warn)' }}>{levels.hedgePressure}</span></div>
+          {levels.bullZone && (
+            <div>bull <span style={{ color: 'var(--long)' }}>{levels.bullZone.low}–{levels.bullZone.high}</span></div>
+          )}
+          {levels.bearZone && (
+            <div>bear <span style={{ color: 'var(--short)' }}>{levels.bearZone.low}–{levels.bearZone.high}</span></div>
+          )}
+          {levels.hedgePressure !== undefined && (
+            <div>HP <span style={{ color: 'var(--warn)' }}>{levels.hedgePressure}</span></div>
+          )}
+          {!levels.bullZone && !levels.bearZone && !levels.hedgePressure && (
+            <div style={{ color: 'var(--text-2)' }}>RS levels not tracked</div>
+          )}
         </div>
       ) : (
         <div style={{ color: 'var(--text-2)', fontSize: 11 }}>no levels loaded</div>

@@ -18,6 +18,39 @@ import { tradingDayFor } from '@trading/contracts';
 import type { ConfluenceSignal } from '@trading/contracts';
 import { SignalChartCard } from './SignalFeed';
 
+// ── Range arithmetic for the dynamic bar-fetch loader ──────────────────────
+// Each entry is [fromMs, toMs] inclusive-exclusive. Arrays are kept sorted+merged.
+type Range = [number, number];
+
+function mergeRange(ranges: Range[], from: number, to: number): Range[] {
+  if (from >= to) return ranges;
+  const all: Range[] = [...ranges, [from, to]].sort((a, b) => a[0] - b[0]);
+  const out: Range[] = [];
+  for (const [a, b] of all) {
+    if (out.length && a <= out[out.length - 1]![1]) {
+      out[out.length - 1]![1] = Math.max(out[out.length - 1]![1], b);
+    } else {
+      out.push([a, b]);
+    }
+  }
+  return out;
+}
+
+function gapsToFetch(ranges: Range[], from: number, to: number): Range[] {
+  if (from >= to) return [];
+  const gaps: Range[] = [];
+  let cursor = from;
+  for (const [a, b] of ranges) {
+    if (b <= cursor) continue;
+    if (a >= to) break;
+    if (a > cursor) gaps.push([cursor, Math.min(a, to)]);
+    cursor = Math.max(cursor, b);
+    if (cursor >= to) break;
+  }
+  if (cursor < to) gaps.push([cursor, to]);
+  return gaps;
+}
+
 // ── Drawing tool types ─────────────────────────────────────────────────────
 type DrawMode = 'line' | 'text' | null;
 type Drawing =
@@ -216,7 +249,7 @@ function computeRegime(
   };
 
   const ddDir = (price: number | null): FactorDir => {
-    if (price === null) return null;
+    if (price === null || !levels.ddBands) return null;
     const { upper, lower } = levels.ddBands;
     if (upper === lower) return null;
     return ((price - lower) / (upper - lower)) > 0.5 ? 'bull' : 'bear';
@@ -224,8 +257,8 @@ function computeRegime(
 
   const greaterMkt = (price: number | null): FactorDir => {
     if (price === null) return null;
-    if (price > levels.bullZone.high) return 'bull';
-    if (price < levels.bearZone.low)  return 'bear';
+    if (levels.bullZone && price > levels.bullZone.high) return 'bull';
+    if (levels.bearZone && price < levels.bearZone.low)  return 'bear';
     return null;
   };
 
@@ -256,7 +289,7 @@ function computeRegime(
     { name: '4H',          dir: structDir(h4Bars,    H4_MS, cp931) },
     { name: 'Greater mkt', dir: greaterMkt(p931) },
     { name: 'DD ratio',    dir: ddDir(p931) },
-    { name: 'HP',          dir: cmp(p931, levels.hedgePressure) },
+    { name: 'HP',          dir: cmp(p931, levels.hedgePressure ?? null) },
     { name: 'ON HP',       dir: cmp(p931, getAL('ON HP')) },
     { name: 'ON MHP',      dir: cmp(p931, getAL('ON MHP')) },
     { name: 'HG',          dir: cmp(p931, getAL('HG')) },
@@ -372,6 +405,11 @@ export function Chart() {
   // day is its own short line series confined to that day's bar range.
   // We track them so we can clean up on level updates / symbol switches.
   const levelLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
+  // Per-level label entries for today's levels, drawn as SVG text in the
+  // drawing overlay (positioned at top-right of each line) so we can control
+  // font-size and placement beyond what lightweight-charts' price-axis chip
+  // allows.
+  const levelLabelsRef = useRef<Array<{ price: number; label: string; color: string }>>([]);
   const flashAlphaLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
   // TP/DD price lines drawn per signal — rebuilt whenever the markers effect runs.
   // Using IPriceLine (attached to the candlestick series) instead of separate
@@ -390,6 +428,17 @@ export function Chart() {
   const barHistoryRef = useRef<Record<string, Map<number, {
     open: number; high: number; low: number; close: number; volume: number;
   }>>>({ NQ: new Map(), ES: new Map() });
+
+  // Tracks already-fetched time ranges so we don't re-request data we have.
+  // Keyed by `${symbol}:${timeframe}` → sorted, merged [fromMs, toMs] intervals.
+  const loadedRangesRef = useRef<Record<string, Range[]>>({});
+  // Symbols currently mid-fetch (prevents redundant requests).
+  const fetchInFlightRef = useRef<Set<string>>(new Set());
+  // Debounce timer for the scroll-driven dynamic loader.
+  const dynamicLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Latest dynamic-load callback, populated by an effect so the chart's
+  // visible-range subscription always reaches the most recent closure.
+  const dynamicLoadRef = useRef<(fromMs: number, toMs: number) => void>(() => {});
 
   // Incremented after historical bars finish loading so the markers effect
   // re-runs with a populated barHistoryRef (post-entry markers arrive via a
@@ -410,6 +459,13 @@ export function Chart() {
   const [textInput, setTextInput] = useState<{ x: number; y: number; time: number; price: number } | null>(null);
   const [textValue, setTextValue] = useState('');
   const [regimeCheckpoints, setRegimeCheckpoints] = useState<CheckpointData[]>([]);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState<string>(() => {
+    // Default to today (ET-naive YYYY-MM-DD) — matches the offset used elsewhere
+    const ET_OFFSET_MS = 4 * 60 * 60_000;
+    const d = new Date(Date.now() - ET_OFFSET_MS);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+  });
   const soundOn    = useStore((s) => s.soundOn);
   const setSoundOn = useStore((s) => s.setSoundOn);
   // Tracks signal timestamps already alerted so we don't re-fire on re-renders
@@ -482,7 +538,78 @@ export function Chart() {
   // Clear bar history when timeframe changes so historical bars re-fetch
   useEffect(() => {
     barHistoryRef.current[selectedSymbol] = new Map();
+    // Loaded ranges are per (symbol, timeframe) — clear only the active key
+    // so a timeframe change forces a re-fetch but other (symbol, tf) caches stay.
+    loadedRangesRef.current[`${selectedSymbol}:${selectedTimeframe}`] = [];
   }, [selectedTimeframe]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dynamic-load callback: when the user scrolls the chart, fetch any
+  // uncovered portion of the visible range. Re-bound each time symbol or
+  // timeframe changes so it always closes over the active selection.
+  useEffect(() => {
+    dynamicLoadRef.current = async (visibleFromMs: number, visibleToMs: number) => {
+      const series = seriesRef.current;
+      if (!series) return;
+
+      // Pad by 25% of visible width on each side so adjacent scrolls don't
+      // need another fetch immediately — but never more than 7 days at once.
+      const span = visibleToMs - visibleFromMs;
+      const PAD = Math.min(span * 0.25, 7 * 24 * 60 * 60_000);
+      let fromMs = visibleFromMs - PAD;
+      let toMs   = visibleToMs   + PAD;
+      // Don't try to fetch the future
+      const nowMs = Date.now();
+      if (toMs > nowMs) toMs = nowMs;
+      if (fromMs >= toMs) return;
+
+      const rk = `${selectedSymbol}:${selectedTimeframe}`;
+      const gaps = gapsToFetch(loadedRangesRef.current[rk] ?? [], fromMs, toMs);
+      if (gaps.length === 0) return;
+
+      // Bail if any fetch for this key is already in flight — we'll catch the
+      // missing range on the next scroll event.
+      if (fetchInFlightRef.current.has(rk)) return;
+      fetchInFlightRef.current.add(rk);
+
+      try {
+        for (const [gFrom, gTo] of gaps) {
+          const url = `/history/bars?symbol=${selectedSymbol}&from=${gFrom}&to=${gTo}&interval=${selectedTimeframe}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json() as {
+            bars: { ts: number; open: number; high: number; low: number; close: number; buyVolume: number; sellVolume: number }[];
+          };
+          const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+          barHistoryRef.current[selectedSymbol] = history;
+          for (const bar of data.bars) {
+            const t = Math.floor(bar.ts / 1000);
+            if (!history.has(t)) {
+              history.set(t, {
+                open: bar.open, high: bar.high, low: bar.low, close: bar.close,
+                volume: (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0),
+              });
+            }
+          }
+          loadedRangesRef.current[rk] = mergeRange(loadedRangesRef.current[rk] ?? [], gFrom, gTo);
+        }
+
+        // Single setData() after all gaps loaded to avoid mid-scroll flicker.
+        const history = barHistoryRef.current[selectedSymbol];
+        if (history && history.size > 0) {
+          const seriesData = Array.from(history.entries())
+            .sort((a, b) => a[0] - b[0])
+            .map(([t, b]) => ({
+              time: t as UTCTimestamp,
+              open: b.open, high: b.high, low: b.low, close: b.close,
+            }));
+          series.setData(seriesData);
+        }
+        setBarsVersion(v => v + 1);
+      } finally {
+        fetchInFlightRef.current.delete(rk);
+      }
+    };
+  }, [selectedSymbol, selectedTimeframe]);
 
   // Init chart once
   useEffect(() => {
@@ -573,6 +700,19 @@ export function Chart() {
     chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
       computeCardsRef.current();
       renderDrawingsRef.current();
+    });
+
+    // Dynamic loader: when the visible time window changes, queue a debounced
+    // fetch for any uncovered range. The loader itself bails out fast if the
+    // range is already loaded, so we can poll generously on every event.
+    chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
+      if (!range) return;
+      if (dynamicLoadTimerRef.current) clearTimeout(dynamicLoadTimerRef.current);
+      dynamicLoadTimerRef.current = setTimeout(() => {
+        const fromMs = (range.from as number) * 1000;
+        const toMs   = (range.to   as number) * 1000;
+        dynamicLoadRef.current(fromMs, toMs);
+      }, 250);
     });
 
     // Shared scroll-restore logic — call after chart.applyOptions() has run.
@@ -686,8 +826,14 @@ export function Chart() {
     let cancelled = false;
     (async () => {
       try {
-        // Chart history: 1 month (43200 minutes).
-        const url = `/history/bars?symbol=${selectedSymbol}&minutes=43200&interval=${selectedTimeframe}`;
+        // Chart history: 1 week (10080 minutes). Reduced from 1 month
+        // (43200) on 2026-06-04 — month-of-1m-bars was making the cockpit slow.
+        // The dynamic-load effect below fills in older windows on demand when
+        // the user scrolls left.
+        const INITIAL_WINDOW_MIN = 10080;
+        const fetchToMs   = Date.now();
+        const fetchFromMs = fetchToMs - INITIAL_WINDOW_MIN * 60_000;
+        const url = `/history/bars?symbol=${selectedSymbol}&minutes=${INITIAL_WINDOW_MIN}&interval=${selectedTimeframe}`;
         const res = await fetch(url);
         if (!res.ok) return;
         const data = (await res.json()) as {
@@ -751,6 +897,14 @@ export function Chart() {
           const sevenDaysAgoSec = (nowSec - 7 * 24 * 60 * 60) as UTCTimestamp;
           chart.timeScale().setVisibleRange({ from: sevenDaysAgoSec, to: nowSec });
         }
+        // Mark this initial window as covered so the dynamic loader skips it.
+        const rk = `${selectedSymbol}:${selectedTimeframe}`;
+        loadedRangesRef.current[rk] = mergeRange(
+          loadedRangesRef.current[rk] ?? [],
+          fetchFromMs,
+          fetchToMs,
+        );
+
         // Signal that bar history is populated so post-entry markers
         // re-evaluate their history.has() check with a full barHistoryRef.
         setBarsVersion(v => v + 1);
@@ -773,6 +927,7 @@ export function Chart() {
     barHistoryRef.current[selectedSymbol] = history;
 
     let updated = false;
+    let newBucketCreated = false;
     for (const ev of recentEvents) {
       if ((ev.source !== 'bookmap' && ev.source !== 'bookmap-es') || ev.type !== 'bar') continue;
       if (ev.symbol !== selectedSymbol) continue;
@@ -785,6 +940,7 @@ export function Chart() {
       const existing = history.get(t);
       if (!existing) {
         history.set(t, { open: ev.open, high: ev.high, low: ev.low, close: ev.close, volume: ev.volume ?? 0 });
+        newBucketCreated = true;
       } else {
         history.set(t, {
           open:   existing.open,
@@ -824,6 +980,14 @@ export function Chart() {
       }));
 
     series.setData(data);
+
+    // 2026-06-04 fix: when a new minute bucket appears, bump barsVersion so
+    // the markers useEffect re-evaluates. Without this, a signal that
+    // arrives BEFORE its bar exists in history is silently dropped (the
+    // history.has(bucket) check returns false) and never re-attached when
+    // the bar appears moments later. This caused the 09:59 FLIP marker to
+    // vanish from the chart on 2026-06-04.
+    if (newBucketCreated) setBarsVersion(v => v + 1);
 
     // No auto-fit. With fixed barSpacing the chart naturally shows the most
     // recent bars at a sensible width and the user can scroll/zoom freely.
@@ -889,6 +1053,7 @@ export function Chart() {
       try { chart.removeSeries(ls); } catch { /* may already be gone */ }
     }
     levelLinesRef.current = [];
+    levelLabelsRef.current = [];
     for (const ls of flashAlphaLinesRef.current) {
       try { chart.removeSeries(ls); } catch { /* may already be gone */ }
     }
@@ -958,16 +1123,22 @@ export function Chart() {
       const { start, end } = dayBoundsSeconds(tradingDay);
       const isToday = tradingDay === today;
 
+      // Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) get a custom
+      // SVG badge above the line at the chart's right edge.  RS levels keep
+      // their built-in price-axis chip so the two systems stay visually
+      // distinct.
+      const STRUCTURAL_LABELS = new Set(['PDH','PDL','PDC','ONH','ONL','ONO','POC','VAH','VAL']);
+
       const addLevelLine = (price: number, color: string, title: string, style: LineStyle, width: 1 | 2 | 3 | 4) => {
+        const isStructural = STRUCTURAL_LABELS.has(title);
         const ls = chart.addLineSeries({
           color,
           lineWidth: width,
           lineStyle: style,
           priceLineVisible: false,
-          // Show the last-value label (which lightweight-charts puts on
-          // the price axis) ONLY for today's levels. Past days' lines
-          // remain visible on the chart but don't clutter the price axis.
-          lastValueVisible: isToday,
+          // RS levels: show last-value chip on price axis (only for today).
+          // Structural levels: chip disabled — we draw an SVG badge instead.
+          lastValueVisible: isToday && !isStructural,
           crosshairMarkerVisible: false,
           title: isToday ? title : '',  // hover tooltip; only meaningful for today
         });
@@ -976,17 +1147,32 @@ export function Chart() {
           { time: end as UTCTimestamp, value: price },
         ]);
         levelLinesRef.current.push(ls);
+        if (isToday && isStructural) {
+          levelLabelsRef.current.push({ price, label: title, color });
+        }
       };
 
-      // Pass clean labels (no date suffix). Title only appears on the price
-      // axis for today's lines (per isToday gate above).
-      addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
-      addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
-      addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
-      addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
-      addLevelLine(dayLevels.ddBands.upper, '#9ee04a', 'DD↑',    LineStyle.Solid, 2);
-      addLevelLine(dayLevels.ddBands.lower, '#9ee04a', 'DD↓',    LineStyle.Solid, 2);
-      addLevelLine(dayLevels.hedgePressure, '#4a8fdc', 'HP',     LineStyle.Solid, 2);
+      // Pass clean labels (no date suffix). RS structural lines (Bull/Bear/DD/HP)
+      // are optional — skip if the field is absent so instruments without RS
+      // framework data (e.g., ES Step 1) render only their additionalLevels.
+      if (dayLevels.bullZone) {
+        addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
+        addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+      }
+      if (dayLevels.bearZone) {
+        addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
+        addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+      }
+      if (dayLevels.ddBands) {
+        addLevelLine(dayLevels.ddBands.upper, '#9ee04a', 'DD↑', LineStyle.Solid, 2);
+        addLevelLine(dayLevels.ddBands.lower, '#9ee04a', 'DD↓', LineStyle.Solid, 2);
+      }
+      if (dayLevels.hedgePressure !== undefined) {
+        addLevelLine(dayLevels.hedgePressure, '#4a8fdc', 'HP', LineStyle.Solid, 2);
+      }
+      if (dayLevels.mhp !== undefined) {
+        addLevelLine(dayLevels.mhp, '#f2a633', 'MHP', LineStyle.Solid, 2);
+      }
 
       if (dayLevels.additionalLevels) {
         for (const al of dayLevels.additionalLevels) {
@@ -1033,6 +1219,8 @@ export function Chart() {
         flashAlpha.putWalls.slice(0, 2).forEach((p, i) => addFa(p, '#d6454588', `PW${i + 1}`));
       }
     }
+    // Paint level labels now (they live in the SVG overlay, not on the chart).
+    renderDrawingsRef.current();
   }, [levelsByDay, flashAlpha, selectedSymbol]);
 
   // Play alert sounds for newly-arrived signals.
@@ -1111,12 +1299,20 @@ export function Chart() {
         if (ruleId === 'absorption-scalp') return selectedTimeframe === 5;
         // EXPL → 1m chart only
         if (ruleId === 'expl') return selectedTimeframe === 1;
-        // CLEAN → 1m chart only
-        if (ruleId === 'clean-impulse') return selectedTimeframe === 1;
+        // CLEAN (FLIP) shows on ALL timeframes — these are tradable signals,
+        // user must see them regardless of which chart they're viewing.
+        // Changed 2026-06-04 after a 09:59 FLIP fired but wasn't visible to user
+        // on a non-1m view, causing an unmonitored open position.
+        if (ruleId === 'clean-impulse') return true;
         // RR → 1m chart only
         if (ruleId === 'reject-resistance') return selectedTimeframe === 1;
         // ALA (BOUNCE + RECLAIM + ZONE_RECLAIM) → 1m chart only
         if (ruleId === 'ala-bounce' || ruleId === 'ala-reclaim' || ruleId === 'ala-zone-reclaim') return selectedTimeframe === 1;
+        // Wall-broken-fade hidden from UI 2026-06-04 (user request — too noisy
+        // during live trading session). Backend logging stays untouched.
+        if (ruleId === 'wall-broken-fade') return false;
+        // ABSO retired from UI 2026-06-02 (backend logging stays; no clear edge)
+        if (ruleId === 'absorption') return false;
         // A/B/C signals → 1m chart only
         return selectedTimeframe === 1;
       });
@@ -1239,6 +1435,50 @@ export function Chart() {
             time: bucket as UTCTimestamp,
             position,
             color: abWarning ? '#fb923c' : getSignalPaletteColor(sig.ts),
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'cont-reentry') {
+          // CONT-REENTRY shadow signal (Strategy CONT). Violet to stand apart from
+          // FLIP(amber)/EXPL(green)/RR(purple)/FADE(cyan)/BNC(cyan).
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          label = (isLong ? 'CONT-REENTRY-SHADOW ↑' : 'CONT-REENTRY-SHADOW ↓') + `·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#8b5cf6',  // violet
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'es-flip') {
+          // ES-FLIP shadow signal (ES-tuned FLIP detector). Hot pink to be unmistakably
+          // distinct from NQ FLIP(amber) and other rules. Only appears on /ES chart.
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          const passCount = (sig as any).passCount;
+          const kStr = passCount ? `·K${passCount}` : '';
+          label = (isLong ? 'ES-FLIP ↑' : 'ES-FLIP ↓') + kStr + `·${sig.score}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#ec4899',  // hot pink
+            shape,
+            text: label,
+            size: 2,
+          };
+        } else if (ruleId === 'wall-broken-fade') {
+          // Wall-broken-fade: cyan-magenta to stand apart from FLIP(orange)/EXPL(green)/ABSO.
+          // ASK wall broken → SHORT fade (arrowDown above bar)
+          // BID wall broken → LONG fade (arrowUp below bar)
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          const peak = (sig as any).peakSize;
+          const peakStr = peak ? ` p${peak}` : '';
+          label = (isLong ? 'FADE ↑' : 'FADE ↓') + `·${sig.score}${peakStr}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: '#22d3ee',  // cyan
             shape,
             text: label,
             size: 2,
@@ -1507,6 +1747,56 @@ export function Chart() {
       }
     }
 
+    // Structural level badges: drawn as a filled pill ABOVE each line, pulled
+    // ~80px in from the right edge of the chart pane so they sit clearly
+    // inside the pane (NOT in the price-axis column where RS chips live).
+    const paneWidth = ts.width();
+    // DEBUG banner — top-left, removes once user confirms badges look right.
+    const banner = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    banner.setAttribute('x', '120'); banner.setAttribute('y', '14');
+    banner.setAttribute('fill', '#ff00ff'); banner.setAttribute('font-size', '12');
+    banner.setAttribute('font-family', 'monospace');
+    banner.textContent = `LV3 paneW=${paneWidth} structural=${levelLabelsRef.current.length}`;
+    svg.appendChild(banner);
+    if (paneWidth > 0 && levelLabelsRef.current.length > 0) {
+      const RIGHT_INSET = 80;
+      const xRight = paneWidth - RIGHT_INSET;
+      const FONT_PX = 16;
+      const CHAR_W = 9.6;
+      const PAD_X = 8;
+      const PAD_Y = 4;
+      const PILL_H = FONT_PX + PAD_Y * 2;
+      const LINE_GAP = 5;
+      for (const lbl of levelLabelsRef.current) {
+        const yLine = series.priceToCoordinate(lbl.price);
+        if (yLine === null) continue;
+        const textW = lbl.label.length * CHAR_W;
+        const pillW = textW + PAD_X * 2;
+        const pillX = xRight - pillW;
+        const pillY = yLine - LINE_GAP - PILL_H;
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', String(pillX));
+        rect.setAttribute('y', String(pillY));
+        rect.setAttribute('width', String(pillW));
+        rect.setAttribute('height', String(PILL_H));
+        rect.setAttribute('rx', '4');
+        rect.setAttribute('fill', lbl.color);
+        rect.setAttribute('stroke', '#0a0a0b');
+        rect.setAttribute('stroke-width', '1');
+        svg.appendChild(rect);
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        el.setAttribute('x', String(xRight - PAD_X));
+        el.setAttribute('y', String(pillY + PILL_H - PAD_Y - 2));
+        el.setAttribute('text-anchor', 'end');
+        el.setAttribute('fill', '#0a0a0b');
+        el.setAttribute('font-family', 'IBM Plex Mono, monospace');
+        el.setAttribute('font-size', String(FONT_PX));
+        el.setAttribute('font-weight', '800');
+        el.textContent = lbl.label;
+        svg.appendChild(el);
+      }
+    }
+
     // Preview line while placing second point
     if (pendingLineRef.current && previewMouseRef.current && drawModeRef.current === 'line') {
       const x1 = ts.timeToCoordinate(pendingLineRef.current.time as UTCTimestamp);
@@ -1569,13 +1859,15 @@ export function Chart() {
       {/* Left overlay — buttons row then Opening Bias below */}
       <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
       {(() => {
-        const WR_ROWS: { window: string; lo: number; hi: number; cf: string; cfs: string; expl: string; abso: string }[] = [
-          { window: '09:30–09:59', lo: 570, hi: 600, cf: '—',                cfs: '100% (n=4)',   expl: '100% (n=3)',     abso: '100% (n=4)'  },
-          { window: '10:00–10:29', lo: 600, hi: 630, cf: '50% (n=2) ⚠',   cfs: '50% (n=2) ⚠', expl: '100% (n=2)',     abso: '50% (n=6) ⚠' },
-          { window: '10:30–11:29', lo: 630, hi: 690, cf: '80% (n=5)',      cfs: '100% (n=3)',   expl: '100% (n=4)',     abso: '57% (n=7) ⚠'  },
-          { window: '11:30–12:59', lo: 690, hi: 780, cf: '79% (n=14)',     cfs: '100% (n=1)',   expl: '70% (n=10)',     abso: '63% (n=8)'    },
-          { window: '13:00–14:29', lo: 780, hi: 870, cf: '40% (n=5) ⚠',   cfs: '0% (n=1) ⚠',  expl: '50% (n=12) ⚠',  abso: '67% (n=9)'    },
-          { window: '14:30–15:59', lo: 870, hi: 960, cf: '—',              cfs: '—',            expl: '18% (n=17) ⚠',  abso: '60% (n=5)'   },
+        // ABSO retired from UI 2026-06-02 — backend logging stays for future analysis.
+        // CF↓ (FLIP SHORTS) retired from UI 2026-06-02 — V3 drops them; revisit in bear regime.
+        const WR_ROWS: { window: string; lo: number; hi: number; cf: string; expl: string }[] = [
+          { window: '09:30–09:59', lo: 570, hi: 600, cf: '—',                expl: '100% (n=3)'     },
+          { window: '10:00–10:29', lo: 600, hi: 630, cf: '50% (n=2) ⚠',   expl: '100% (n=2)'     },
+          { window: '10:30–11:29', lo: 630, hi: 690, cf: '80% (n=5)',      expl: '100% (n=4)'     },
+          { window: '11:30–12:59', lo: 690, hi: 780, cf: '79% (n=14)',     expl: '70% (n=10)'     },
+          { window: '13:00–14:29', lo: 780, hi: 870, cf: '40% (n=5) ⚠',   expl: '50% (n=12) ⚠'  },
+          { window: '14:30–15:59', lo: 870, hi: 960, cf: '—',              expl: '18% (n=17) ⚠'  },
         ];
         const etMin = (() => {
           const p = new Intl.DateTimeFormat('en-US', {
@@ -1641,11 +1933,11 @@ export function Chart() {
                   zIndex: 100,
                 }}>
                   <div style={{
-                    display: 'grid', gridTemplateColumns: '96px 88px 88px 110px 88px',
+                    display: 'grid', gridTemplateColumns: '96px 88px 110px',
                     padding: '5px 10px', borderBottom: '1px dotted #444',
                     color: '#888', fontSize: 10, fontWeight: 700, letterSpacing: 0.6,
                   }}>
-                    <span>WINDOW</span><span>CF↑</span><span>CF↓</span><span>EXPL↑</span><span>ABSO↑</span>
+                    <span>WINDOW</span><span>CF↑</span><span>EXPL↑</span>
                   </div>
                   {WR_ROWS.map((row, i) => {
                     const isActive = i === activeIdx;
@@ -1655,7 +1947,7 @@ export function Chart() {
                       v.includes('⚠')     ? '#e05252' : '#d0d0d8';
                     return (
                       <div key={row.window} style={{
-                        display: 'grid', gridTemplateColumns: '96px 88px 88px 110px 88px',
+                        display: 'grid', gridTemplateColumns: '96px 88px 110px',
                         padding: '4px 10px',
                         borderBottom: '1px dotted #333',
                         background: isActive ? 'rgba(90,155,255,0.13)' : 'transparent',
@@ -1665,9 +1957,7 @@ export function Chart() {
                           {row.window}
                         </span>
                         <span style={{ color: wrColor(row.cf) }}>{row.cf}</span>
-                        <span style={{ color: wrColor(row.cfs) }}>{row.cfs}</span>
                         <span style={{ color: wrColor(row.expl) }}>{row.expl}</span>
-                        <span style={{ color: wrColor(row.abso) }}>{row.abso}</span>
                       </div>
                     );
                   })}
@@ -1675,7 +1965,7 @@ export function Chart() {
                     padding: '4px 10px 5px', borderTop: '1px dotted #444',
                     color: '#777', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
                   }}>
-                    SL: CF↑ 55 · CF↓ 105 · EXPL 70 · ABSO 140  |  TP: 80 pts
+                    SL: CF↑ 55 · EXPL 70  |  TP: 80 pts
                   </div>
                 </div>
               )}
@@ -1687,34 +1977,72 @@ export function Chart() {
               onToggle={() => setActivePanel(p => p === 'trade' ? null : 'trade')}
             />
 
-            {/* ── DRAW: LINE ── */}
-            <button
-              onClick={() => setDrawMode(drawMode === 'line' ? null : 'line')}
-              style={ctrlBtn('#5a9bff', drawMode === 'line')}
-            >
-              LINE
-            </button>
+            {/* ── TRADE RULES — always-open quick reference ── */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '22px 36px 18px 1fr',
+              rowGap: 4,
+              columnGap: 6,
+              alignItems: 'baseline',
+              padding: '6px 12px',
+              border: '1.5px solid #22c55e',
+              borderRadius: 5,
+              background: 'rgba(7, 18, 11, 0.92)',
+              fontFamily: 'IBM Plex Mono, monospace',
+              fontSize: 12,
+              fontWeight: 700,
+              color: '#f5f5f5',
+              letterSpacing: 0.3,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 0 8px rgba(34, 197, 94, 0.25)',
+              pointerEvents: 'auto',
+            }}>
+              {/* Header spans all 4 columns */}
+              <div style={{
+                gridColumn: '1 / span 4',
+                fontSize: 11,
+                color: '#22c55e',
+                letterSpacing: 1,
+                marginBottom: 1,
+                borderBottom: '1px dotted #22c55e88',
+                paddingBottom: 3,
+              }}>
+                🎯 TRADE RULES
+              </div>
 
-            {/* ── DRAW: TEXT ── */}
-            <button
-              onClick={() => setDrawMode(drawMode === 'text' ? null : 'text')}
-              style={ctrlBtn('#fde047', drawMode === 'text')}
-            >
-              TEXT
-            </button>
+              {/* FLIP SHORT — take everywhere */}
+              <span style={{ color: '#d64545', textAlign: 'center' }}>🌀</span>
+              <span style={{ color: '#d64545' }}>FLIP↓</span>
+              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+              <span>
+                <span style={{ color: '#a5f3a3' }}>take all</span>
+                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+                <span style={{ color: '#fff' }}>78% WR</span>
+              </span>
 
-            {/* ── CLEAR DRAWINGS ── */}
-            <button
-              onClick={() => {
-                drawingsRef.current = [];
-                pendingLineRef.current = null;
-                previewMouseRef.current = null;
-                renderDrawingsRef.current();
-              }}
-              style={ctrlBtn('#777', false)}
-            >
-              CLR
-            </button>
+              {/* FLIP LONG — 10:30 onward only */}
+              <span style={{ color: '#2bb673', textAlign: 'center' }}>🌀</span>
+              <span style={{ color: '#2bb673' }}>FLIP↑</span>
+              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+              <span>
+                <span style={{ color: '#a5f3a3' }}>from 10:30</span>
+                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+                <span style={{ color: '#fb923c' }}>skip 10:00-10:29</span>
+              </span>
+
+              {/* Universal cutoff */}
+              <span style={{ color: '#fcd34d', textAlign: 'center' }}>⏰</span>
+              <span style={{ color: '#fcd34d' }}>STOP</span>
+              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+              <span>
+                <span style={{ color: '#fff' }}>after 14:30</span>
+                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+                <span style={{ color: '#fcd34d' }}>late-day chop</span>
+              </span>
+
+              {/* FADE / EXPL retired from rules box 2026-06-04 — EXPL silenced (both sides losing),
+                  FADE shadow-only pending validation */}
+            </div>
           </div>
         );
       })()}
@@ -1747,6 +2075,156 @@ export function Chart() {
       >
         »
       </button>
+
+      {/* Calendar — bottom left, jumps the chart to a chosen day's RTH session */}
+      <button
+        onClick={() => setCalendarOpen(v => !v)}
+        title="Jump to date"
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          left: 16,
+          zIndex: 20,
+          background: 'var(--bg-2, #2a2a3a)',
+          border: '1px solid var(--border, #555)',
+          borderRadius: 4,
+          color: '#ccc',
+          cursor: 'pointer',
+          padding: '4px 8px',
+          fontSize: 14,
+          lineHeight: 1,
+          userSelect: 'none',
+        }}
+      >
+        📅
+      </button>
+      {calendarOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 76,
+            left: 16,
+            zIndex: 30,
+            background: 'var(--bg-2, #2a2a3a)',
+            border: '1px solid var(--border, #555)',
+            borderRadius: 6,
+            padding: 12,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            color: '#ccc',
+            fontSize: 13,
+            userSelect: 'none',
+          }}
+        >
+          <div style={{ marginBottom: 8 }}>Jump to date (RTH session):</div>
+          <input
+            type="date"
+            value={calendarDate}
+            onChange={e => setCalendarDate(e.target.value)}
+            autoFocus
+            style={{
+              background: 'var(--bg-1, #1a1a26)',
+              border: '1px solid var(--border, #555)',
+              borderRadius: 4,
+              color: '#fff',
+              padding: '4px 6px',
+              fontSize: 13,
+              colorScheme: 'dark',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setCalendarOpen(false)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border, #555)',
+                borderRadius: 4,
+                color: '#aaa',
+                cursor: 'pointer',
+                padding: '4px 12px',
+                fontSize: 13,
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                const chart = chartRef.current;
+                if (!chart || !calendarDate) { setCalendarOpen(false); return; }
+                // RTH window for the chosen ET date: 09:30 → 16:00 ET (EDT-fixed).
+                // Fetch a slightly wider window (pre-market through after-hours) so
+                // there's context around the RTH session if the user scrolls.
+                const [y, m, d] = calendarDate.split('-').map(Number) as [number, number, number];
+                const fetchFromMs = Date.UTC(y, m - 1, d,  8,  0);  // 04:00 ET
+                const fetchToMs   = Date.UTC(y, m - 1, d, 24,  0);  // 20:00 ET
+                const fromSec = Math.floor(Date.UTC(y, m - 1, d, 13, 30) / 1000) as UTCTimestamp;
+                const toSec   = Math.floor(Date.UTC(y, m - 1, d, 20,  0) / 1000) as UTCTimestamp;
+
+                // Fetch + merge bars for that date on demand. The initial 7-day
+                // fetch doesn't cover historical days, so we have to pull them
+                // explicitly here.
+                try {
+                  const url = `/history/bars?symbol=${selectedSymbol}&from=${fetchFromMs}&to=${fetchToMs}&interval=${selectedTimeframe}`;
+                  const res = await fetch(url);
+                  if (res.ok) {
+                    const data = await res.json() as {
+                      bars: { ts: number; open: number; high: number; low: number; close: number; buyVolume: number; sellVolume: number }[];
+                    };
+                    const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+                    barHistoryRef.current[selectedSymbol] = history;
+                    for (const bar of data.bars) {
+                      const t = Math.floor(bar.ts / 1000);
+                      if (!history.has(t)) {
+                        history.set(t, {
+                          open: bar.open, high: bar.high, low: bar.low, close: bar.close,
+                          volume: (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0),
+                        });
+                      }
+                    }
+                    // Replace series data with merged history so the new bars render.
+                    const series = seriesRef.current;
+                    if (series) {
+                      const seriesData = Array.from(history.entries())
+                        .sort((a, b) => a[0] - b[0])
+                        .map(([t, b]) => ({
+                          time: t as UTCTimestamp,
+                          open: b.open, high: b.high, low: b.low, close: b.close,
+                        }));
+                      series.setData(seriesData);
+                    }
+                    // Mark this day as covered for the dynamic loader.
+                    const rk = `${selectedSymbol}:${selectedTimeframe}`;
+                    loadedRangesRef.current[rk] = mergeRange(
+                      loadedRangesRef.current[rk] ?? [],
+                      fetchFromMs,
+                      fetchToMs,
+                    );
+                    setBarsVersion(v => v + 1);
+                  }
+                } catch {
+                  // best-effort; we still scroll to the date even if fetch failed
+                }
+
+                chart.timeScale().setVisibleRange({ from: fromSec, to: toSec });
+                setCalendarOpen(false);
+              }}
+              style={{
+                background: '#22c55e',
+                border: '1px solid #22c55e',
+                borderRadius: 4,
+                color: '#0a1a0a',
+                cursor: 'pointer',
+                padding: '4px 16px',
+                fontSize: 13,
+                fontWeight: 'bold',
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Signal overlay cards — hidden for now, re-enable by removing the `false &&` */}
       {false && cardPositions.map(({ sig, x, y, id }) => (

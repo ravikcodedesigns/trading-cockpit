@@ -1,31 +1,410 @@
 {
   "days": {
+    "2026-06-04": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30330.1,
+            "high": 30330.1
+          },
+          "bearZone": {
+            "low": 30247.8,
+            "high": 30247.8
+          },
+          "ddBands": {
+            "upper": 30743.74,
+            "lower": 30247.8
+          },
+          "hedgePressure": 30042,
+          "mhp": 29424.7,
+          "additionalLevels": [
+            {
+              "price": 30807.75,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30719.25,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30685,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 30634.5,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30634.25,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30589.5,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30568.72,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30546,
+              "label": "ONH",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30535.8,
+              "label": "Bull Zone",
+              "color": "#2bb673",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30495.5,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30494.7,
+              "label": "Bear Zone",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30484,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30460.5,
+              "label": "ONO",
+              "color": "#ff9a3c",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30451.63,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30268.75,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30255.48,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30163,
+              "label": "ONL",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 29959.7,
+              "label": "Bull Zone",
+              "color": "#2bb673",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 29836.2,
+              "label": "Bear Zone",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 1
+            }
+          ],
+          "notes": "2026-06-04 NQ — RS framework levels carried from 2026-06-03 (user will refresh in morning). ON HP 30568.72, ON MHP 30255.48 (Globex ON closed 16:00 ET 2026-06-03). Wide ON range (313pt gap) reflects today's failed-breakout reversal — yesterday's RTH H 30807.75 to L 30495.5. PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL will be populated by structural-levels cron at 09:23 ET."
+        }
+      ]
+    },
+    "2026-06-03": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30567.6,
+            "high": 30567.6
+          },
+          "bearZone": {
+            "low": 30526.4,
+            "high": 30526.4
+          },
+          "ddBands": {
+            "upper": 30991,
+            "lower": 30273.54
+          },
+          "hedgePressure": 30444.1,
+          "mhp": 29827,
+          "additionalLevels": [
+            {
+              "price": 30797.5,
+              "label": "ONH",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30754.75,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30743,
+              "label": "ONO",
+              "color": "#ff9a3c",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30731,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30720.5,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30707.25,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30707.25,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30703,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30665,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 30590.75,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30589.4,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30566.25,
+              "label": "ONL",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30494.15,
+              "label": "DD",
+              "color": "#cccc66",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30466.27,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30423.75,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30403,
+              "label": "Bull2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30361.9,
+              "label": "Bear2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30279.6,
+              "label": "Bull3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30238.4,
+              "label": "Bear3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30197.3,
+              "label": "Bull4",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "notes": "2026-06-03 NQ RS levels (RocketScooter chart 11:46 ET + user RS context) | Bull1/Bear1 30567.60/30526.40 (Support, DD>0.5) | HP 30444.10 (Resistance, WRes<0) | DD anchor 30494.15 (Support) | MHP 29827 (per user) | DD upper 30991 (per user) DD lower 30273.54 (carried) | DD Ratio 0.55 | GM Bull, LM BLU, VX 17.85, VVIX 90.86 | ON HP 30589.40 ON MHP 30466.27 (overnight, persist through day) | Bull2/Bear2 30403.00/30361.90 | Bull3/Bear3 30279.60/30238.40 | Bull4 30197.30 | Resistance above: QQQ Open 30754.75, HG 30731, QQQ Close 30707.25 | NQ100 resilience: Res -26.23/-18.54, HP 740, MHP 725 | SP500 DD 0.56 RU2K Res 5.47"
+        }
+      ]
+    },
     "2026-06-01": {
       "levels": [
         {
           "symbol": "NQ",
           "bullZone": {
-            "low": 30108.10,
-            "high": 30108.10
+            "low": 30296.2,
+            "high": 30296.2
           },
           "bearZone": {
-            "low": 30066.80,
-            "high": 30066.80
+            "low": 30255.1,
+            "high": 30255.1
           },
           "ddBands": {
-            "upper": 30562.25,
-            "lower": 30063
+            "upper": 30638.46,
+            "lower": 30140.54
           },
-          "hedgePressure": 29736.4,
-          "mhp": 29529.8,
+          "hedgePressure": 30255.1,
+          "mhp": 29431.8,
           "additionalLevels": [
-            { "price": 30452,    "label": "ON HP",     "color": "#f2a633", "style": "solid",        "width": 2 },
-            { "price": 30344.25, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
-            { "price": 30060,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
-            { "price": 29777.70, "label": "Bull2",     "color": "#444444", "style": "solid",        "width": 2 },
-            { "price": 29736.40, "label": "Bear2",     "color": "#444444", "style": "solid",        "width": 2 }
+            {
+              "price": 30452,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30395.5,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30369.13,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30342.75,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30172.7,
+              "label": "Bull2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30060,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30049.3,
+              "label": "Bear2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29925.8,
+              "label": "Bull3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29843.4,
+              "label": "Bear3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            }
           ],
-          "notes": "2026-06-01 NQ Monday session (Sun 5/31 18:00 → Mon 6/1 16:00 ET) | ON HP 30452 ON MHP 30060 (from user Sun eve) | MHP 29529.8 HP 29736.4 DD 30562.25/30063 BZB 30108.10 BrZT 30066.80 HG 30344.25 Bull2 29777.70 Bear2 29736.40 — all carried forward from Fri 2026-05-29 | QQQ Open TBD at Mon 09:30 ET | QQQ Close TBD (= Fri close) | regime context to be set Mon morning"
+          "notes": "2026-06-01 NQ Monday RTH | BZB 30296.20 BrZT 30255.10 (= HP overlap) | HP 30255.10 (WRes -18.7) MHP 29431.80 (MRes +48.6) | DD 30638.46/30140.54 | ON HP 30452 ON MHP 30060 (from Sun eve) | QQQ Open 30342.75 QQQ Close 30395.50 HG 30369.13 | Bull2/Bear2 30172.70/30049.30 | Bull3/Bear3 29925.80/29843.40 | MRes +48.6 WRes -18.7 Res +12.6"
         }
       ]
     },
@@ -34,12 +413,12 @@
         {
           "symbol": "NQ",
           "bullZone": {
-            "low": 30108.10,
-            "high": 30108.10
+            "low": 30108.1,
+            "high": 30108.1
           },
           "bearZone": {
-            "low": 30066.80,
-            "high": 30066.80
+            "low": 30066.8,
+            "high": 30066.8
           },
           "ddBands": {
             "upper": 30562.25,
@@ -48,13 +427,55 @@
           "hedgePressure": 29736.4,
           "mhp": 29529.8,
           "additionalLevels": [
-            { "price": 30382.25, "label": "QQQ Open",  "color": "#ffffff", "style": "solid",        "width": 2 },
-            { "price": 30344.25, "label": "HG",        "color": "#ffffff", "style": "large-dashed", "width": 2 },
-            { "price": 30306.25, "label": "QQQ Close", "color": "#ffffff", "style": "solid",        "width": 2 },
-            { "price": 30180,    "label": "ON HP",     "color": "#f2a633", "style": "solid",        "width": 2 },
-            { "price": 29952,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",        "width": 2 },
-            { "price": 29777.70, "label": "Bull2",     "color": "#444444", "style": "solid",        "width": 2 },
-            { "price": 29736.40, "label": "Bear2",     "color": "#444444", "style": "solid",        "width": 2 }
+            {
+              "price": 30382.25,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30344.25,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30306.25,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30180,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29952,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29777.7,
+              "label": "Bull2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29736.4,
+              "label": "Bear2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            }
           ],
           "notes": "2026-05-29 NQ | BZB 30108.10 BrZT 30066.80 | HP 29736.4 MHP 29529.8 | DD 30562.25/30063 ratio 0.72 bullish | MRes +72.8 WRes -19.8 Res -2.8 | ON HP 30180 ON MHP 29952 | GM BULL LM BLU | VX 17.50 VVIX 86"
         }
@@ -65,12 +486,12 @@
         {
           "symbol": "NQ",
           "bullZone": {
-            "low": 30022.90,
-            "high": 30022.90
+            "low": 30022.9,
+            "high": 30022.9
           },
           "bearZone": {
-            "low": 29981.80,
-            "high": 29981.80
+            "low": 29981.8,
+            "high": 29981.8
           },
           "ddBands": {
             "upper": 30374,
@@ -79,13 +500,55 @@
           "hedgePressure": 29549,
           "mhp": 29343,
           "additionalLevels": [
-            { "price": 30125,    "label": "ON HP",     "color": "#f2a633", "style": "solid",         "width": 2 },
-            { "price": 30053,    "label": "QQQ Open",  "color": "#ffffff", "style": "solid",         "width": 2 },
-            { "price": 30050.13, "label": "HG",        "color": "#ffffff", "style": "large-dashed",  "width": 2 },
-            { "price": 30047.25, "label": "QQQ Close", "color": "#ffffff", "style": "solid",         "width": 2 },
-            { "price": 29899.40, "label": "Bull2",     "color": "#444444", "style": "solid",         "width": 2 },
-            { "price": 29858.20, "label": "Bear2",     "color": "#444444", "style": "solid",         "width": 2 },
-            { "price": 29674,    "label": "ON MHP",    "color": "#f2a633", "style": "solid",         "width": 2 }
+            {
+              "price": 30125,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30053,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30050.13,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30047.25,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29899.4,
+              "label": "Bull2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29858.2,
+              "label": "Bear2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29674,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            }
           ],
           "notes": "2026-05-28 NQ | BZB 30022.90 BrZT 29981.80 | HP 29549 MHP 29343 | DD 30374/29876 ratio 0.86 bullish | MRes +49.1 WRes -12.7 Res +19.5 | ON HP 30125 ON MHP 29674 | VX 18.27 VVIX 86.92"
         }
@@ -590,12 +1053,12 @@
         {
           "symbol": "NQ",
           "bullZone": {
-            "low": 29612.50,
-            "high": 29643.0
+            "low": 29612.5,
+            "high": 29643
           },
           "bearZone": {
-            "low": 29540.0,
-            "high": 29571.40
+            "low": 29540,
+            "high": 29571.4
           },
           "ddBands": {
             "upper": 30293.92,
@@ -649,8 +1112,8 @@
           ],
           "extraZones": [
             {
-              "bzb": 29283.10,
-              "brzt": 29241.90
+              "bzb": 29283.1,
+              "brzt": 29241.9
             }
           ],
           "lmCode": "BLU",
@@ -743,6 +1206,307 @@
           ],
           "notes": "2026-05-20 levels",
           "openPrice": 29073
+        }
+      ]
+    },
+    "2026-06-02": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30579,
+            "high": 30579
+          },
+          "bearZone": {
+            "low": 30537.8,
+            "high": 30537.8
+          },
+          "ddBands": {
+            "upper": 30771.46,
+            "lower": 30273.54
+          },
+          "hedgePressure": 30352.6,
+          "mhp": 29632,
+          "additionalLevels": [
+            {
+              "price": 30571.25,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30564,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30556.75,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30496.7,
+              "label": "Bull2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30455.5,
+              "label": "Bear2",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30290.9,
+              "label": "Bull3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30249.7,
+              "label": "Bear3",
+              "color": "#444444",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "notes": "2026-06-02 NQ AM session | BZB 30579 BrZT 30537.80 | HP 30352.60 (WRes>0) MHP 29632 | DD 30771.46/30273.54 | QQQ Open 30556.75 Close 30571.25 HG 30564 | Bull2/Bear2 30496.70/30455.50 | Bull3/Bear3 30290.90/30249.70 | GM=bull LM=BLU VX 17.85 VVIX 91.51"
+        }
+      ]
+    },
+    "2026-06-05": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30200.7,
+            "high": 30200.7
+          },
+          "bearZone": {
+            "low": 30118.5,
+            "high": 30118.5
+          },
+          "ddBands": {
+            "upper": 30648.38,
+            "lower": 30150.62
+          },
+          "hedgePressure": 30139,
+          "mhp": 29624.7,
+          "additionalLevels": [
+            {
+              "price": 30603.25,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30571.1,
+              "label": "Bull Zone",
+              "color": "#2bb673",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30529.9,
+              "label": "Bear Zone",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30494.95,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29021.25,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30484,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30484,
+              "label": "QQQ Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30475.5,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30423,
+              "label": "ONH",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30410,
+              "label": "ONO",
+              "color": "#ff9a3c",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30320,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 30283,
+              "label": "Bull Zone",
+              "color": "#2bb673",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30259.88,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 30241.9,
+              "label": "Bear Zone",
+              "color": "#d64545",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30166.75,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30152.25,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30127.42,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30035.75,
+              "label": "QQQ Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30012.75,
+              "label": "ONL",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            }
+          ]
+        }
+      ]
+    },
+    "2026-06-08": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 30200.7,
+            "high": 30200.7
+          },
+          "bearZone": {
+            "low": 30118.5,
+            "high": 30118.5
+          },
+          "ddBands": {
+            "upper": 30648.38,
+            "lower": 30150.62
+          },
+          "hedgePressure": 30139,
+          "mhp": 29624.7,
+          "additionalLevels": [
+            {
+              "price": 30100.75,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30037,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 29432,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 29366.75,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 29021.25,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 29021.25,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28973.75,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            }
+          ]
         }
       ]
     }

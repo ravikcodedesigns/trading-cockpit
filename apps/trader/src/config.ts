@@ -16,6 +16,7 @@ export const config = {
     appVersion: process.env.TRADOVATE_APP_VERSION ?? '1.0',
     cid:        parseInt(required('TRADOVATE_CID'), 10),
     secret:     required('TRADOVATE_SECRET'),
+    deviceId:   required('TRADOVATE_DEVICE_ID'),
   },
 
   mode: (process.env.TRADER_MODE ?? 'demo') as TraderMode,
@@ -36,6 +37,9 @@ export const config = {
 
   enabledRules: (process.env.TRADER_ENABLED_RULES ?? 'clean-impulse')
     .split(',').map(r => r.trim()).filter(Boolean),
+
+  // Discord webhook for trade notifications. Empty string = disabled.
+  discordWebhook: process.env.DISCORD_WEBHOOK ?? '',
 };
 
 // SL/TP per rule+direction (points)

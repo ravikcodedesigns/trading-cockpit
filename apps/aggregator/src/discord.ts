@@ -132,6 +132,16 @@ class DiscordAlerter {
   }
 
   signal(sig: ConfluenceSignal) {
+    // Suppress Discord alerts for shadow/visual-monitor rules — they should
+    // still display on the cockpit chart but not spam Discord during validation.
+    if (sig.ruleId === 'wall-broken-fade') return;
+    // ABSO muted 2026-06-02 — kept in qualified_signals for research, but
+    // removed from V3 (entry + opp-exit) and Discord. Re-enable when/if a
+    // future score-model refactor restores edge.
+    if (sig.ruleId === 'absorption') return;
+    // compression-realwall muted (shadow pending multi-day MBO data)
+    if (sig.ruleId === 'compression-realwall') return;
+
     const color = sig.direction === 'long' ? COLOR.longSignal : COLOR.shortSignal;
     const arrow = sig.direction === 'long' ? '▲' : '▼';
     const ext = sig as ConfluenceSignal & {

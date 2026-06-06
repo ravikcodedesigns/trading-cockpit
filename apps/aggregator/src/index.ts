@@ -8,6 +8,7 @@ import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
 import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
 import { startStrategyE, stopStrategyE } from './rules-v2/strategy-e-index.js';
 import { startStrategyH, stopStrategyH } from './rules-v2/strategy-h-index.js';
+import { startStrategyEsFlip, stopStrategyEsFlip } from './rules-v2/strategy-es-flip-index.js';
 import { startStrategyEXPL, stopStrategyEXPL } from './rules-v2/strategy-expl-index.js';
 import { startStrategyI, stopStrategyI } from './rules-v2/strategy-i-index.js';
 import { startStrategyJ, stopStrategyJ } from './rules-v2/strategy-j-index.js';
@@ -173,6 +174,8 @@ async function main() {
   if (config.activeStrategy === 'H' || config.activeStrategy === 'ALL') {
     startStrategyH();
     logger.info('strategy-H started (CLEAN impulse: FLIP + CONT, both directions)');
+    startStrategyEsFlip();
+    logger.info('strategy-ES-FLIP started (ES-tuned FLIP detector — SHADOW mode)');
     startStrategyEXPL();
     logger.info('strategy-EXPL started (pre-explosive move detector)');
     startStrategyI();
@@ -213,6 +216,7 @@ async function main() {
       }
       if (config.activeStrategy === 'H' || config.activeStrategy === 'ALL') {
         stopStrategyH();
+        stopStrategyEsFlip();
         stopStrategyEXPL();
         stopStrategyI();
         stopStrategyJ();

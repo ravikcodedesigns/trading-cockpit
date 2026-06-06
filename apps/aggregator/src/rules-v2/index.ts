@@ -21,6 +21,8 @@ import { logger } from '../logger.js';
 import { detectAbsorption } from './absorption.js';
 import { detectTapeSpeed } from './tape-speed.js';
 import { detectLargePrint } from './large-print.js';
+import { detectWallBrokenFade } from './wall-broken-fade.js';
+import { detectCompressionRealwall } from './compression-realwall.js';
 import type { Symbol } from '@trading/contracts';
 
 const POLL_MS = config.tickStore.pollMs;
@@ -46,6 +48,22 @@ const RULES: Array<{ id: string; fn: RuleFn; enabled: boolean }> = [
   {
     id: 'large-print',
     fn: detectLargePrint,
+    enabled: true,
+  },
+  {
+    // Strategy WBF — passive wall fade. Shadow-only until calibrated.
+    // Quality gate in quality.ts forces silenced tier; signals still hit signals table.
+    id: 'wall-broken-fade',
+    fn: detectWallBrokenFade,
+    enabled: true,
+  },
+  {
+    // Compression + Real-Bid-Wall + Capitulation (LONG only, MNQ).
+    // R:R 1:4 strict (TP=24/SL=6). SHADOW pending multi-day MBO validation;
+    // single-day MBO produced 0 qualifying confluence on the test day.
+    // Quality gate in quality.ts forces 'silenced' until validated.
+    id: 'compression-realwall',
+    fn: detectCompressionRealwall,
     enabled: true,
   },
   // Future rules:

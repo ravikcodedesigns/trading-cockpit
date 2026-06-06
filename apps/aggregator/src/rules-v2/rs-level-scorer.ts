@@ -89,9 +89,9 @@ export function resetLevelTestCounts(): void {
 function extractAllLevels(levels: DailyLevels): RSLevel[] {
   const out: RSLevel[] = [];
 
-  // Primary zones
-  out.push({ label: 'BZB',  price: levels.bullZone.low,  type: 'bzb',  isEST: true });
-  out.push({ label: 'BrZT', price: levels.bearZone.high, type: 'brzt', isEST: true });
+  // Primary zones — optional (ES Step 1 stub entries omit RS framework)
+  if (levels.bullZone) out.push({ label: 'BZB',  price: levels.bullZone.low,  type: 'bzb',  isEST: true });
+  if (levels.bearZone) out.push({ label: 'BrZT', price: levels.bearZone.high, type: 'brzt', isEST: true });
 
   // Secondary zone clusters
   for (const [i, ez] of (levels.extraZones ?? []).entries()) {
@@ -99,12 +99,16 @@ function extractAllLevels(levels: DailyLevels): RSLevel[] {
     out.push({ label: `BrZT-${i + 2}`, price: ez.brzt, type: 'extra-brzt', isEST: true });
   }
 
-  // DD bands
-  out.push({ label: 'Upper DD Band', price: levels.ddBands.upper, type: 'dd-upper', isEST: false });
-  out.push({ label: 'Lower DD Band', price: levels.ddBands.lower, type: 'dd-lower', isEST: false });
+  // DD bands — optional (ES Step 1 stub entries don't have RS framework)
+  if (levels.ddBands) {
+    out.push({ label: 'Upper DD Band', price: levels.ddBands.upper, type: 'dd-upper', isEST: false });
+    out.push({ label: 'Lower DD Band', price: levels.ddBands.lower, type: 'dd-lower', isEST: false });
+  }
 
-  // HP (weekly hedge pressure)
-  out.push({ label: 'HP', price: levels.hedgePressure, type: 'hp', isEST: false });
+  // HP (weekly hedge pressure) — optional
+  if (levels.hedgePressure !== undefined) {
+    out.push({ label: 'HP', price: levels.hedgePressure, type: 'hp', isEST: false });
+  }
 
   // MHP (monthly hedge pressure) — dedicated field, not in additionalLevels
   if (levels.mhp !== undefined) {
@@ -428,7 +432,8 @@ function checkHardFilters(
   currentPrice: number,
   levels: DailyLevels,
 ): { filtered: boolean; reason: string } {
-  if (direction === 'short' && currentPrice < levels.ddBands.lower) {
+  // Skip irrational-territory check when RS framework isn't present (e.g. ES Step 1).
+  if (levels.ddBands && direction === 'short' && currentPrice < levels.ddBands.lower) {
     return {
       filtered: true,
       reason: `SHORT blocked: price ${currentPrice} below lower DD Band ${levels.ddBands.lower} — irrational territory`,

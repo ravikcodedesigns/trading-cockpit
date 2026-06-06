@@ -4,8 +4,10 @@ import { logger } from './logger.js';
 import { posDb } from './db.js';
 import { checkCanTrade } from './risk-guard.js';
 import { TradovateClient } from './broker/tradovate.js';
-import { handleSignal } from './order-manager.js';
+import { handleSignal, handleV3Close, warmContractCache } from './order-manager.js';
 import { startSignalGate } from './signal-gate.js';
+import { startPositionWatcher } from './position-watcher.js';
+import { discord } from './discord.js';
 import type { ConfluenceSignal } from '@trading/contracts';
 
 async function main() {
@@ -17,6 +19,21 @@ async function main() {
   await broker.loadAccount();
   await broker.connectWebSocket();
   logger.info({ account: broker.account }, 'broker ready');
+
+  // Pre-warm front-month contract caches (MNQ + MES). Lets the
+  // position-watcher map contractId→symbol from the very first WS update,
+  // even if the trader restarted with a stale open position.
+  await warmContractCache(broker);
+
+  // ── Position-watcher (orphan-bracket safety net) ───────────────────────────
+  // Cancels any working exit orders when a contract's net position hits 0 by
+  // any path (manual flatten, mobile-app close, opposing fill, risk liquidate).
+  // Tradovate's OCO/OSO brackets only link siblings to each other — they do
+  // NOT auto-cancel when the position is closed externally. This watcher is
+  // the safety net for that gap.
+  const stopWatcher = startPositionWatcher(broker);
+  process.on('SIGINT',  () => { stopWatcher(); process.exit(0); });
+  process.on('SIGTERM', () => { stopWatcher(); process.exit(0); });
 
   // ── Resume any open positions from a previous run ─────────────────────────
   const open = posDb.openPositions();
@@ -32,9 +49,19 @@ async function main() {
 
   // ── Signal gate ────────────────────────────────────────────────────────────
   startSignalGate(async (signal: ConfluenceSignal) => {
-    const block = checkCanTrade(signal.ts);
+    const block = checkCanTrade(signal.ts, signal.direction as 'long' | 'short');
     if (block) {
       logger.info({ block, ruleId: (signal as any).ruleId, direction: signal.direction }, 'trade blocked');
+      // Notify Discord on data-driven TOD blocks (these matter — user may want to know).
+      // RTH/news/halt/maxPositions/duplicate are intentionally silent.
+      if (block === 'flip_long_pre_1030' || block === 'after_1430_stop' || block === 'daily_loss_limit') {
+        discord.block({
+          ruleId: (signal as any).ruleId,
+          direction: signal.direction,
+          symbol: signal.symbol,
+          blockReason: block,
+        });
+      }
       return;
     }
 
@@ -46,6 +73,16 @@ async function main() {
     // Fire-and-forget — handleSignal manages its own error handling
     handleSignal(broker, signal).catch((err) => {
       logger.error({ err }, 'handleSignal threw unexpectedly');
+    });
+  }, async (evt) => {
+    // V3 trade-close event handler (opposing-signal exit, bell close, etc.)
+    // Cancel pending SL/TP + market-flatten the position.
+    logger.info(
+      { symbol: evt.trade.symbol, direction: evt.trade.direction, reason: evt.reason, exitPx: evt.exitPx },
+      '◀ V3 close — flattening position'
+    );
+    handleV3Close(broker, evt).catch((err) => {
+      logger.error({ err }, 'handleV3Close threw unexpectedly');
     });
   });
 
@@ -64,6 +101,12 @@ async function main() {
     },
     'trader configuration'
   );
+
+  discord.startup({
+    mode: config.mode,
+    rules: config.enabledRules,
+    lossLimit: config.risk.maxDailyLoss,
+  });
 }
 
 main().catch((err) => {

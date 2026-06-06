@@ -4,11 +4,17 @@ node_modules/
 data/trading.db*
 data/ticks.db*
 data/ticks_corrupted_backup.db
+data/mbo.db*
+data/positions.db*
 dist/
 .turbo/
 .vite/
 .env
 apps/aggregator/data/trading.db*
+
+# Compiled Bookmap addon artifacts
+addons/bookmap-java/build/
+addons/bookmap-java/.gradle/
 
 
 # Local data + screenshots (not committed)

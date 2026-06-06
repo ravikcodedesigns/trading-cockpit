@@ -156,7 +156,8 @@ class TradeManager {
    * is eligible to close that trade.
    *
    *   open LONG  → closer must be qualified (per config.v3.requireQualifiedExitsLongs)
-   *   open SHORT → any opposite signal closes (per config.v3.requireQualifiedExitsShorts)
+   *   open SHORT → if closeShortsOnlyOnFlipLong=true: closer MUST be a qualified
+   *                clean-impulse FLIP-long. Otherwise: legacy requireQualifiedExitsShorts.
    *
    * Returns false if no open trade or directions don't oppose.
    */
@@ -164,6 +165,8 @@ class TradeManager {
     symbol: string,
     incomingDirection: Direction,
     incomingIsQualified: boolean,
+    incomingRuleId?: string,
+    incomingPattern?: string | null,
   ): boolean {
     const t = this.open.get(symbol);
     if (!t) return false;
@@ -171,8 +174,15 @@ class TradeManager {
     if (t.direction === 'long' && config.v3.requireQualifiedExitsLongs && !incomingIsQualified) {
       return false;
     }
-    if (t.direction === 'short' && config.v3.requireQualifiedExitsShorts && !incomingIsQualified) {
-      return false;
+    if (t.direction === 'short') {
+      if (config.v3.closeShortsOnlyOnFlipLong) {
+        // Strict: only a qualified FLIP-LONG (clean-impulse + FLIP pattern) can close a short.
+        if (!incomingIsQualified) return false;
+        if (incomingRuleId !== 'clean-impulse') return false;
+        if (incomingPattern !== 'FLIP') return false;
+      } else if (config.v3.requireQualifiedExitsShorts && !incomingIsQualified) {
+        return false;
+      }
     }
     return true;
   }

@@ -1,14 +1,20 @@
 // Strategy CONT — Trend Continuation Re-Entry
 //
-// Fires when a confirmed FLIP/EXPL/absorption signal established a trend
-// direction within the last 90 min, price extended ≥ 40pts in that direction,
-// then pulled back 20–55% of that run while delta is re-aligning.
+// Fires when an approved parent signal established a trend direction within
+// the last 90 min, price extended ≥ 40pts in that direction, then pulled back
+// 20–55% of that run while delta is re-aligning.
 //
-// This catches the "second leg" of trending days that the initial FLIP/EXPL
+// Approved parents (see db.recentGoldTriggerFor):
+//   - clean-impulse FLIP        (strategy_version='H')
+//   - EXPL long                  (strategy_version='EXPL', dir=long)
+//   - absorption-tier B          (strategy_version='B' AND score≥80)
+//   - wall-broken-fade           (strategy_version='WBF')
+//
+// This catches the "second leg" of trending days that the initial parent
 // fires miss — the continuation moves that run 80–400pts on strong trend days.
 //
 // Detection per bar close:
-//   1. Find most recent gold trigger (H/EXPL/B≥80) for same symbol+direction
+//   1. Find most recent approved-parent trigger for same symbol+direction
 //      within last 90 min.
 //   2. Build 1-min bars from that trigger's ts → now.
 //   3. Compute max favorable extension (peak gain from trigger entry).

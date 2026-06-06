@@ -20,6 +20,7 @@
     "backfill:strategy-i": "tsx scripts/backfill_strategy_i.ts",
     "migrate:strategy-version": "tsx scripts/migrate_strategy_version.ts",
     "levels:add": "tsx scripts/levels_cli.ts",
+    "levels:structural": "tsx scripts/compute_structural_levels.ts",
     "context:set": "tsx scripts/context_set.ts set",
     "context:show": "tsx scripts/context_set.ts show",
     "context:bbb": "tsx scripts/context_set.ts bbb",

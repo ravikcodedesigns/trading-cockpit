@@ -130,10 +130,36 @@ export const posDb = {
     updateStatus.run(status, Date.now(), id);
   },
 
+  // Record a known entry fill price on an error row. Used when handleSignal's
+  // catch fires AFTER the entry filled but BEFORE the bracket was attached.
+  // The row stays in status='error_naked' (not closed yet) so position-watcher
+  // can later compute PnL when the broker reports flat.
+  setErrorWithFill(id: number, fillPrice: number) {
+    db.prepare(`
+      UPDATE positions
+      SET fill_price=?, status='error_naked', updated_at=?
+      WHERE id=?
+    `).run(fillPrice, Date.now(), id);
+  },
+
   openPositions(): Position[] {
     return db.prepare(`
       SELECT * FROM positions WHERE status IN ('pending_entry','filled_entry')
     `).all() as Position[];
+  },
+
+  // Open positions for a specific symbol (e.g. 'NQ'). Used by position-watcher
+  // when a broker-side flat transition is detected — we need to mark the
+  // corresponding DB row closed so max_positions doesn't silently block
+  // future signals.
+  // Includes both 'filled_entry' (normal) AND 'error_naked' (entry filled
+  // but bracket failed). Both need closure reconciliation when the broker
+  // reports the position flat.
+  filledPositionsForSymbol(symbol: string): Position[] {
+    return db.prepare(`
+      SELECT * FROM positions
+      WHERE status IN ('filled_entry','error_naked') AND symbol=?
+    `).all(symbol) as Position[];
   },
 
   getById(id: number): Position | null {

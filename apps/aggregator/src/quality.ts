@@ -74,74 +74,26 @@ function classifyStrategyA(_rule: string, _session: Session, _score: number): Qu
 const FLIP_STALENESS_PTS = 150;
 
 function classifyStrategyB(
-  _rule: string, session: Session, score: number, direction: string,
-  conviction?: string, ctx: QualityContext = {}, absEntry?: number
+  _rule: string, _session: Session, _score: number, direction: string,
+  _conviction?: string, _ctx: QualityContext = {}, _absEntry?: number
 ): QualityDecision {
-  if (session !== 'rth') return { tier: 'silenced', reason: 'B: ON absorption silenced (RTH-only focus)' };
-  if (score < 80) {
-    return { tier: 'silenced', reason: `B: score=${score} below threshold` };
-  }
-  // Require a same-direction H FLIP within the last 60 min.
-  // Backtest (n=33): FLIP-filtered win rate 81.8% vs 31.8% unfiltered.
-  // Signals with no FLIP context avg -4.37 net — worst performing bucket.
-  const flip = ctx.lastFlip;
-  if (flip === undefined) {
-    // Context not injected (snapshot path without regime data) — allow through.
-    // Live applySignal() always injects lastFlip so this only affects old snapshots.
-    return { tier: 'gold', reason: `B: RTH absorption score=${score} (no flip ctx)` };
-  }
-  if (flip === null || flip.direction !== direction) {
-    const why = flip === null ? 'no FLIP in 60m window' : `last FLIP=${flip.direction} (opposing)`;
-    return { tier: 'silenced', reason: `B: ${why} — needs same-dir FLIP context` };
-  }
-  // Price-staleness gate: if the market has moved >150pts from the FLIP entry,
-  // that FLIP is no longer representative of current structure. Absorptions this
-  // deep into an extended move have large bounce risk before the trend resumes.
-  if (flip.entry !== undefined && absEntry !== undefined) {
-    const ptsDrift = Math.abs(absEntry - flip.entry);
-    if (ptsDrift > FLIP_STALENESS_PTS) {
-      return {
-        tier: 'silenced',
-        reason: `B: FLIP@${flip.entry} is ${ptsDrift.toFixed(0)}pts from absorption@${absEntry} (>${FLIP_STALENESS_PTS}pt staleness gate)`,
-      };
-    }
-  }
-  const agoMin = Math.round((Date.now() - flip.ts) / 60_000);
-  return { tier: 'gold', reason: `B: RTH absorption score=${score} FLIP-confirmed ${agoMin}m ago` };
+  // Strategy B (absorption) — SILENCED COMPLETELY 2026-06-04.
+  // Removed from V3 entry rules 2026-06-02, hidden from chart, Discord-muted.
+  // No qualified signals trade, no chart display, no Discord — zero active use.
+  // Detector still runs (no-op cost is minor) and logs to signals table for
+  // future regime-change re-evaluation. Previous FLIP-context gate (81.8% WR
+  // filtered) preserved in git history for future research.
+  return { tier: 'silenced', reason: `B: absorption ${direction} — fully retired (no V3 trade, no chart, no Discord)` };
 }
 
-// EXPL conflict check for FLIP signals.
-// Block when the most recent EXPL in the lookback window opposes the flip direction
-// AND the flip's exhaustion ratio > 0.25 (i.e. it is NOT a structural exhaustion
-// of the EXPL itself — a ratio < 0.25 means the candle moved hard against the
-// prevailing delta, which is the signature of a genuine EXPL completion reversal).
-function checkExplConflict(signal: ConfluenceSignal, ctx: QualityContext): QualityDecision | null {
-  const expls = ctx.recentExpls;
-  if (!expls || expls.length === 0) return null;
-
-  const sameDir = expls.filter(e => e.direction === signal.direction);
-  const oppDir  = expls.filter(e => e.direction !== signal.direction);
-  const lastSame = sameDir.at(-1);
-  const lastOpp  = oppDir.at(-1);
-
-  const isConflict = !!lastOpp && (!lastSame || lastOpp.ts > lastSame.ts);
-  if (!isConflict) return null;
-
-  const ext   = signal as any;
-  const dT    = Math.abs(ext.deltaT    ?? 0);
-  const d5    = Math.abs(ext.delta5    ?? 0);
-  const dl    = Math.abs(ext.delta_last3 ?? 0);
-  const denom = Math.max(d5, dl);
-  const ratio = denom === 0 ? 999 : dT / denom;
-
-  if (ratio <= 0.25) return null; // structural exhaustion of the EXPL — allow through
-
-  const agoMin = Math.round((signal.ts - lastOpp.ts) / 60_000);
-  return {
-    tier: 'silenced',
-    reason: `H: FLIP ${signal.direction} blocked — EXPL ${lastOpp.direction} active ${agoMin}m ago (ratio=${ratio.toFixed(2)})`,
-  };
-}
+// EXPL conflict check for FLIP signals — REMOVED 2026-06-04.
+// Rationale: EXPL itself was silenced (both directions losing — LONG 30% WR, SHORT 4% WR).
+// Using a broken signal as a counter-indicator for FLIP made no theoretical sense.
+// Empirical impact of removal (30-day simulation):
+//   LONG: +5-8 marginal sigs, ~breakeven (~40% WR on the new ones)
+//   SHORT: +1 sig (5/13 09:42), CLEAN WIN +80 pts
+//   Net: +75 pts, code simplification
+// Original ratio-check logic preserved in git history for future reference.
 
 // Regime change gate for LONG signals (2-of-3 independent conditions).
 // Returns true when the market has likely flipped from bull to bear intraday.
@@ -186,6 +138,31 @@ function isRegimeBearish(signal: ConfluenceSignal, ctx: QualityContext): boolean
 export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityContext = {}): QualityDecision {
   const session = classifySession(signal.ts);
   const strategy = signal.strategyVersion ?? 'A';
+  // ── Special-case: wall-broken-fade is visual-monitor mode ────────────────
+  // Backtest shows 64-78% WR depending on peak size. Signal is promoted to
+  // GOLD so it broadcasts via the bus to the cockpit chart, but discord.ts
+  // suppresses notifications for this ruleId (avoid spam during validation).
+  // Trader does NOT act on it because wall-broken-fade is not in TRADER_ENABLED_RULES.
+  if (signal.ruleId === 'wall-broken-fade') {
+    return { tier: 'gold', reason: `WBF visual-monitor mode: score=${signal.score}` };
+  }
+  // compression-realwall (shipped 2026-06-03): SHADOW pending multi-day MBO validation.
+  // Single-day MBO produced 0 qualifying setups (no confluence formed on the bull-trend test day).
+  // Force 'silenced' tier — signals still log to qualified_signals/v3_decisions for
+  // accumulation but don't broadcast to chart/Discord and don't auto-trade.
+  if (signal.ruleId === 'compression-realwall') {
+    return { tier: 'silenced', reason: 'compression-realwall: shadow pending multi-day MBO data' };
+  }
+  // es-flip (2026-06-03): ES-tuned FLIP detector. SHADOW mode — gold tier so signals
+  // broadcast to chart for visual monitoring. V3 logs decisions to v3_decisions but
+  // doesn't auto-trade (forceShadowRules list).
+  if (signal.ruleId === 'es-flip') {
+    const ext = signal as any;
+    return {
+      tier: 'gold',
+      reason: `ES-FLIP shadow: ${signal.direction} K=${ext.passCount ?? '?'}/5 score=${signal.score}`,
+    };
+  }
   if (strategy === 'A') return classifyStrategyA(signal.ruleId, session, signal.score);
   if (strategy === 'B') return classifyStrategyB(signal.ruleId, session, signal.score, signal.direction, (signal as any).conviction, ctx, (signal as any).entry);
   // Strategy C: all signals are gold — the level watcher is the quality gate.
@@ -193,47 +170,28 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
   if (strategy === 'C') return { tier: 'silenced', reason: 'C: temporarily silenced for CLEAN analysis' };
   if (strategy === 'D') return { tier: 'silenced', reason: 'D: temporarily silenced for CLEAN analysis' };
   if (strategy === 'E') return { tier: 'silenced', reason: 'E: temporarily silenced for CLEAN analysis' };
-  // Strategy EXPL: pre-explosive move detector. Score gate enforced inside
-  // strategy-expl.ts (MIN_SCORE_TO_FIRE = 3). All signals that reach here passed.
-  // SHORT side is silenced — only 2 historical signals, both failures (0% hit 20pt,
-  // avg MAE 68pt). SHORT detector needs calibration before going live.
+  // Strategy EXPL: SILENCED COMPLETELY (2026-06-04).
+  // Performance through 06-02:
+  //   LONG qualified (n=59): 30.5% WR / -19.1 EV / -1,130 pts
+  //   SHORT raw (n=49):       4.1% WR / -61.6 EV / -3,018 pts
+  // Both directions losing significantly. Detector keeps logging to signals/v3_decisions
+  // for future research; gate returns silenced → hidden from chart, not in qualified_signals.
+  // Also added to config.v3.forceShadowRules so V3 never opens an EXPL trade even if
+  // promoted to live mode.
   if (strategy === 'EXPL') {
-    if (signal.direction === 'short') return { tier: 'silenced', reason: 'EXPL: short side uncalibrated (n=2, 0% win rate)' };
-    // Require at least one stacked bid zone — every historical good EXPL had one;
-    // the two signals without bid zones both failed immediately (2026-05-13 14:38, 15:16).
-    const bidZones = (signal as any).stackedBidZones as unknown[] | undefined;
-    if (!bidZones || bidZones.length === 0) {
-      return { tier: 'silenced', reason: `EXPL: no stacked bid zones (score=${signal.score})` };
-    }
-    // Zone position filter: reject longs where bid zone is in the lower half of the
-    // 60-min range (rangePct < 0.5). Low-range zones indicate buyers are absorbing
-    // near the session low, not near a compression breakout area — weaker setup.
-    // Historical calibration: all good EXPLs had rangePct > 0.56; 5/13 09:30 failure = 0.319.
-    const rangePct = (signal as any).rangePct as number | null | undefined;
-    if (signal.direction === 'long' && rangePct !== null && rangePct !== undefined && rangePct < 0.5) {
-      return { tier: 'silenced', reason: `EXPL: bid zone too low in range (rangePct=${rangePct.toFixed(2)} < 0.50)` };
-    }
-    // Regime gate disabled pending threshold calibration.
-    // condA (CVD slope) never fires in practice — bookmap CVD recovers at signal times
-    // even on bearish-looking sessions. condB+condC alone (2-of-3 without CVD) has 2
-    // collateral vs 1 correct block and misses the 5/08 afternoon cluster entirely.
-    // Re-enable once condA threshold is calibrated against more session data.
-    return { tier: 'gold', reason: `EXPL: explosive move setup score=${signal.score} zones=${bidZones.length}` };
+    return { tier: 'silenced', reason: `EXPL: silenced ${signal.direction} — both sides losing (LONG 30% WR, SHORT 4% WR)` };
   }
-  // Strategy H: CLEAN impulse (FLIP + CONT, both directions). Filters on FLIP:
-  //   1. EXPL conflict: opposing EXPL most recent in 60-min window + ratio > 0.25 → silenced
-  //   2. Delta15 gate: long FLIPs require net-bearish 15-bar background (delta15 < 0).
+  // Strategy H: CLEAN impulse (FLIP only). Filters on FLIP:
+  //   1. Delta15 gate: long FLIPs require net-bearish 15-bar background (delta15 < 500).
   //      A positive delta15 means buyers are still dominant — no exhaustion to reverse.
-  //      Calibrated: 5/12 09:53 failure had delta15=+1726; all confirmed good longs had delta15 < 0.
-  //   3. Delta5 gate: |delta5| >= 1000 without EXPL zone context, >= 800 with it.
-  //      EXPL zone confirmation substitutes for raw delta magnitude — the zone
-  //      absorbs sellers so the flip needs less background pressure to be valid.
-  //   4. Regime gate: 2-of-3 bearish conditions block long FLIPs when market has flipped.
+  //      Calibrated: 5/12 09:53 failure had delta15=+1726; all confirmed good longs had delta15 < 500.
+  //   2. Delta5 direction gate: |delta5| >= 1000 in the wrong-direction sign for the FLIP.
+  //   3. Regime gate: 2-of-3 bearish conditions block long FLIPs when market has flipped.
+  // EXPL conflict check removed 2026-06-04 — EXPL was retired (both directions losing),
+  //   so using it as counter-indicator made no sense. See checkExplConflict comment.
+  // Delta5 EXPL-zone exception (800 threshold) also removed — uniformly 1000 now.
   if (strategy === 'H') {
     if ((signal as any).pattern === 'FLIP') {
-      const conflict = checkExplConflict(signal, ctx);
-      if (conflict) return conflict;
-
       const ext = signal as any;
 
       // Delta15 gate (LONG only): need sellers to have dominated the 15-bar background.
@@ -249,36 +207,34 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
         }
       }
 
+      // Delta5 direction gate: SHORT needs d5 >= 1000 (buyers were pushing up); LONG needs
+      // d5 <= -1000 (sellers were pushing down). The "EXPL-zone substitute" (800 threshold)
+      // was removed 2026-06-04 when EXPL was silenced — uniformly 1000 now.
       const d5 = ext.delta5 ?? 0;
-      const hasSameDirExpl = (ctx.recentExpls ?? []).some(e => e.direction === signal.direction);
-      const d5Threshold = hasSameDirExpl ? 800 : 1000;
-      // Directional check: CF short needs buyers dominant (d5 > 0), CF long needs sellers dominant (d5 < 0).
-      // ABS would pass a short with d5=-1085 (sellers dominant) — conceptually wrong for buyer exhaustion.
-      const d5Passes = signal.direction === 'short'
-        ? d5 >= d5Threshold          // buyers must have been pushing UP before the reversal
-        : d5 <= -d5Threshold;        // sellers must have been pushing DOWN before the reversal
+      const d5Threshold = 1000;
+      const d5Passes = signal.direction === 'short' ? d5 >= d5Threshold : d5 <= -d5Threshold;
       if (!d5Passes) {
         return {
           tier: 'silenced',
-          reason: `H: FLIP ${signal.direction} wrong-direction background delta5=${d5} (short needs d5>=${d5Threshold}, long needs d5<=-${d5Threshold}${hasSameDirExpl ? ' EXPL-zone' : ''})`,
+          reason: `H: FLIP ${signal.direction} wrong-direction background delta5=${d5} (short needs d5>=${d5Threshold}, long needs d5<=-${d5Threshold})`,
         };
       }
 
       // Regime gate disabled pending threshold calibration.
-      // See EXPL block above for rationale — same issue applies here.
     }
     return { tier: 'gold', reason: `H: clean-impulse ${(signal as any).pattern ?? ''} score=${signal.score}` };
   }
   if (strategy === 'I') return { tier: 'gold', reason: `I: passive-seller score=${signal.score}` };
-  // Strategy CONT: trend continuation re-entry. Observe-only pending calibration.
-  // Backtest (n=11, May 4–19): 45% win rate overall, 60% at score>=90.
-  // n too small for production — collecting data until n>=30 before enabling.
+  // Strategy CONT: trend continuation re-entry. SHADOW mode (2026-06-03 promoted from silenced).
+  // Empirical analysis on n=24 (May 20 – Jun 3) at TP=80/SL=70 → 66.7% WR, +30.5 EV/sig, +733 pts.
+  // Promoted to gold-tier so signals broadcast to chart for visual monitoring. V3 will log
+  // decisions to v3_decisions but won't auto-trade until OOS sample reaches ~50+ signals.
   if (strategy === 'CONT') {
     const ext = signal as any;
     const parentAgoMin = Math.round((signal.ts - (ext.parentTs ?? signal.ts)) / 60_000);
     return {
-      tier: 'silenced',
-      reason: `CONT: observe-only (n=11, 45% WR) — ${signal.direction} +${ext.extensionPts?.toFixed(0) ?? '?'}pt parent ${parentAgoMin}m ago retrace=${((ext.retracePct ?? 0) * 100).toFixed(0)}%`,
+      tier: 'gold',
+      reason: `CONT shadow: ${signal.direction} +${ext.extensionPts?.toFixed(0) ?? '?'}pt parent ${parentAgoMin}m ago retrace=${((ext.retracePct ?? 0) * 100).toFixed(0)}%`,
     };
   }
   // Strategy J: silenced pending structural pre-filter (RS level proximity + session context).

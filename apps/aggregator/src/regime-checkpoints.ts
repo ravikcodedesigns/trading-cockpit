@@ -147,7 +147,7 @@ function computeRegime(
   };
 
   const ddDir = (price: number | null): FactorDir => {
-    if (price === null) return null;
+    if (price === null || !levels.ddBands) return null;
     const { upper, lower } = levels.ddBands;
     if (upper === lower) return null;
     return ((price - lower) / (upper - lower)) > 0.5 ? 'bull' : 'bear';
@@ -155,8 +155,8 @@ function computeRegime(
 
   const greaterMkt = (price: number | null): FactorDir => {
     if (price === null) return null;
-    if (price > levels.bullZone.high) return 'bull';
-    if (price < levels.bearZone.low)  return 'bear';
+    if (levels.bullZone && price > levels.bullZone.high) return 'bull';
+    if (levels.bearZone && price < levels.bearZone.low)  return 'bear';
     return null;
   };
 
@@ -185,7 +185,7 @@ function computeRegime(
     { name: '4H',          dir: structDir(bars4h,  H4_MS, cp931) },
     { name: 'Greater mkt', dir: greaterMkt(p931) },
     { name: 'DD ratio',    dir: ddDir(p931) },
-    { name: 'HP',          dir: cmp(p931, levels.hedgePressure) },
+    { name: 'HP',          dir: cmp(p931, levels.hedgePressure ?? null) },
     { name: 'ON HP',       dir: cmp(p931, getAL('ON HP')) },
     { name: 'ON MHP',      dir: cmp(p931, getAL('ON MHP')) },
     { name: 'HG',          dir: cmp(p931, getAL('HG')) },

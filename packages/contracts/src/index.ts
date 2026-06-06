@@ -138,10 +138,13 @@ export interface DailyLevels extends BaseEvent {
   // in NY time. Trading day = 09:30 ET on Day N -> 09:30 ET on Day N+1.
   // Friday's trading day extends across the weekend gap to Monday 09:30.
   tradingDay: string;
-  bullZone: ZoneRange;   // primary Bull Zone; low = BZB (EST level), high = zone top (same as low if out of range)
-  bearZone: ZoneRange;   // primary Bear Zone; high = BrZT (EST level), low = zone bottom (same as high if out of range)
-  ddBands: { upper: number; lower: number };
-  hedgePressure: number; // HP — Weekly Hedge Pressure (cyan line)
+  // RS structural levels — optional for instruments not yet on the RocketScooter framework
+  // (e.g., ES Step 1 expansion 2026-06-04: only ON HP / ON MHP populated via additionalLevels).
+  // NQ entries always have all four; chart skips rendering when absent.
+  bullZone?: ZoneRange;   // primary Bull Zone; low = BZB (EST level), high = zone top (same as low if out of range)
+  bearZone?: ZoneRange;   // primary Bear Zone; high = BrZT (EST level), low = zone bottom (same as high if out of range)
+  ddBands?: { upper: number; lower: number };
+  hedgePressure?: number; // HP — Weekly Hedge Pressure (cyan line)
   mhp?: number;          // MHP — Monthly Hedge Pressure (orange line); required for LM code auto-computation
   additionalLevels?: AdditionalLevel[];  // RS reference lines (QQQ Open/Close, HG, ON HP, etc.)
   extraZones?: ExtraZone[];              // secondary zone clusters, ordered top-to-bottom
@@ -173,7 +176,7 @@ export interface ConfluenceSignal extends BaseEvent {
   contextEventIds?: number[];
   rationale: string;
   observeOnly?: boolean;  // v1: always true
-  strategyVersion: 'A' | 'B';  // A=bar-based, B=tick-based
+  strategyVersion: 'A' | 'B' | 'WBF';  // A=bar-based, B=tick-based, WBF=wall-broken-fade
   ruleVersion?: string;         // e.g. 'sweep-v1', 'absorption-v1'
   // RS scoring — independent dimension from signal score
   rsScore?: number;       // 0-100 RS confluence score

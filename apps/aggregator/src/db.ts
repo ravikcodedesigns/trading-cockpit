@@ -213,7 +213,7 @@ _db.exec(`
     direction   TEXT    NOT NULL,
     qualified   INTEGER NOT NULL,
     active_mode TEXT    NOT NULL,    -- 'shadow' | 'live'
-    action      TEXT    NOT NULL,    -- 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED'
+    action      TEXT    NOT NULL,    -- 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED' | 'SKIP_NOT_V3_RULE' | 'SKIP_FORCE_SHADOW'
     reason      TEXT    NOT NULL,
     cvd_session REAL,
     entry       REAL,
@@ -309,6 +309,16 @@ const stmtRecentBars = _db.prepare(`
   ORDER BY ts ASC
 `);
 
+const stmtBarsBetween = _db.prepare(`
+  SELECT payload FROM events
+  WHERE source IN ('bookmap', 'bookmap-es')
+    AND type = 'bar'
+    AND symbol = ?
+    AND ts >= ?
+    AND ts <  ?
+  ORDER BY ts ASC
+`);
+
 export const db = {
   logEvent(evt: AggregatorEvent): number {
     const result = stmtInsertEvent.run(
@@ -399,9 +409,15 @@ export const db = {
     return row?.ts ?? 0;
   },
 
-  // Returns the most recent gold-tier trigger signal (H FLIP or EXPL long) for
-  // the given symbol+direction within the last `withinMs` milliseconds.
-  // Used by strategy-CONT to establish the parent trend signal and its entry price.
+  // Returns the most recent approved-parent trigger signal for the given
+  // symbol+direction within the last `withinMs` ms. Used by strategy-CONT to
+  // establish the parent trend signal and its entry price.
+  //
+  // Approved parents (explicit, in order of historical contribution):
+  //   - strategy_version='H'                          → clean-impulse FLIP
+  //   - strategy_version='EXPL', direction='long'     → EXPL long
+  //   - strategy_version='B',   score >= 80           → absorption-tier B rules
+  //   - strategy_version='WBF'                        → wall-broken-fade (any score)
   recentGoldTriggerFor(
     symbol: string,
     direction: string,
@@ -419,6 +435,7 @@ export const db = {
           (strategy_version = 'H')
           OR (strategy_version = 'EXPL' AND direction = 'long')
           OR (strategy_version = 'B' AND score >= 80)
+          OR (strategy_version = 'WBF')
         )
       ORDER BY ts DESC
       LIMIT 1
@@ -450,6 +467,18 @@ export const db = {
       const bar = JSON.parse(r.payload) as { ts: number };
       // ts on the bar IS the bucket-start; later inserts overwrite earlier
       // ones, leaving us with the most recent payload per bucket.
+      byBucket.set(bar.ts, bar);
+    }
+    return Array.from(byBucket.values()).sort(
+      (a, b) => (a as { ts: number }).ts - (b as { ts: number }).ts
+    );
+  },
+
+  barsBetween(symbol: string, fromMs: number, toMs: number): unknown[] {
+    const rows = stmtBarsBetween.all(symbol, fromMs, toMs) as { payload: string }[];
+    const byBucket = new Map<number, unknown>();
+    for (const r of rows) {
+      const bar = JSON.parse(r.payload) as { ts: number };
       byBucket.set(bar.ts, bar);
     }
     return Array.from(byBucket.values()).sort(
@@ -565,7 +594,7 @@ export interface V3Decision {
   direction: 'long' | 'short';
   qualified: boolean;
   activeMode: 'shadow' | 'live';
-  action: 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED' | 'SKIP_NOT_V3_RULE';
+  action: 'OPEN' | 'CLOSE' | 'SKIP_COOLDOWN' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_SILENCED' | 'SKIP_NOT_V3_RULE' | 'SKIP_FORCE_SHADOW';
   reason: string;
   cvdSession?: number;
   entry?: number;

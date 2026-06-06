@@ -4,8 +4,27 @@ import { logger } from './logger.js';
 import type { CockpitMessage, ConfluenceSignal } from '@trading/contracts';
 
 type SignalHandler = (signal: ConfluenceSignal) => void;
+// V3 trade-close event broadcast over the cockpit WS. Shape mirrors
+// aggregator's CloseEvent (see apps/aggregator/src/trade-manager.ts).
+export interface TradeCloseEvent {
+  trade: {
+    symbol: string;
+    signalId: number;
+    ruleId: string;
+    pattern: string | null;
+    direction: 'long' | 'short';
+    entry: number;
+    openTs: number;
+  };
+  exitPx: number;
+  exitTs: number;
+  reason: 'TP_HIT' | 'SL_HIT' | 'OPP_SIG_EXIT' | 'CLOSE_AT_BELL';
+  closingSignalId: number | null;
+  pnlPts: number;
+}
+type TradeCloseHandler = (evt: TradeCloseEvent) => void;
 
-export function startSignalGate(onSignal: SignalHandler): void {
+export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeCloseHandler): void {
   const seen = new Set<number>(); // dedup by signal ts
   let reconnectDelay = 2_000;
 
@@ -28,6 +47,17 @@ export function startSignalGate(onSignal: SignalHandler): void {
           seen.add(sig.ts);
         }
         logger.info({ count: msg.state.recentSignals.length }, 'signal gate: snapshot seeded');
+        return;
+      }
+
+      // V3 trade-close event — opposing-signal exit, bell-close, etc.
+      if ((msg as any).type === 'trade-close') {
+        const evt = (msg as any).evt as TradeCloseEvent;
+        logger.info(
+          { symbol: evt.trade.symbol, direction: evt.trade.direction, reason: evt.reason, exitPx: evt.exitPx, pnlPts: evt.pnlPts },
+          'signal gate: V3 trade-close received'
+        );
+        if (onTradeClose) onTradeClose(evt);
         return;
       }
 

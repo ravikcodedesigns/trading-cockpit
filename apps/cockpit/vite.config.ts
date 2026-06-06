@@ -22,6 +22,7 @@ export default defineConfig({
       '/ingest':     { target: AGG, changeOrigin: true },
       '/levels':     { target: AGG, changeOrigin: true },
       '/calendar':   { target: AGG, changeOrigin: true },
+      '/trader':     { target: AGG, changeOrigin: true },
     },
   },
 });

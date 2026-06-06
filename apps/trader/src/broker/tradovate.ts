@@ -80,6 +80,7 @@ export class TradovateClient {
   private wsReady = false;
   private fillListeners: Array<(fill: FillEvent) => void> = [];
   private orderUpdateListeners: Array<(orderId: number, status: string) => void> = [];
+  private positionListeners: Array<(pos: { id: number; contractId: number; netPos: number; netPrice: number | null; accountId: number; timestamp?: string }) => void> = [];
   private wsHeartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ export class TradovateClient {
       password:   config.tradovate.password,
       appId:      config.tradovate.appId,
       appVersion: config.tradovate.appVersion,
+      deviceId:   config.tradovate.deviceId,
       cid:        config.tradovate.cid,
       sec:        config.tradovate.secret,
     }, { skipAuth: true });
@@ -127,14 +129,18 @@ export class TradovateClient {
   }
 
   // ── Contract lookup ───────────────────────────────────────────────────────
-  // Finds the front-month contract for a root symbol (e.g. "MNQ" → "MNQM6")
+  // Finds the front-month contract for a root symbol (e.g. "MNQ" → "MNQM6").
+  // Tradovate marks tradeable contracts with status="DefinitionChecked" or
+  // "Active" — accept both. Empirically demo returns DefinitionChecked.
   async findContract(root: string): Promise<TradovateContract> {
     await this.ensureAuth();
-    // suggest returns active contracts sorted by expiry
+    // suggest returns contracts sorted by expiry (front-month first)
     const suggestions = await this.get(`/contract/suggest?t=${encodeURIComponent(root)}&l=10`) as TradovateContract[];
-    const active = suggestions.filter(c => c.status === 'Active');
-    if (!active.length) throw new Error(`No active contract found for ${root}`);
-    return active[0]!;
+    const tradeable = suggestions.filter(c => c.status === 'Active' || c.status === 'DefinitionChecked');
+    if (!tradeable.length) {
+      throw new Error(`No tradeable contract found for ${root} (got: ${suggestions.map(c => `${c.name}/${c.status}`).join(', ')})`);
+    }
+    return tradeable[0]!;
   }
 
   // ── Orders ────────────────────────────────────────────────────────────────
@@ -152,7 +158,7 @@ export class TradovateClient {
       symbol:      params.contractName,
       orderQty:    params.qty,
       orderType:   'Market',
-      timeInForce: 'DAY',
+      timeInForce: 'Day',
       isAutomated: true,
     });
 
@@ -176,7 +182,7 @@ export class TradovateClient {
       action:      params.action,
       symbol:      params.contractName,
       orderQty:    params.qty,
-      orderType:   'StopMarket',
+      orderType:   'Stop',
       stopPrice:   params.stopPrice,
       timeInForce: 'GTC',
       isAutomated: true,
@@ -220,11 +226,44 @@ export class TradovateClient {
     logger.info({ orderId }, 'order cancelled');
   }
 
+  // Fetch the most recent fill of a given action on a contract.
+  // Used by position-watcher to find the actual close fill price after a
+  // flat transition. Without this, the watcher computes PnL from the net-
+  // position snapshot (the entry price for a 1-qty trade) and reports 0.
+  async getMostRecentFill(contractId: number, action: 'Buy' | 'Sell'): Promise<{ price: number; timestamp: string } | null> {
+    await this.ensureAuth();
+    const fills = await this.get('/fill/list') as Array<{ contractId: number; action: string; price: number; timestamp: string }> | null;
+    if (!Array.isArray(fills)) return null;
+    let best: { price: number; timestamp: string } | null = null;
+    for (const f of fills) {
+      if (f.contractId !== contractId) continue;
+      if (f.action !== action) continue;
+      if (!best || f.timestamp > best.timestamp) best = { price: f.price, timestamp: f.timestamp };
+    }
+    return best;
+  }
+
   async getOrderStatus(orderId: number): Promise<{ status: string; avgPx?: number } | null> {
     await this.ensureAuth();
     const res = await this.get(`/order/item?id=${orderId}`);
     if (!res) return null;
-    return { status: res.ordStatus as string, avgPx: res.avgPx as number | undefined };
+    // 2026-06-04 fix: /order/item does NOT include avgPx — the fill price lives
+    // in /fill/deps?masterid=. If the order is Filled, fetch fills explicitly
+    // and compute volume-weighted average price. Without this, waitForFill's
+    // REST fallback could never confirm a fill, causing the trader to throw
+    // even though the broker had filled the order in milliseconds.
+    const status = res.ordStatus as string;
+    if (status === 'Filled') {
+      try {
+        const fills = await this.get(`/fill/deps?masterid=${orderId}`) as Array<{ qty: number; price: number }> | null;
+        if (Array.isArray(fills) && fills.length > 0) {
+          let qty = 0, weightedPx = 0;
+          for (const f of fills) { qty += f.qty; weightedPx += f.qty * f.price; }
+          if (qty > 0) return { status, avgPx: weightedPx / qty };
+        }
+      } catch { /* fall through to no-avgPx case */ }
+    }
+    return { status, avgPx: undefined };
   }
 
   // ── WebSocket (fill events) ───────────────────────────────────────────────
@@ -248,8 +287,9 @@ export class TradovateClient {
 
         // "o" = socket open confirmation
         if (msg === 'o') {
-          // Authorize the WebSocket session
-          ws.send(wsFrame('authorize', { token: this.accessToken }));
+          // Authorize the WebSocket session — Tradovate expects the raw access
+          // token as the body, NOT a {token: ...} JSON wrapper.
+          ws.send(wsFrame('authorize', this.accessToken!));
           return;
         }
 
@@ -286,6 +326,15 @@ export class TradovateClient {
                 const order = ev.d.entity as { id: number; ordStatus: string };
                 this.orderUpdateListeners.forEach(fn => fn(order.id, order.ordStatus));
               }
+
+              // Position updates — needed for the orphan-bracket watcher
+              if (ev.e === 'props' && ev.d?.entityType === 'position') {
+                const pos = ev.d.entity as {
+                  id: number; contractId: number; netPos: number;
+                  netPrice: number | null; accountId: number; timestamp?: string;
+                };
+                this.positionListeners.forEach(fn => fn(pos));
+              }
             }
           } catch (err) {
             logger.warn({ err, msg }, 'WS parse error');
@@ -320,6 +369,18 @@ export class TradovateClient {
   onOrderUpdate(fn: (orderId: number, status: string) => void): () => void {
     this.orderUpdateListeners.push(fn);
     return () => { this.orderUpdateListeners = this.orderUpdateListeners.filter(f => f !== fn); };
+  }
+
+  onPositionUpdate(fn: (pos: { id: number; contractId: number; netPos: number; netPrice: number | null; accountId: number; timestamp?: string }) => void): () => void {
+    this.positionListeners.push(fn);
+    return () => { this.positionListeners = this.positionListeners.filter(f => f !== fn); };
+  }
+
+  // List currently-Working orders for a given contractId (used by orphan-watcher).
+  async getWorkingOrdersForContract(contractId: number): Promise<Array<{ id: number; ordStatus: string; action: string }>> {
+    await this.ensureAuth();
+    const all = await this.get('/order/list') as Array<{ id: number; ordStatus: string; contractId: number; action: string }>;
+    return all.filter(o => o.contractId === contractId && o.ordStatus === 'Working');
   }
 
   // Wait for an order to fill (or fail) with REST polling fallback

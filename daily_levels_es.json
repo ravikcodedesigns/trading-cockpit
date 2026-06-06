@@ -1,0 +1,320 @@
+{
+  "_comment": "ES daily levels — Step 1 of multi-instrument expansion (2026-06-03 evening). ALL RS values for 2026-06-04 are TEST placeholders to verify chart rendering — user will overwrite with the morning RocketScooter snapshot exactly the same way as NQ. ON HP / ON MHP are real (from June 4 ON screenshot). Same schema as daily_levels.json (NQ); chart applies the same rendering logic.",
+  "days": {
+    "2026-06-04": {
+      "levels": [
+        {
+          "symbol": "ES",
+          "bullZone": {
+            "low": 7567.8,
+            "high": 7567.8
+          },
+          "bearZone": {
+            "low": 7527.7,
+            "high": 7527.7
+          },
+          "ddBands": {
+            "upper": 7613.6,
+            "lower": 7481.4
+          },
+          "hedgePressure": 7502.6,
+          "mhp": 7452.4,
+          "additionalLevels": [
+            {
+              "price": 7614.75,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7599.5,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7590.5,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7579.75,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7572,
+              "label": "SPY Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7572,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7570.5,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7562.5,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7560.25,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7558,
+              "label": "ONH",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7548.5,
+              "label": "SPY Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7541.5,
+              "label": "ONO",
+              "color": "#ff9a3c",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7527.83,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7524.5,
+              "label": "ONL",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7496.47,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "notes": "2026-06-04 ES — TEST RS values (placeholder, user will overwrite with morning RocketScooter snapshot). Real values: ON HP 7527.83, ON MHP 7496.47 (from June 4 ON screenshot). Bull/Bear zones, DD bands, HP, MHP, SPY Open/Close, HG, Bull2-3, Bear2-3 are all placeholders sized around yesterday's ES price action (PDH 7614.75, PDL 7562.5, PDC 7572). Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) will be auto-populated at 09:23 ET by structural-levels cron."
+        }
+      ]
+    },
+    "2026-06-05": {
+      "levels": [
+        {
+          "symbol": "ES",
+          "additionalLevels": [
+            {
+              "price": 7611.5,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7611.25,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7606,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7599.75,
+              "label": "SPY Close",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7400,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7599.5,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7592.93,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7591.5,
+              "label": "ONH",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7589.5,
+              "label": "ONO",
+              "color": "#ff9a3c",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7573.88,
+              "label": "HG",
+              "color": "#ffffff",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7562,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7548,
+              "label": "SPY Open",
+              "color": "#ffffff",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7542.25,
+              "label": "ONL",
+              "color": "#ff9a3c",
+              "style": "large-dashed",
+              "width": 2
+            },
+            {
+              "price": 7541.75,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7527.21,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            }
+          ],
+          "bullZone": {
+            "low": 7565,
+            "high": 7565
+          },
+          "bearZone": {
+            "low": 7524.8,
+            "high": 7524.8
+          },
+          "ddBands": {
+            "upper": 7521.59,
+            "lower": 7521.59
+          },
+          "hedgePressure": 7499.7,
+          "mhp": 7449.6
+        }
+      ]
+    },
+    "2026-06-08": {
+      "levels": [
+        {
+          "symbol": "ES",
+          "additionalLevels": [
+            {
+              "price": 7552.75,
+              "label": "PDH",
+              "color": "#d64545",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7552.5,
+              "label": "VAH",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7518,
+              "label": "POC",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7433.25,
+              "label": "VAL",
+              "color": "#ffd700",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 7400,
+              "label": "PDC",
+              "color": "#bbbbbb",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7400,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7379.75,
+              "label": "PDL",
+              "color": "#2bb673",
+              "style": "dashed",
+              "width": 2
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

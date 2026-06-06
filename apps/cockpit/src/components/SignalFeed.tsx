@@ -278,7 +278,8 @@ export function SignalFeed() {
     [recentEvents, selectedSymbol]
   );
   const filteredSignals = useMemo(
-    () => recentSignals.filter((s) => s.symbol === selectedSymbol),
+    // 2026-06-04: hide wall-broken-fade from the panel (user request, live trading).
+    () => recentSignals.filter((s) => s.symbol === selectedSymbol && (s as any).ruleId !== 'wall-broken-fade'),
     [recentSignals, selectedSymbol]
   );
 

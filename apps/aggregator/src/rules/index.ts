@@ -43,6 +43,8 @@ function ruleAbsorptionAtZone(
   // Are we near a meaningful zone?
   const padPct = 0.0005; // 0.05% padding around zone boundary
   const padding = event.price * padPct;
+  // Legacy strategy-A zone check skipped when bullZone/bearZone absent (ES Step 1).
+  if (!levels.bullZone || !levels.bearZone) return null;
   const inBull = inZone(event.price, levels.bullZone, padding);
   const inBear = inZone(event.price, levels.bearZone, padding);
 
