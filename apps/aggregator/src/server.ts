@@ -445,6 +445,33 @@ export async function startServer(): Promise<FastifyInstance> {
     return { symbol, minutes, interval: intervalMin, count: bars.length, bars };
   });
 
+  // Returns the timestamps of signals that passed the quality gate (gold-tier,
+  // i.e. rows in qualified_signals) and the timestamps of signals V3 actually
+  // OPENed. The chart uses these to power per-bucket "QUALIFIED" / "V3"
+  // toggles. We return seconds-bucketed values keyed by symbol so the client
+  // can match against bar timestamps efficiently.
+  app.get('/signals/marks', async (req) => {
+    const q = req.query as { symbol?: string; sinceMs?: string };
+    const symbol = q.symbol ?? 'NQ';
+    const sinceMs = parseInt(q.sinceMs ?? String(Date.now() - 14 * 24 * 60 * 60 * 1000), 10);
+
+    const qualifiedTs = db.query<{ signal_ts: number }>(`
+      SELECT signal_ts FROM qualified_signals
+      WHERE symbol = ? AND signal_ts >= ?
+    `, [symbol, sinceMs]).map(r => Math.floor(r.signal_ts / 60000) * 60);
+
+    const v3OpenTs = db.query<{ ts: number }>(`
+      SELECT ts FROM v3_decisions
+      WHERE symbol = ? AND ts >= ? AND action = 'OPEN'
+    `, [symbol, sinceMs]).map(r => Math.floor(r.ts / 60000) * 60);
+
+    return {
+      symbol,
+      qualifiedTs: Array.from(new Set(qualifiedTs)),
+      v3OpenTs:    Array.from(new Set(v3OpenTs)),
+    };
+  });
+
   // Live post-entry order-flow analysis.
   // Called by cockpit ws.ts at 30s and 2m after an RTH absorption signal fires.
   // Fetches the tick window from the tick-store and classifies into

@@ -90,11 +90,12 @@ export const config = {
     // forceShadowRules: rules in this list are evaluated by V3 (decisions logged
     // to v3_decisions) but NEVER open a trade — even when V3 is in 'live' mode.
     // Used for rules that need OOS sample accumulation before going live.
-    //   - cont-reentry (2026-06-03): n=24 / 67% WR / +30.5 EV. Needs ~50+ OOS sigs.
+    //   - cont-reentry: PROMOTED 2026-06-07. Deduped backtest n=24 / 71% WR /
+    //     +$1,651; score≥90 subset n=12 / 83% WR / +$1,225. Now V3-eligible.
     //   - es-flip (2026-06-03): n=41 test / 60.7% LONG / 50% SHORT WR. Needs OOS.
     //   - expl (2026-06-04): SILENCED + force-shadow. LONG 30% WR / -19 EV / -1,130 pts;
     //     SHORT 4% WR / -62 EV / -3,018 pts. Both losing; detector kept for research.
-    forceShadowRules: ['cont-reentry', 'es-flip', 'expl'] as string[],
+    forceShadowRules: ['es-flip', 'expl'] as string[],
 
     // Per-rule TP/SL points. Number → both directions; { long, short } → asymmetric.
     perRule: {

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { OpeningBias } from './OpeningBias';
 import { RegimePanel } from './RegimePanel';
 import type { CheckpointData, FactorDir, RegimeLabel } from './RegimePanel';
-import { TradeNoTradePopover } from './TradeNoTradePopover';
 import {
   createChart,
   type IChartApi,
@@ -52,10 +51,11 @@ function gapsToFetch(ranges: Range[], from: number, to: number): Range[] {
 }
 
 // ── Drawing tool types ─────────────────────────────────────────────────────
-type DrawMode = 'line' | 'text' | null;
+type DrawMode = 'line' | 'text' | 'measure' | null;
 type Drawing =
-  | { id: string; kind: 'line'; p1: { time: number; price: number }; p2: { time: number; price: number } }
-  | { id: string; kind: 'text'; point: { time: number; price: number }; text: string };
+  | { id: string; kind: 'line';    p1: { time: number; price: number }; p2: { time: number; price: number } }
+  | { id: string; kind: 'measure'; p1: { time: number; price: number }; p2: { time: number; price: number } }
+  | { id: string; kind: 'text';    point: { time: number; price: number }; text: string };
 
 // Each absorption signal instance gets a unique color so back-to-back signals
 // and their 30s/2m follow-up markers are visually grouped and don't blur together.
@@ -445,7 +445,7 @@ export function Chart() {
   // separate fast fetch that often completes before the bar history).
   const [barsVersion, setBarsVersion] = useState(0);
 
-  const [activePanel, setActivePanel] = useState<'regime' | 'wr' | 'trade' | null>(null);
+  const [activePanel, setActivePanel] = useState<'regime' | null>(null);
   const panelWrapRef = useRef<HTMLDivElement>(null);
 
   // ── Drawing tool refs/state ──────────────────────────────────────────────
@@ -459,6 +459,10 @@ export function Chart() {
   const [textInput, setTextInput] = useState<{ x: number; y: number; time: number; price: number } | null>(null);
   const [textValue, setTextValue] = useState('');
   const [regimeCheckpoints, setRegimeCheckpoints] = useState<CheckpointData[]>([]);
+  const [showQualified, setShowQualified] = useState(true);
+  const [showV3,        setShowV3]        = useState(true);
+  const qualifiedTsRef = useRef<Set<number>>(new Set());
+  const v3OpenTsRef    = useRef<Set<number>>(new Set());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<string>(() => {
     // Default to today (ET-naive YYYY-MM-DD) — matches the offset used elsewhere
@@ -534,6 +538,27 @@ export function Chart() {
   const flashAlpha     = useStore((s) => s.flashAlpha[s.selectedSymbol]);
   const recentEvents   = useStore((s) => s.recentEvents);
   const recentSignals  = useStore((s) => s.recentSignals);
+
+  // Fetch the set of "qualified" and "V3-OPEN" signal-timestamp buckets so
+  // the chart can render only the relevant markers when those toggles are on.
+  // Re-runs on symbol change and polls every 60s for fresh decisions.
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const res = await fetch(`/signals/marks?symbol=${selectedSymbol}`);
+        if (!res.ok) return;
+        const data = await res.json() as { qualifiedTs: number[]; v3OpenTs: number[] };
+        if (cancelled) return;
+        qualifiedTsRef.current = new Set(data.qualifiedTs);
+        v3OpenTsRef.current    = new Set(data.v3OpenTs);
+        setBarsVersion(v => v + 1);   // re-trigger marker render
+      } catch { /* best-effort */ }
+    };
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [selectedSymbol]);
 
   // Clear bar history when timeframe changes so historical bars re-fetch
   useEffect(() => {
@@ -1287,8 +1312,29 @@ export function Chart() {
     // that exact candle.
     const bucketSecs = (tsMs: number) => Math.floor(tsMs / 60000) * 60;
 
+    // Apply the QUALIFIED / V3 toggle filters. Both ON = pass-through
+    // (default), both OFF = nothing rendered, exactly one ON = only that
+    // category, both ON = union (legacy + qualified + V3).
+    //
+    // Match by minute-bucket of sig.ts because the server keys its returned
+    // timestamp lists the same way (Math.floor(ts/60000)*60).
+    const filterByToggles = (sigTsMs: number): boolean => {
+      const bucket = Math.floor(sigTsMs / 60000) * 60;
+      const isQualified = qualifiedTsRef.current.has(bucket);
+      const isV3Open    = v3OpenTsRef.current.has(bucket);
+      const isUnknown   = !isQualified && !isV3Open;
+      // Always keep "unknown" signals (e.g. silenced ones the chart already
+      // chose to show) when both toggles are off, so the chart isn't blank.
+      if (!showQualified && !showV3) return isUnknown;
+      if (showQualified && isQualified) return true;
+      if (showV3        && isV3Open)    return true;
+      if (showQualified && showV3 && isUnknown) return true;
+      return false;
+    };
+
     const symbolSignals = recentSignals
       .filter((s) => s.symbol === selectedSymbol)
+      .filter((s) => filterByToggles(s.ts))
       .filter((s) => {
         const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? "";
         // Strategy D: compression-breakout → 15m chart only
@@ -1658,7 +1704,7 @@ export function Chart() {
     };
 
     computeCardsRef.current();
-  }, [recentSignals, selectedSymbol, selectedTimeframe, barsVersion]);
+  }, [recentSignals, selectedSymbol, selectedTimeframe, barsVersion, showQualified, showV3]);
 
   // ── Drawing SVG handlers (read from stable refs, defined each render) ────
   const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -1672,18 +1718,21 @@ export function Chart() {
     const price = series.coordinateToPrice(y);
     if (time === null || price === null) return;
 
-    if (drawModeRef.current === 'line') {
+    if (drawModeRef.current === 'line' || drawModeRef.current === 'measure') {
+      const kind = drawModeRef.current;
       if (!pendingLineRef.current) {
         pendingLineRef.current = { time: time as number, price };
         renderDrawingsRef.current();
       } else {
         drawingsRef.current = [...drawingsRef.current, {
-          id: String(Date.now()), kind: 'line',
+          id: String(Date.now()), kind,
           p1: pendingLineRef.current,
           p2: { time: time as number, price },
-        }];
+        } as Drawing];
         pendingLineRef.current = null;
         previewMouseRef.current = null;
+        // Measure is a one-shot tool: drop back to normal cursor after placement.
+        if (kind === 'measure') setDrawMode(null);
         renderDrawingsRef.current();
       }
     } else if (drawModeRef.current === 'text') {
@@ -1693,7 +1742,8 @@ export function Chart() {
   };
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (drawModeRef.current !== 'line' || !pendingLineRef.current) return;
+    const mode = drawModeRef.current;
+    if ((mode !== 'line' && mode !== 'measure') || !pendingLineRef.current) return;
     const rect = svgRef.current!.getBoundingClientRect();
     previewMouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     renderDrawingsRef.current();
@@ -1721,6 +1771,123 @@ export function Chart() {
     const ts = chart.timeScale();
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
+    // Timeframe (1/5/15) used to compute "bars covered" inside measure boxes.
+    const tfMin = Math.max(1, parseInt(String(selectedTimeframe), 10) || 1);
+
+    // Helper: render a measure rectangle + label between two points.
+    // When `drawingId` is supplied (finalized measurements only — never previews),
+    // an X close button is drawn at the top-right that removes that drawing
+    // on click.
+    const drawMeasureBox = (p1: { time: number; price: number }, p2: { time: number; price: number }, preview = false, drawingId?: string) => {
+      const x1 = ts.timeToCoordinate(p1.time as UTCTimestamp);
+      const y1 = series.priceToCoordinate(p1.price);
+      const x2 = ts.timeToCoordinate(p2.time as UTCTimestamp);
+      const y2 = series.priceToCoordinate(p2.price);
+      if (x1 === null || y1 === null || x2 === null || y2 === null) return;
+
+      const xL = Math.min(x1, x2);
+      const xR = Math.max(x1, x2);
+      const yT = Math.min(y1, y2);
+      const yB = Math.max(y1, y2);
+
+      const priceDiff = p2.price - p1.price;
+      const isUp = priceDiff >= 0;
+      const fill   = isUp ? 'rgba(34,197,94,0.14)'  : 'rgba(231,76,76,0.14)';
+      const stroke = isUp ? 'rgba(34,197,94,0.85)'  : 'rgba(231,76,76,0.85)';
+
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', String(xL));
+      rect.setAttribute('y', String(yT));
+      rect.setAttribute('width',  String(xR - xL));
+      rect.setAttribute('height', String(yB - yT));
+      rect.setAttribute('fill',   fill);
+      rect.setAttribute('stroke', stroke);
+      rect.setAttribute('stroke-width', preview ? '1' : '1.2');
+      if (preview) rect.setAttribute('stroke-dasharray', '4,4');
+      svg.appendChild(rect);
+
+      // Stats: points, bars, minutes
+      const pts = Math.abs(priceDiff);
+      const totalMin = Math.max(0, Math.round(Math.abs(p2.time - p1.time) / 60));
+      const bars = Math.max(0, Math.round(totalMin / tfMin));
+      const sign = isUp ? '+' : '−';
+      const hh = Math.floor(totalMin / 60);
+      const mm = totalMin % 60;
+      const timeStr = hh > 0 ? `${hh}h ${mm}m` : `${mm}m`;
+      const label = `${sign}${pts.toFixed(2)} pts  ·  ${bars} bars  ·  ${timeStr}`;
+
+      // Label box centered horizontally above the rectangle (or below if too high).
+      const FONT_PX = 12;
+      const PAD = 6;
+      const charW = 7.2;
+      const labelW = label.length * charW + PAD * 2;
+      const labelH = FONT_PX + PAD * 2 - 2;
+      const labelX = (xL + xR) / 2 - labelW / 2;
+      const labelY = yT - labelH - 6 < 4 ? yB + 6 : yT - labelH - 6;
+
+      const lbg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      lbg.setAttribute('x', String(labelX));
+      lbg.setAttribute('y', String(labelY));
+      lbg.setAttribute('width',  String(labelW));
+      lbg.setAttribute('height', String(labelH));
+      lbg.setAttribute('rx', '3');
+      lbg.setAttribute('fill', 'rgba(10,10,12,0.92)');
+      lbg.setAttribute('stroke', stroke);
+      lbg.setAttribute('stroke-width', '1');
+      svg.appendChild(lbg);
+
+      const ltxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      ltxt.setAttribute('x', String(labelX + labelW / 2));
+      ltxt.setAttribute('y', String(labelY + labelH - PAD));
+      ltxt.setAttribute('text-anchor', 'middle');
+      ltxt.setAttribute('fill', '#f5f5f5');
+      ltxt.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      ltxt.setAttribute('font-size', String(FONT_PX));
+      ltxt.setAttribute('font-weight', '700');
+      ltxt.textContent = label;
+      svg.appendChild(ltxt);
+
+      // Close button (X) — only on finalized boxes, not previews.
+      // pointer-events: auto on the bg circle lets clicks land even when the
+      // SVG itself is pointer-events: none (i.e. when no draw tool is active).
+      if (!preview && drawingId) {
+        const R = 8;                                  // button radius
+        const cx = xR - 4 - R;                        // pinned to top-right corner of the box
+        const cy = yT + 4 + R;
+        const xBg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        xBg.setAttribute('cx', String(cx));
+        xBg.setAttribute('cy', String(cy));
+        xBg.setAttribute('r', String(R));
+        xBg.setAttribute('fill', 'rgba(10,10,12,0.92)');
+        xBg.setAttribute('stroke', stroke);
+        xBg.setAttribute('stroke-width', '1');
+        xBg.style.cursor = 'pointer';
+        xBg.style.pointerEvents = 'auto';
+        const onClose = (ev: Event) => {
+          ev.stopPropagation();
+          ev.preventDefault();
+          drawingsRef.current = drawingsRef.current.filter(d => d.id !== drawingId);
+          renderDrawingsRef.current();
+        };
+        xBg.addEventListener('click', onClose);
+        xBg.addEventListener('mousedown', (ev) => ev.stopPropagation());
+        svg.appendChild(xBg);
+
+        // The two strokes of the X glyph
+        const xLen = 4;
+        for (const [dx, dy] of [[ -xLen,  xLen ], [ xLen,  xLen ]] as const) {
+          const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          ln.setAttribute('x1', String(cx - dx)); ln.setAttribute('y1', String(cy - dy));
+          ln.setAttribute('x2', String(cx + dx)); ln.setAttribute('y2', String(cy + dy));
+          ln.setAttribute('stroke', '#f5f5f5');
+          ln.setAttribute('stroke-width', '1.5');
+          ln.setAttribute('stroke-linecap', 'round');
+          ln.style.pointerEvents = 'none';
+          svg.appendChild(ln);
+        }
+      }
+    };
+
     for (const d of drawingsRef.current) {
       if (d.kind === 'line') {
         const x1 = ts.timeToCoordinate(d.p1.time as UTCTimestamp);
@@ -1733,6 +1900,8 @@ export function Chart() {
         el.setAttribute('x2', String(x2)); el.setAttribute('y2', String(y2));
         el.setAttribute('stroke', '#5a9bff'); el.setAttribute('stroke-width', '1.5');
         svg.appendChild(el);
+      } else if (d.kind === 'measure') {
+        drawMeasureBox(d.p1, d.p2, false, d.id);
       } else if (d.kind === 'text') {
         const x = ts.timeToCoordinate(d.point.time as UTCTimestamp);
         const y = series.priceToCoordinate(d.point.price);
@@ -1751,13 +1920,6 @@ export function Chart() {
     // ~80px in from the right edge of the chart pane so they sit clearly
     // inside the pane (NOT in the price-axis column where RS chips live).
     const paneWidth = ts.width();
-    // DEBUG banner — top-left, removes once user confirms badges look right.
-    const banner = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    banner.setAttribute('x', '120'); banner.setAttribute('y', '14');
-    banner.setAttribute('fill', '#ff00ff'); banner.setAttribute('font-size', '12');
-    banner.setAttribute('font-family', 'monospace');
-    banner.textContent = `LV3 paneW=${paneWidth} structural=${levelLabelsRef.current.length}`;
-    svg.appendChild(banner);
     if (paneWidth > 0 && levelLabelsRef.current.length > 0) {
       const RIGHT_INSET = 80;
       const xRight = paneWidth - RIGHT_INSET;
@@ -1797,7 +1959,30 @@ export function Chart() {
       }
     }
 
-    // Preview line while placing second point
+    // First-click marker — drawn immediately for both line and measure tools,
+    // so the user gets feedback before the mouse moves.
+    if (pendingLineRef.current && (drawModeRef.current === 'line' || drawModeRef.current === 'measure')) {
+      const x1 = ts.timeToCoordinate(pendingLineRef.current.time as UTCTimestamp);
+      const y1 = series.priceToCoordinate(pendingLineRef.current.price);
+      if (x1 !== null && y1 !== null) {
+        const color = drawModeRef.current === 'measure' ? '#5a9bff' : '#5a9bff';
+        // Outer ring (more visible against varied backgrounds)
+        const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        ring.setAttribute('cx', String(x1)); ring.setAttribute('cy', String(y1));
+        ring.setAttribute('r', '6');
+        ring.setAttribute('fill', 'rgba(10,10,12,0.85)');
+        ring.setAttribute('stroke', color);
+        ring.setAttribute('stroke-width', '1.5');
+        svg.appendChild(ring);
+        // Inner dot
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', String(x1)); dot.setAttribute('cy', String(y1));
+        dot.setAttribute('r', '3'); dot.setAttribute('fill', color);
+        svg.appendChild(dot);
+      }
+    }
+
+    // Preview dashed line from first click to mouse (line tool only)
     if (pendingLineRef.current && previewMouseRef.current && drawModeRef.current === 'line') {
       const x1 = ts.timeToCoordinate(pendingLineRef.current.time as UTCTimestamp);
       const y1 = series.priceToCoordinate(pendingLineRef.current.price);
@@ -1809,10 +1994,19 @@ export function Chart() {
         el.setAttribute('stroke', '#5a9bff'); el.setAttribute('stroke-width', '1');
         el.setAttribute('stroke-dasharray', '4,4');
         svg.appendChild(el);
-        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        dot.setAttribute('cx', String(x1)); dot.setAttribute('cy', String(y1));
-        dot.setAttribute('r', '3'); dot.setAttribute('fill', '#5a9bff');
-        svg.appendChild(dot);
+      }
+    }
+
+    // Preview measure rectangle while placing second point
+    if (pendingLineRef.current && previewMouseRef.current && drawModeRef.current === 'measure') {
+      const previewTime  = ts.coordinateToTime(previewMouseRef.current.x);
+      const previewPrice = series.coordinateToPrice(previewMouseRef.current.y);
+      if (previewTime !== null && previewPrice !== null) {
+        drawMeasureBox(
+          pendingLineRef.current,
+          { time: previewTime as number, price: previewPrice },
+          true,
+        );
       }
     }
   };
@@ -1821,19 +2015,46 @@ export function Chart() {
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />
 
-      {/* Drawing SVG overlay */}
+      {/* Drawing SVG overlay — z-index ensures it sits above the lightweight-charts
+          canvas. Without an explicit z-index the canvas's internal layers can
+          end up on top and swallow our clicks. */}
       <svg
         ref={svgRef}
+        width="100%"
+        height="100%"
         style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
           overflow: 'hidden',
+          zIndex: 8,
           pointerEvents: drawMode ? 'auto' : 'none',
-          cursor: drawMode === 'line' ? 'crosshair' : drawMode === 'text' ? 'text' : 'default',
+          cursor: drawMode === 'line' || drawMode === 'measure' ? 'crosshair' : drawMode === 'text' ? 'text' : 'default',
         }}
         onClick={handleSvgClick}
         onMouseMove={handleSvgMouseMove}
         onMouseLeave={() => { previewMouseRef.current = null; renderDrawingsRef.current(); }}
       />
+
+      {/* Draw-mode debug indicator — visible whenever a drawing tool is active. */}
+      {drawMode && (
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          right: 80,
+          zIndex: 30,
+          background: 'rgba(90,155,255,0.18)',
+          border: '1px solid #5a9bff',
+          borderRadius: 4,
+          padding: '4px 10px',
+          color: '#5a9bff',
+          fontFamily: 'IBM Plex Mono, monospace',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 0.5,
+          pointerEvents: 'none',
+        }}>
+          {drawMode === 'measure' ? '📏 MEASURE — click start, click end' : drawMode.toUpperCase()}
+        </div>
+      )}
 
       {/* Text input for draw-text tool */}
       {textInput && (
@@ -1859,25 +2080,8 @@ export function Chart() {
       {/* Left overlay — buttons row then Opening Bias below */}
       <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
       {(() => {
-        // ABSO retired from UI 2026-06-02 — backend logging stays for future analysis.
-        // CF↓ (FLIP SHORTS) retired from UI 2026-06-02 — V3 drops them; revisit in bear regime.
-        const WR_ROWS: { window: string; lo: number; hi: number; cf: string; expl: string }[] = [
-          { window: '09:30–09:59', lo: 570, hi: 600, cf: '—',                expl: '100% (n=3)'     },
-          { window: '10:00–10:29', lo: 600, hi: 630, cf: '50% (n=2) ⚠',   expl: '100% (n=2)'     },
-          { window: '10:30–11:29', lo: 630, hi: 690, cf: '80% (n=5)',      expl: '100% (n=4)'     },
-          { window: '11:30–12:59', lo: 690, hi: 780, cf: '79% (n=14)',     expl: '70% (n=10)'     },
-          { window: '13:00–14:29', lo: 780, hi: 870, cf: '40% (n=5) ⚠',   expl: '50% (n=12) ⚠'  },
-          { window: '14:30–15:59', lo: 870, hi: 960, cf: '—',              expl: '18% (n=17) ⚠'  },
-        ];
-        const etMin = (() => {
-          const p = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false,
-          }).formatToParts(new Date());
-          return parseInt(p.find(x => x.type === 'hour')?.value ?? '0', 10) * 60
-               + parseInt(p.find(x => x.type === 'minute')?.value ?? '0', 10);
-        })();
-        const activeIdx = WR_ROWS.findIndex(r => etMin >= r.lo && etMin < r.hi);
-
+        // TIME-AND-WR + TRADE/NO-TRADE buttons retired 2026-06-06 — info now lives
+        // in the always-on TRADE RULES box at top-center.
         const ctrlBtn = (color: string, active: boolean) => ({
           padding: '3px 10px',
           fontSize: 11,
@@ -1911,142 +2115,131 @@ export function Chart() {
               )}
             </div>
 
-            {/* ── TIME AND WR ── */}
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setActivePanel(p => p === 'wr' ? null : 'wr')}
-                style={ctrlBtn('#f59e0b', activePanel === 'wr')}
-              >
-                TIME AND WR
-              </button>
-              {activePanel === 'wr' && (
-                <div style={{
-                  position: 'absolute', top: 'calc(100% + 3px)', left: 0,
-                  background: 'rgba(10,10,12,0.95)',
-                  border: '1px dotted #444',
-                  borderRadius: 4,
-                  fontFamily: 'IBM Plex Mono, monospace',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: '#d0d0d8',
-                  overflow: 'hidden',
-                  zIndex: 100,
-                }}>
-                  <div style={{
-                    display: 'grid', gridTemplateColumns: '96px 88px 110px',
-                    padding: '5px 10px', borderBottom: '1px dotted #444',
-                    color: '#888', fontSize: 10, fontWeight: 700, letterSpacing: 0.6,
-                  }}>
-                    <span>WINDOW</span><span>CF↑</span><span>EXPL↑</span>
-                  </div>
-                  {WR_ROWS.map((row, i) => {
-                    const isActive = i === activeIdx;
-                    const wrColor = (v: string) =>
-                      v === '—'           ? '#555'    :
-                      v.startsWith('100') ? '#2bb673' :
-                      v.includes('⚠')     ? '#e05252' : '#d0d0d8';
-                    return (
-                      <div key={row.window} style={{
-                        display: 'grid', gridTemplateColumns: '96px 88px 110px',
-                        padding: '4px 10px',
-                        borderBottom: '1px dotted #333',
-                        background: isActive ? 'rgba(90,155,255,0.13)' : 'transparent',
-                        borderLeft: isActive ? '3px solid #5a9bff' : '3px solid transparent',
-                      }}>
-                        <span style={{ color: isActive ? '#7ab8ff' : '#999', fontWeight: isActive ? 800 : 700 }}>
-                          {row.window}
-                        </span>
-                        <span style={{ color: wrColor(row.cf) }}>{row.cf}</span>
-                        <span style={{ color: wrColor(row.expl) }}>{row.expl}</span>
-                      </div>
-                    );
-                  })}
-                  <div style={{
-                    padding: '4px 10px 5px', borderTop: '1px dotted #444',
-                    color: '#777', fontSize: 10, fontWeight: 600, letterSpacing: 0.3,
-                  }}>
-                    SL: CF↑ 55 · EXPL 70  |  TP: 80 pts
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* ── MEASURE — toggles the TradingView-style measuring tool ── */}
+            <button
+              onClick={() => setDrawMode(drawMode === 'measure' ? null : 'measure')}
+              title="Measure: click start, click end (ESC to cancel)"
+              style={{
+                ...ctrlBtn('#5a9bff', drawMode === 'measure'),
+                fontSize: 14,
+                padding: '2px 8px',
+              }}
+            >
+              📏
+            </button>
 
-            {/* ── TRADE/NO TRADE ── */}
-            <TradeNoTradePopover
-              open={activePanel === 'trade'}
-              onToggle={() => setActivePanel(p => p === 'trade' ? null : 'trade')}
-            />
+            {/* ── QUALIFIED — toggles markers for signals that passed quality gate */}
+            <button
+              onClick={() => setShowQualified(v => !v)}
+              title="Toggle markers for quality-gated (qualified_signals) signals"
+              style={ctrlBtn('#22c55e', showQualified)}
+            >
+              QUALIFIED
+            </button>
 
-            {/* ── TRADE RULES — always-open quick reference ── */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '22px 36px 18px 1fr',
-              rowGap: 4,
-              columnGap: 6,
-              alignItems: 'baseline',
-              padding: '6px 12px',
-              border: '1.5px solid #22c55e',
-              borderRadius: 5,
-              background: 'rgba(7, 18, 11, 0.92)',
-              fontFamily: 'IBM Plex Mono, monospace',
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#f5f5f5',
-              letterSpacing: 0.3,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 0 8px rgba(34, 197, 94, 0.25)',
-              pointerEvents: 'auto',
-            }}>
-              {/* Header spans all 4 columns */}
-              <div style={{
-                gridColumn: '1 / span 4',
-                fontSize: 11,
-                color: '#22c55e',
-                letterSpacing: 1,
-                marginBottom: 1,
-                borderBottom: '1px dotted #22c55e88',
-                paddingBottom: 3,
-              }}>
-                🎯 TRADE RULES
-              </div>
+            {/* ── V3 — toggles markers for signals V3 actually OPENed */}
+            <button
+              onClick={() => setShowV3(v => !v)}
+              title="Toggle markers for signals V3 OPENed (v3_decisions.action='OPEN')"
+              style={ctrlBtn('#a855f7', showV3)}
+            >
+              V3
+            </button>
 
-              {/* FLIP SHORT — take everywhere */}
-              <span style={{ color: '#d64545', textAlign: 'center' }}>🌀</span>
-              <span style={{ color: '#d64545' }}>FLIP↓</span>
-              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
-              <span>
-                <span style={{ color: '#a5f3a3' }}>take all</span>
-                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
-                <span style={{ color: '#fff' }}>78% WR</span>
-              </span>
-
-              {/* FLIP LONG — 10:30 onward only */}
-              <span style={{ color: '#2bb673', textAlign: 'center' }}>🌀</span>
-              <span style={{ color: '#2bb673' }}>FLIP↑</span>
-              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
-              <span>
-                <span style={{ color: '#a5f3a3' }}>from 10:30</span>
-                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
-                <span style={{ color: '#fb923c' }}>skip 10:00-10:29</span>
-              </span>
-
-              {/* Universal cutoff */}
-              <span style={{ color: '#fcd34d', textAlign: 'center' }}>⏰</span>
-              <span style={{ color: '#fcd34d' }}>STOP</span>
-              <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
-              <span>
-                <span style={{ color: '#fff' }}>after 14:30</span>
-                <span style={{ color: '#666', margin: '0 6px' }}>|</span>
-                <span style={{ color: '#fcd34d' }}>late-day chop</span>
-              </span>
-
-              {/* FADE / EXPL retired from rules box 2026-06-04 — EXPL silenced (both sides losing),
-                  FADE shadow-only pending validation */}
-            </div>
           </div>
         );
       })()}
       <OpeningBias symbol={selectedSymbol} barHistoryRef={barHistoryRef} barsVersion={barsVersion} />
+      </div>
+
+      {/* ── TRADE RULES — always-open quick reference, top-center.
+          Lives at the chart root (NOT inside the top-left overlay) so the
+          flex-center wrapper spans the full chart width. ── */}
+      <div style={{
+        position: 'absolute',
+        top: 8,
+        left: 0,
+        right: 0,
+        zIndex: 11,
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '22px 36px 18px 1fr',
+          rowGap: 4,
+          columnGap: 6,
+          alignItems: 'baseline',
+          padding: '6px 12px',
+          border: '1.5px solid #22c55e',
+          borderRadius: 5,
+          background: 'rgba(7, 18, 11, 0.92)',
+          fontFamily: 'IBM Plex Mono, monospace',
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#f5f5f5',
+          letterSpacing: 0.3,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 0 8px rgba(34, 197, 94, 0.25)',
+          pointerEvents: 'auto',
+        }}>
+          {/* Header spans all 4 columns */}
+          <div style={{
+            gridColumn: '1 / span 4',
+            fontSize: 11,
+            color: '#22c55e',
+            letterSpacing: 1,
+            marginBottom: 1,
+            borderBottom: '1px dotted #22c55e88',
+            paddingBottom: 3,
+          }}>
+            🎯 TRADE RULES
+          </div>
+
+          {/* FLIP SHORT — take everywhere */}
+          <span style={{ color: '#d64545', textAlign: 'center' }}>🌀</span>
+          <span style={{ color: '#d64545' }}>FLIP↓</span>
+          <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+          <span>
+            <span style={{ color: '#a5f3a3' }}>take all</span>
+            <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+            <span style={{ color: '#fff' }}>78% WR</span>
+          </span>
+
+          {/* FLIP LONG — 10:30 onward only */}
+          <span style={{ color: '#2bb673', textAlign: 'center' }}>🌀</span>
+          <span style={{ color: '#2bb673' }}>FLIP↑</span>
+          <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+          <span>
+            <span style={{ color: '#a5f3a3' }}>from 10:30</span>
+            <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+            <span style={{ color: '#fff' }}>67% WR</span>
+          </span>
+
+          {/* CONT-REENTRY — score-90+ continuation entry after a qualifying parent */}
+          <span style={{ color: '#a78bfa', textAlign: 'center' }}>🔁</span>
+          <span style={{ color: '#a78bfa' }}>CONT↕</span>
+          <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+          <span>
+            <span style={{ color: '#a5f3a3' }}>after parent + 20-55% pullback</span>
+            <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+            <span style={{ color: '#fff' }}>83% (score≥90)</span>
+          </span>
+
+          {/* Universal cutoff */}
+          <span style={{ color: '#fcd34d', textAlign: 'center' }}>⏰</span>
+          <span style={{ color: '#fcd34d' }}>STOP</span>
+          <span style={{ color: '#22c55e', textAlign: 'center' }}>→</span>
+          <span>
+            <span style={{ color: '#fff' }}>after 14:30</span>
+            <span style={{ color: '#666', margin: '0 6px' }}>|</span>
+            <span style={{ color: '#fcd34d' }}>late-day chop</span>
+          </span>
+
+          {/* FADE / EXPL retired from rules box 2026-06-04 — EXPL silenced (both sides losing),
+              FADE shadow-only pending validation */}
+        </div>
       </div>
 
       {/* Scroll to latest — bottom right, above the time axis */}

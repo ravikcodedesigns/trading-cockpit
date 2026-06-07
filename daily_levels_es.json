@@ -1,5 +1,5 @@
 {
-  "_comment": "ES daily levels — Step 1 of multi-instrument expansion (2026-06-03 evening). ALL RS values for 2026-06-04 are TEST placeholders to verify chart rendering — user will overwrite with the morning RocketScooter snapshot exactly the same way as NQ. ON HP / ON MHP are real (from June 4 ON screenshot). Same schema as daily_levels.json (NQ); chart applies the same rendering logic.",
+  "_comment": "ES daily levels \u2014 Step 1 of multi-instrument expansion (2026-06-03 evening). ALL RS values for 2026-06-04 are TEST placeholders to verify chart rendering \u2014 user will overwrite with the morning RocketScooter snapshot exactly the same way as NQ. ON HP / ON MHP are real (from June 4 ON screenshot). Same schema as daily_levels.json (NQ); chart applies the same rendering logic.",
   "days": {
     "2026-06-04": {
       "levels": [
@@ -126,7 +126,7 @@
               "width": 2
             }
           ],
-          "notes": "2026-06-04 ES — TEST RS values (placeholder, user will overwrite with morning RocketScooter snapshot). Real values: ON HP 7527.83, ON MHP 7496.47 (from June 4 ON screenshot). Bull/Bear zones, DD bands, HP, MHP, SPY Open/Close, HG, Bull2-3, Bear2-3 are all placeholders sized around yesterday's ES price action (PDH 7614.75, PDL 7562.5, PDC 7572). Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) will be auto-populated at 09:23 ET by structural-levels cron."
+          "notes": "2026-06-04 ES \u2014 TEST RS values (placeholder, user will overwrite with morning RocketScooter snapshot). Real values: ON HP 7527.83, ON MHP 7496.47 (from June 4 ON screenshot). Bull/Bear zones, DD bands, HP, MHP, SPY Open/Close, HG, Bull2-3, Bear2-3 are all placeholders sized around yesterday's ES price action (PDH 7614.75, PDL 7562.5, PDC 7572). Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) will be auto-populated at 09:23 ET by structural-levels cron."
         }
       ]
     },
@@ -306,10 +306,24 @@
               "width": 2
             },
             {
+              "price": 7399.04,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
               "price": 7379.75,
               "label": "PDL",
               "color": "#2bb673",
               "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7339.6,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
               "width": 2
             }
           ]

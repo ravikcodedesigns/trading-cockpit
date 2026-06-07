@@ -17,11 +17,11 @@ export type CheckpointData = {
 };
 
 function labelColor(label: RegimeLabel | null): string {
-  if (!label) return '#555';
+  if (!label) return '#888';
   if (label === 'BULL STRONG') return '#2bb673';
-  if (label === 'BULL WEAK')   return '#7ece8c';
-  if (label === 'NEUTRAL')     return '#a8a8b0';
-  if (label === 'BEAR WEAK')   return '#e88080';
+  if (label === 'BULL WEAK')   return '#9ee0ab';
+  if (label === 'NEUTRAL')     return '#c8c8d0';
+  if (label === 'BEAR WEAK')   return '#f0a0a0';
   return '#d64545';
 }
 
@@ -34,7 +34,7 @@ function factorChar(dir: FactorDir): string {
 function factorColor(dir: FactorDir): string {
   if (dir === 'bull') return '#2bb673';
   if (dir === 'bear') return '#d64545';
-  return '#3a3a45';
+  return '#7a7a85';
 }
 
 function FactorArrow({ name, dir }: { name: string; dir: FactorDir }) {
@@ -78,20 +78,20 @@ export function RegimePanel({ checkpoints }: { checkpoints: CheckpointData[] }) 
   return (
     <div style={{
       background: 'rgba(10,10,12,0.95)',
-      border: '1px dotted #444',
+      border: '1px dotted #555',
       borderRadius: 4,
       fontFamily: 'IBM Plex Mono, monospace',
       fontSize: 11,
       fontWeight: 700,
-      color: '#d0d0d8',
+      color: '#e8e8ec',
       overflow: 'visible',
       minWidth: 230,
     }}>
       {/* header */}
       <div style={{
         display: 'grid', gridTemplateColumns: '40px 100px 1fr',
-        padding: '5px 10px', borderBottom: '1px dotted #444',
-        color: '#888', fontSize: 10, fontWeight: 700, letterSpacing: 0.6,
+        padding: '5px 10px', borderBottom: '1px dotted #555',
+        color: '#b8b8c0', fontSize: 10, fontWeight: 700, letterSpacing: 0.6,
       }}>
         <span>TIME</span>
         <span>REGIME</span>
@@ -102,12 +102,12 @@ export function RegimePanel({ checkpoints }: { checkpoints: CheckpointData[] }) 
         <div key={cp.time} style={{
           display: 'grid', gridTemplateColumns: '40px 100px 1fr',
           padding: '4px 10px',
-          borderBottom: '1px dotted #333',
-          opacity: cp.label !== null ? 1 : 0.35,
+          borderBottom: '1px dotted #404048',
+          opacity: cp.label !== null ? 1 : 0.5,
           alignItems: 'center',
           overflow: 'visible',
         }}>
-          <span style={{ color: '#4a5568' }}>{cp.time}</span>
+          <span style={{ color: '#e0e6f0' }}>{cp.time}</span>
           <span style={{ color: labelColor(cp.label), fontWeight: 700 }}>
             {cp.label ?? '—'}
           </span>

@@ -153,7 +153,7 @@
               "width": 1
             }
           ],
-          "notes": "2026-06-04 NQ — RS framework levels carried from 2026-06-03 (user will refresh in morning). ON HP 30568.72, ON MHP 30255.48 (Globex ON closed 16:00 ET 2026-06-03). Wide ON range (313pt gap) reflects today's failed-breakout reversal — yesterday's RTH H 30807.75 to L 30495.5. PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL will be populated by structural-levels cron at 09:23 ET."
+          "notes": "2026-06-04 NQ \u2014 RS framework levels carried from 2026-06-03 (user will refresh in morning). ON HP 30568.72, ON MHP 30255.48 (Globex ON closed 16:00 ET 2026-06-03). Wide ON range (313pt gap) reflects today's failed-breakout reversal \u2014 yesterday's RTH H 30807.75 to L 30495.5. PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL will be populated by structural-levels cron at 09:23 ET."
         }
       ]
     },
@@ -930,7 +930,7 @@
               "brzt": 28656.3
             }
           ],
-          "notes": "2026-05-18 RTH levels. DD Ratio 0.76 (bullish). NQ Res -25.32 (bearish) — redistribution zone and HP all acting as resistance. Price broke below lower DD band (28923.19) during session. ON HP/ON MHP/QQQ Close to be updated at ~18:00 ET."
+          "notes": "2026-05-18 RTH levels. DD Ratio 0.76 (bullish). NQ Res -25.32 (bearish) \u2014 redistribution zone and HP all acting as resistance. Price broke below lower DD band (28923.19) during session. ON HP/ON MHP/QQQ Close to be updated at ~18:00 ET."
         }
       ]
     },
@@ -1044,7 +1044,7 @@
               "brzt": 28541.6
             }
           ],
-          "notes": "2026-05-19 NQ | BZB 28827.40 BrZT 28786.60 | HP 28655 MHP 27727 | DD bands tight 28873-28879 (inside bear zone) | open 28850.25 above BZB → LM BLU | extra zones: 28623/28582, 28541"
+          "notes": "2026-05-19 NQ | BZB 28827.40 BrZT 28786.60 | HP 28655 MHP 27727 | DD bands tight 28873-28879 (inside bear zone) | open 28850.25 above BZB \u2192 LM BLU | extra zones: 28623/28582, 28541"
         }
       ]
     },
@@ -1504,6 +1504,20 @@
               "label": "PDL",
               "color": "#2bb673",
               "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 28815.48,
+              "label": "ON HP",
+              "color": "#f2a633",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28713.73,
+              "label": "ON MHP",
+              "color": "#f2a633",
+              "style": "solid",
               "width": 2
             }
           ]
