@@ -432,6 +432,12 @@ export function Chart() {
   // Tracks already-fetched time ranges so we don't re-request data we have.
   // Keyed by `${symbol}:${timeframe}` → sorted, merged [fromMs, toMs] intervals.
   const loadedRangesRef = useRef<Record<string, Range[]>>({});
+  // True once the initial bulk-history fetch has populated the series for a
+  // given symbol. Live-bar updates accumulate into barHistoryRef before this
+  // flips, but they don't call setData — that way the very first setData seen
+  // by lightweight-charts is the bulk one with the full window, and the
+  // visible-range anchor right after it lands in one shot (no autofit flash).
+  const historyLoadedRef = useRef<Record<string, boolean>>({});
   // Symbols currently mid-fetch (prevents redundant requests).
   const fetchInFlightRef = useRef<Set<string>>(new Set());
   // Debounce timer for the scroll-driven dynamic loader.
@@ -444,6 +450,12 @@ export function Chart() {
   // re-runs with a populated barHistoryRef (post-entry markers arrive via a
   // separate fast fetch that often completes before the bar history).
   const [barsVersion, setBarsVersion] = useState(0);
+  // Flips once per symbol after the bulk-history setData lands. The levels
+  // effect uses this to defer its first render until the chart has candles —
+  // without piggy-backing on barsVersion, which bumps every new-bar bucket
+  // and every dynamic-loader fetch and would otherwise re-render every
+  // level line on each bump.
+  const [historyReady, setHistoryReady] = useState<Record<string, boolean>>({});
 
   const [activePanel, setActivePanel] = useState<'regime' | null>(null);
   const panelWrapRef = useRef<HTMLDivElement>(null);
@@ -566,6 +578,9 @@ export function Chart() {
     // Loaded ranges are per (symbol, timeframe) — clear only the active key
     // so a timeframe change forces a re-fetch but other (symbol, tf) caches stay.
     loadedRangesRef.current[`${selectedSymbol}:${selectedTimeframe}`] = [];
+    // Re-gate live-bar setData calls until the new history fetch lands.
+    historyLoadedRef.current[selectedSymbol] = false;
+    setHistoryReady((prev) => prev[selectedSymbol] === false ? prev : { ...prev, [selectedSymbol]: false });
   }, [selectedTimeframe]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Dynamic-load callback: when the user scrolls the chart, fetch any
@@ -704,6 +719,17 @@ export function Chart() {
     });
     chartRef.current = chart;
     (window as any).__cockpitChart = chart;  // CDP navigation hook
+
+    // Suppress lightweight-charts' default fitContent autoscale. Without this,
+    // every series.setData() call (level lines, FlashAlpha lines, VWAP, the
+    // bulk history) triggers an auto-fit pass against ALL series' time ranges,
+    // so the chart visibly settles 2-3 times in the first few seconds as
+    // different sources land (FlashAlpha spans 31 days, level lines 24 hours,
+    // candles ~7 days). Pinning a logical range up front makes every subsequent
+    // setData a no-op for the visible window — the history-fetch handler is
+    // the only place that gets to move it.
+    chart.timeScale().setVisibleLogicalRange({ from: 0, to: 100 });
+
     seriesRef.current = chart.addCandlestickSeries({
       upColor: '#2bb673',
       downColor: '#d64545',
@@ -711,6 +737,24 @@ export function Chart() {
       borderDownColor: '#d64545',
       wickUpColor: '#2bb673',
       wickDownColor: '#d64545',
+      // Pad the candle's natural price range symmetrically so the candles
+      // sit in the middle ~20% of the vertical space (with room above/below
+      // for nearby level lines like MHP / POC / VAL / ON HP). Without this,
+      // lightweight-charts fits candles to fill 90% of the chart vertically —
+      // and combined with the level-line exclusion below, that would zoom
+      // tight on candles only and clip every level out of view.
+      autoscaleInfoProvider: (orig) => {
+        const base = orig();
+        if (!base || !base.priceRange) return base;
+        const { minValue, maxValue } = base.priceRange;
+        const range = maxValue - minValue;
+        if (range <= 0) return base;
+        const pad = range * 2;
+        return {
+          ...base,
+          priceRange: { minValue: minValue - pad, maxValue: maxValue + pad },
+        };
+      },
     });
 
     vwapSeriesRef.current = chart.addLineSeries({
@@ -887,6 +931,24 @@ export function Chart() {
         const seriesData = Array.from(history.entries())
           .sort((a, b) => a[0] - b[0])
           .map(([time, ohlc]) => ({ time: time as UTCTimestamp, open: ohlc.open, high: ohlc.high, low: ohlc.low, close: ohlc.close }));
+
+        // Anchor the visible range FIRST, then call setData. lightweight-charts
+        // skips its default fitContent autofit if a manual range is already in
+        // place when data arrives. Doing it the other way around (setData →
+        // setVisibleLogicalRange) produces a visible flicker: the autofit pass
+        // renders for ~1.5s before the explicit range catches up.
+        //
+        // The window scales with timeframe so 1m shows ~last 4 hours, 5m ~last
+        // day, 15m ~last 3 days. The user can scroll left freely from here.
+        const chart = chartRef.current;
+        if (chart && seriesData.length > 0) {
+          const targetBars = Math.min(seriesData.length, Math.floor(240 / selectedTimeframe));
+          const lastLogical = seriesData.length - 1;
+          chart.timeScale().setVisibleLogicalRange({
+            from: lastLogical - targetBars,
+            to:   lastLogical + 5,
+          });
+        }
         series.setData(seriesData);
 
         // Compute session VWAP from historical bars (resets at RTH 09:30 ET each day).
@@ -910,18 +972,15 @@ export function Chart() {
         if (vwapSeriesRef.current && vwapPoints.length > 0) {
           vwapSeriesRef.current.setData(vwapPoints);
         }
-
-        // After bulk-loading history, keep the view anchored to recent data.
-        // Without this, lightweight-charts auto-fits ALL bars into the viewport,
-        // which compresses months of data into a tiny view. We scroll to the
-        // right edge while capping the visible window at 7 days so the user
-        // sees recent context at a readable zoom and can scroll left for history.
-        const chart = chartRef.current;
-        if (chart && seriesData.length > 0) {
-          const nowSec = Math.floor(Date.now() / 1000) as UTCTimestamp;
-          const sevenDaysAgoSec = (nowSec - 7 * 24 * 60 * 60) as UTCTimestamp;
-          chart.timeScale().setVisibleRange({ from: sevenDaysAgoSec, to: nowSec });
-        }
+        // History is now in the series — let live-bar updates start calling
+        // setData. (Live bars that arrived during the fetch were buffered into
+        // barHistoryRef without rendering, so nothing was dropped.)
+        historyLoadedRef.current[selectedSymbol] = true;
+        // One-time signal to the levels effect that it can render. State so
+        // React re-runs the effect; not piggy-backed on barsVersion because
+        // that bumps on every new bar / dynamic fetch and would cause the
+        // levels (~100 line series) to tear down and re-add on every bump.
+        setHistoryReady((prev) => prev[selectedSymbol] ? prev : { ...prev, [selectedSymbol]: true });
         // Mark this initial window as covered so the dynamic loader skips it.
         const rk = `${selectedSymbol}:${selectedTimeframe}`;
         loadedRangesRef.current[rk] = mergeRange(
@@ -996,6 +1055,14 @@ export function Chart() {
       updated = true;
     }
     if (!updated) return;
+
+    // Wait for the bulk-history fetch to land before letting live bars trigger
+    // their own setData. Otherwise the first live bar arrives with a tiny
+    // history (a handful of buckets), triggers lightweight-charts' default
+    // autofit on that range, and the visible window flickers ~1.5s later when
+    // the bulk fetch finally lands. Bars themselves are not lost — they're
+    // merged into barHistoryRef above and will appear in the bulk setData.
+    if (!historyLoadedRef.current[selectedSymbol]) return;
 
     const data = Array.from(history.entries())
       .sort((a, b) => a[0] - b[0])
@@ -1072,6 +1139,13 @@ export function Chart() {
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
+    // Wait for the bulk history setData + visible-range pin before adding any
+    // level / FlashAlpha line series. Each of those is a LineSeries with its
+    // own time range (24h per level, ~31d for FA) and triggers lightweight-
+    // charts' auto-fit pass on setData. If they land before the candle
+    // history, the chart settles to their time spans first and then snaps to
+    // the candle range a second or two later — visible as a load-time flicker.
+    if (!historyLoadedRef.current[selectedSymbol]) return;
 
     // Tear down all existing level lines + flashAlpha lines
     for (const ls of levelLinesRef.current) {
@@ -1176,6 +1250,14 @@ export function Chart() {
           lastValueVisible: isToday && !isStructural,
           crosshairMarkerVisible: false,
           title: isToday ? title : '',  // hover tooltip; only meaningful for today
+          // Exclude level lines from the price scale's autoscale calc. With
+          // levels like DD↑ at 30650 and ON MHP at 28713 alongside candles at
+          // ~29100, default autoscale stretches the price scale across 2000+
+          // points and squeezes the candles to the bottom of the chart.
+          // Returning null from the provider tells lightweight-charts not to
+          // include this series in the price-scale fit. Levels still render
+          // wherever they fall within the candle-driven range.
+          autoscaleInfoProvider: () => null,
         });
         ls.setData([
           { time: start as UTCTimestamp, value: price },
@@ -1241,6 +1323,8 @@ export function Chart() {
             lastValueVisible: false,
             crosshairMarkerVisible: false,
             title,
+            // Excluded from autoscale — see addLevelLine comment above.
+            autoscaleInfoProvider: () => null,
           });
           // Anchor to a wide range so the line covers most of the chart.
           const now = Math.floor(Date.now() / 1000);
@@ -1258,7 +1342,7 @@ export function Chart() {
     }
     // Paint level labels now (they live in the SVG overlay, not on the chart).
     renderDrawingsRef.current();
-  }, [levelsByDay, flashAlpha, selectedSymbol]);
+  }, [levelsByDay, flashAlpha, selectedSymbol, historyReady]);
 
   // Play alert sounds for newly-arrived signals.
   // Signals present on the initial snapshot (> 5 min old) are silently pre-seeded
@@ -2254,11 +2338,18 @@ export function Chart() {
         </div>
       </div>
 
-      {/* Scroll to latest — bottom right, above the time axis */}
+      {/* Scroll to latest — bottom right, above the time axis. Also re-fits
+          the price scale so the latest price action is in view (without this,
+          jumping from an older Jun-4 view at 30,000-30,600 to today's
+          ~29,000 leaves the candles below the visible band). */}
       <button
         onClick={() => {
           const chart = chartRef.current;
-          if (chart) chart.timeScale().scrollToRealTime();
+          if (!chart) return;
+          chart.timeScale().scrollToRealTime();
+          const ps = chart.priceScale('right');
+          ps.applyOptions({ autoScale: false });
+          ps.applyOptions({ autoScale: true });
         }}
         title="Go to latest"
         style={{

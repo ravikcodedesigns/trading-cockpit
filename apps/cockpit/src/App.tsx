@@ -51,6 +51,7 @@ export function App() {
           flex: 1, overflow: 'hidden',
           display: 'grid',
           gridTemplateColumns: signalPanelOpen ? '1fr 14px 360px' : '1fr 14px',
+          gridTemplateRows: 'minmax(0, 1fr)',
         }}>
           {/* Chart area */}
           <div style={{ position: 'relative', overflow: 'hidden' }}>
