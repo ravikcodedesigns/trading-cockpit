@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.reminder-machine-repair</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-machine-repair</string>
+    <string>2026</string>
+    <string>Cockpit: Machine repair window — start the handoff</string>
+    <string>RTH is closed. Send the machine in for repair this weekend (Sat–Mon). Trader + launchd jobs will stop while machine is off. Resume on the replacement Mon morning: git pull → pnpm install → bash scripts/launchd/install-all.sh → verify Tradovate. HANDOFF.md sections 20–21 cover the full restore path.</string>
+  </array>
+
+  <!-- One-shot: fires 2026-06-12 (Friday) at 16:30 local time, ~30 min after
+       RTH close. Wrapper self-disables after firing. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key><integer>6</integer>
+    <key>Day</key><integer>12</integer>
+    <key>Hour</key><integer>16</integer>
+    <key>Minute</key><integer>30</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stderr.log</string>
+</dict>
+</plist>

@@ -926,13 +926,14 @@ The 4 Claude session-only crons that were dying on every session end have been r
 
 This closes task **#18** (Draft launchd plist for MBO ingest — 24/7 durability).
 
-### 21.2 The 4 installed jobs
+### 21.2 The 5 installed jobs
 
 | Plist | Schedule | What it does | Type |
 |---|---|---|---|
 | `com.cockpit.mbo-ingest` | Every hour at **:23** | Pulls new bytes from `~/cockpit-mbo-capture/` into `data/mbo.db`. **Skips if another ingest is in flight** (pgrep check). | Recurring |
 | `com.cockpit.structural-levels` | **Mon-Fri 9:23 AM local** | Pre-RTH compute of PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL into `daily_levels.json` | Recurring |
 | `com.cockpit.reminder-cvd` | One-shot **2026-06-09 8:43 AM** | macOS notification: re-evaluate `cvdShortFloor=+3000` for wall-broken-fade. Self-disables after firing. | One-shot |
+| `com.cockpit.reminder-machine-repair` | One-shot **2026-06-12 (Fri) 4:30 PM** | macOS notification: hand over to weekend repair shop. RTH closed; safe to power down. Self-disables. | One-shot |
 | `com.cockpit.reminder-flipshorts` | One-shot **2026-07-07 8:53 AM** | macOS notification: re-evaluate FLIP SHORTS after 5+ weeks of data. Self-disables after firing. | One-shot |
 
 ### 21.3 Files (committed at `048d5d3`)
@@ -1009,6 +1010,7 @@ For lightweight reminders: Claude crons are slightly more ergonomic but vanish o
 - **MBO ingest**: next `:23` of any hour (within ~next 60 min from install at 2026-06-08 ~00:55)
 - **Structural levels**: next weekday at 9:23 AM local time
 - **CVD reminder**: 2026-06-09 8:43 AM (~32 hours from install)
+- **Machine-repair reminder**: 2026-06-12 (Fri) 4:30 PM (~4.5 days from install)
 - **FLIP SHORTS reminder**: 2026-07-07 8:53 AM (~30 days)
 
 ### 21.9 New session: what to know
