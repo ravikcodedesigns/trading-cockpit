@@ -335,3 +335,7 @@ export interface TickBatch {
   ts: number;          // batch creation timestamp (server-side ordering)
   events: TickEvent[];
 }
+
+// Re-export the standardized level color/style palette so cockpit + aggregator
+// share one source of truth.
+export * from './level-styles.js';

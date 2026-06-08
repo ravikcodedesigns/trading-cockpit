@@ -23,6 +23,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LEVEL_STYLES } from '@trading/contracts';
 import Database from 'better-sqlite3';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -228,16 +229,18 @@ function computeVolumeProfile(db: Database.Database, priorDay: string, symbol: s
 
 // ---- upsert ----
 
+// Pulled from the shared LEVEL_STYLES palette (packages/contracts/src/level-styles.ts)
+// — single source of truth for level colors/widths/styles across the app.
 const STYLES: Record<StructuralLabel, { color: string; style: string; width: number }> = {
-  PDH: { color: '#d64545', style: 'dashed',       width: 2 },
-  PDL: { color: '#2bb673', style: 'dashed',       width: 2 },
-  PDC: { color: '#bbbbbb', style: 'solid',        width: 1 },
-  ONH: { color: '#ff9a3c', style: 'large-dashed', width: 2 },
-  ONL: { color: '#ff9a3c', style: 'large-dashed', width: 2 },
-  ONO: { color: '#ff9a3c', style: 'dotted',       width: 1 },
-  POC: { color: '#ffd700', style: 'solid',        width: 3 },
-  VAH: { color: '#ffd700', style: 'dotted',       width: 1 },
-  VAL: { color: '#ffd700', style: 'dotted',       width: 1 },
+  PDH: LEVEL_STYLES['PDH']!,
+  PDL: LEVEL_STYLES['PDL']!,
+  PDC: LEVEL_STYLES['PDC']!,
+  ONH: LEVEL_STYLES['ONH']!,
+  ONL: LEVEL_STYLES['ONL']!,
+  ONO: LEVEL_STYLES['ONO']!,
+  POC: LEVEL_STYLES['POC']!,
+  VAH: LEVEL_STYLES['VAH']!,
+  VAL: LEVEL_STYLES['VAL']!,
 };
 
 function upsertLevels(

@@ -13,8 +13,8 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
-import { tradingDayFor } from '@trading/contracts';
-import type { ConfluenceSignal } from '@trading/contracts';
+import { tradingDayFor, lookupLevelStyle } from '@trading/contracts';
+import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
 import { SignalChartCard } from './SignalFeed';
 
 // ── Range arithmetic for the dynamic bar-fetch loader ──────────────────────
@@ -1154,12 +1154,22 @@ export function Chart() {
       // distinct.
       const STRUCTURAL_LABELS = new Set(['PDH','PDL','PDC','ONH','ONL','ONO','POC','VAH','VAL']);
 
+      // addLevelLine consults the standardized LEVEL_STYLES palette
+      // (packages/contracts/src/level-styles.ts) before falling back to the
+      // caller's args. This means daily_levels.json entries with stale
+      // colors get auto-canonicalized to the current spec.
       const addLevelLine = (price: number, color: string, title: string, style: LineStyle, width: 1 | 2 | 3 | 4) => {
+        const canonical = lookupLevelStyle(title);
+        const finalColor = canonical?.color ?? color;
+        const finalWidth = canonical?.width ?? width;
+        const finalStyle = canonical
+          ? (styleMap[canonical.style] ?? style)
+          : style;
         const isStructural = STRUCTURAL_LABELS.has(title);
         const ls = chart.addLineSeries({
-          color,
-          lineWidth: width,
-          lineStyle: style,
+          color: finalColor,
+          lineWidth: finalWidth,
+          lineStyle: finalStyle,
           priceLineVisible: false,
           // RS levels: show last-value chip on price axis (only for today).
           // Structural levels: chip disabled — we draw an SVG badge instead.
@@ -1173,13 +1183,15 @@ export function Chart() {
         ]);
         levelLinesRef.current.push(ls);
         if (isToday && isStructural) {
-          levelLabelsRef.current.push({ price, label: title, color });
+          levelLabelsRef.current.push({ price, label: title, color: finalColor });
         }
       };
 
       // Pass clean labels (no date suffix). RS structural lines (Bull/Bear/DD/HP)
       // are optional — skip if the field is absent so instruments without RS
       // framework data (e.g., ES Step 1) render only their additionalLevels.
+      // NOTE: the color/style/width args below are now fallbacks — LEVEL_STYLES
+      // overrides them when the label matches a known entry.
       if (dayLevels.bullZone) {
         addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
         addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);

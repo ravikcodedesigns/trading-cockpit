@@ -266,63 +266,63 @@
             {
               "price": 7552.75,
               "label": "PDH",
-              "color": "#d64545",
+              "color": "#2596BE",
               "style": "dashed",
-              "width": 2
+              "width": 3
             },
             {
               "price": 7552.5,
               "label": "VAH",
-              "color": "#ffd700",
-              "style": "dotted",
+              "color": "#D8D06E",
+              "style": "solid",
               "width": 1
             },
             {
               "price": 7518,
               "label": "POC",
-              "color": "#ffd700",
+              "color": "#545FDE",
               "style": "solid",
               "width": 3
             },
             {
               "price": 7433.25,
               "label": "VAL",
-              "color": "#ffd700",
-              "style": "dotted",
+              "color": "#8C8641",
+              "style": "solid",
               "width": 1
             },
             {
               "price": 7400,
               "label": "PDC",
-              "color": "#bbbbbb",
+              "color": "#BBBBBB",
               "style": "solid",
               "width": 1
             },
             {
               "price": 7400,
               "label": "ES Close",
-              "color": "#ffd700",
+              "color": "#FFD700",
               "style": "solid",
               "width": 2
             },
             {
               "price": 7399.04,
               "label": "ON HP",
-              "color": "#f2a633",
+              "color": "#00FFFF",
               "style": "solid",
               "width": 2
             },
             {
               "price": 7379.75,
               "label": "PDL",
-              "color": "#2bb673",
+              "color": "#BF3C24",
               "style": "dashed",
-              "width": 2
+              "width": 3
             },
             {
               "price": 7339.6,
               "label": "ON MHP",
-              "color": "#f2a633",
+              "color": "#FFA500",
               "style": "solid",
               "width": 2
             }
