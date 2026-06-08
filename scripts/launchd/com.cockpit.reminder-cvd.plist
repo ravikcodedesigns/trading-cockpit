@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.reminder-cvd</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-cvd</string>
+    <string>2026</string>
+    <string>Cockpit: CVD short-gate re-eval</string>
+    <string>Re-evaluate cvdShortFloor=+3000 for wall-broken-fade. Run fade_blocked_pnl.ts and segment by score band + ctx_gm. Goal: 50+ blocked-short samples across 2+ regime types.</string>
+  </array>
+
+  <!-- One-shot: fires 2026-06-09 at 8:43 AM local time. Wrapper script
+       checks the year and self-disables after the target year fires. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key><integer>6</integer>
+    <key>Day</key><integer>9</integer>
+    <key>Hour</key><integer>8</integer>
+    <key>Minute</key><integer>43</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stderr.log</string>
+</dict>
+</plist>

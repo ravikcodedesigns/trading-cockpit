@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.reminder-flipshorts</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-flipshorts</string>
+    <string>2026</string>
+    <string>Cockpit: FLIP SHORTS re-eval</string>
+    <string>Re-evaluate FLIP SHORTS (clean-impulse direction=short) in qualified_signals after 5+ weeks accumulated data. Group by ctx_gm (bear regime focus). If bear-regime WR >= 60% with n >= 20, propose enabling FLIP SHORTS on bear-regime days only.</string>
+  </array>
+
+  <!-- One-shot: fires 2026-07-07 at 8:53 AM. Wrapper self-disables. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key><integer>7</integer>
+    <key>Day</key><integer>7</integer>
+    <key>Hour</key><integer>8</integer>
+    <key>Minute</key><integer>53</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stderr.log</string>
+</dict>
+</plist>
