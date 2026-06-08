@@ -836,3 +836,77 @@ Found in `~/.claude/projects/-Users-ravikumarbasker-claude-workspace/memory/`:
 ---
 
 **End of handoff.** A new session reading this top-to-bottom should be ~80% caught up. The rest comes from running the tools, reading the code, and asking the user clarifying questions as needed.
+
+---
+
+## 20. Most-Recent-Session Decisions (2026-06-07 evening, post-handoff drafting)
+
+These shipped after the original handoff was drafted earlier in the day. New session: trust these.
+
+### 20.1 LEVEL_STYLES palette standardized
+- New `packages/contracts/src/level-styles.ts` is the **single source of truth** for level colors/widths/styles
+- Cockpit `Chart.tsx addLevelLine()` consults LEVEL_STYLES first → palette wins over JSON
+- `compute_structural_levels.ts` sources its STYLES record from contracts
+- `daily_levels.json` + `daily_levels_es.json` for 2026-06-08 re-canonicalized
+- Full color spec is in the level-styles.ts header comment + commit `5a9d34c`
+
+### 20.2 CLAUDE.md auto-load
+- New `CLAUDE.md` at repo root auto-loads on every Claude Code session
+- Points to HANDOFF.md, embeds 6 hard rules, lists common ops
+- New sessions should boot with: *"Read CLAUDE.md and HANDOFF.md, then check git status"*
+
+### 20.3 Old project copy deleted
+- `/Users/ravikumarbasker/claude-workspace/trading-cockpit` (7 GB, last commit May ~10) was a stale copy from prior workflow
+- Verified no daemons/launchd/shell rc referenced it → deleted
+- Reclaimed 7 GB. Active project remains at `/Users/ravikumarbasker/trading-cockpit`
+
+### 20.4 Open color questions (Ravi to decide)
+The following labels were left at sensible defaults because Ravi didn't include them in his explicit color spec. **A new session should ask before changing**:
+
+- **PDC** (currently `#BBBBBB` grey, solid thin) — should it match PDH/PDL family (bold dashed)?
+- **NQ Close / ES Close** (currently `#FFD700` gold, solid 2) — align with `#FFFFFF` like QQQ/SPY/SPX Open/Close?
+- **ONO** (currently `#FF9A3C` orange, dotted) — move into ON family (cyan)?
+- **Bull Zone / Bear Zone** (currently green/red, solid thin) — custom palette?
+- **OHL** in Ravi's original spec was treated as typo for **ONL**. Confirm?
+
+### 20.5 Recent regime backfill question (parked)
+Ravi asked: "how many days has the 09:31 regime aligned with the rest of the day?"
+- Answer requires backfilling `daily_regimes` table — currently only 1 day (05-26) stored
+- Backfill design sketched: export `computeRegime()` from regime-checkpoints.ts → loop historical days → store
+- **Not yet shipped.** ~30-45 min of work when prioritized.
+
+### 20.6 Recent perf analysis context
+- V3-OPEN FLIP (40 trades): 70% WR, +$2,754
+- V3-OPEN SHORT subcohort (n=10): 80% WR, +$860, +$86/trade
+- Cont-reentry score≥90 (12 trades, deduped): 83% WR, +$1,225
+- Combined V3 (FLIP+CONT@90): 66 trades, 70.8% WR, +$4,567 over 32 days
+- **For $3k/day target**: 22× MNQ contracts (≈ 2 NQ E-mini), 6-week phased ramp (5→10→20 MNQ)
+
+### 20.7 Trader current state
+- `TRADER_MODE=live` (real orders to Tradovate)
+- `TRADER_ENABLED_RULES=clean-impulse` (FLIP only)
+- V3 still in shadow (`V3_ACTIVE_MODE=shadow`) → trader sees QUALIFIED FLIPs, not V3-OPEN FLIPs
+- To get V3-OPEN cohort live: needs `V3_ACTIVE_MODE=live` AND likely add cont-reentry to TRADER_ENABLED_RULES
+- **Target cutover: week of 2026-06-09** (task #21)
+
+### 20.8 Pending issue worth investigating early
+Today (06-05) had 3 NQ SHORT FLIP winners (10:21, 13:05, 14:57 at +$80 each) all SILENCED by quality gate — specifically the **DD-band hard filter** (rs-level-scorer.ts:430): SHORT blocked when price < lower DD band. This rule was calibrated for "irrational territory" but is over-blocking on real bear days.
+
+Suggested investigation:
+1. Backfill how often DD-band-blocked SHORTs would have won
+2. If high WR (>65%), relax to: SHORT blocked only when below DD AND <some volume threshold (avoid panic spikes)
+
+### 20.9 Cockpit features added today (recap)
+- Calendar widget (bottom-left) → jump to any historical date back to 2026-04-29
+- 📏 Measure tool with X close button (TradingView-style)
+- QUALIFIED / V3 marker toggle buttons next to measure tool
+- TRADE RULES box centered at top (lifted out of top-left container)
+- TIME-AND-WR / TRADE buttons removed
+- LV3 paneW debug banner removed
+- RegimePanel time column brightened (#e0e6f0)
+- Dynamic on-scroll bar fetch with gap tracking
+- /signals/marks endpoint serving qualified + V3 timestamps
+
+---
+
+**Truly end of handoff** as of 2026-06-07 21:30 ET (last commit `5a9d34c`).
