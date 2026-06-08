@@ -40,12 +40,15 @@ These apply to **every** interaction:
 ## Working directory & key paths
 
 - **Repo root**: `/Users/ravikumarbasker/trading-cockpit`
-- **Aggregator**: `apps/aggregator/` (port 8787, fastify + sqlite)
-- **Cockpit**: `apps/cockpit/` (port 5173, vite + react + lightweight-charts)
-- **Trader**: `apps/trader/` (port 8788, fastify + tradovate)
+- **Aggregator**: `apps/aggregator/` — Fastify HTTP + WS, **port 8787**
+- **Tick-store**: `apps/tick-store/` — Fastify HTTP + WS ingest, **port 8788**
+- **Cockpit**: `apps/cockpit/` — Vite dev server, **port 5173** (proxies to 8787)
+- **Trader**: `apps/trader/` — **no HTTP server**; outbound SSE client → 8787, outbound WS → Tradovate
 - **Contracts**: `packages/contracts/` (shared TS types + LEVEL_STYLES palette)
 - **MBO capture**: `~/cockpit-mbo-capture/` (outside repo)
-- **Data**: `data/` (3 SQLite DBs, gitignored)
+- **Data**: `data/` (4 SQLite DBs, gitignored: trading.db, ticks.db, mbo.db, positions.db)
+
+**Port assignments are fixed — do not change.** See HANDOFF.md §2.5 for the full service topology table.
 
 ## Common ops
 

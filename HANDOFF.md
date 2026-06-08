@@ -17,7 +17,7 @@
 
 ### Tech stack
 - **Runtime**: Node.js 20+, TypeScript, pnpm monorepo
-- **Backend**: Fastify (aggregator on `:8787`, trader on `:8788`)
+- **Backend**: Fastify (aggregator on `:8787`, tick-store on `:8788`); trader is a daemon with no HTTP server
 - **Frontend**: React + Vite + lightweight-charts (cockpit on `:5173`)
 - **Storage**: SQLite (3 DBs), JSON files for levels/context
 - **Data source**: Bookmap (with custom Java + Python addons for tick + MBO capture)
@@ -52,7 +52,7 @@ trading-cockpit/
 │   │   │   ├── cvd-session.ts  # RTH-anchored CVD per symbol
 │   │   │   └── regime-checkpoints.ts # 4× daily regime snapshots
 │   │   └── scripts/             # 100+ research/analysis scripts (see §11)
-│   ├── cockpit/           # React dashboard (port 5173)
+│   ├── cockpit/           # React dashboard (port 5173 — Vite dev, proxies to 8787)
 │   │   └── src/components/
 │   │       ├── Chart.tsx           # ⭐ Main chart + signal markers + tools
 │   │       ├── SignalFeed.tsx
@@ -61,8 +61,12 @@ trading-cockpit/
 │   │       ├── KillSwitch.tsx
 │   │       ├── TraderStatus.tsx
 │   │       └── StatusBar.tsx
-│   └── trader/            # Tradovate auto-trader daemon (port 8788)
-│       └── src/
+│   ├── tick-store/        # Fastify HTTP + WS tick ingest (port 8788, writes ticks.db)
+│   │   └── src/
+│   │       ├── server.ts          # /health /trades /depth + /ws/ticks ingest
+│   │       └── db.ts              # better-sqlite3 writer for ticks.db
+│   └── trader/            # Tradovate auto-trader daemon (NO HTTP server)
+│       └── src/                   # Outbound SSE → 8787, outbound WS → Tradovate
 │           ├── index.ts
 │           ├── config.ts
 │           ├── signal-gate.ts     # ⭐ WS subscriber → trade decisions
@@ -87,6 +91,39 @@ trading-cockpit/
 ├── daily_levels_es.json   # ES structural levels per trading day
 └── data/rs-context.json   # Daily RS framework context
 ```
+
+### 2.5 Service Topology & Ports — **CANONICAL**
+
+These port assignments are fixed. **Do not change them across restarts.** If a port conflict arises, find and kill the squatter — don't reassign.
+
+| Service | Process | Port | Bind | Protocol | Purpose | Health check |
+|---|---|---|---|---|---|---|
+| **Aggregator** | `apps/aggregator` (Fastify) | **8787** | `127.0.0.1` | HTTP + WS | Signals, levels, history, `/ws/cockpit`, `/ws/sources` ingest | `curl :8787/health` |
+| **Tick-store** | `apps/tick-store` (Fastify) | **8788** | `127.0.0.1` | HTTP + WS | Tick/depth writes to `ticks.db`, `/ws/ticks` ingest | `pgrep -f 'tsx.*tick-store'` — **do NOT use `/health`**, it runs `COUNT(*)` on 546M-row depth table (~37s, blocks event loop) |
+| **Cockpit** | `apps/cockpit` (Vite dev) | **5173** | `127.0.0.1` | HTTP | React dashboard. Proxies `/ws`, `/context`, `/history`, `/health`, `/levels`, `/calendar`, `/trader`, `/ingest`, `/post-entry`, `/test` → aggregator on 8787 | `curl :5173/` |
+| **Trader** | `apps/trader` (daemon) | — | — | **No listener** | Outbound SSE → `127.0.0.1:8787/ws/cockpit`; outbound WS → Tradovate (`md.tradovate.com`). Owns `positions.db`. | `pgrep -f 'tsx.*trader/src/index'` + `lsof -p <pid> -iTCP` should show 1 ESTABLISHED to `:8787` and 1 ESTABLISHED to `34.120.3.201:443` (Tradovate) |
+| **Bookmap NQ addon** | `addons/bookmap/cockpit_addon.py` | — | — | WS client | Outbound to `ws://127.0.0.1:8787/ws/sources?source=bookmap` AND `ws://127.0.0.1:8788/ws/ticks` (parallel fan-out) | inside Bookmap process |
+| **Bookmap ES addon** | `addons/bookmap/es_cockpit_addon.py` | — | — | WS client | Outbound to `ws://127.0.0.1:8787/ws/sources?source=bookmap-es` AND `ws://127.0.0.1:8788/ws/ticks` | inside Bookmap process |
+| **MBO capture (Java)** | `addons/bookmap-java/` | — | — | File writer | Writes `~/cockpit-mbo-capture/*.log`; no network listener. Ingested into `mbo.db` hourly by launchd. | log file growth + `launchctl list \| grep mbo-ingest` |
+
+**Override env vars** (rarely used — only for testing):
+- `AGGREGATOR_PORT` (default 8787)
+- `TICK_STORE_PORT` / `TICK_STORE_HOST` (defaults 8788 / 127.0.0.1)
+- `AGGREGATOR_WS` (trader's override of where to subscribe; default `ws://127.0.0.1:8787/ws/cockpit`)
+
+**Common port-conflict debug**
+```bash
+# Who owns a port?
+lsof -nP -iTCP:8788 -sTCP:LISTEN
+
+# Which app dir is a node PID running from?
+lsof -p <pid> | grep cwd
+
+# Identifying confusion: aggregator and tick-store both run as `node ... tsx ... src/index.ts`.
+# The only quick disambiguator is the `cwd` (above) or the listening port (8787 vs 8788).
+```
+
+**Historical note (2026-06-08):** HANDOFF.md previously listed trader on `:8788`. That was wrong — trader has no HTTP server. Port 8788 has always been tick-store. Section added after this confusion cost a debugging session.
 
 ---
 
@@ -365,7 +402,7 @@ TRADER_MODE=live                    # placing real orders
 TRADER_ENABLED_RULES=clean-impulse  # FLIP only (not WBF, CONT, EXPL)
 ```
 
-Account: **Tradovate live 1557816**. Listening on port `8788`.
+Account: **Tradovate live 1557816**. The trader has **no HTTP server** — it's a pure daemon: outbound SSE to aggregator (`ws://127.0.0.1:8787/ws/cockpit`) + outbound WS to Tradovate. Health checks happen via `pgrep -f 'tsx.*trader/src/index'` (see §2.5).
 
 ### 8.2 Signal flow
 
