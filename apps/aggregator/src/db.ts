@@ -499,21 +499,28 @@ export const db = {
     `).all(sinceMs, limit).map((r) => JSON.parse((r as { payload: string }).payload));
   },
 
-  // Symbol-scoped variant of qualifiedSignalsSince — same shape, narrows by
-  // symbol AND excludes rule IDs that are gold-tier-only for visual monitoring
-  // (e.g. wall-broken-fade — visual-monitor in quality.ts but not tradable).
-  // Used by /signals/marks so the chart only shows tradable historical markers.
+  // Symbol-scoped qualified-signal feed for the chart's QUALIFIED button.
+  // Reads from tradable_signals WHERE qualified=1 (LIVE, written on every
+  // signal by the pipeline) instead of the legacy qualified_signals table
+  // (STALE — only refreshed by `pnpm qualify` script runs).
+  //
+  // Migrated 2026-06-09. The old qualified_signals table still exists and is
+  // still populated by reapply_quality_gates.ts for re-evaluation work
+  // (GATE_VERSION bumps), but is no longer the read source for the live chart.
+  //
+  // excludeRules is preserved for back-compat — e.g. wall-broken-fade is
+  // technically qualified but the chart UI hides it (visual-monitor only).
   qualifiedSignalsForSymbol(symbol: string, sinceMs: number, limit: number, excludeRules: string[]): ConfluenceSignal[] {
     const exclPlaceholders = excludeRules.length > 0
-      ? `AND q.rule_id NOT IN (${excludeRules.map(() => '?').join(',')})`
+      ? `AND t.rule_id NOT IN (${excludeRules.map(() => '?').join(',')})`
       : '';
     return _db.prepare(`
       SELECT s.payload
-      FROM qualified_signals q
-      JOIN signals s ON s.id = q.signal_id
-      WHERE q.symbol = ? AND q.signal_ts >= ?
+      FROM tradable_signals t
+      JOIN signals s ON s.id = t.signal_id
+      WHERE t.qualified = 1 AND t.symbol = ? AND t.signal_ts >= ?
         ${exclPlaceholders}
-      ORDER BY q.signal_ts DESC
+      ORDER BY t.signal_ts DESC
       LIMIT ?
     `).all(symbol, sinceMs, ...excludeRules, limit)
       .map((r) => JSON.parse((r as { payload: string }).payload));
