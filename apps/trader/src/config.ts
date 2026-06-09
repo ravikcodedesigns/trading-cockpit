@@ -40,6 +40,12 @@ export const config = {
 
   // Discord webhook for trade notifications. Empty string = disabled.
   discordWebhook: process.env.DISCORD_WEBHOOK ?? '',
+
+  // Pushover credentials for fast (<1s) iOS / macOS push. Both must be set;
+  // empty = disabled. User key: top of https://pushover.net (your account).
+  // App token: create one at https://pushover.net/apps/build.
+  pushoverUser:  process.env.PUSHOVER_USER  ?? '',
+  pushoverToken: process.env.PUSHOVER_TOKEN ?? '',
 };
 
 // SL/TP per rule+direction (points)
@@ -48,6 +54,11 @@ export const SIGNAL_PARAMS: Record<string, { sl: number; tp: number }> = {
   'clean-impulse:short': { sl: 105, tp: 80 },
   'expl:long':           { sl: 70,  tp: 80 },
   'absorption:long':     { sl: 100, tp: 80 },
+  // CONT-reentry promoted 2026-06-09 per backtest analysis:
+  //   23-day window: +$1,154 / WR 60→62% / ~$50/day average lift.
+  //   Symmetric TP=80/SL=70 mirrors aggregator's v3.perRule['cont-reentry'].
+  'cont-reentry:long':   { sl: 70,  tp: 80 },
+  'cont-reentry:short':  { sl: 70,  tp: 80 },
 };
 
 export function signalParams(ruleId: string, direction: string) {
