@@ -337,7 +337,25 @@ class State {
 
       const symbol = signal.symbol;
       const cvd = cvdSession.get(symbol);
-      const hasOpenTrade = tradeManager.getOpen(symbol) != null;
+
+      // Cooldown / close-on-opp interaction: if THIS signal will close the
+      // currently-open trade (qualified opposing-direction in tradableExitRules),
+      // treat the cooldown gate as if the slot is already empty so the same
+      // signal can flip into the opposite direction. Without this, a FLIP-long
+      // arriving over an open FLIP-short would close the short but never open
+      // the long — half the Variant A exit policy lost. (Fixed 2026-06-09 post-
+      // cutover; V3's old cascade ordered close-then-cooldown-check naturally.)
+      const openTrade = tradeManager.getOpen(symbol);
+      const pattern = (signal as { pattern?: string }).pattern ?? null;
+      const willCloseOnOpp = openTrade != null
+        && tradeManager.shouldExitOnSignal(
+             symbol,
+             signal.direction as 'long' | 'short',
+             tech.qualified,
+             signal.ruleId,
+             pattern,
+           );
+      const hasOpenTrade = (openTrade != null) && !willCloseOnOpp;
       const act = evaluateActionability(signal, tech.qualified, tech.reason,
                                         { cvdSession: cvd, hasOpenTrade });
 
@@ -349,10 +367,13 @@ class State {
       // Pipeline is authoritative — drive close-on-opp + OPEN + broadcast from
       // the decision. Sequence per design:
       //   1. close any open trade if this signal is opposing-qualified
-      //   2. open new trade + broadcast if action='OPEN'
+      //   2. open new trade + broadcast if action='OPEN' (works even right
+      //      after a close-on-opp thanks to the willCloseOnOpp hint above)
       //   3. write tradable_signals row LAST — log reflects what actually
       //      happened (trade placed), not what we're about to do.
-      this.closeOpenTradeOnOpposingSignal(signal, signalId, tech.qualified);
+      if (willCloseOnOpp) {
+        this.closeOpenTradeOnOpposingSignal(signal, signalId, tech.qualified);
+      }
       if (act.action === 'OPEN') {
         this.openTradeAndBroadcast(signal, signalId, act.reason);
       }
