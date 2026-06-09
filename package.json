@@ -4,7 +4,9 @@
   "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "concurrently -n agg,ui,bm,ticks,trader,deploy -c blue,green,magenta,cyan,red,yellow \"pnpm --filter @trading/aggregator dev\" \"pnpm --filter @trading/cockpit dev\" \"python3 addons/bookmap/addon.py\" \"pnpm --filter @trading/tick-store dev\" \"pnpm --filter @trading/trader dev\" \"bash ~/auto_deploy_tick_addon.sh\"",
+    "_dev_note": "Trader removed from `dev` 2026-06-09 — now runs under launchd (com.cockpit.trader, see scripts/launchd/com.cockpit.trader.plist). The `trader` slot in concurrently is now a log-tail of the launchd trader's stdout (does NOT spawn a process). Use `pnpm dev:with-trader` only if launchd is unloaded; the launchd trader.sh singleton check will block accidental duplicates anyway.",
+    "dev": "concurrently -n agg,ui,bm,ticks,trader,deploy -c blue,green,magenta,cyan,red,yellow \"pnpm --filter @trading/aggregator dev\" \"pnpm --filter @trading/cockpit dev\" \"python3 addons/bookmap/addon.py\" \"pnpm --filter @trading/tick-store dev\" \"tail -F ~/Library/Logs/cockpit-trader.stdout.log\" \"bash ~/auto_deploy_tick_addon.sh\"",
+    "dev:with-trader": "concurrently -n agg,ui,bm,ticks,trader,deploy -c blue,green,magenta,cyan,red,yellow \"pnpm --filter @trading/aggregator dev\" \"pnpm --filter @trading/cockpit dev\" \"python3 addons/bookmap/addon.py\" \"pnpm --filter @trading/tick-store dev\" \"pnpm --filter @trading/trader dev\" \"bash ~/auto_deploy_tick_addon.sh\"",
     "build": "pnpm -r run build",
     "aggregator": "pnpm --filter @trading/aggregator run dev",
     "cockpit": "pnpm --filter @trading/cockpit run dev",

@@ -17,7 +17,8 @@ mkdir -p "$DEST_DIR"
 # Make wrapper scripts executable
 chmod +x "$SRC_DIR/mbo-ingest.sh" \
          "$SRC_DIR/structural-levels.sh" \
-         "$SRC_DIR/reminder.sh"
+         "$SRC_DIR/reminder.sh" \
+         "$SRC_DIR/trader.sh"
 
 for PLIST in "$SRC_DIR"/com.cockpit.*.plist; do
   NAME=$(basename "$PLIST")
@@ -42,3 +43,5 @@ echo "Logs:"
 echo "  ~/Library/Logs/cockpit-mbo-ingest.log"
 echo "  ~/Library/Logs/cockpit-structural-levels.log"
 echo "  ~/Library/Logs/cockpit-reminders.log"
+echo "  ~/Library/Logs/cockpit-trader.stdout.log"
+echo "  ~/Library/Logs/cockpit-trader.stderr.log"

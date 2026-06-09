@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.trader</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/trader.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/ravikumarbasker/trading-cockpit</string>
+
+  <!-- Start immediately when the plist is loaded. -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Auto-restart on CRASH (non-zero exit). Graceful SIGTERM exits via
+       index.ts:shutdown() with code 0 and is NOT restarted — that lets
+       `launchctl stop com.cockpit.trader` actually stop the trader. -->
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+
+  <!-- Minimum 60s between (re)starts. Critical for Tradovate rate limits —
+       prevents the trader from re-authenticating in a 429-storm loop after a
+       crash. Combined with the startup backoff in index.ts (5/10/20/40/60s
+       across up to 20 attempts), this gives the rate-limit window time to
+       clear before the next attempt. -->
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+
+  <!-- Time (seconds) allowed for graceful shutdown after SIGTERM before
+       launchd SIGKILLs. The trader's shutdown handler only logs + exits, so
+       10s is plenty. -->
+  <key>ExitTimeOut</key>
+  <integer>10</integer>
+
+  <!-- All pino logs from the trader go to stdout — this is the file you tail
+       to see signals, trades, halt checks, broker events, etc. Same format
+       you currently see in `pnpm dev` under [trader]. -->
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-trader.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-trader.stderr.log</string>
+</dict>
+</plist>

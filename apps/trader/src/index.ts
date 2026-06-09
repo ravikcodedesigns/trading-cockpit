@@ -7,7 +7,7 @@ import { TradovateClient } from './broker/tradovate.js';
 import { handleSignal, handleV3Close, warmContractCache } from './order-manager.js';
 import { startSignalGate } from './signal-gate.js';
 import { startPositionWatcher } from './position-watcher.js';
-import { discord } from './discord.js';
+import { notify } from './notify.js';
 import type { ConfluenceSignal } from '@trading/contracts';
 
 async function main() {
@@ -17,7 +17,11 @@ async function main() {
   const broker = new TradovateClient();
   await broker.authenticate();
   await broker.loadAccount();
-  await broker.connectWebSocket();
+  // WS connect with exponential backoff — Tradovate 429s on rapid reconnects.
+  // Without this the trader fatal-exits on a single 429 and tsx watch doesn't
+  // auto-restart it (waits for a file change). Backoff: 5,10,20,40,60,60,...
+  // capped at 60s, max ~20 attempts (~15 min total) before giving up.
+  await connectWithBackoff(broker);
   logger.info({ account: broker.account }, 'broker ready');
 
   // Pre-warm front-month contract caches (MNQ + MES). Lets the
@@ -32,8 +36,13 @@ async function main() {
   // NOT auto-cancel when the position is closed externally. This watcher is
   // the safety net for that gap.
   const stopWatcher = startPositionWatcher(broker);
-  process.on('SIGINT',  () => { stopWatcher(); process.exit(0); });
-  process.on('SIGTERM', () => { stopWatcher(); process.exit(0); });
+  const shutdown = (sig: string) => {
+    logger.warn({ signal: sig }, '═══ trader stopping ═══');
+    stopWatcher();
+    process.exit(0);
+  };
+  process.on('SIGINT',  () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 
   // ── Resume any open positions from a previous run ─────────────────────────
   const open = posDb.openPositions();
@@ -55,7 +64,7 @@ async function main() {
       // Notify Discord on data-driven TOD blocks (these matter — user may want to know).
       // RTH/news/halt/maxPositions/duplicate are intentionally silent.
       if (block === 'flip_long_pre_1030' || block === 'after_1430_stop' || block === 'daily_loss_limit') {
-        discord.block({
+        notify.block({
           ruleId: (signal as any).ruleId,
           direction: signal.direction,
           symbol: signal.symbol,
@@ -102,11 +111,34 @@ async function main() {
     'trader configuration'
   );
 
-  discord.startup({
+  notify.startup({
     mode: config.mode,
     rules: config.enabledRules,
     lossLimit: config.risk.maxDailyLoss,
   });
+}
+
+async function connectWithBackoff(broker: TradovateClient): Promise<void> {
+  const delays = [5_000, 10_000, 20_000, 40_000];
+  const maxDelay = 60_000;
+  const maxAttempts = 20;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await broker.connectWebSocket();
+      return;
+    } catch (err: any) {
+      const wait = delays[attempt - 1] ?? maxDelay;
+      const is429 = String(err?.message ?? '').includes('429');
+      logger.warn(
+        { attempt, maxAttempts, waitMs: wait, is429, err: err?.message },
+        is429
+          ? 'Tradovate rate-limited (429) on WS connect — backing off'
+          : 'Tradovate WS connect failed — backing off'
+      );
+      if (attempt === maxAttempts) throw err;
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
 }
 
 main().catch((err) => {
