@@ -534,6 +534,40 @@ export const db = {
       .map((r) => JSON.parse((r as { payload: string }).payload));
   },
 
+  // Returns full ConfluenceSignal payloads for every signal the new pipeline
+  // would have OPENed (action='OPEN' AND shadow=0). This is what the trader
+  // would auto-trade under pipeline.activeMode='live'. Used by /signals/marks
+  // to render the TRADABLE button's markers on the chart.
+  tradableOpenSignalsForSymbol(symbol: string, sinceMs: number, limit: number): ConfluenceSignal[] {
+    return _db.prepare(`
+      SELECT s.payload
+      FROM tradable_signals t
+      JOIN signals s ON s.id = t.signal_id
+      WHERE t.symbol = ? AND t.signal_ts >= ? AND t.action = 'OPEN' AND t.shadow = 0
+      ORDER BY t.signal_ts DESC
+      LIMIT ?
+    `).all(symbol, sinceMs, limit)
+      .map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
+  // Returns signals from rules that are in force-shadow (logged but never
+  // traded — e.g. es-flip, expl). action='OPEN' but shadow=1 OR
+  // action='SKIP_FORCE_SHADOW'. Used by /signals/marks to render the
+  // EXPERIMENTAL toggle's markers, so the user can see what shadowed rules
+  // would have done without committing capital.
+  experimentalSignalsForSymbol(symbol: string, sinceMs: number, limit: number): ConfluenceSignal[] {
+    return _db.prepare(`
+      SELECT s.payload
+      FROM tradable_signals t
+      JOIN signals s ON s.id = t.signal_id
+      WHERE t.symbol = ? AND t.signal_ts >= ?
+        AND (t.shadow = 1 OR t.action = 'SKIP_FORCE_SHADOW')
+      ORDER BY t.signal_ts DESC
+      LIMIT ?
+    `).all(symbol, sinceMs, limit)
+      .map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
   recentEvents(n: number): AggregatorEvent[] {
     return stmtRecentEvents
       .all(n)

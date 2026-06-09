@@ -2,6 +2,7 @@ import { useStore } from '../lib/ws';
 import type { ConnectionStatus, SourceName } from '@trading/contracts';
 import { RSContextBar } from './RSContextBar';
 import { KillSwitch } from './KillSwitch';
+import { PipelineModeBadge } from './PipelineModeBadge';
 import { TraderStatus } from './TraderStatus';
 
 const SOURCES: SourceName[] = ['bookmap', 'flashalpha', 'levels', 'tradovate'];
@@ -126,6 +127,10 @@ export function StatusBar() {
         {/* Trader state badge (open position + pnl + errors) */}
         <TraderStatus />
 
+        {/* Pipeline mode badge — shows SHADOW vs LIVE so the user knows
+            whether the new signal-pipeline or legacy V3 is authoritative. */}
+        <PipelineModeBadge />
+
         {/* Trader kill-switch */}
         <KillSwitch />
 
@@ -155,7 +160,7 @@ export function StatusBar() {
         borderTop: '1px solid var(--border)',
         minHeight: 26,
       }}>
-        <RSContextBar />
+        <RSContextBar symbol={selectedSymbol} />
       </div>
     </div>
   );

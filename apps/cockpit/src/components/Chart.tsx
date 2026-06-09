@@ -445,6 +445,14 @@ export function Chart() {
   // Latest dynamic-load callback, populated by an effect so the chart's
   // visible-range subscription always reaches the most recent closure.
   const dynamicLoadRef = useRef<(fromMs: number, toMs: number) => void>(() => {});
+  // Earliest timestamp (ms) for which qualified/V3 marks have been fetched.
+  // Pan-scroll past this and the marks-loader extends the window back to cover.
+  // Starts at "now" so the first initial fetch always pulls something.
+  const marksLoadedFromMsRef = useRef<number>(Date.now());
+  // Per-symbol callback that extends the loaded marks range back to `sinceMs`.
+  // Populated by an effect so the chart's visible-range subscription can call
+  // it with the most recent symbol/state closure.
+  const loadMarksRef = useRef<(sinceMs: number) => void>(() => {});
 
   // Incremented after historical bars finish loading so the markers effect
   // re-runs with a populated barHistoryRef (post-entry markers arrive via a
@@ -471,10 +479,25 @@ export function Chart() {
   const [textInput, setTextInput] = useState<{ x: number; y: number; time: number; price: number } | null>(null);
   const [textValue, setTextValue] = useState('');
   const [regimeCheckpoints, setRegimeCheckpoints] = useState<CheckpointData[]>([]);
-  const [showQualified, setShowQualified] = useState(true);
-  const [showV3,        setShowV3]        = useState(true);
-  const qualifiedTsRef = useRef<Set<number>>(new Set());
-  const v3OpenTsRef    = useRef<Set<number>>(new Set());
+  // QUALIFIED and TRADABLE are mutually exclusive — exactly one of them is
+  // active at any time. EXPERIMENTAL is an independent toggle that can layer
+  // on top of either (it shows force-shadow rule markers — es-flip, expl, etc).
+  //
+  // Default: QUALIFIED on (broader view), TRADABLE off, EXPERIMENTAL off.
+  const [showQualified,    setShowQualified]    = useState(true);
+  const [showTradable,     setShowTradable]     = useState(false);
+  const [showExperimental, setShowExperimental] = useState(false);
+  const qualifiedTsRef    = useRef<Set<number>>(new Set());
+  const tradableTsRef     = useRef<Set<number>>(new Set());
+  const experimentalTsRef = useRef<Set<number>>(new Set());
+  // Full signal payloads keyed by minute-bucket so the markers code can render
+  // the SAME rich markers (FLIP↑/↓+score, CONT, etc.) for historical signals
+  // that it does for live ones in `recentSignals`. Populated by the
+  // /signals/marks fetch — server returns full ConfluenceSignal objects now,
+  // not just timestamps, so old signals render as proper arrows instead of dots.
+  const qualifiedSignalsRef    = useRef<Map<number, ConfluenceSignal>>(new Map());
+  const tradableSignalsRef     = useRef<Map<number, ConfluenceSignal>>(new Map());
+  const experimentalSignalsRef = useRef<Map<number, ConfluenceSignal>>(new Map());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState<string>(() => {
     // Default to today (ET-naive YYYY-MM-DD) — matches the offset used elsewhere
@@ -553,22 +576,79 @@ export function Chart() {
 
   // Fetch the set of "qualified" and "V3-OPEN" signal-timestamp buckets so
   // the chart can render only the relevant markers when those toggles are on.
-  // Re-runs on symbol change and polls every 60s for fresh decisions.
+  //
+  // Two behaviours wired here:
+  //   1. On symbol change: reset the loaded ranges and fetch the last 30 days.
+  //      Polls every 60s for new live decisions arriving since the last fetch.
+  //   2. On chart pan past the earliest loaded timestamp: the chart's
+  //      subscribeVisibleTimeRangeChange (further below) calls
+  //      loadMarksRef.current(sinceMs) — this effect's fetcher extends the
+  //      window back to cover the new range and merges into the existing
+  //      Sets, so existing markers don't blink off during the fetch.
   useEffect(() => {
     let cancelled = false;
-    const refresh = async () => {
+
+    const fetchSince = async (sinceMs: number) => {
       try {
-        const res = await fetch(`/signals/marks?symbol=${selectedSymbol}`);
+        const res = await fetch(`/signals/marks?symbol=${selectedSymbol}&sinceMs=${sinceMs}`);
         if (!res.ok) return;
-        const data = await res.json() as { qualifiedTs: number[]; v3OpenTs: number[] };
-        if (cancelled) return;
-        qualifiedTsRef.current = new Set(data.qualifiedTs);
-        v3OpenTsRef.current    = new Set(data.v3OpenTs);
-        setBarsVersion(v => v + 1);   // re-trigger marker render
+        const data = await res.json() as {
+          qualifiedTs: number[];
+          v3OpenTs: number[];
+          tradableTs?: number[];
+          experimentalTs?: number[];
+          qualifiedSignals?:    ConfluenceSignal[];
+          v3OpenSignals?:       ConfluenceSignal[];
+          tradableSignals?:     ConfluenceSignal[];
+          experimentalSignals?: ConfluenceSignal[];
+        };
+        // Refs are mutable state shared across effect closures, so a fetch
+        // initiated by an already-cancelled closure (React StrictMode dev
+        // double-mount) still carries valid data the new closure would have
+        // fetched anyway — merge unconditionally. Only state updates respect
+        // `cancelled` to avoid spurious re-renders on a stale closure.
+        for (const ts of data.qualifiedTs)         qualifiedTsRef.current.add(ts);
+        for (const ts of data.tradableTs ?? [])    tradableTsRef.current.add(ts);
+        for (const ts of data.experimentalTs ?? []) experimentalTsRef.current.add(ts);
+        // Store the full payloads keyed by minute-bucket so markers can
+        // render rich rule-specific arrows for historical signals.
+        for (const sig of data.qualifiedSignals ?? []) {
+          qualifiedSignalsRef.current.set(Math.floor(sig.ts / 60000) * 60, sig);
+        }
+        for (const sig of data.tradableSignals ?? []) {
+          tradableSignalsRef.current.set(Math.floor(sig.ts / 60000) * 60, sig);
+        }
+        for (const sig of data.experimentalSignals ?? []) {
+          experimentalSignalsRef.current.set(Math.floor(sig.ts / 60000) * 60, sig);
+        }
+        marksLoadedFromMsRef.current = Math.min(marksLoadedFromMsRef.current, sinceMs);
+        if (!cancelled) setBarsVersion(v => v + 1);
       } catch { /* best-effort */ }
     };
-    refresh();
-    const id = setInterval(refresh, 60_000);
+
+    // Reset for the new symbol.
+    qualifiedTsRef.current    = new Set();
+    tradableTsRef.current     = new Set();
+    experimentalTsRef.current = new Set();
+    qualifiedSignalsRef.current    = new Map();
+    tradableSignalsRef.current     = new Map();
+    experimentalSignalsRef.current = new Map();
+    marksLoadedFromMsRef.current = Date.now();
+
+    // Initial fetch — last 30 days covers the typical scroll-back window.
+    const initialSince = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    fetchSince(initialSince);
+
+    // Expose the fetcher to the visible-time-range subscriber. Re-arm on
+    // every symbol change so the closure stays current.
+    loadMarksRef.current = (sinceMs: number) => { void fetchSince(sinceMs); };
+
+    // 60s poll for new decisions. We just re-pull the same window — the
+    // server-side query is sub-10ms even over 30 days at the current
+    // qualified_signals size (~12k rows total).
+    const id = setInterval(() => {
+      void fetchSince(marksLoadedFromMsRef.current);
+    }, 60_000);
     return () => { cancelled = true; clearInterval(id); };
   }, [selectedSymbol]);
 
@@ -774,12 +854,29 @@ export function Chart() {
     // Dynamic loader: when the visible time window changes, queue a debounced
     // fetch for any uncovered range. The loader itself bails out fast if the
     // range is already loaded, so we can poll generously on every event.
+    //
+    // Also extends the qualified/V3 marks window if the user scrolled past
+    // the earliest already-fetched timestamp. Marks fire immediately on the
+    // range-change event (no debounce) since the server-side query is ~4ms
+    // and the user is actively scrolling — they want to see the new markers
+    // as fast as possible. The marks-fetcher itself dedupes in-flight calls.
     chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
       if (!range) return;
+      const fromMs = (range.from as number) * 1000;
+      const toMs   = (range.to   as number) * 1000;
+
+      // Marks: extend the loaded window if visible 'from' is older than what
+      // we've fetched. Pad by 15 days so the next small pan doesn't re-trigger.
+      if (fromMs < marksLoadedFromMsRef.current) {
+        const padMs   = 15 * 24 * 60 * 60 * 1000;
+        const newFrom = fromMs - padMs;
+        loadMarksRef.current(newFrom);
+      }
+
+      // Bars: debounced 250ms — heavier query, and the user is usually
+      // mid-scroll so deferring avoids dozens of partial fetches.
       if (dynamicLoadTimerRef.current) clearTimeout(dynamicLoadTimerRef.current);
       dynamicLoadTimerRef.current = setTimeout(() => {
-        const fromMs = (range.from as number) * 1000;
-        const toMs   = (range.to   as number) * 1000;
         dynamicLoadRef.current(fromMs, toMs);
       }, 250);
     });
@@ -1408,28 +1505,59 @@ export function Chart() {
     // that exact candle.
     const bucketSecs = (tsMs: number) => Math.floor(tsMs / 60000) * 60;
 
-    // Apply the QUALIFIED / V3 toggle filters. Both ON = pass-through
-    // (default), both OFF = nothing rendered, exactly one ON = only that
-    // category, both ON = union (legacy + qualified + V3).
+    // QUALIFIED and TRADABLE are mutually exclusive — exactly one of those two
+    // primary categories is active. EXPERIMENTAL is an independent layer that
+    // can show on top of either (force-shadow rule markers).
     //
     // Match by minute-bucket of sig.ts because the server keys its returned
     // timestamp lists the same way (Math.floor(ts/60000)*60).
     const filterByToggles = (sigTsMs: number): boolean => {
       const bucket = Math.floor(sigTsMs / 60000) * 60;
-      const isQualified = qualifiedTsRef.current.has(bucket);
-      const isV3Open    = v3OpenTsRef.current.has(bucket);
-      const isUnknown   = !isQualified && !isV3Open;
-      // Always keep "unknown" signals (e.g. silenced ones the chart already
-      // chose to show) when both toggles are off, so the chart isn't blank.
-      if (!showQualified && !showV3) return isUnknown;
-      if (showQualified && isQualified) return true;
-      if (showV3        && isV3Open)    return true;
-      if (showQualified && showV3 && isUnknown) return true;
-      return false;
+      const inPrimary = (showQualified && qualifiedTsRef.current.has(bucket))
+                    || (showTradable  && tradableTsRef.current.has(bucket));
+      const inExperimental = showExperimental && experimentalTsRef.current.has(bucket);
+      return inPrimary || inExperimental;
     };
 
-    const symbolSignals = recentSignals
-      .filter((s) => s.symbol === selectedSymbol)
+    // Source signals = live (recentSignals from WS, last ~30h) ∪ historical
+    // (full payloads fetched via /signals/marks, populated into qualified /
+    // tradable / experimental SignalsRef Maps). Dedup by minute-bucket — live
+    // wins over historical since live has any post-fire metadata updates.
+    // We merge all three historical maps so EXPERIMENTAL markers render with
+    // the same rich payload data as QUALIFIED/TRADABLE.
+    const histRef = showQualified ? qualifiedSignalsRef
+                  : showTradable  ? tradableSignalsRef
+                  : null;
+    const expHistRef = showExperimental ? experimentalSignalsRef : null;
+    const seenBuckets = new Set<number>();
+    const sourceSignals: ConfluenceSignal[] = [];
+    for (const sig of recentSignals) {
+      if (sig.symbol !== selectedSymbol) continue;
+      const b = bucketSecs(sig.ts);
+      if (seenBuckets.has(b)) continue;
+      seenBuckets.add(b);
+      sourceSignals.push(sig);
+    }
+    if (histRef) {
+      for (const sig of histRef.current.values()) {
+        if (sig.symbol !== selectedSymbol) continue;
+        const b = bucketSecs(sig.ts);
+        if (seenBuckets.has(b)) continue;
+        seenBuckets.add(b);
+        sourceSignals.push(sig);
+      }
+    }
+    if (expHistRef) {
+      for (const sig of expHistRef.current.values()) {
+        if (sig.symbol !== selectedSymbol) continue;
+        const b = bucketSecs(sig.ts);
+        if (seenBuckets.has(b)) continue;
+        seenBuckets.add(b);
+        sourceSignals.push(sig);
+      }
+    }
+
+    const symbolSignals = sourceSignals
       .filter((s) => filterByToggles(s.ts))
       .filter((s) => {
         const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? "";
@@ -1642,6 +1770,9 @@ export function Chart() {
       })
       .filter((m): m is NonNullable<typeof m> => m !== null);
 
+    // (Fallback dot markers removed — historical signals now render with
+    // full rich markers via qualified / tradable / experimental SignalsRef.)
+
     const allMarkers = [...markers]
       .sort((a, b) => (a.time as number) - (b.time as number));
 
@@ -1800,7 +1931,7 @@ export function Chart() {
     };
 
     computeCardsRef.current();
-  }, [recentSignals, selectedSymbol, selectedTimeframe, barsVersion, showQualified, showV3]);
+  }, [recentSignals, selectedSymbol, selectedTimeframe, barsVersion, showQualified, showTradable, showExperimental]);
 
   // ── Drawing SVG handlers (read from stable refs, defined each render) ────
   const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -2179,17 +2310,29 @@ export function Chart() {
         // TIME-AND-WR + TRADE/NO-TRADE buttons retired 2026-06-06 — info now lives
         // in the always-on TRADE RULES box at top-center.
         const ctrlBtn = (color: string, active: boolean) => ({
-          padding: '3px 10px',
-          fontSize: 11,
+          padding: '6px 14px',
+          fontSize: 13,
           fontWeight: 700,
-          letterSpacing: 0.5,
+          letterSpacing: 0.6,
           cursor: 'pointer' as const,
-          border: `1px solid ${color}55`,
+          // Border color shifts from faint (33 = 20% alpha) when off → full
+          // saturation when on. Border WIDTH stays 1px so the button doesn't
+          // change footprint and the row never jumps when toggled.
+          border: `1px solid ${active ? color : `${color}33`}`,
           borderRadius: 3,
-          background: active ? `${color}1a` : 'rgba(10,10,12,0.85)',
-          color,
+          // Active: tinted fill (33 ≈ 20% alpha) so the body of the button
+          // reads as colored. Inactive: matches the chart background.
+          background: active ? `${color}33` : 'rgba(10,10,12,0.85)',
+          // Active: full-saturation label. Inactive: dimmed (80 = 50% alpha)
+          // so off-buttons clearly recede.
+          color: active ? color : `${color}80`,
+          // Active: outer glow + inset border doubles the visual weight without
+          // changing pixel dimensions. Inactive: no shadow.
+          boxShadow: active
+            ? `0 0 12px ${color}55, inset 0 0 0 1px ${color}`
+            : 'none',
           fontFamily: 'IBM Plex Mono, monospace',
-          transition: 'background 0.15s',
+          transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s',
           whiteSpace: 'nowrap' as const,
           pointerEvents: 'auto' as const,
         });
@@ -2217,29 +2360,54 @@ export function Chart() {
               title="Measure: click start, click end (ESC to cancel)"
               style={{
                 ...ctrlBtn('#5a9bff', drawMode === 'measure'),
-                fontSize: 14,
-                padding: '2px 8px',
+                fontSize: 16,
+                padding: '4px 10px',
               }}
             >
               📏
             </button>
 
-            {/* ── QUALIFIED — toggles markers for signals that passed quality gate */}
+            {/* QUALIFIED and TRADABLE are mutually exclusive AND independently
+                dismissible. EXPERIMENTAL is an independent layer that can
+                show on top of either. Four states for the primary pair:
+                  - QUALIFIED selected → all gold-tier markers (broad view)
+                  - TRADABLE selected  → only markers the new pipeline would OPEN
+                  - Neither selected   → no primary markers
+                Clicking the active button turns it off. Clicking the inactive
+                one turns it on and the other off. EXPERIMENTAL toggles on/off
+                independently. */}
+
+            {/* ── QUALIFIED — markers for signals that passed quality gate ── */}
             <button
-              onClick={() => setShowQualified(v => !v)}
+              onClick={() => {
+                if (showQualified) { setShowQualified(false); }
+                else               { setShowQualified(true); setShowTradable(false); }
+              }}
               title="Toggle markers for quality-gated (qualified_signals) signals"
               style={ctrlBtn('#22c55e', showQualified)}
             >
               QUALIFIED
             </button>
 
-            {/* ── V3 — toggles markers for signals V3 actually OPENed */}
+            {/* ── TRADABLE — markers for what the new pipeline would OPEN ── */}
             <button
-              onClick={() => setShowV3(v => !v)}
-              title="Toggle markers for signals V3 OPENed (v3_decisions.action='OPEN')"
-              style={ctrlBtn('#a855f7', showV3)}
+              onClick={() => {
+                if (showTradable) { setShowTradable(false); }
+                else              { setShowTradable(true); setShowQualified(false); }
+              }}
+              title="Toggle markers for tradable_signals where action='OPEN' (what the trader auto-takes when pipeline.activeMode='live')"
+              style={ctrlBtn('#a855f7', showTradable)}
             >
-              V3
+              TRADABLE
+            </button>
+
+            {/* ── EXPERIMENTAL — markers for force-shadow rules (es-flip, expl, etc.) ── */}
+            <button
+              onClick={() => setShowExperimental(!showExperimental)}
+              title="Toggle markers for force-shadow rules — these are signals from rules that are logged but never traded (independent of QUALIFIED/TRADABLE)"
+              style={ctrlBtn('#f59e0b', showExperimental)}
+            >
+              EXP
             </button>
 
           </div>

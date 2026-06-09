@@ -230,7 +230,10 @@ export async function startServer(): Promise<FastifyInstance> {
     return { ok: true, vx: ctx.vx, vvix: ctx.vvix, vxAboveBBB: ctx.vxAboveBBB, vvixGolden: ctx.vvixGolden };
   });
 
-  app.get('/context/rs', async () => getContext());
+  app.get('/context/rs', async (req) => {
+    const q = req.query as { symbol?: string };
+    return getContext(q.symbol);
+  });
 
   // Test signal — fires a scored signal through the full RS pipeline and
   // pushes it live to the cockpit. Bypasses quality gate.
@@ -317,6 +320,16 @@ export async function startServer(): Promise<FastifyInstance> {
       return reply.code(500).send({ error: err?.message ?? 'failed' });
     }
   });
+
+  // ── Pipeline state — who's driving the live path? ─────────────────────────
+  // Used by the cockpit's PipelineModeBadge to show 'SHADOW' vs 'LIVE' so the
+  // user always knows whether the new signal-pipeline or the legacy V3 cascade
+  // is authoritative. See config.pipeline.activeMode for the source of truth.
+  app.get('/pipeline/state', async () => ({
+    pipelineMode: config.pipeline.activeMode,        // 'shadow' | 'live'
+    v3Mode:       config.v3.activeMode,              // 'off' | 'shadow' | 'live'
+    symbols:      config.v3.symbols,                 // which symbols are managed
+  }));
 
   // ── Trader state — current position + today's pnl ─────────────────────────
   // Reads positions.db directly (same-host). Used by the cockpit's status bar
@@ -455,20 +468,42 @@ export async function startServer(): Promise<FastifyInstance> {
     const symbol = q.symbol ?? 'NQ';
     const sinceMs = parseInt(q.sinceMs ?? String(Date.now() - 14 * 24 * 60 * 60 * 1000), 10);
 
-    const qualifiedTs = db.query<{ signal_ts: number }>(`
-      SELECT signal_ts FROM qualified_signals
-      WHERE symbol = ? AND signal_ts >= ?
-    `, [symbol, sinceMs]).map(r => Math.floor(r.signal_ts / 60000) * 60);
+    // Rules that pass the quality gate (gold tier in quality.ts) but are NOT
+    // tradable yet — these should not appear as qualified markers on the chart.
+    // Keep in sync with Chart.tsx rich-marker hiding list.
+    const MARK_EXCLUDED_RULES = ['wall-broken-fade', 'absorption'];
 
-    const v3OpenTs = db.query<{ ts: number }>(`
-      SELECT ts FROM v3_decisions
-      WHERE symbol = ? AND ts >= ? AND action = 'OPEN'
-    `, [symbol, sinceMs]).map(r => Math.floor(r.ts / 60000) * 60);
+    // Hard cap on payload count to keep WS / HTTP transfers bounded. ~2k of
+    // each per fetch is plenty for any visible-window scroll.
+    const MAX_SIGNALS = 2000;
+
+    // Full signal payloads — cockpit uses these to render the same rich markers
+    // (FLIP↑/↓+score, CONT, etc.) for historical signals that it does for the
+    // live ones in `recentSignals`. The timestamp arrays below are kept for
+    // back-compat (a couple of places still use them as filter sets).
+    const qualifiedSignals   = db.qualifiedSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS, MARK_EXCLUDED_RULES);
+    const v3OpenSignals      = db.v3OpenSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
+    // New (PR #4 cockpit work):
+    //   tradable    = signals the new pipeline would OPEN (action='OPEN', shadow=0)
+    //   experimental = signals from force-shadow rules (es-flip, expl, etc.)
+    const tradableSignals     = db.tradableOpenSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
+    const experimentalSignals = db.experimentalSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
+
+    const qualifiedTs    = Array.from(new Set(qualifiedSignals.map(s => Math.floor(s.ts / 60000) * 60)));
+    const v3OpenTs       = Array.from(new Set(v3OpenSignals.map(s => Math.floor(s.ts / 60000) * 60)));
+    const tradableTs     = Array.from(new Set(tradableSignals.map(s => Math.floor(s.ts / 60000) * 60)));
+    const experimentalTs = Array.from(new Set(experimentalSignals.map(s => Math.floor(s.ts / 60000) * 60)));
 
     return {
       symbol,
-      qualifiedTs: Array.from(new Set(qualifiedTs)),
-      v3OpenTs:    Array.from(new Set(v3OpenTs)),
+      qualifiedTs,
+      v3OpenTs,
+      tradableTs,
+      experimentalTs,
+      qualifiedSignals,
+      v3OpenSignals,
+      tradableSignals,
+      experimentalSignals,
     };
   });
 
