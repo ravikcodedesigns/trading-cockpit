@@ -24,8 +24,18 @@ export interface TradeCloseEvent {
 }
 type TradeCloseHandler = (evt: TradeCloseEvent) => void;
 
+// Lightweight gate state exposed for diagnostics (used by the halt-file watcher
+// in index.ts to confirm trader health on resume). Updated by ws open/close events.
+export const signalGateState = { connected: false };
+
 export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeCloseHandler): void {
-  const seen = new Set<number>(); // dedup by signal ts
+  // Dedup key: ts|symbol|ruleId|direction. NOT ts alone.
+  // 2026-06-08: ts-only dedup caused us to miss the 10:01 NQ clean-impulse
+  // FLIP long because an ES `trap` signal fired at the exact same second and
+  // consumed the dedup slot before the enabled-rules check could be reached.
+  const seen = new Set<string>();
+  const keyOf = (s: { ts: number; symbol: string; ruleId?: string; rule_id?: string; direction: string }) =>
+    `${s.ts}|${s.symbol}|${s.ruleId ?? s.rule_id ?? ''}|${s.direction}`;
   let reconnectDelay = 2_000;
 
   function connect() {
@@ -34,6 +44,7 @@ export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeClo
 
     ws.on('open', () => {
       reconnectDelay = 2_000;
+      signalGateState.connected = true;
       logger.info('signal gate connected');
     });
 
@@ -44,7 +55,7 @@ export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeClo
       // On snapshot: pre-seed recently seen signals (so restarts don't re-fire stale signals)
       if (msg.type === 'snapshot') {
         for (const sig of msg.state.recentSignals) {
-          seen.add(sig.ts);
+          seen.add(keyOf(sig as unknown as Parameters<typeof keyOf>[0]));
         }
         logger.info({ count: msg.state.recentSignals.length }, 'signal gate: snapshot seeded');
         return;
@@ -64,15 +75,16 @@ export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeClo
       if (msg.type !== 'signal') return;
 
       const signal = msg.signal;
-
-      // Dedup
-      if (seen.has(signal.ts)) return;
-      seen.add(signal.ts);
-
       const ruleId = (signal as any).ruleId ?? (signal as any).rule_id ?? '';
 
-      // Only act on enabled rules
+      // Only act on enabled rules — checked BEFORE dedup so a dropped rule
+      // can't consume the dedup slot for an enabled rule at the same ts.
       if (!config.enabledRules.includes(ruleId)) return;
+
+      // Dedup (composite key — see top-of-function comment)
+      const key = keyOf({ ts: signal.ts, symbol: signal.symbol, ruleId, direction: signal.direction });
+      if (seen.has(key)) return;
+      seen.add(key);
 
       // For clean-impulse: only FLIP pattern (not CONT)
       if (ruleId === 'clean-impulse' && (signal as any).pattern !== 'FLIP') return;
@@ -94,6 +106,7 @@ export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeClo
     });
 
     ws.on('close', () => {
+      signalGateState.connected = false;
       logger.warn({ reconnectDelay }, 'signal gate disconnected — reconnecting');
       setTimeout(connect, reconnectDelay);
       reconnectDelay = Math.min(reconnectDelay * 2, 30_000);

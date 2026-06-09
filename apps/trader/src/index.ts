@@ -1,14 +1,18 @@
 import 'dotenv/config';
+import fs from 'node:fs';
+import WebSocket from 'ws';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { posDb } from './db.js';
 import { checkCanTrade } from './risk-guard.js';
 import { TradovateClient } from './broker/tradovate.js';
 import { handleSignal, handleV3Close, warmContractCache } from './order-manager.js';
-import { startSignalGate } from './signal-gate.js';
+import { startSignalGate, signalGateState } from './signal-gate.js';
 import { startPositionWatcher } from './position-watcher.js';
 import { notify } from './notify.js';
 import type { ConfluenceSignal } from '@trading/contracts';
+
+const HALT_FILE = '/tmp/trader.halt';
 
 async function main() {
   logger.info({ mode: config.mode, rules: config.enabledRules }, '═══ trader starting ═══');
@@ -96,6 +100,32 @@ async function main() {
   });
 
   logger.info('trader ready — listening for signals');
+
+  // ── Halt-file watcher: log a confirmation when the kill-switch is cleared ──
+  // Polls every 2s for /tmp/trader.halt presence (fs.watch on /tmp is too
+  // noisy + unreliable on macOS for transient files). On a halt→clear edge,
+  // emit a single ERROR-level log including current broker + signal-gate
+  // state, so the user gets definitive "trader is actually ready" confirmation
+  // after toggling the cockpit kill-switch.
+  let prevHalted = fs.existsSync(HALT_FILE);
+  let haltedSinceMs = prevHalted ? Date.now() : null;
+  setInterval(() => {
+    const nowHalted = fs.existsSync(HALT_FILE);
+    if (nowHalted === prevHalted) return;
+    if (nowHalted) {
+      haltedSinceMs = Date.now();
+      logger.warn('═══ HALT armed — trader will block new orders ═══');
+    } else {
+      const brokerOk = (broker as any).ws?.readyState === WebSocket.OPEN;
+      const haltDurSec = haltedSinceMs ? Math.round((Date.now() - haltedSinceMs) / 1000) : 0;
+      logger.error(
+        { brokerConnected: brokerOk, gateConnected: signalGateState.connected, haltDurationSec: haltDurSec },
+        '═══ HALT CLEARED — trader resuming ═══'
+      );
+      haltedSinceMs = null;
+    }
+    prevHalted = nowHalted;
+  }, 2_000).unref();
 
   // ── Startup summary ────────────────────────────────────────────────────────
   const todayPnl = posDb.todayPnl();
