@@ -176,7 +176,7 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
   //   SHORT raw (n=49):       4.1% WR / -61.6 EV / -3,018 pts
   // Both directions losing significantly. Detector keeps logging to signals/v3_decisions
   // for future research; gate returns silenced → hidden from chart, not in qualified_signals.
-  // Also added to config.v3.forceShadowRules so V3 never opens an EXPL trade even if
+  // Also added to config.pipeline.forceShadowRules so V3 never opens an EXPL trade even if
   // promoted to live mode.
   if (strategy === 'EXPL') {
     return { tier: 'silenced', reason: `EXPL: silenced ${signal.direction} — both sides losing (LONG 30% WR, SHORT 4% WR)` };

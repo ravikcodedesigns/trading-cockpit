@@ -18,8 +18,9 @@
 //   - read CVD (that's state.ts's gate-check responsibility)
 //   - touch broadcast paths (state.ts forwards close events)
 //
-// When config.v3.activeMode is 'off' or the symbol is not in config.v3.symbols,
-// TradeManager methods are still safe to call but state.ts simply never calls them.
+// When the symbol is not in config.pipeline.symbols, TradeManager methods
+// are still safe to call but the pipeline simply never calls them for that
+// symbol (legacy gold-tier broadcast path handles non-pipeline symbols).
 
 import { EventEmitter } from 'node:events';
 import { config } from './config.js';
@@ -62,7 +63,7 @@ export function resolvePerRulePoints(
   direction: Direction,
 ): { tp: number; sl: number } | null {
   const key = pattern ? `${ruleId}-${pattern}` : ruleId;
-  const cfg = (config.v3.perRule as Record<string, { tp: number | { long: number; short: number }; sl: number | { long: number; short: number } }>)[key];
+  const cfg = (config.pipeline.perRule as Record<string, { tp: number | { long: number; short: number }; sl: number | { long: number; short: number } }>)[key];
   if (!cfg) return null;
   const tp = typeof cfg.tp === 'number' ? cfg.tp : cfg.tp[direction];
   const sl = typeof cfg.sl === 'number' ? cfg.sl : cfg.sl[direction];
@@ -153,7 +154,7 @@ class TradeManager {
   /**
    * Variant-A exit rule: an open trade closes when an opposing-direction signal
    * arrives that is both (a) qualified (gold tier per quality.ts) and (b) from
-   * a rule in `config.v3.tradableExitRules` (currently FLIP + CONT only).
+   * a rule in `config.pipeline.tradableExitRules` (currently FLIP + CONT only).
    *
    * Symmetric — same rule applies to LONG and SHORT trades, no asymmetric
    * carve-outs (replaces the old requireQualifiedExitsLongs +
@@ -178,7 +179,7 @@ class TradeManager {
     if (t.direction === incomingDirection) return false;
     if (!incomingIsQualified) return false;
     if (!incomingRuleId) return false;
-    if (!config.v3.tradableExitRules.includes(incomingRuleId)) return false;
+    if (!config.pipeline.tradableExitRules.includes(incomingRuleId)) return false;
     return true;
   }
 

@@ -1,6 +1,6 @@
 // V3 RTH-close timer.
 //
-// At config.v3.rthCloseEt (default '15:54:00' ET — 8 min before the broker
+// At config.pipeline.rthCloseEt (default '15:54:00' ET — 8 min before the broker
 // 15:55 margin deadline), any currently-open V3 trade is force-closed at the
 // most recent tick price.
 //
@@ -8,10 +8,10 @@
 //   - setInterval polls every 30s to see whether the ET clock has just
 //     crossed the configured close time.
 //   - Triggers at most once per RTH day (tracked by dateKey).
-//   - For each symbol in config.v3.symbols with an open trade:
+//   - For each symbol in config.pipeline.symbols with an open trade:
 //       - Look up the latest tick price.
 //       - Call tradeManager.onRthClose(symbol, px, ts) — emits CLOSE_AT_BELL.
-//   - No-op when config.v3.activeMode === 'off'.
+//   - Runs unconditionally — pipeline is the only path post-cutover.
 //
 // Lifecycle: start() at boot, stop() on shutdown. Same shape as the tick
 // router.
@@ -47,7 +47,7 @@ class V3RthTimer {
 
   start(): void {
     if (this.intervalHandle) return;
-    if (config.v3.activeMode === 'off') return;
+    // Pipeline is always-on after the 2026-06-09 cutover. No activeMode gate.
 
     try {
       const ticksPath = path.join(path.dirname(config.dbPath), 'ticks.db');
@@ -58,7 +58,7 @@ class V3RthTimer {
     }
 
     this.intervalHandle = setInterval(() => this.check(), CHECK_INTERVAL_MS);
-    logger.info({ closeEt: config.v3.rthCloseEt }, 'V3 RTH timer started');
+    logger.info({ closeEt: config.pipeline.rthCloseEt }, 'V3 RTH timer started');
   }
 
   stop(): void {
@@ -77,7 +77,7 @@ class V3RthTimer {
     if (!this.xdb) return;
     const now = etNow();
     if (now.date === this.lastFiredDate) return;     // already fired today
-    const target = parseHms(config.v3.rthCloseEt);
+    const target = parseHms(config.pipeline.rthCloseEt);
     // Fire when ET clock has passed target. We use ≥ on hour/minute.
     const past = (now.hh > target.h)
               || (now.hh === target.h && now.mm >= target.m);
@@ -91,7 +91,7 @@ class V3RthTimer {
   private fire(dateKey: string): void {
     this.lastFiredDate = dateKey;
     const nowMs = Date.now();
-    for (const sym of config.v3.symbols) {
+    for (const sym of config.pipeline.symbols) {
       const t = tradeManager.getOpen(sym);
       if (!t) continue;
       const px = this.latestTickPrice(sym, nowMs);
@@ -100,7 +100,7 @@ class V3RthTimer {
       }
       tradeManager.onRthClose(sym, px ?? t.entry, nowMs);
     }
-    logger.info({ dateKey, closeEt: config.v3.rthCloseEt }, 'V3 RTH timer fired');
+    logger.info({ dateKey, closeEt: config.pipeline.rthCloseEt }, 'V3 RTH timer fired');
   }
 
   private latestTickPrice(symbol: string, tsMs: number): number | null {

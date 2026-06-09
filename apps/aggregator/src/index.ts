@@ -195,9 +195,9 @@ async function main() {
 
   // V3 tick router — drains live trade ticks into CvdSession and TradeManager
   // so the session CVD and any open V3 trade's TP/SL stay current. No-op when
-  // config.v3.activeMode === 'off'.
+  // config.pipeline.activeMode === 'shadow'.
   v3TickRouter.start();
-  // V3 RTH-close timer — at config.v3.rthCloseEt (default 15:54 ET), force-close
+  // V3 RTH-close timer — at config.pipeline.rthCloseEt (default 15:54 ET), force-close
   // any open V3 trade at the latest tick price. No-op when V3 is 'off'.
   v3RthTimer.start();
 

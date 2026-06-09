@@ -19,7 +19,7 @@
 //
 // This module is standalone and zero-side-effect when nobody calls it.
 // V3 hooks invoke it from state.ts and the tick router only when
-// config.v3.activeMode !== 'off'.
+// config.pipeline.activeMode === 'live'.
 
 import Database from 'better-sqlite3';
 import path from 'node:path';

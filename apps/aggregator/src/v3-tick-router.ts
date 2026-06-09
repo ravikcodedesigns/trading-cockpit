@@ -16,7 +16,7 @@
 //   - start() should be called AFTER CvdSession.hydrate(). lastSeenTs is
 //     initialized to start time so we don't double-count ticks already
 //     scanned by hydration.
-//   - The router does nothing unless config.v3.activeMode !== 'off'.
+//   - Runs unconditionally — pipeline is the only path post-cutover.
 //   - When stopped, ticks pile up in ticks.db but are not consumed —
 //     CvdSession will fall behind real cvd until restarted. Restart on a
 //     fresh process re-hydrates from ticks.db, catching back up correctly.
@@ -51,11 +51,10 @@ class V3TickRouter {
 
   /**
    * Start the polling loop. Idempotent — calling twice has no effect.
-   * Does nothing if V3 is off.
+   * Runs unconditionally post-2026-06-09 pipeline cutover.
    */
   start(): void {
     if (this.intervalHandle || this.disabled) return;
-    if (config.v3.activeMode === 'off') return;
 
     try {
       const ticksPath = path.join(path.dirname(config.dbPath), 'ticks.db');
@@ -68,10 +67,10 @@ class V3TickRouter {
 
     // Start at "now" — CvdSession.hydrate already counted everything up to here.
     const now = Date.now();
-    for (const sym of config.v3.symbols) this.lastSeenTs.set(sym, now);
+    for (const sym of config.pipeline.symbols) this.lastSeenTs.set(sym, now);
 
     this.intervalHandle = setInterval(() => this.poll(), POLL_INTERVAL_MS);
-    logger.info({ symbols: config.v3.symbols, pollMs: POLL_INTERVAL_MS }, 'V3 tick router started');
+    logger.info({ symbols: config.pipeline.symbols, pollMs: POLL_INTERVAL_MS }, 'V3 tick router started');
   }
 
   /** Stop the polling loop and close the DB handle. Safe to call repeatedly. */
@@ -100,7 +99,7 @@ class V3TickRouter {
     const now = Date.now();
     let totalDelivered = 0;
 
-    for (const sym of config.v3.symbols) {
+    for (const sym of config.pipeline.symbols) {
       const since = this.lastSeenTs.get(sym) ?? 0;
       let rows: TickRow[];
       try {

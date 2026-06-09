@@ -66,8 +66,8 @@ interface Case {
   expect: { action: ActionabilityAction; reason: string };
 }
 
-const longFloor  = config.v3.cvdLongFloor;
-const shortFloor = config.v3.cvdShortFloor;
+const longFloor  = config.pipeline.cvdLongFloor;
+const shortFloor = config.pipeline.cvdShortFloor;
 
 const cases: Case[] = [
   {
@@ -179,13 +179,13 @@ console.log(`  result: ${actMismatch} / ${cases.length} failures`);
 // We don't actually flip the config (no mutation of singleton config object);
 // we just sanity-check current behavior.
 
-console.log(`\n=== Test 3: dropFlipShorts honored (current = ${config.v3.dropFlipShorts}) ===`);
+console.log(`\n=== Test 3: dropFlipShorts honored (current = ${config.pipeline.dropFlipShorts}) ===`);
 const flipShort = evaluateActionability(
   { ruleId: 'clean-impulse', pattern: 'FLIP', direction: 'short', ts: 1, symbol: 'NQ', score: 90 } as unknown as ConfluenceSignal,
   true, 'H: clean-impulse FLIP score=90',
   { cvdSession: 0, hasOpenTrade: false },
 );
-const expectedAction: ActionabilityAction = config.v3.dropFlipShorts ? 'SKIP_FLIP_SHORT' : 'OPEN';
+const expectedAction: ActionabilityAction = config.pipeline.dropFlipShorts ? 'SKIP_FLIP_SHORT' : 'OPEN';
 const ok3 = flipShort.action === expectedAction;
 console.log(`  [${ok3 ? 'OK' : 'FAIL'}] expected ${expectedAction}, got ${flipShort.action}`);
 

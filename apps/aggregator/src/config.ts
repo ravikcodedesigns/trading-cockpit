@@ -44,50 +44,28 @@ export const config = {
     pollMs: parseInt(process.env.TICK_STORE_POLL_MS ?? '500', 10),
   },
 
-  // ── Pipeline cutover flag (PR #4) ─────────────────────────────────────────
+  // ── Pipeline — signal evaluation + trade management ──────────────────────
   //
-  // Controls whether the new signal-pipeline (evaluateTechnical +
-  // evaluateActionability writing to tradable_signals) is the authoritative
-  // path or runs only as an observer alongside the legacy V3 cascade.
+  // The pipeline replaces the old V3 cascade (deleted 2026-06-09). It writes
+  // every evaluated signal to tradable_signals, drives broadcasts to the
+  // cockpit + Discord, and manages tradeManager state (open/close on each
+  // signal per the policies below).
   //
   // activeMode:
-  //   'shadow' → New pipeline writes tradable_signals but does NOT drive
-  //              broadcasts or trade-manager. V3 cascade remains live. This is
-  //              the default — flip to 'live' only after the diff script's
-  //              acceptance check has been clean for ≥5 RTH sessions.
-  //   'live'   → New pipeline drives broadcasts + tradeManager.openTrade and
-  //              tradeManager.closeTrade. V3 cascade still runs (computes its
-  //              action and writes to v3_decisions) but its side effects
-  //              (close-on-opp, broadcast, openTrade) are suppressed — V3
-  //              becomes the shadow path. Flip back to 'shadow' for instant
-  //              revert; no code change needed.
+  //   'shadow' → pipeline writes tradable_signals as an observer but does NOT
+  //              broadcast or call tradeManager. Use for safe experimentation
+  //              when actively iterating on rule logic.
+  //   'live'   → pipeline drives broadcasts + tradeManager (default). The
+  //              trader subscribes to bus 'signal' events to place broker
+  //              orders. Halt-file (/tmp/trader.halt) is still the kill switch.
   //
-  // Scope: only applies to symbols in config.v3.symbols (same constraint as V3).
-  // Non-V3 symbols still go through the legacy gold-tier broadcast path.
+  // Scope (symbols): only signals on symbols in `symbols` go through the
+  // pipeline. Non-pipeline symbols fall through to the legacy gold-tier
+  // broadcast (just publishes to cockpit; trader ignores them).
   pipeline: {
-    activeMode: (process.env.PIPELINE_ACTIVE_MODE ?? 'shadow') as 'shadow' | 'live',
-  },
+    activeMode: (process.env.PIPELINE_ACTIVE_MODE ?? 'live') as 'shadow' | 'live',
 
-  // ── V3 — Combined-cooldown trade manager (post-research deploy)
-  //
-  // V3 layers ON TOP of the existing gold-tier quality gate. It does NOT
-  // replace any current logic. When disabled or in 'off' mode, the live
-  // system behaves exactly as it does today.
-  //
-  // activeMode:
-  //   'off'    → V3 logic short-circuited. Zero behavior change. (DEFAULT)
-  //   'shadow' → V3 records decisions to v3_decisions table but does NOT
-  //              gate broadcasts. Chart and Discord unchanged. Used to verify
-  //              live decisions match the offline backtest for ≥5 RTH days.
-  //   'live'   → V3 gates broadcasts and emits trade-close events. Chart
-  //              shows only V3-tradable signals + close markers.
-  //
-  // To silence V3 entirely in the future: set activeMode='off' and restart.
-  // The new tables (open_trades, v3_decisions) remain but go unused.
-  v3: {
-    activeMode: (process.env.V3_ACTIVE_MODE ?? 'off') as 'off' | 'shadow' | 'live',
-
-    // Symbols V3 manages. ES bypasses V3 entirely until calibrated.
+    // Symbols the pipeline manages. ES is not yet promoted (still calibrating).
     symbols: ['NQ'] as const,
 
     // 15:54 ET = 8 min before broker margin close at 15:55. Trades open at
@@ -100,35 +78,25 @@ export const config = {
 
     // Direction-specific behavior baked in from backtest findings:
     // dropFlipShorts: 2026-06-04 flipped TRUE → FALSE after 30-day analysis showed
-    // qualified FLIP-SHORTs at 77.8% WR / +38.9 EV / +700 pts (n=18) — strongest single
-    // signal in the system. Previous TRUE setting was leaving ~$3,500/short on the table.
-    dropFlipShorts: false,                 // qualified FLIP shorts now ELIGIBLE for V3 OPEN
+    // qualified FLIP-SHORTs at 77.8% WR / +38.9 EV / +700 pts (n=18) — strongest
+    // single signal in the system. Previous TRUE setting was leaving ~$3,500/short
+    // on the table.
+    dropFlipShorts: false,                 // qualified FLIP shorts ELIGIBLE for OPEN
 
-    // ── Exit policy (2026-06-08 — replaces requireQualifiedExitsLongs +
-    //    closeShortsOnlyOnFlipLong + requireQualifiedExitsShorts) ──
+    // ── Exit policy (Variant A — any-kind FLIP+CONT, 2026-06-08) ──
     //
-    // Symmetric "Variant A — any-kind FLIP+CONT" policy: a trade closes on any
-    // qualified opposing-direction signal whose rule_id is in this allow-list.
-    // Validated by scripts/backtest_exit_variants.ts on the FLIP+CONT cohort:
-    //   - A (this): 40 trades, 67.5% WR, +1,138.5 pts  ← selected
-    //   - B same-kind only: 32 trades, 68.8% WR, +939.3 pts (suppresses CONT entirely)
-    //   - C V3-prev (strict shorts): 38 trades, 63.2% WR, +788.5 pts
-    //
-    // A captures CONT both directions (B+C suppress CONT-LONGs via cooldown),
-    // and adds +199 pts vs B / +350 pts vs C at the same time horizon.
-    //
-    // Keep this list in sync with new pipeline's isTradableRule() so the
-    // exit rules match what we consider tradable at entry.
+    // A trade closes on any qualified opposing-direction signal whose rule_id
+    // is in this allow-list. Validated by backtest_exit_variants.ts on
+    // FLIP+CONT cohort: 40 trades, 67.5% WR, +1,138.5 pts ← chosen.
+    // Keep in sync with signal-pipeline.ts:isTradableRule().
     tradableExitRules: ['clean-impulse', 'cont-reentry'] as string[],
 
-    // forceShadowRules: rules in this list are evaluated by V3 (decisions logged
-    // to v3_decisions) but NEVER open a trade — even when V3 is in 'live' mode.
-    // Used for rules that need OOS sample accumulation before going live.
-    //   - cont-reentry: PROMOTED 2026-06-07. Deduped backtest n=24 / 71% WR /
-    //     +$1,651; score≥90 subset n=12 / 83% WR / +$1,225. Now V3-eligible.
-    //   - es-flip (2026-06-03): n=41 test / 60.7% LONG / 50% SHORT WR. Needs OOS.
-    //   - expl (2026-06-04): SILENCED + force-shadow. LONG 30% WR / -19 EV / -1,130 pts;
-    //     SHORT 4% WR / -62 EV / -3,018 pts. Both losing; detector kept for research.
+    // forceShadowRules: rules evaluated and logged to tradable_signals but
+    // NEVER open a trade (action=SKIP_FORCE_SHADOW). Used for rules that need
+    // OOS sample accumulation before promotion.
+    //   - es-flip: n=41 test / 60.7% LONG / 50% SHORT WR. Needs OOS.
+    //   - expl: SILENCED + force-shadow. LONG 30% WR / -19 EV; SHORT 4% WR /
+    //     -62 EV. Both losing; detector kept for research.
     forceShadowRules: ['es-flip', 'expl'] as string[],
 
     // Per-rule TP/SL points. Number → both directions; { long, short } → asymmetric.

@@ -94,22 +94,18 @@ function buildRegimeContext(signal: { symbol: string; direction: string; ts: num
 const RECENT_EVENT_BUFFER = 200;
 const startTime = Date.now();
 
-// ── V3 helpers ────────────────────────────────────────────────────────────
+// ── Pipeline helpers ──────────────────────────────────────────────────────
 //
-// These are no-ops when config.v3.activeMode === 'off'.
+// Used by the pipeline path (decideTradableSignals + close/open methods) for
+// looking up entry prices, last ticks, etc.
 
-/**
- * Is this signal a V3 entry-rule candidate (would be eligible to open or
- * close a V3 trade)? Independent of qualification — used by the exit-check
- * path which considers even silenced signals.
- */
 // isV3EntryRule + v3PatternFor — REMOVED 2026-06-09 in pipeline cutover.
 // The pipeline's signal-pipeline.ts:isTradableRule() + patternFor() are the
 // authoritative replacements. Anything in state.ts that needs the pattern
 // field reads it directly from the signal payload (it's just signal.pattern).
 
 /**
- * Resolve a usable entry price for a signal at V3 open time.
+ * Resolve a usable entry price for a signal at pipeline open time.
  *
  * - absorption / FLIP: payload has 'entry' (always populated by rule engine).
  * - expl: no entry field — fall back to the most recent tick price for the
@@ -172,26 +168,20 @@ class State {
   constructor() {
     this.bus.setMaxListeners(50);
 
-    // Always subscribe to TradeManager close events. The handler internally
-    // checks config.v3.activeMode and short-circuits if 'off'. Subscribing
-    // unconditionally means runtime mode changes (tests, ops flips) still
-    // see close events without restarting the process.
+    // Subscribe to TradeManager close events. Close events forward to the
+    // cockpit bus + Discord and audit-log to v3_decisions (to be renamed
+    // signal_results in a follow-up commit).
     tradeManager.onClose((evt) => this.handleTradeClose(evt));
 
-    // One-time hydration at boot — only if V3 is on at startup. Cost: small
-    // one-time ticks.db scan. If mode is flipped on later via SIGHUP/restart,
-    // hydration happens then. Within a single process lifetime, this is
-    // fine: in-memory state stays consistent because applySignalV3 keeps
-    // CvdSession in sync from ticks (Task #47) and TradeManager in sync
-    // from applySignal calls.
-    if (config.v3.activeMode !== 'off') {
-      try {
-        cvdSession.hydrate(config.v3.symbols);
-        tradeManager.hydrate();
-        logger.info({ mode: config.v3.activeMode, symbols: config.v3.symbols }, 'V3 initialized');
-      } catch (err) {
-        logger.error({ err: String(err) }, 'V3 init failed; falling back to off mode');
-      }
+    // One-time hydration at boot. Cost: small ticks.db scan. Keeps cvdSession
+    // + tradeManager consistent across process restarts so the pipeline sees
+    // valid CVD state and any persisted open trades on the first signal.
+    try {
+      cvdSession.hydrate(config.pipeline.symbols);
+      tradeManager.hydrate();
+      logger.info({ mode: config.pipeline.activeMode, symbols: config.pipeline.symbols }, 'pipeline initialized');
+    } catch (err) {
+      logger.error({ err: String(err) }, 'pipeline init failed');
     }
   }
 
@@ -285,11 +275,11 @@ class State {
     const isGold = decision.tier === 'gold';
 
     // ── Pipeline dispatch (post-cutover, 2026-06-09) ─────────────────────────
-    // For symbols managed by the pipeline (config.v3.symbols → NQ currently),
+    // For symbols managed by the pipeline (config.pipeline.symbols → NQ currently),
     // decideTradableSignals owns the close-on-opp + open-trade + broadcast
     // path. For other symbols (ES today), fall through to the legacy gold-tier
     // broadcast — these symbols haven't been promoted into the pipeline scope.
-    const pipelineSymbolManaged = (config.v3.symbols as readonly string[]).includes(signal.symbol);
+    const pipelineSymbolManaged = (config.pipeline.symbols as readonly string[]).includes(signal.symbol);
 
     if (pipelineSymbolManaged) {
       this.decideTradableSignals(signal, id, isGold, decision.reason, qualityCtx);
@@ -395,7 +385,7 @@ class State {
 
   /**
    * Close the symbol's open trade if THIS incoming signal is a qualified
-   * opposing-direction signal whose rule is in `config.v3.tradableExitRules`
+   * opposing-direction signal whose rule is in `config.pipeline.tradableExitRules`
    * (currently FLIP + CONT). No-op when there's no open trade, when the
    * direction matches, or when the rule isn't an exit-eligible rule.
    *

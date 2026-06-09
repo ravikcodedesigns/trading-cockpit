@@ -327,8 +327,7 @@ export async function startServer(): Promise<FastifyInstance> {
   // is authoritative. See config.pipeline.activeMode for the source of truth.
   app.get('/pipeline/state', async () => ({
     pipelineMode: config.pipeline.activeMode,        // 'shadow' | 'live'
-    v3Mode:       config.v3.activeMode,              // 'off' | 'shadow' | 'live'
-    symbols:      config.v3.symbols,                 // which symbols are managed
+    symbols:      config.pipeline.symbols,           // which symbols are managed
   }));
 
   // ── Trader state — current position + today's pnl ─────────────────────────

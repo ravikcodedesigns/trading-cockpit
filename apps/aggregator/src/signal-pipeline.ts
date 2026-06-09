@@ -127,28 +127,28 @@ export function evaluateActionability(
   if (!isQualified) {
     return { action: 'SKIP_SILENCED', reason: `silenced: ${qualifiedReason}` };
   }
-  if (config.v3.forceShadowRules.includes(signal.ruleId)) {
+  if (config.pipeline.forceShadowRules.includes(signal.ruleId)) {
     return {
       action: 'SKIP_FORCE_SHADOW',
       reason: `force-shadow rule (${signal.ruleId}) — observed but not traded`,
     };
   }
-  if (config.v3.dropFlipShorts
+  if (config.pipeline.dropFlipShorts
       && signal.ruleId === 'clean-impulse'
       && pattern === 'FLIP'
       && direction === 'short') {
     return { action: 'SKIP_FLIP_SHORT', reason: 'V3 drops qualified FLIP shorts' };
   }
-  if (direction === 'long' && ctx.cvdSession <= config.v3.cvdLongFloor) {
+  if (direction === 'long' && ctx.cvdSession <= config.pipeline.cvdLongFloor) {
     return {
       action: 'SKIP_CVD',
-      reason: `cvdSession=${ctx.cvdSession} <= longFloor=${config.v3.cvdLongFloor}`,
+      reason: `cvdSession=${ctx.cvdSession} <= longFloor=${config.pipeline.cvdLongFloor}`,
     };
   }
-  if (direction === 'short' && ctx.cvdSession >= config.v3.cvdShortFloor) {
+  if (direction === 'short' && ctx.cvdSession >= config.pipeline.cvdShortFloor) {
     return {
       action: 'SKIP_CVD',
-      reason: `cvdSession=${ctx.cvdSession} >= shortFloor=${config.v3.cvdShortFloor}`,
+      reason: `cvdSession=${ctx.cvdSession} >= shortFloor=${config.pipeline.cvdShortFloor}`,
     };
   }
   if (ctx.hasOpenTrade) {
