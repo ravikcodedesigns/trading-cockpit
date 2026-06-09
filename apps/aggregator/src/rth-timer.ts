@@ -40,7 +40,7 @@ function parseHms(s: string): { h: number; m: number; sec: number } {
   return { h: parts[0] ?? 0, m: parts[1] ?? 0, sec: parts[2] ?? 0 };
 }
 
-class V3RthTimer {
+class RthTimer {
   private intervalHandle: NodeJS.Timeout | null = null;
   private xdb: Database.Database | null = null;
   private lastFiredDate = '';
@@ -112,4 +112,4 @@ class V3RthTimer {
   }
 }
 
-export const v3RthTimer = new V3RthTimer();
+export const rthTimer = new RthTimer();

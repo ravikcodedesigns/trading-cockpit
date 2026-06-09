@@ -17,8 +17,8 @@ import { startStrategyRR, stopStrategyRR } from './rules-v2/strategy-rr-index.js
 import { startStrategyALA, stopStrategyALA } from './rules-v2/strategy-ala-index.js';
 import { startExplShortObserver, stopExplShortObserver } from './observers/expl-short-observer.js';
 import { getRecentTrades } from './rules-v2/tick-client.js';
-import { v3TickRouter } from './v3-tick-router.js';
-import { v3RthTimer } from './v3-rth-timer.js';
+import { tickRouter } from './tick-router.js';
+import { rthTimer } from './rth-timer.js';
 import { state } from './state.js';
 import { logger } from './logger.js';
 import { discord } from './discord.js';
@@ -196,10 +196,10 @@ async function main() {
   // V3 tick router — drains live trade ticks into CvdSession and TradeManager
   // so the session CVD and any open V3 trade's TP/SL stay current. No-op when
   // config.pipeline.activeMode === 'shadow'.
-  v3TickRouter.start();
+  tickRouter.start();
   // V3 RTH-close timer — at config.pipeline.rthCloseEt (default 15:54 ET), force-close
   // any open V3 trade at the latest tick price. No-op when V3 is 'off'.
-  v3RthTimer.start();
+  rthTimer.start();
 
   // Then the server (sources and cockpit can connect)
   const app = await startServer();
@@ -225,8 +225,8 @@ async function main() {
         stopStrategyALA();
       }
       stopExplShortObserver();
-      v3TickRouter.stop();
-      v3RthTimer.stop();
+      tickRouter.stop();
+      rthTimer.stop();
       await app.close();
       db.close();
     } catch (err) {

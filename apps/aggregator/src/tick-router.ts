@@ -43,7 +43,7 @@ interface TickRow {
   is_bid_aggressor: number;
 }
 
-class V3TickRouter {
+class TickRouter {
   private xdb: Database.Database | null = null;
   private intervalHandle: NodeJS.Timeout | null = null;
   private lastSeenTs = new Map<string, number>();
@@ -123,4 +123,4 @@ class V3TickRouter {
   }
 }
 
-export const v3TickRouter = new V3TickRouter();
+export const tickRouter = new TickRouter();
