@@ -151,39 +151,34 @@ class TradeManager {
   }
 
   /**
-   * Asymmetric exit rule predicate: given an incoming signal that is
-   * opposite-direction to the currently open trade, decide whether it
-   * is eligible to close that trade.
+   * Variant-A exit rule: an open trade closes when an opposing-direction signal
+   * arrives that is both (a) qualified (gold tier per quality.ts) and (b) from
+   * a rule in `config.v3.tradableExitRules` (currently FLIP + CONT only).
    *
-   *   open LONG  → closer must be qualified (per config.v3.requireQualifiedExitsLongs)
-   *   open SHORT → if closeShortsOnlyOnFlipLong=true: closer MUST be a qualified
-   *                clean-impulse FLIP-long. Otherwise: legacy requireQualifiedExitsShorts.
+   * Symmetric — same rule applies to LONG and SHORT trades, no asymmetric
+   * carve-outs (replaces the old requireQualifiedExitsLongs +
+   * closeShortsOnlyOnFlipLong + requireQualifiedExitsShorts triad).
    *
-   * Returns false if no open trade or directions don't oppose.
+   * Validated by scripts/backtest_exit_variants.ts on FLIP+CONT cohort:
+   *   - This (Variant A): 40 trades, 67.5% WR, +1,138.5 pts ← chosen
+   *   - Variant B (same-kind only): suppresses CONT entirely
+   *   - Variant C (prev V3, strict shorts): -350 pts vs A
+   *
+   * Returns false if no open trade or directions match.
    */
   shouldExitOnSignal(
     symbol: string,
     incomingDirection: Direction,
     incomingIsQualified: boolean,
     incomingRuleId?: string,
-    incomingPattern?: string | null,
+    _incomingPattern?: string | null,
   ): boolean {
     const t = this.open.get(symbol);
     if (!t) return false;
     if (t.direction === incomingDirection) return false;
-    if (t.direction === 'long' && config.v3.requireQualifiedExitsLongs && !incomingIsQualified) {
-      return false;
-    }
-    if (t.direction === 'short') {
-      if (config.v3.closeShortsOnlyOnFlipLong) {
-        // Strict: only a qualified FLIP-LONG (clean-impulse + FLIP pattern) can close a short.
-        if (!incomingIsQualified) return false;
-        if (incomingRuleId !== 'clean-impulse') return false;
-        if (incomingPattern !== 'FLIP') return false;
-      } else if (config.v3.requireQualifiedExitsShorts && !incomingIsQualified) {
-        return false;
-      }
-    }
+    if (!incomingIsQualified) return false;
+    if (!incomingRuleId) return false;
+    if (!config.v3.tradableExitRules.includes(incomingRuleId)) return false;
     return true;
   }
 

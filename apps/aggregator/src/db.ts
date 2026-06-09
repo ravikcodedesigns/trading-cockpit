@@ -225,6 +225,39 @@ _db.exec(`
   CREATE INDEX IF NOT EXISTS idx_v3_decisions_ts        ON v3_decisions(ts);
   CREATE INDEX IF NOT EXISTS idx_v3_decisions_symbol_ts ON v3_decisions(symbol, ts);
   CREATE INDEX IF NOT EXISTS idx_v3_decisions_action    ON v3_decisions(action);
+
+  -- tradable_signals: PR #2 of the signal-pipeline refactor.
+  -- One row per signal that ran through evaluateActionability() (i.e. every
+  -- raw signal that's a V3-eligible rule, in a tradable symbol). Stores the
+  -- pipeline's decision — OPEN or SKIP_X — and whether it was a shadow rule.
+  --
+  -- Parallel-observer mode: today the trader still acts on the original V3
+  -- bus broadcast; this table is for divergence detection and acceptance
+  -- testing. After cutover, the trader will subscribe to action='OPEN' rows
+  -- here and shadow=0 (live trades only).
+  --
+  -- One row per signal_id (PK), upserted. Lets the row reflect the most
+  -- recent evaluation if signal payloads change shape mid-day.
+  CREATE TABLE IF NOT EXISTS tradable_signals (
+    signal_id    INTEGER PRIMARY KEY REFERENCES signals(id),
+    signal_ts    INTEGER NOT NULL,
+    symbol       TEXT    NOT NULL,
+    rule_id      TEXT    NOT NULL,
+    pattern      TEXT,                 -- FLIP for clean-impulse FLIPs; NULL otherwise
+    direction    TEXT    NOT NULL,
+    score        INTEGER NOT NULL,
+    qualified    INTEGER NOT NULL,    -- 1 if evaluateTechnical returned gold
+    action       TEXT    NOT NULL,    -- 'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_COOLDOWN'
+    reason       TEXT    NOT NULL,
+    shadow       INTEGER NOT NULL DEFAULT 0,  -- 1 = logged for analysis, not traded (force-shadow rules)
+    cvd_session  REAL,
+    entry        REAL,
+    evaluated_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_tradable_ts            ON tradable_signals(signal_ts);
+  CREATE INDEX IF NOT EXISTS idx_tradable_symbol_ts     ON tradable_signals(symbol, signal_ts);
+  CREATE INDEX IF NOT EXISTS idx_tradable_action        ON tradable_signals(action);
+  CREATE INDEX IF NOT EXISTS idx_tradable_symbol_action ON tradable_signals(symbol, action);
 `);
 
 const stmtInsertEvent = _db.prepare(
@@ -450,6 +483,57 @@ export const db = {
       .map((r) => JSON.parse((r as { payload: string }).payload));
   },
 
+  // Returns full ConfluenceSignal payloads for every signal that passed the
+  // quality gate (= was written into qualified_signals) since `sinceMs`.
+  // Used by the cockpit snapshot so signal cards survive cockpit reloads
+  // and aggregator restarts — qualified_signals is the persisted record of
+  // "this was gold at fire time", no in-memory re-classification needed.
+  qualifiedSignalsSince(sinceMs: number, limit: number): ConfluenceSignal[] {
+    return _db.prepare(`
+      SELECT s.payload
+      FROM qualified_signals q
+      JOIN signals s ON s.id = q.signal_id
+      WHERE q.signal_ts >= ?
+      ORDER BY q.signal_ts DESC
+      LIMIT ?
+    `).all(sinceMs, limit).map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
+  // Symbol-scoped variant of qualifiedSignalsSince — same shape, narrows by
+  // symbol AND excludes rule IDs that are gold-tier-only for visual monitoring
+  // (e.g. wall-broken-fade — visual-monitor in quality.ts but not tradable).
+  // Used by /signals/marks so the chart only shows tradable historical markers.
+  qualifiedSignalsForSymbol(symbol: string, sinceMs: number, limit: number, excludeRules: string[]): ConfluenceSignal[] {
+    const exclPlaceholders = excludeRules.length > 0
+      ? `AND q.rule_id NOT IN (${excludeRules.map(() => '?').join(',')})`
+      : '';
+    return _db.prepare(`
+      SELECT s.payload
+      FROM qualified_signals q
+      JOIN signals s ON s.id = q.signal_id
+      WHERE q.symbol = ? AND q.signal_ts >= ?
+        ${exclPlaceholders}
+      ORDER BY q.signal_ts DESC
+      LIMIT ?
+    `).all(symbol, sinceMs, ...excludeRules, limit)
+      .map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
+  // Returns full ConfluenceSignal payloads for every signal V3 actually OPENed
+  // on a symbol since `sinceMs`. Used by /signals/marks so V3-mode renders
+  // rich markers (FLIP↑/↓+score etc.) for historical V3 OPENs, not just dots.
+  v3OpenSignalsForSymbol(symbol: string, sinceMs: number, limit: number): ConfluenceSignal[] {
+    return _db.prepare(`
+      SELECT s.payload
+      FROM v3_decisions v
+      JOIN signals s ON s.id = v.signal_id
+      WHERE v.symbol = ? AND v.ts >= ? AND v.action = 'OPEN'
+      ORDER BY v.ts DESC
+      LIMIT ?
+    `).all(symbol, sinceMs, limit)
+      .map((r) => JSON.parse((r as { payload: string }).payload));
+  },
+
   recentEvents(n: number): AggregatorEvent[] {
     return stmtRecentEvents
       .all(n)
@@ -570,6 +654,18 @@ export const db = {
       return Number(res.lastInsertRowid);
     },
   },
+
+  // ── tradable_signals helpers (PR #2 of signal-pipeline refactor) ────────
+  tradable: {
+    upsert(row: TradableSignalRow): void {
+      stmtTradableUpsert.run(
+        row.signal_id, row.signal_ts, row.symbol, row.rule_id,
+        row.pattern ?? null, row.direction, row.score,
+        row.qualified ? 1 : 0, row.action, row.reason, row.shadow ? 1 : 0,
+        row.cvd_session ?? null, row.entry ?? null, row.evaluated_at,
+      );
+    },
+  },
 };
 
 // V3 types and prepared statements
@@ -583,6 +679,24 @@ export interface V3OpenTrade {
   tpPts: number;
   slPts: number;
   openTs: number;
+}
+
+// Row shape for the tradable_signals table (PR #2 refactor).
+export interface TradableSignalRow {
+  signal_id:    number;
+  signal_ts:    number;
+  symbol:       string;
+  rule_id:      string;
+  pattern:      string | null;
+  direction:    'long' | 'short';
+  score:        number;
+  qualified:    boolean;
+  action:       'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_COOLDOWN';
+  reason:       string;
+  shadow:       boolean;
+  cvd_session?: number;
+  entry?:       number;
+  evaluated_at: number;
 }
 
 export interface V3Decision {
@@ -626,6 +740,28 @@ const stmtV3InsertDecision   = _db.prepare(`
     active_mode, action, reason, cvd_session, entry,
     exit_price, exit_outcome, pnl_pts, open_trade_id
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+// tradable_signals upsert — one row per signal_id, overwrites on conflict.
+const stmtTradableUpsert = _db.prepare(`
+  INSERT INTO tradable_signals (
+    signal_id, signal_ts, symbol, rule_id, pattern, direction, score,
+    qualified, action, reason, shadow, cvd_session, entry, evaluated_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ON CONFLICT(signal_id) DO UPDATE SET
+    signal_ts    = excluded.signal_ts,
+    symbol       = excluded.symbol,
+    rule_id      = excluded.rule_id,
+    pattern      = excluded.pattern,
+    direction    = excluded.direction,
+    score        = excluded.score,
+    qualified    = excluded.qualified,
+    action       = excluded.action,
+    reason       = excluded.reason,
+    shadow       = excluded.shadow,
+    cvd_session  = excluded.cvd_session,
+    entry        = excluded.entry,
+    evaluated_at = excluded.evaluated_at
 `);
 
 logger.info({ path: config.dbPath }, 'database ready');

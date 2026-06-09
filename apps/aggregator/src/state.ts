@@ -5,6 +5,7 @@ import { discord } from './discord.js';
 import { logger } from './logger.js';
 import { classifySignalQuality } from './quality.js';
 import type { QualityContext } from './quality.js';
+import { evaluateTechnical, evaluateActionability } from './signal-pipeline.js';
 import { cvdSession } from './cvd-session.js';
 import { tradeManager, type CloseEvent } from './trade-manager.js';
 import type {
@@ -302,29 +303,186 @@ class State {
     const recentExpls = db.explInWindow(signal.symbol, signal.ts - EXPL_LOOKBACK_MS, signal.ts);
     const regimeCtx = buildRegimeContext(signal);
     const lastFlip = db.lastFlipInWindow(signal.symbol, signal.ts - FLIP_LOOKBACK_MS, signal.ts);
-    const decision = classifySignalQuality(signal, { recentExpls, lastFlip, ...regimeCtx });
+    const qualityCtx: QualityContext = { recentExpls, lastFlip, ...regimeCtx };
+    const decision = classifySignalQuality(signal, qualityCtx);
     const isGold = decision.tier === 'gold';
 
-    // ── V3 active path. Engages when (a) V3 is on and (b) the symbol is in
-    //    config.v3.symbols. Otherwise we fall through to the legacy broadcast.
-    const v3Active = config.v3.activeMode !== 'off'
-                  && (config.v3.symbols as readonly string[]).includes(signal.symbol);
+    // ── V3 + pipeline dispatch (PR #4 cutover) ───────────────────────────────
+    // Two flags decide who drives the live path:
+    //   - v3Active:      V3 cascade should compute its decision (and possibly act)
+    //   - pipelineLive:  new pipeline is authoritative — it owns broadcasts +
+    //                    tradeManager calls. V3 cascade still runs for decision
+    //                    logging but applySideEffects=false suppresses its acts.
+    // Both flags apply only to symbols in config.v3.symbols; other symbols use
+    // the legacy gold-tier broadcast path.
+    const v3SymbolManaged = (config.v3.symbols as readonly string[]).includes(signal.symbol);
+    const v3Active        = config.v3.activeMode !== 'off' && v3SymbolManaged;
+    const pipelineLive    = config.pipeline.activeMode === 'live' && v3SymbolManaged;
+
+    let v3Action: string | null = null;
     if (v3Active) {
-      this.applySignalV3(signal, id, isGold, decision.reason);
-      return id;
+      v3Action = this.applySignalV3(signal, id, isGold, decision.reason, /* applySideEffects = */ !pipelineLive);
+    } else if (!pipelineLive) {
+      // ── Legacy path (unchanged from pre-V3). Quality gate for broadcast.
+      if (isGold) {
+        this.bus.emit('signal', signal);
+        discord.signal(signal);
+        logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                    'gold-tier signal broadcast');
+      } else {
+        logger.debug({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                     'silenced signal (DB only)');
+      }
     }
 
-    // ── Legacy path (unchanged from pre-V3). Quality gate for broadcast.
-    if (isGold) {
+    // ── Pipeline decision (always runs).
+    // In shadow mode: writes to tradable_signals + logs divergence vs V3.
+    // In live mode: also drives close-on-opp + OPEN/broadcast.
+    this.decideTradableSignals(signal, id, isGold, decision.reason, qualityCtx, v3Action, pipelineLive);
+
+    return id;
+  }
+
+  /**
+   * Pipeline decision maker (PR #2 + PR #4).
+   *
+   * Runs evaluateTechnical + evaluateActionability, writes the decision to
+   * tradable_signals, and (when pipeline.activeMode === 'live' and the symbol
+   * is in v3.symbols) drives the actual broadcast + tradeManager side effects.
+   *
+   * Behavior by config.pipeline.activeMode:
+   *   - 'shadow': parallel observer only. Writes tradable_signals + logs
+   *               divergence vs V3 cascade. NO broadcasts or trade-manager calls.
+   *   - 'live':   authoritative path. After writing tradable_signals, applies
+   *               close-on-opp + OPEN/broadcast based on the pipeline's action.
+   *               V3 cascade still runs (with applySideEffects=false) for log
+   *               continuity in v3_decisions.
+   *
+   * Returns the pipeline's action string ('OPEN', 'SKIP_*', or 'ERROR' on
+   * exception) so the caller can log it / compare to V3.
+   *
+   * Never throws. Errors are caught and logged.
+   */
+  private decideTradableSignals(
+    signal: ConfluenceSignal,
+    signalId: number,
+    isGold: boolean,
+    qualifiedReason: string,
+    qualityCtx: QualityContext,
+    v3ActionFromLive: string | null,
+    pipelineLive: boolean,
+  ): string {
+    try {
+      // Sanity: technical wrapper MUST match what classifySignalQuality returned.
+      // (PR #1 smoke test pins this; double-check at runtime for catching drift.)
+      const tech = evaluateTechnical(signal, qualityCtx);
+      if (tech.qualified !== isGold) {
+        logger.error({
+          signalId, ruleId: signal.ruleId,
+          live_isGold: isGold, pipeline_qualified: tech.qualified,
+        }, '[PIPELINE-DIVERGENCE] evaluateTechnical disagrees with live classifySignalQuality');
+      }
+
+      const symbol = signal.symbol;
+      const cvd = cvdSession.get(symbol);
+      const hasOpenTrade = tradeManager.getOpen(symbol) != null;
+      const act = evaluateActionability(signal, tech.qualified, tech.reason,
+                                        { cvdSession: cvd, hasOpenTrade });
+
+      // Compare to V3 if V3 ran on this signal.
+      if (v3ActionFromLive !== null && v3ActionFromLive !== act.action) {
+        logger.warn({
+          signalId, ruleId: signal.ruleId, direction: signal.direction,
+          v3_action: v3ActionFromLive, pipeline_action: act.action,
+          pipeline_reason: act.reason,
+        }, '[PIPELINE-DIVERGENCE] evaluateActionability disagrees with V3 cascade');
+      }
+
+      // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule that would
+      // otherwise OPEN is logged but not traded. Future phase normalises this.
+      const shadow = act.action === 'SKIP_FORCE_SHADOW';
+
+      db.tradable.upsert({
+        signal_id:    signalId,
+        signal_ts:    signal.ts,
+        symbol,
+        rule_id:      signal.ruleId,
+        pattern:      (signal as { pattern?: string }).pattern ?? null,
+        direction:    signal.direction as 'long' | 'short',
+        score:        signal.score,
+        qualified:    tech.qualified,
+        action:       act.action,
+        reason:       act.reason,
+        shadow,
+        cvd_session:  cvd,
+        entry:        (signal as { entry?: number }).entry,
+        evaluated_at: Date.now(),
+      });
+
+      // ── Live-mode side effects (PR #4 cutover) ───────────────────────────
+      // Pipeline is now authoritative — drive close-on-opp + OPEN + broadcast
+      // from the pipeline's action. V3 cascade has been called with
+      // applySideEffects=false above so it doesn't double-act.
+      if (pipelineLive) {
+        this.applyPipelineSideEffects(signal, signalId, act.action, act.reason, tech.qualified);
+      }
+
+      return act.action;
+    } catch (err) {
+      // Observer failures must never affect live trading. Log and move on.
+      logger.warn({ err, signalId, ruleId: signal.ruleId },
+                  '[PIPELINE-DECIDE] failed — falling back to V3 cascade for this signal');
+      return 'ERROR';
+    }
+  }
+
+  /**
+   * Apply the pipeline's decision as live side effects (PR #4 cutover).
+   * Called only when config.pipeline.activeMode === 'live' AND the symbol is
+   * in v3.symbols. Same semantics as V3's Step 1 (close-on-opp) + Step 3
+   * (broadcast + openTrade), but driven by the pipeline's action.
+   */
+  private applyPipelineSideEffects(
+    signal: ConfluenceSignal,
+    signalId: number,
+    action: string,
+    reason: string,
+    qualified: boolean,
+  ): void {
+    const symbol = signal.symbol;
+    const direction = signal.direction as 'long' | 'short';
+    const pattern = (signal as { pattern?: string }).pattern ?? null;
+
+    // Step 1: close any open trade if this is a qualified opposite-direction
+    // signal in the tradableExitRules list.
+    const openTrade = tradeManager.getOpen(symbol);
+    if (openTrade && tradeManager.shouldExitOnSignal(symbol, direction, qualified, signal.ruleId, pattern)) {
+      const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
+      if (exitPx != null) {
+        tradeManager.closeTrade(symbol, exitPx, signal.ts, 'OPP_SIG_EXIT', signalId);
+      } else {
+        logger.warn({ symbol, signalId }, 'pipeline live: opposite signal arrived but no exit price; skip close');
+      }
+    }
+
+    // Step 2: open + broadcast on OPEN action.
+    if (action === 'OPEN') {
+      const entry = resolveEntryForOpen(signal);
+      if (entry == null) {
+        logger.warn({ symbol, signalId, rule: signal.ruleId }, 'pipeline live: cannot resolve entry price; skip open');
+        return;
+      }
+      tradeManager.openTrade({
+        symbol, signalId, ruleId: signal.ruleId, pattern, direction,
+        entry, openTs: signal.ts,
+      });
       this.bus.emit('signal', signal);
       discord.signal(signal);
-      logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
-                  'gold-tier signal broadcast');
+      logger.info({ ruleId: signal.ruleId, score: signal.score, reason },
+                  'pipeline live: signal broadcast + trade opened');
     } else {
-      logger.debug({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
-                   'silenced signal (DB only)');
+      logger.debug({ ruleId: signal.ruleId, action, reason }, 'pipeline live: signal not broadcast');
     }
-    return id;
   }
 
   /**
@@ -352,7 +510,16 @@ class State {
    *               reach the chart or Discord. TradeManager state is updated
    *               and close events flow to the bus.
    */
-  private applySignalV3(signal: ConfluenceSignal, id: number, isGold: boolean, qualityReason: string): void {
+  private applySignalV3(
+    signal: ConfluenceSignal,
+    id: number,
+    isGold: boolean,
+    qualityReason: string,
+    applySideEffects: boolean = true,
+  ): string {
+    // applySideEffects=false → PR #4 cutover mode: pipeline drives, V3 just logs
+    // its decision into v3_decisions for divergence detection. No close-on-opp,
+    // no broadcast, no openTrade — the pipeline path handles all of those.
     const mode = config.v3.activeMode as 'shadow' | 'live';   // 'off' was filtered out before
     const direction = signal.direction as 'long' | 'short';
     const symbol = signal.symbol;
@@ -367,9 +534,12 @@ class State {
     };
 
     // ── Step 1: Check whether this signal should close an open trade.
+    // Skipped when pipeline is authoritative — pipeline handles close-on-opp.
     const openTrade = tradeManager.getOpen(symbol);
     let didClose = false;
-    if (openTrade && isV3Rule && tradeManager.shouldExitOnSignal(symbol, direction, isGold, signal.ruleId, pattern)) {
+    if (applySideEffects
+        && openTrade && isV3Rule
+        && tradeManager.shouldExitOnSignal(symbol, direction, isGold, signal.ruleId, pattern)) {
       const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
       if (exitPx != null) {
         // closeTrade also emits a 'trade-close' event handled by handleTradeClose.
@@ -415,6 +585,11 @@ class State {
     logV3Decision({ ...baseDecision, action, reason });
 
     // ── Step 3: Apply broadcast + open by mode.
+    // When applySideEffects=false the pipeline is authoritative — V3 just logs
+    // its decision and returns. Skip all the broadcast/tradeManager calls.
+    if (!applySideEffects) {
+      return action;
+    }
     if (mode === 'live') {
       if (action === 'OPEN') {
         const entry = resolveEntryForOpen(signal);
@@ -459,6 +634,7 @@ class State {
 
     // didClose just suppresses an unused-var warning in some lint configs.
     void didClose;
+    return action;
   }
 
   // Bulk-replace all levels with a fresh set from the levels file.
@@ -486,32 +662,18 @@ class State {
   // --- Snapshot for cockpit on connect ---
 
   snapshot(): CockpitSnapshot['state'] {
-    // For recentSignals, fetch a wider net (500) and filter to gold tier
-    // before returning. The cockpit should only see what passes Discord;
-    // silenced signals stay in the DB for outcome analysis but aren't
-    // shown in the right panel or as chart markers.
-    const allRecent = db.recentSignals(2000);
-    // Preload context signals once for in-memory per-signal lookups.
-    const allExpls = db.query<{ ts: number; direction: string; symbol: string }>(
-      `SELECT ts, direction, symbol FROM signals WHERE rule_id = 'expl' ORDER BY ts ASC`
-    );
-    const allFlips = db.query<{ ts: number; direction: string; symbol: string; entry?: number }>(
-      `SELECT ts, direction, symbol, CAST(json_extract(payload, '$.entry') AS REAL) as entry FROM signals
-       WHERE strategy_version = 'H' AND json_extract(payload, '$.pattern') = 'FLIP'
-       ORDER BY ts ASC`
-    );
-    const goldOnly = allRecent
-      .filter(s => {
-        const recentExpls = allExpls.filter(
-          e => e.symbol === s.symbol && e.ts >= s.ts - EXPL_LOOKBACK_MS && e.ts < s.ts
-        );
-        const flipsInWindow = allFlips.filter(
-          f => f.symbol === s.symbol && f.ts >= s.ts - FLIP_LOOKBACK_MS && f.ts < s.ts
-        );
-        const lastFlip = flipsInWindow.length > 0 ? flipsInWindow.at(-1)! : null;
-        return classifySignalQuality(s, { recentExpls, lastFlip }).tier === 'gold';
-      })
-      .slice(0, 2000);
+    // Pull from qualified_signals (the persisted "this passed the gate at
+    // fire-time" record). Earlier this re-ran classifySignalQuality on every
+    // recentSignals(2000) row in-memory, which meant a signal could "go away"
+    // on a cockpit reload if the gate logic / context had drifted since it
+    // fired. Reading the persisted decision keeps cards stable across
+    // cockpit reloads AND aggregator restarts — what the user saw at fire
+    // time is what they see again on reload.
+    //
+    // 30h window covers a full futures session (Sun 18:00 ET → Mon 16:00 ET
+    // = 22h) plus generous slack. Cap at 2000 so the snapshot stays small.
+    const sinceMs = Date.now() - 30 * 60 * 60 * 1000;
+    const goldOnly = db.qualifiedSignalsSince(sinceMs, 2000);
 
     return {
       ts: Date.now(),

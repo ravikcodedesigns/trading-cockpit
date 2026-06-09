@@ -44,6 +44,30 @@ export const config = {
     pollMs: parseInt(process.env.TICK_STORE_POLL_MS ?? '500', 10),
   },
 
+  // ── Pipeline cutover flag (PR #4) ─────────────────────────────────────────
+  //
+  // Controls whether the new signal-pipeline (evaluateTechnical +
+  // evaluateActionability writing to tradable_signals) is the authoritative
+  // path or runs only as an observer alongside the legacy V3 cascade.
+  //
+  // activeMode:
+  //   'shadow' → New pipeline writes tradable_signals but does NOT drive
+  //              broadcasts or trade-manager. V3 cascade remains live. This is
+  //              the default — flip to 'live' only after the diff script's
+  //              acceptance check has been clean for ≥5 RTH sessions.
+  //   'live'   → New pipeline drives broadcasts + tradeManager.openTrade and
+  //              tradeManager.closeTrade. V3 cascade still runs (computes its
+  //              action and writes to v3_decisions) but its side effects
+  //              (close-on-opp, broadcast, openTrade) are suppressed — V3
+  //              becomes the shadow path. Flip back to 'shadow' for instant
+  //              revert; no code change needed.
+  //
+  // Scope: only applies to symbols in config.v3.symbols (same constraint as V3).
+  // Non-V3 symbols still go through the legacy gold-tier broadcast path.
+  pipeline: {
+    activeMode: (process.env.PIPELINE_ACTIVE_MODE ?? 'shadow') as 'shadow' | 'live',
+  },
+
   // ── V3 — Combined-cooldown trade manager (post-research deploy)
   //
   // V3 layers ON TOP of the existing gold-tier quality gate. It does NOT
@@ -79,13 +103,23 @@ export const config = {
     // qualified FLIP-SHORTs at 77.8% WR / +38.9 EV / +700 pts (n=18) — strongest single
     // signal in the system. Previous TRUE setting was leaving ~$3,500/short on the table.
     dropFlipShorts: false,                 // qualified FLIP shorts now ELIGIBLE for V3 OPEN
-    requireQualifiedExitsLongs: true,      // only qualified opp signals close LONG trades
-    // closeShortsOnlyOnFlipLong: 2026-06-04 — when ON, an open SHORT can ONLY be closed
-    // by a qualified FLIP-LONG signal (clean-impulse rule_id, FLIP pattern). Prevents
-    // weak opposing signals (tape-speed, large-print, absorption) from exiting profitable
-    // shorts early. Overrides requireQualifiedExitsShorts when ON.
-    closeShortsOnlyOnFlipLong: true,
-    requireQualifiedExitsShorts: false,    // (legacy — superseded by closeShortsOnlyOnFlipLong)
+
+    // ── Exit policy (2026-06-08 — replaces requireQualifiedExitsLongs +
+    //    closeShortsOnlyOnFlipLong + requireQualifiedExitsShorts) ──
+    //
+    // Symmetric "Variant A — any-kind FLIP+CONT" policy: a trade closes on any
+    // qualified opposing-direction signal whose rule_id is in this allow-list.
+    // Validated by scripts/backtest_exit_variants.ts on the FLIP+CONT cohort:
+    //   - A (this): 40 trades, 67.5% WR, +1,138.5 pts  ← selected
+    //   - B same-kind only: 32 trades, 68.8% WR, +939.3 pts (suppresses CONT entirely)
+    //   - C V3-prev (strict shorts): 38 trades, 63.2% WR, +788.5 pts
+    //
+    // A captures CONT both directions (B+C suppress CONT-LONGs via cooldown),
+    // and adds +199 pts vs B / +350 pts vs C at the same time horizon.
+    //
+    // Keep this list in sync with new pipeline's isTradableRule() so the
+    // exit rules match what we consider tradable at entry.
+    tradableExitRules: ['clean-impulse', 'cont-reentry'] as string[],
 
     // forceShadowRules: rules in this list are evaluated by V3 (decisions logged
     // to v3_decisions) but NEVER open a trade — even when V3 is in 'live' mode.
