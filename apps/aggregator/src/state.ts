@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { config } from './config.js';
-import { db, type V3Decision } from './db.js';
+import { db } from './db.js';
 import { discord } from './discord.js';
 import { logger } from './logger.js';
 import { classifySignalQuality } from './quality.js';
@@ -103,30 +103,10 @@ const startTime = Date.now();
  * close a V3 trade)? Independent of qualification — used by the exit-check
  * path which considers even silenced signals.
  */
-function isV3EntryRule(signal: ConfluenceSignal): boolean {
-  // ABSO removed 2026-06-02 — no clear edge in historical WR, hidden from UI,
-  // and no longer triggers V3 OPENs. Detection + qualified_signals logging
-  // continues for future research; absorption is also excluded from the
-  // opposing-signal exit set further below.
-  if (signal.ruleId === 'expl')       return true;
-  if (signal.ruleId === 'clean-impulse' && (signal as any).pattern === 'FLIP') return true;
-  if (signal.ruleId === 'wall-broken-fade') return true;
-  if (signal.ruleId === 'compression-realwall') return true;
-  // cont-reentry (2026-06-03): SHADOW — logs V3 decisions but doesn't trade in live mode
-  // either, since the rule still needs OOS sample size. Visible on chart for monitoring.
-  if (signal.ruleId === 'cont-reentry') return true;
-  // es-flip (2026-06-03): SHADOW — ES-tuned FLIP detector, forceShadowRules-gated.
-  if (signal.ruleId === 'es-flip') return true;
-  return false;
-}
-
-/**
- * Pattern field for V3 entries that need one (currently only FLIP).
- */
-function v3PatternFor(signal: ConfluenceSignal): string | null {
-  if (signal.ruleId === 'clean-impulse' && (signal as any).pattern === 'FLIP') return 'FLIP';
-  return null;
-}
+// isV3EntryRule + v3PatternFor — REMOVED 2026-06-09 in pipeline cutover.
+// The pipeline's signal-pipeline.ts:isTradableRule() + patternFor() are the
+// authoritative replacements. Anything in state.ts that needs the pattern
+// field reads it directly from the signal payload (it's just signal.pattern).
 
 /**
  * Resolve a usable entry price for a signal at V3 open time.
@@ -174,12 +154,10 @@ function latestTickPriceAtOrBefore(symbol: string, tsMs: number): number | null 
   return row?.price ?? null;
 }
 
-/** Compose a V3Decision row from the per-signal evaluation. */
-function logV3Decision(d: V3Decision) {
-  try { db.v3.logDecision(d); } catch (err) {
-    logger.error({ err: String(err) }, 'V3: failed to log decision');
-  }
-}
+// logV3Decision — REMOVED 2026-06-09 in pipeline cutover. The pipeline writes
+// per-signal decisions to tradable_signals (the modern equivalent of
+// v3_decisions). Old v3_decisions writes from applySignalV3 are gone with the
+// cascade removal.
 
 class State {
   private bus = new EventEmitter();
@@ -218,36 +196,35 @@ class State {
   }
 
   /**
-   * Handler for TradeManager close events. In live mode, broadcasts to cockpit
-   * and Discord. In shadow mode, just logs (close events fire on TP/SL ticks
-   * regardless of mode, but we only show the user in live mode).
+   * Handler for TradeManager close events. Broadcasts to cockpit and Discord.
+   * Audit-logs the close as a v3_decisions row for backwards-compatible
+   * close-history queries (the table will be renamed in a follow-up commit).
    */
   private handleTradeClose(evt: CloseEvent) {
-    const mode = config.v3.activeMode;
-    if (mode === 'off') return;
+    // Audit log to v3_decisions (close-history record).
+    try {
+      db.v3.logDecision({
+        ts: evt.exitTs,
+        symbol: evt.trade.symbol,
+        signalId: evt.closingSignalId,
+        ruleId: evt.trade.ruleId,
+        pattern: evt.trade.pattern,
+        direction: evt.trade.direction,
+        qualified: true,
+        activeMode: 'live',
+        action: 'CLOSE',
+        reason: `${evt.reason} px=${evt.exitPx} pnl=${evt.pnlPts.toFixed(1)}`,
+        exitPrice: evt.exitPx,
+        exitOutcome: evt.reason === 'TP_HIT' ? 'WIN' : evt.reason === 'SL_HIT' ? 'LOSS' : evt.reason as any,
+        pnlPts: evt.pnlPts,
+        openTradeId: evt.trade.signalId,
+        entry: evt.trade.entry,
+      });
+    } catch (err) {
+      logger.error({ err: String(err) }, 'failed to audit-log trade close');
+    }
 
-    // Audit log to v3_decisions regardless of mode.
-    logV3Decision({
-      ts: evt.exitTs,
-      symbol: evt.trade.symbol,
-      signalId: evt.closingSignalId,
-      ruleId: evt.trade.ruleId,
-      pattern: evt.trade.pattern,
-      direction: evt.trade.direction,
-      qualified: true,                          // open-trade entries were qualified V3 opens
-      activeMode: mode === 'live' ? 'live' : 'shadow',
-      action: 'CLOSE',
-      reason: `${evt.reason} px=${evt.exitPx} pnl=${evt.pnlPts.toFixed(1)}`,
-      exitPrice: evt.exitPx,
-      exitOutcome: evt.reason === 'TP_HIT' ? 'WIN' : evt.reason === 'SL_HIT' ? 'LOSS' : evt.reason as any,
-      pnlPts: evt.pnlPts,
-      openTradeId: evt.trade.signalId,
-      entry: evt.trade.entry,
-    });
-
-    if (mode !== 'live') return;
-    // Live mode: forward to cockpit bus and Discord.
-    // The cockpit will get a 'trade-close' message; Chart.tsx renders a close marker.
+    // Forward to cockpit bus + Discord. Chart.tsx renders the close marker.
     this.bus.emit('trade-close', evt);
     try { (discord as any).tradeClose?.(evt); } catch { /* discord helper optional */ }
   }
@@ -307,38 +284,24 @@ class State {
     const decision = classifySignalQuality(signal, qualityCtx);
     const isGold = decision.tier === 'gold';
 
-    // ── V3 + pipeline dispatch (PR #4 cutover) ───────────────────────────────
-    // Two flags decide who drives the live path:
-    //   - v3Active:      V3 cascade should compute its decision (and possibly act)
-    //   - pipelineLive:  new pipeline is authoritative — it owns broadcasts +
-    //                    tradeManager calls. V3 cascade still runs for decision
-    //                    logging but applySideEffects=false suppresses its acts.
-    // Both flags apply only to symbols in config.v3.symbols; other symbols use
-    // the legacy gold-tier broadcast path.
-    const v3SymbolManaged = (config.v3.symbols as readonly string[]).includes(signal.symbol);
-    const v3Active        = config.v3.activeMode !== 'off' && v3SymbolManaged;
-    const pipelineLive    = config.pipeline.activeMode === 'live' && v3SymbolManaged;
+    // ── Pipeline dispatch (post-cutover, 2026-06-09) ─────────────────────────
+    // For symbols managed by the pipeline (config.v3.symbols → NQ currently),
+    // decideTradableSignals owns the close-on-opp + open-trade + broadcast
+    // path. For other symbols (ES today), fall through to the legacy gold-tier
+    // broadcast — these symbols haven't been promoted into the pipeline scope.
+    const pipelineSymbolManaged = (config.v3.symbols as readonly string[]).includes(signal.symbol);
 
-    let v3Action: string | null = null;
-    if (v3Active) {
-      v3Action = this.applySignalV3(signal, id, isGold, decision.reason, /* applySideEffects = */ !pipelineLive);
-    } else if (!pipelineLive) {
-      // ── Legacy path (unchanged from pre-V3). Quality gate for broadcast.
-      if (isGold) {
-        this.bus.emit('signal', signal);
-        discord.signal(signal);
-        logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
-                    'gold-tier signal broadcast');
-      } else {
-        logger.debug({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
-                     'silenced signal (DB only)');
-      }
+    if (pipelineSymbolManaged) {
+      this.decideTradableSignals(signal, id, isGold, decision.reason, qualityCtx);
+    } else if (isGold) {
+      this.bus.emit('signal', signal);
+      discord.signal(signal);
+      logger.info({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                  'gold-tier signal broadcast');
+    } else {
+      logger.debug({ ruleId: signal.ruleId, score: signal.score, reason: decision.reason },
+                   'silenced signal (DB only)');
     }
-
-    // ── Pipeline decision (always runs).
-    // In shadow mode: writes to tradable_signals + logs divergence vs V3.
-    // In live mode: also drives close-on-opp + OPEN/broadcast.
-    this.decideTradableSignals(signal, id, isGold, decision.reason, qualityCtx, v3Action, pipelineLive);
 
     return id;
   }
@@ -369,12 +332,11 @@ class State {
     isGold: boolean,
     qualifiedReason: string,
     qualityCtx: QualityContext,
-    v3ActionFromLive: string | null,
-    pipelineLive: boolean,
   ): string {
     try {
       // Sanity: technical wrapper MUST match what classifySignalQuality returned.
-      // (PR #1 smoke test pins this; double-check at runtime for catching drift.)
+      // (Pinned by pipeline_equivalence_smoke.ts; double-check at runtime for
+      // catching drift.)
       const tech = evaluateTechnical(signal, qualityCtx);
       if (tech.qualified !== isGold) {
         logger.error({
@@ -389,18 +351,21 @@ class State {
       const act = evaluateActionability(signal, tech.qualified, tech.reason,
                                         { cvdSession: cvd, hasOpenTrade });
 
-      // Compare to V3 if V3 ran on this signal.
-      if (v3ActionFromLive !== null && v3ActionFromLive !== act.action) {
-        logger.warn({
-          signalId, ruleId: signal.ruleId, direction: signal.direction,
-          v3_action: v3ActionFromLive, pipeline_action: act.action,
-          pipeline_reason: act.reason,
-        }, '[PIPELINE-DIVERGENCE] evaluateActionability disagrees with V3 cascade');
-      }
-
-      // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule that would
-      // otherwise OPEN is logged but not traded. Future phase normalises this.
+      // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule (es-flip,
+      // expl) that would otherwise OPEN is logged but not traded.
       const shadow = act.action === 'SKIP_FORCE_SHADOW';
+
+      // ── Apply actions ────────────────────────────────────────────────────
+      // Pipeline is authoritative — drive close-on-opp + OPEN + broadcast from
+      // the decision. Sequence per design:
+      //   1. close any open trade if this signal is opposing-qualified
+      //   2. open new trade + broadcast if action='OPEN'
+      //   3. write tradable_signals row LAST — log reflects what actually
+      //      happened (trade placed), not what we're about to do.
+      this.closeOpenTradeOnOpposingSignal(signal, signalId, tech.qualified);
+      if (act.action === 'OPEN') {
+        this.openTradeAndBroadcast(signal, signalId, act.reason);
+      }
 
       db.tradable.upsert({
         signal_id:    signalId,
@@ -419,14 +384,6 @@ class State {
         evaluated_at: Date.now(),
       });
 
-      // ── Live-mode side effects (PR #4 cutover) ───────────────────────────
-      // Pipeline is now authoritative — drive close-on-opp + OPEN + broadcast
-      // from the pipeline's action. V3 cascade has been called with
-      // applySideEffects=false above so it doesn't double-act.
-      if (pipelineLive) {
-        this.applyPipelineSideEffects(signal, signalId, act.action, act.reason, tech.qualified);
-      }
-
       return act.action;
     } catch (err) {
       // Observer failures must never affect live trading. Log and move on.
@@ -437,205 +394,76 @@ class State {
   }
 
   /**
-   * Apply the pipeline's decision as live side effects (PR #4 cutover).
-   * Called only when config.pipeline.activeMode === 'live' AND the symbol is
-   * in v3.symbols. Same semantics as V3's Step 1 (close-on-opp) + Step 3
-   * (broadcast + openTrade), but driven by the pipeline's action.
+   * Close the symbol's open trade if THIS incoming signal is a qualified
+   * opposing-direction signal whose rule is in `config.v3.tradableExitRules`
+   * (currently FLIP + CONT). No-op when there's no open trade, when the
+   * direction matches, or when the rule isn't an exit-eligible rule.
+   *
+   * Called by the pipeline-live path before evaluating whether THIS signal
+   * itself should open a new trade — exactly the same close-on-opp semantics
+   * that V3's Step 1 used to handle. Source-of-truth for the close decision
+   * is `tradeManager.shouldExitOnSignal()`.
    */
-  private applyPipelineSideEffects(
+  private closeOpenTradeOnOpposingSignal(
     signal: ConfluenceSignal,
     signalId: number,
-    action: string,
-    reason: string,
     qualified: boolean,
   ): void {
     const symbol = signal.symbol;
     const direction = signal.direction as 'long' | 'short';
     const pattern = (signal as { pattern?: string }).pattern ?? null;
 
-    // Step 1: close any open trade if this is a qualified opposite-direction
-    // signal in the tradableExitRules list.
     const openTrade = tradeManager.getOpen(symbol);
-    if (openTrade && tradeManager.shouldExitOnSignal(symbol, direction, qualified, signal.ruleId, pattern)) {
-      const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
-      if (exitPx != null) {
-        tradeManager.closeTrade(symbol, exitPx, signal.ts, 'OPP_SIG_EXIT', signalId);
-      } else {
-        logger.warn({ symbol, signalId }, 'pipeline live: opposite signal arrived but no exit price; skip close');
-      }
-    }
+    if (!openTrade) return;
+    if (!tradeManager.shouldExitOnSignal(symbol, direction, qualified, signal.ruleId, pattern)) return;
 
-    // Step 2: open + broadcast on OPEN action.
-    if (action === 'OPEN') {
-      const entry = resolveEntryForOpen(signal);
-      if (entry == null) {
-        logger.warn({ symbol, signalId, rule: signal.ruleId }, 'pipeline live: cannot resolve entry price; skip open');
-        return;
-      }
-      tradeManager.openTrade({
-        symbol, signalId, ruleId: signal.ruleId, pattern, direction,
-        entry, openTs: signal.ts,
-      });
-      this.bus.emit('signal', signal);
-      discord.signal(signal);
-      logger.info({ ruleId: signal.ruleId, score: signal.score, reason },
-                  'pipeline live: signal broadcast + trade opened');
-    } else {
-      logger.debug({ ruleId: signal.ruleId, action, reason }, 'pipeline live: signal not broadcast');
+    const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
+    if (exitPx == null) {
+      logger.warn({ symbol, signalId }, 'pipeline live: opposite signal arrived but no exit price; skip close');
+      return;
     }
+    tradeManager.closeTrade(symbol, exitPx, signal.ts, 'OPP_SIG_EXIT', signalId);
   }
 
   /**
-   * V3 broadcast and trade-management pipeline. Called only when V3 is active.
+   * Open a new trade in tradeManager AND broadcast the signal to the cockpit
+   * (via this.bus.emit 'signal') + Discord webhook. Called only when the
+   * pipeline's action for THIS signal was 'OPEN' and pipeline is the live
+   * driver. The trader subscribes to bus 'signal' events to place the actual
+   * broker order — so this method's openTrade call is the trigger for the
+   * full live-trade flow.
    *
-   * Two responsibilities:
-   *   1. CHECK FOR EXIT — if a V3 trade is open and this opposite-direction
-   *      signal is eligible to close it (per asymmetric rule), close it.
-   *      Runs BEFORE the gold-tier broadcast decision so silenced opposite
-   *      signals can still close short trades.
-   *   2. DECIDE WHETHER TO BROADCAST / OPEN — apply V3 filters:
-   *        - must be gold-tier
-   *        - must be a V3 entry rule (absorption / FLIP / EXPL)
-   *        - drop FLIP shorts
-   *        - CVD regime gate
-   *        - cooldown (no open trade)
-   *
-   * Behavior by mode:
-   *   - 'shadow': decisions are written to v3_decisions for the daily diff
-   *               script. The actual broadcast falls back to the legacy
-   *               gold-tier rule so the chart and Discord behave as they do
-   *               today. TradeManager state IS updated so that close events
-   *               can be observed end-to-end in shadow.
-   *   - 'live'  : V3 decisions gate the broadcast. Filtered signals do NOT
-   *               reach the chart or Discord. TradeManager state is updated
-   *               and close events flow to the bus.
+   * If the entry price can't be resolved (rare — signal payload missing entry
+   * + no recent tick), warn and skip without opening or broadcasting.
    */
-  private applySignalV3(
+  private openTradeAndBroadcast(
     signal: ConfluenceSignal,
-    id: number,
-    isGold: boolean,
-    qualityReason: string,
-    applySideEffects: boolean = true,
-  ): string {
-    // applySideEffects=false → PR #4 cutover mode: pipeline drives, V3 just logs
-    // its decision into v3_decisions for divergence detection. No close-on-opp,
-    // no broadcast, no openTrade — the pipeline path handles all of those.
-    const mode = config.v3.activeMode as 'shadow' | 'live';   // 'off' was filtered out before
-    const direction = signal.direction as 'long' | 'short';
+    signalId: number,
+    reason: string,
+  ): void {
     const symbol = signal.symbol;
-    const pattern = v3PatternFor(signal);
-    const isV3Rule = isV3EntryRule(signal);
-    const cvd = cvdSession.get(symbol);
-    const baseDecision: Omit<V3Decision, 'action' | 'reason'> = {
-      ts: signal.ts, symbol, signalId: id, ruleId: signal.ruleId, pattern,
-      direction, qualified: isGold, activeMode: mode,
-      cvdSession: cvd,
-      entry: (signal as any).entry ?? undefined,
-    };
+    const direction = signal.direction as 'long' | 'short';
+    const pattern = (signal as { pattern?: string }).pattern ?? null;
 
-    // ── Step 1: Check whether this signal should close an open trade.
-    // Skipped when pipeline is authoritative — pipeline handles close-on-opp.
-    const openTrade = tradeManager.getOpen(symbol);
-    let didClose = false;
-    if (applySideEffects
-        && openTrade && isV3Rule
-        && tradeManager.shouldExitOnSignal(symbol, direction, isGold, signal.ruleId, pattern)) {
-      const exitPx = resolveEntryForOpen(signal) ?? latestTickPriceAtOrBefore(symbol, signal.ts);
-      if (exitPx != null) {
-        // closeTrade also emits a 'trade-close' event handled by handleTradeClose.
-        tradeManager.closeTrade(symbol, exitPx, signal.ts, 'OPP_SIG_EXIT', id);
-        didClose = true;
-      } else {
-        logger.warn({ symbol, signalId: id }, 'V3: opposite signal arrived but no exit price available; skip close');
-      }
+    const entry = resolveEntryForOpen(signal);
+    if (entry == null) {
+      logger.warn({ symbol, signalId, rule: signal.ruleId }, 'pipeline live: cannot resolve entry price; skip open');
+      return;
     }
-
-    // ── Step 2: Determine whether this signal can OPEN a new trade.
-    // Sequence of gates: not-V3-rule → silenced → flip-short → CVD → cooldown → OPEN.
-    let action: V3Decision['action'] = 'OPEN';
-    let reason = qualityReason;
-
-    if (!isV3Rule) { action = 'SKIP_NOT_V3_RULE'; reason = `not a V3 entry rule (${signal.ruleId})`; }
-    else if (!isGold) { action = 'SKIP_SILENCED'; reason = `silenced: ${qualityReason}`; }
-    else if (config.v3.forceShadowRules.includes(signal.ruleId)) {
-      // Per-rule shadow override: rule is observed (decision logged) but never opens
-      // a trade — even when V3 is in 'live' mode. Used for OOS-accumulation rules.
-      action = 'SKIP_FORCE_SHADOW';
-      reason = `force-shadow rule (${signal.ruleId}) — observed but not traded`;
-    }
-    else if (config.v3.dropFlipShorts && signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'short') {
-      action = 'SKIP_FLIP_SHORT'; reason = 'V3 drops qualified FLIP shorts';
-    }
-    else if (direction === 'long'  && cvd <= config.v3.cvdLongFloor) {
-      action = 'SKIP_CVD'; reason = `cvdSession=${cvd} <= longFloor=${config.v3.cvdLongFloor}`;
-    }
-    else if (direction === 'short' && cvd >= config.v3.cvdShortFloor) {
-      action = 'SKIP_CVD'; reason = `cvdSession=${cvd} >= shortFloor=${config.v3.cvdShortFloor}`;
-    }
-    else if (tradeManager.getOpen(symbol)) {
-      // Either we didn't close above (same-dir signal), or the close completed
-      // and we'd be re-opening — but a re-open in this path means the closer
-      // was an entry-eligible opposite signal. We already closed the prior
-      // trade; only allow opening a new one if the slot is empty after close.
-      // Belt-and-suspenders: if still open, skip.
-      action = 'SKIP_COOLDOWN'; reason = 'V3 cooldown: a trade is already open';
-    }
-
-    // ── Log the entry decision.
-    logV3Decision({ ...baseDecision, action, reason });
-
-    // ── Step 3: Apply broadcast + open by mode.
-    // When applySideEffects=false the pipeline is authoritative — V3 just logs
-    // its decision and returns. Skip all the broadcast/tradeManager calls.
-    if (!applySideEffects) {
-      return action;
-    }
-    if (mode === 'live') {
-      if (action === 'OPEN') {
-        const entry = resolveEntryForOpen(signal);
-        if (entry == null) {
-          logger.warn({ symbol, signalId: id, rule: signal.ruleId }, 'V3 live: cannot resolve entry price; skip open');
-        } else {
-          // Open the trade and broadcast normally.
-          tradeManager.openTrade({
-            symbol, signalId: id,
-            ruleId: signal.ruleId, pattern, direction,
-            entry, openTs: signal.ts,
-          });
-          this.bus.emit('signal', signal);
-          discord.signal(signal);
-          logger.info({ ruleId: signal.ruleId, score: signal.score, reason: qualityReason }, 'V3 live: signal broadcast + trade opened');
-        }
-      } else {
-        logger.debug({ ruleId: signal.ruleId, action, reason }, 'V3 live: signal not broadcast');
-      }
-    } else {
-      // Shadow: broadcast follows the legacy gold-tier path; V3 decisions are
-      // recorded but do not alter what the user sees.
-      if (isGold) {
-        this.bus.emit('signal', signal);
-        discord.signal(signal);
-        logger.info({ ruleId: signal.ruleId, score: signal.score, v3Action: action }, 'V3 shadow: legacy broadcast (V3 decision logged)');
-      }
-      // In shadow mode we also keep TradeManager in sync so close events are
-      // observable end-to-end — but only OPEN if V3 said OPEN, never override
-      // the legacy broadcast.
-      if (action === 'OPEN' && !tradeManager.getOpen(symbol)) {
-        const entry = resolveEntryForOpen(signal);
-        if (entry != null) {
-          tradeManager.openTrade({
-            symbol, signalId: id,
-            ruleId: signal.ruleId, pattern, direction,
-            entry, openTs: signal.ts,
-          });
-        }
-      }
-    }
-
-    // didClose just suppresses an unused-var warning in some lint configs.
-    void didClose;
-    return action;
+    tradeManager.openTrade({
+      symbol, signalId, ruleId: signal.ruleId, pattern, direction,
+      entry, openTs: signal.ts,
+    });
+    this.bus.emit('signal', signal);
+    discord.signal(signal);
+    logger.info({ ruleId: signal.ruleId, score: signal.score, reason },
+                'pipeline live: signal broadcast + trade opened');
   }
+
+  // applySignalV3 — REMOVED 2026-06-09 in pipeline cutover. The pipeline path
+  // (decideTradableSignals + closeOpenTradeOnOpposingSignal +
+  // openTradeAndBroadcast) is the authoritative replacement. All entry gating,
+  // cascade ordering, and broadcast/tradeManager side effects live there.
 
   // Bulk-replace all levels with a fresh set from the levels file.
   // Wipes the in-memory map and reapplies. Logs each as a 'levels' event so
