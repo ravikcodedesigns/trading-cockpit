@@ -193,7 +193,7 @@ class State {
   private handleTradeClose(evt: CloseEvent) {
     // Audit log to v3_decisions (close-history record).
     try {
-      db.v3.logDecision({
+      db.signalResults.log({
         ts: evt.exitTs,
         symbol: evt.trade.symbol,
         signalId: evt.closingSignalId,

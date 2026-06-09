@@ -593,12 +593,10 @@ export function Chart() {
         const res = await fetch(`/signals/marks?symbol=${selectedSymbol}&sinceMs=${sinceMs}`);
         if (!res.ok) return;
         const data = await res.json() as {
-          qualifiedTs: number[];
-          v3OpenTs: number[];
-          tradableTs?: number[];
+          qualifiedTs:    number[];
+          tradableTs?:    number[];
           experimentalTs?: number[];
           qualifiedSignals?:    ConfluenceSignal[];
-          v3OpenSignals?:       ConfluenceSignal[];
           tradableSignals?:     ConfluenceSignal[];
           experimentalSignals?: ConfluenceSignal[];
         };

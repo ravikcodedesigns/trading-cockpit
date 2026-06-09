@@ -480,27 +480,24 @@ export async function startServer(): Promise<FastifyInstance> {
     // (FLIP↑/↓+score, CONT, etc.) for historical signals that it does for the
     // live ones in `recentSignals`. The timestamp arrays below are kept for
     // back-compat (a couple of places still use them as filter sets).
-    const qualifiedSignals   = db.qualifiedSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS, MARK_EXCLUDED_RULES);
-    const v3OpenSignals      = db.v3OpenSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
-    // New (PR #4 cockpit work):
-    //   tradable    = signals the new pipeline would OPEN (action='OPEN', shadow=0)
-    //   experimental = signals from force-shadow rules (es-flip, expl, etc.)
+    // Three signal classes the chart can filter on:
+    //   qualified    = passed quality gate (broad view)
+    //   tradable     = pipeline would OPEN (action='OPEN', shadow=0)
+    //   experimental = force-shadow rules (es-flip, expl, etc.)
+    const qualifiedSignals    = db.qualifiedSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS, MARK_EXCLUDED_RULES);
     const tradableSignals     = db.tradableOpenSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
     const experimentalSignals = db.experimentalSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
 
     const qualifiedTs    = Array.from(new Set(qualifiedSignals.map(s => Math.floor(s.ts / 60000) * 60)));
-    const v3OpenTs       = Array.from(new Set(v3OpenSignals.map(s => Math.floor(s.ts / 60000) * 60)));
     const tradableTs     = Array.from(new Set(tradableSignals.map(s => Math.floor(s.ts / 60000) * 60)));
     const experimentalTs = Array.from(new Set(experimentalSignals.map(s => Math.floor(s.ts / 60000) * 60)));
 
     return {
       symbol,
       qualifiedTs,
-      v3OpenTs,
       tradableTs,
       experimentalTs,
       qualifiedSignals,
-      v3OpenSignals,
       tradableSignals,
       experimentalSignals,
     };

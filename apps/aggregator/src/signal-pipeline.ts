@@ -53,9 +53,8 @@ export function evaluateTechnical(
 // ── Stage 3: actionability evaluation (= tradable_signals membership) ──────
 
 /**
- * Action labels match the existing V3Decision['action'] enum for byte-identical
- * equivalence in PR #1. In Phase 4 these will be normalised to a smaller set
- * (OPEN / SKIP / SHADOW) once V3 naming is retired.
+ * Action labels — written into tradable_signals.action and also reused as the
+ * SignalResult['action'] enum for the signal_results audit log.
  */
 export type ActionabilityAction =
   | 'OPEN'

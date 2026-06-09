@@ -176,20 +176,30 @@ for (const [col, type] of [
   try { _db.exec(`ALTER TABLE qualified_signals ADD COLUMN ${col} ${type}`); } catch { /* already exists */ }
 }
 
-// ── V3 tables ──────────────────────────────────────────────────────────────
+// ── Migration 2026-06-09: rename v3_decisions → signal_results ─────────────
+// Idempotent. If the source table doesn't exist (fresh DB or already renamed),
+// the ALTER fails harmlessly and the CREATE TABLE IF NOT EXISTS below covers
+// the schema. We also rename the indexes so they stay matched.
+try { _db.exec(`ALTER TABLE v3_decisions RENAME TO signal_results`); } catch { /* already renamed or never existed */ }
+try { _db.exec(`ALTER INDEX idx_v3_decisions_ts        RENAME TO idx_signal_results_ts`); }        catch { /* */ }
+try { _db.exec(`ALTER INDEX idx_v3_decisions_symbol_ts RENAME TO idx_signal_results_symbol_ts`); } catch { /* */ }
+try { _db.exec(`ALTER INDEX idx_v3_decisions_action    RENAME TO idx_signal_results_action`); }    catch { /* */ }
+
+// ── Pipeline tables ────────────────────────────────────────────────────────
 //
-// open_trades: one row per symbol with an active V3 trade.
+// open_trades: one row per symbol with an active pipeline-managed trade.
 //   - signal_id  : the signal that opened the trade (FK → signals.id)
 //   - rule_id    : 'absorption' | 'clean-impulse' | 'expl'
 //   - pattern    : 'FLIP' for clean-impulse FLIPs; NULL otherwise
 //   - tp_pts/sl_pts : configured at trade-open time (per-rule, per-direction)
 //
-// v3_decisions: append-only audit log. Every signal that runs through the V3
-// pipeline (shadow OR live) writes one row here. Used by the daily diff script
-// to verify the live decisions exactly match the offline backtest.
+// signal_results: append-only audit log. The pipeline path writes a row here
+// for every entry-decision (via decideTradableSignals) and every CLOSE event
+// (via handleTradeClose). Used by the daily reconciliation reports.
 //
-// Both tables are V3-only. If V3 is later removed, drop these two tables and
-// no other system is affected.
+// Renamed from `v3_decisions` on 2026-06-09 — see the ALTER TABLE migration
+// further down. The schema below creates the new name for fresh DBs; the
+// migration handles existing data.
 _db.exec(`
   CREATE TABLE IF NOT EXISTS open_trades (
     symbol      TEXT    PRIMARY KEY,
@@ -203,7 +213,7 @@ _db.exec(`
     open_ts     INTEGER NOT NULL
   );
 
-  CREATE TABLE IF NOT EXISTS v3_decisions (
+  CREATE TABLE IF NOT EXISTS signal_results (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     ts          INTEGER NOT NULL,
     symbol      TEXT    NOT NULL,
@@ -222,9 +232,9 @@ _db.exec(`
     pnl_pts     REAL,
     open_trade_id INTEGER            -- the open_trades row this acted on (CLOSE/SKIP_COOLDOWN)
   );
-  CREATE INDEX IF NOT EXISTS idx_v3_decisions_ts        ON v3_decisions(ts);
-  CREATE INDEX IF NOT EXISTS idx_v3_decisions_symbol_ts ON v3_decisions(symbol, ts);
-  CREATE INDEX IF NOT EXISTS idx_v3_decisions_action    ON v3_decisions(action);
+  CREATE INDEX IF NOT EXISTS idx_signal_results_ts        ON signal_results(ts);
+  CREATE INDEX IF NOT EXISTS idx_signal_results_symbol_ts ON signal_results(symbol, ts);
+  CREATE INDEX IF NOT EXISTS idx_signal_results_action    ON signal_results(action);
 
   -- tradable_signals: PR #2 of the signal-pipeline refactor.
   -- One row per signal that ran through evaluateActionability() (i.e. every
@@ -526,20 +536,11 @@ export const db = {
       .map((r) => JSON.parse((r as { payload: string }).payload));
   },
 
-  // Returns full ConfluenceSignal payloads for every signal V3 actually OPENed
-  // on a symbol since `sinceMs`. Used by /signals/marks so V3-mode renders
-  // rich markers (FLIP↑/↓+score etc.) for historical V3 OPENs, not just dots.
-  v3OpenSignalsForSymbol(symbol: string, sinceMs: number, limit: number): ConfluenceSignal[] {
-    return _db.prepare(`
-      SELECT s.payload
-      FROM v3_decisions v
-      JOIN signals s ON s.id = v.signal_id
-      WHERE v.symbol = ? AND v.ts >= ? AND v.action = 'OPEN'
-      ORDER BY v.ts DESC
-      LIMIT ?
-    `).all(symbol, sinceMs, limit)
-      .map((r) => JSON.parse((r as { payload: string }).payload));
-  },
+  // v3OpenSignalsForSymbol — REMOVED 2026-06-09 in pipeline cutover.
+  // The chart's TRADABLE button (post-cutover) reads from
+  // tradableOpenSignalsForSymbol which queries tradable_signals directly.
+  // The legacy V3 button is gone, so this reader has no caller.
+
 
   // Returns full ConfluenceSignal payloads for every signal the new pipeline
   // would have OPENed (action='OPEN' AND shadow=0). This is what the trader
@@ -656,16 +657,16 @@ export const db = {
     return _db.prepare(sql).all(...params) as T[];
   },
 
-  // ── V3 helpers ───────────────────────────────────────────────────────────
-  v3: {
-    upsertOpenTrade(t: V3OpenTrade): void {
-      stmtV3UpsertOpenTrade.run(
+  // ── open_trades helpers — persistent per-symbol open-trade slot ──────────
+  openTrades: {
+    upsert(t: OpenTradeRow): void {
+      stmtUpsertOpenTrade.run(
         t.symbol, t.signalId, t.ruleId, t.pattern ?? null,
         t.direction, t.entry, t.tpPts, t.slPts, t.openTs,
       );
     },
-    getOpenTrade(symbol: string): V3OpenTrade | null {
-      const row = stmtV3GetOpenTrade.get(symbol) as any;
+    get(symbol: string): OpenTradeRow | null {
+      const row = stmtGetOpenTrade.get(symbol) as any;
       if (!row) return null;
       return {
         symbol: row.symbol, signalId: row.signal_id, ruleId: row.rule_id,
@@ -673,19 +674,23 @@ export const db = {
         tpPts: row.tp_pts, slPts: row.sl_pts, openTs: row.open_ts,
       };
     },
-    getAllOpenTrades(): V3OpenTrade[] {
-      const rows = stmtV3GetAllOpenTrades.all() as any[];
+    getAll(): OpenTradeRow[] {
+      const rows = stmtGetAllOpenTrades.all() as any[];
       return rows.map(row => ({
         symbol: row.symbol, signalId: row.signal_id, ruleId: row.rule_id,
         pattern: row.pattern, direction: row.direction, entry: row.entry,
         tpPts: row.tp_pts, slPts: row.sl_pts, openTs: row.open_ts,
       }));
     },
-    deleteOpenTrade(symbol: string): void {
-      stmtV3DeleteOpenTrade.run(symbol);
+    delete(symbol: string): void {
+      stmtDeleteOpenTrade.run(symbol);
     },
-    logDecision(d: V3Decision): number {
-      const res = stmtV3InsertDecision.run(
+  },
+
+  // ── signal_results helpers — append-only audit log (renamed from v3_decisions) ──
+  signalResults: {
+    log(d: SignalResult): number {
+      const res = stmtInsertSignalResult.run(
         d.ts, d.symbol, d.signalId ?? null, d.ruleId, d.pattern ?? null,
         d.direction, d.qualified ? 1 : 0, d.activeMode, d.action, d.reason,
         d.cvdSession ?? null, d.entry ?? null,
@@ -710,7 +715,7 @@ export const db = {
 };
 
 // V3 types and prepared statements
-export interface V3OpenTrade {
+export interface OpenTradeRow {
   symbol: string;
   signalId: number;
   ruleId: string;
@@ -740,7 +745,8 @@ export interface TradableSignalRow {
   evaluated_at: number;
 }
 
-export interface V3Decision {
+/** Row shape for the signal_results table (renamed from v3_decisions 2026-06-09). */
+export interface SignalResult {
   ts: number;
   symbol: string;
   signalId: number | null;
@@ -759,7 +765,7 @@ export interface V3Decision {
   openTradeId?: number;
 }
 
-const stmtV3UpsertOpenTrade = _db.prepare(`
+const stmtUpsertOpenTrade = _db.prepare(`
   INSERT INTO open_trades (symbol, signal_id, rule_id, pattern, direction, entry, tp_pts, sl_pts, open_ts)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(symbol) DO UPDATE SET
@@ -772,11 +778,11 @@ const stmtV3UpsertOpenTrade = _db.prepare(`
     sl_pts    = excluded.sl_pts,
     open_ts   = excluded.open_ts
 `);
-const stmtV3GetOpenTrade     = _db.prepare(`SELECT * FROM open_trades WHERE symbol = ?`);
-const stmtV3GetAllOpenTrades = _db.prepare(`SELECT * FROM open_trades`);
-const stmtV3DeleteOpenTrade  = _db.prepare(`DELETE FROM open_trades WHERE symbol = ?`);
-const stmtV3InsertDecision   = _db.prepare(`
-  INSERT INTO v3_decisions (
+const stmtGetOpenTrade     = _db.prepare(`SELECT * FROM open_trades WHERE symbol = ?`);
+const stmtGetAllOpenTrades = _db.prepare(`SELECT * FROM open_trades`);
+const stmtDeleteOpenTrade  = _db.prepare(`DELETE FROM open_trades WHERE symbol = ?`);
+const stmtInsertSignalResult = _db.prepare(`
+  INSERT INTO signal_results (
     ts, symbol, signal_id, rule_id, pattern, direction, qualified,
     active_mode, action, reason, cvd_session, entry,
     exit_price, exit_outcome, pnl_pts, open_trade_id

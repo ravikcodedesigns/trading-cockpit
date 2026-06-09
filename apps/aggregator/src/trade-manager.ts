@@ -25,7 +25,7 @@
 import { EventEmitter } from 'node:events';
 import { config } from './config.js';
 import { logger } from './logger.js';
-import { db, type V3OpenTrade } from './db.js';
+import { db, type OpenTradeRow } from './db.js';
 
 export type Direction = 'long' | 'short';
 export type CloseReason = 'TP_HIT' | 'SL_HIT' | 'OPP_SIG_EXIT' | 'CLOSE_AT_BELL';
@@ -84,14 +84,14 @@ class TradeManager {
    * load time (their RTH session has long since ended).
    */
   hydrate(): void {
-    const rows = db.v3.getAllOpenTrades();
+    const rows = db.openTrades.getAll();
     const now = Date.now();
     const todayRthOpen = rthOpenMsFor(now);
     let kept = 0, forceClosed = 0;
     for (const r of rows) {
       if (r.openTs < todayRthOpen) {
         // Stale: belonged to a prior RTH session. Drop it.
-        db.v3.deleteOpenTrade(r.symbol);
+        db.openTrades.delete(r.symbol);
         forceClosed++;
         logger.warn({ symbol: r.symbol, openTs: r.openTs }, 'TradeManager.hydrate: dropped stale open trade');
         continue;
@@ -142,7 +142,7 @@ class TradeManager {
       openTs: args.openTs,
     };
     this.open.set(trade.symbol, trade);
-    db.v3.upsertOpenTrade({
+    db.openTrades.upsert({
       symbol: trade.symbol, signalId: trade.signalId, ruleId: trade.ruleId,
       pattern: trade.pattern, direction: trade.direction, entry: trade.entry,
       tpPts: trade.tpPts, slPts: trade.slPts, openTs: trade.openTs,
@@ -200,7 +200,7 @@ class TradeManager {
     const pnlPts = t.direction === 'long' ? exitPx - t.entry : t.entry - exitPx;
     const evt: CloseEvent = { trade: t, exitPx, exitTs, reason, pnlPts, closingSignalId };
     this.open.delete(symbol);
-    db.v3.deleteOpenTrade(symbol);
+    db.openTrades.delete(symbol);
     logger.info({ symbol, exitPx, exitTs, reason, pnlPts }, 'TradeManager: closed');
     this.bus.emit('trade-close', evt);
     return evt;
@@ -251,7 +251,7 @@ class TradeManager {
     return () => { this.bus.off('trade-close', fn); };
   }
 
-  private rowToTrade(r: V3OpenTrade): OpenedTrade {
+  private rowToTrade(r: OpenTradeRow): OpenedTrade {
     return {
       symbol: r.symbol, signalId: r.signalId, ruleId: r.ruleId,
       pattern: r.pattern, direction: r.direction, entry: r.entry,
