@@ -74,6 +74,7 @@ public class CaptureAddon
     private String alias = "";
     private double pips = 1.0;            // price per tick (e.g. 0.25 for NQ); used to convert int prices
     private BufferedWriter logWriter;
+    private LocalDate currentLogDate = null;   // date the current logWriter file is for
     private final ReentrantLock writeLock = new ReentrantLock();
     private long eventCount = 0;
     private long lastSummaryTs = 0;
@@ -88,24 +89,73 @@ public class CaptureAddon
         this.pips = info.pips;
         try {
             Files.createDirectories(LOG_DIR);
-            String date = LocalDate.now().format(DATE_FMT);
-            Path file = LOG_DIR.resolve(String.format("%s-%s.log", date, sanitize(alias)));
-            logWriter = Files.newBufferedWriter(
-                    file,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
+            // Open the initial day's writer. Subsequent calendar-day rollovers
+            // are handled inside log() via maybeRotateForToday() — so a long-
+            // running Bookmap session continues logging across midnight without
+            // appending forever to the original day's file.
+            openWriterForToday();
             log("init", Map.of(
                     "alias", alias,
                     "full_name", info.fullName,
                     "pips", info.pips,
                     "size_multiplier", info.sizeMultiplier,
                     "is_crypto", info.isCrypto,
-                    "log_file", file.toString()
+                    "log_file", currentLogFile().toString()
             ));
-            System.out.println("[cockpit-mbo] Attached to " + alias + " | logging to " + file);
+            System.out.println("[cockpit-mbo] Attached to " + alias + " | logging to " + currentLogFile());
         } catch (IOException e) {
             System.err.println("[cockpit-mbo] Failed to open log file: " + e);
         }
+    }
+
+    /**
+     * Open (or re-open) the buffered writer for today's calendar date.
+     * Caller must hold writeLock if there's any chance of concurrent log() calls.
+     */
+    private void openWriterForToday() throws IOException {
+        LocalDate today = LocalDate.now();
+        Path file = LOG_DIR.resolve(String.format("%s-%s.log", today.format(DATE_FMT), sanitize(alias)));
+        logWriter = Files.newBufferedWriter(
+                file,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
+        currentLogDate = today;
+    }
+
+    /** Current log file path (for diagnostics). Recomputed from currentLogDate. */
+    private Path currentLogFile() {
+        LocalDate d = currentLogDate != null ? currentLogDate : LocalDate.now();
+        return LOG_DIR.resolve(String.format("%s-%s.log", d.format(DATE_FMT), sanitize(alias)));
+    }
+
+    /**
+     * If the calendar day has advanced since we opened the current writer,
+     * flush + close the old file and open a fresh one for today's date. Called
+     * on every event from inside log() while holding writeLock — safe and cheap.
+     */
+    private void maybeRotateForToday() throws IOException {
+        LocalDate today = LocalDate.now();
+        if (today.equals(currentLogDate)) return;
+        LocalDate from = currentLogDate;
+        if (logWriter != null) {
+            try { logWriter.flush(); logWriter.close(); } catch (IOException ignored) {}
+        }
+        openWriterForToday();
+        // Write a marker into the NEW file so downstream ingesters can see the
+        // boundary explicitly (also helps debug rotation timing).
+        Map<String, Object> rec = new HashMap<>();
+        rec.put("ts_ms", System.currentTimeMillis());
+        rec.put("alias", alias);
+        rec.put("kind", "rotate");
+        rec.put("data", Map.of(
+                "from_date", from == null ? "init" : from.toString(),
+                "to_date",   today.toString()
+        ));
+        logWriter.write(GSON.toJson(rec));
+        logWriter.newLine();
+        logWriter.flush();
+        System.out.println("[cockpit-mbo " + alias + "] rotated " + from + " → " + today
+                + " (new file: " + currentLogFile() + ")");
     }
 
     @Override
@@ -190,6 +240,10 @@ public class CaptureAddon
         String line = GSON.toJson(record);
         writeLock.lock();
         try {
+            // Calendar-day rollover: cheap LocalDate.equals() short-circuit on
+            // 99.99...% of events; on the one event/day that crosses midnight
+            // we close the old file and open a new one named for today's date.
+            maybeRotateForToday();
             logWriter.write(line);
             logWriter.newLine();
             // Flush periodically so events are visible during tailing
