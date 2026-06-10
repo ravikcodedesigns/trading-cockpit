@@ -34,6 +34,7 @@ import { logger } from './logger.js';
 import { cvdSession } from './cvd-session.js';
 import { tradeManager } from './trade-manager.js';
 import { shadowTrader } from './shadow-trader.js';
+import { cooldownShadow } from './cooldown-shadow.js';
 
 const POLL_INTERVAL_MS = 250;
 
@@ -122,6 +123,13 @@ class TickRouter {
           shadowTrader.onTick(sym, r.ts, r.price);
         } catch (err) {
           logger.warn({ err: String(err), sym, ts: r.ts }, 'shadowTrader.onTick threw — live path unaffected');
+        }
+        // Cooldown-shadow walks any qualified-but-skipped signals' virtual TP/SL.
+        // Same isolation guarantee as shadowTrader.onTick above.
+        try {
+          cooldownShadow.onTick(sym, r.ts, r.price);
+        } catch (err) {
+          logger.warn({ err: String(err), sym, ts: r.ts }, 'cooldownShadow.onTick threw — live path unaffected');
         }
         if (r.ts > maxTs) maxTs = r.ts;
       }

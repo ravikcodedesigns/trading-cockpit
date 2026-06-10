@@ -6,6 +6,7 @@ import { logger } from './logger.js';
 import { classifySignalQuality } from './quality.js';
 import type { QualityContext } from './quality.js';
 import { evaluateTechnical, evaluateActionability } from './signal-pipeline.js';
+import { cooldownShadow } from './cooldown-shadow.js';
 import { cvdSession } from './cvd-session.js';
 import { tradeManager, type CloseEvent } from './trade-manager.js';
 import type {
@@ -376,6 +377,29 @@ class State {
       }
       if (act.action === 'OPEN') {
         this.openTradeAndBroadcast(signal, signalId, act.reason);
+      }
+
+      // ── Cooldown shadow ───────────────────────────────────────────────────
+      // Record a "would-have-fired" trade for qualified signals that the
+      // pipeline skipped because a same-direction trade was already open.
+      // Pure observational — never touches live order flow. Wrapped in
+      // try/catch so any bug here can NEVER affect the live path.
+      if (act.action === 'SKIP_COOLDOWN' && tech.qualified) {
+        const entry = (signal as { entry?: number }).entry;
+        if (typeof entry === 'number' && Number.isFinite(entry)) {
+          try {
+            cooldownShadow.recordSkippedSignal({
+              symbol,
+              signalId,
+              ruleId: signal.ruleId,
+              direction: signal.direction as 'long' | 'short',
+              entry,
+              ts: signal.ts,
+            });
+          } catch (err) {
+            logger.warn({ err: String(err), signalId }, 'cooldown-shadow record failed — live path unaffected');
+          }
+        }
       }
 
       db.tradable.upsert({

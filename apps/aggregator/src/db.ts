@@ -176,6 +176,24 @@ for (const [col, type] of [
   try { _db.exec(`ALTER TABLE qualified_signals ADD COLUMN ${col} ${type}`); } catch { /* already exists */ }
 }
 
+// ── Migration 2026-06-10: extend shadow_trades for cooldown-shadow ─────────
+// Same table, two row sources distinguished by `source`:
+//   'level'             — structural-level shadow (default; existing rows)
+//   'cooldown-skipped'  — qualified signal that the pipeline skipped because
+//                          a same-direction trade was already open
+// For cooldown-skipped rows, signal_id + rule_id are populated. The existing
+// NOT NULL columns (level_label/level_price/classification/approach_dir)
+// are populated with semantic placeholders rather than recreating the table.
+for (const [col, type] of [
+  ['source',    `TEXT NOT NULL DEFAULT 'level'`],
+  ['signal_id', `INTEGER`],
+  ['rule_id',   `TEXT`],
+] as [string, string][]) {
+  try { _db.exec(`ALTER TABLE shadow_trades ADD COLUMN ${col} ${type}`); } catch { /* already exists */ }
+}
+try { _db.exec(`CREATE INDEX IF NOT EXISTS idx_shadow_source ON shadow_trades(source)`); } catch { /* */ }
+try { _db.exec(`CREATE INDEX IF NOT EXISTS idx_shadow_signal_id ON shadow_trades(signal_id)`); } catch { /* */ }
+
 // ── Migration 2026-06-09: rename v3_decisions → signal_results ─────────────
 // Idempotent. If the source table doesn't exist (fresh DB or already renamed),
 // the ALTER fails harmlessly and the CREATE TABLE IF NOT EXISTS below covers
@@ -279,32 +297,44 @@ _db.exec(`
   -- which is why we shadow before risking capital.
   CREATE TABLE IF NOT EXISTS shadow_trades (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    source          TEXT    NOT NULL DEFAULT 'level',  -- 'level' | 'cooldown-skipped'
     symbol          TEXT    NOT NULL,
     trading_day     TEXT    NOT NULL,    -- YYYY-MM-DD ET
-    level_label     TEXT    NOT NULL,    -- 'WkH','PDH','onVAL','PML','Bull L','Bear H'
-    level_price     REAL    NOT NULL,    -- the structural level value at fire
-    classification  TEXT    NOT NULL,    -- 'FADE' | 'BREAKOUT'
-    bucket          TEXT,                -- 'OPEN' | 'MID' | 'CLOSE' (RTH bucket of open)
+    -- For source='level': WkH/PDH/onVAL/etc. For source='cooldown-skipped':
+    -- semantic placeholder like 'cooldown:clean-impulse'.
+    level_label     TEXT    NOT NULL,
+    -- For source='level': the structural level price. For 'cooldown-skipped':
+    -- mirrors the signal's entry price (no structural anchor in play).
+    level_price     REAL    NOT NULL,
+    -- For source='level': 'FADE' | 'BREAKOUT'. For 'cooldown-skipped': 'COOLDOWN'.
+    classification  TEXT    NOT NULL,
+    bucket          TEXT,                -- 'OPEN' | 'MID' | 'CLOSE'
     open_ts         INTEGER NOT NULL,
     open_price      REAL    NOT NULL,
     direction       TEXT    NOT NULL,    -- 'long' | 'short'
-    approach_dir    TEXT    NOT NULL,    -- 'up' | 'down' (price approach to level)
+    -- For source='level': 'up' | 'down' (approach to level).
+    -- For 'cooldown-skipped': 'N/A' (signal direction is known directly).
+    approach_dir    TEXT    NOT NULL,
     tp_pt           REAL    NOT NULL,
     sl_pt           REAL    NOT NULL,
     tp_price        REAL    NOT NULL,
     sl_price        REAL    NOT NULL,
-    close_ts        INTEGER,             -- null until closed
+    close_ts        INTEGER,
     close_price     REAL,
     close_reason    TEXT,                -- 'TP' | 'SL' | 'EOD'
     pnl_pts         REAL,
-    pnl_usd         REAL,                -- pnl_pts × $2 (MNQ)
+    pnl_usd         REAL,
     duration_ms     INTEGER,
+    signal_id       INTEGER,             -- populated for source='cooldown-skipped'
+    rule_id         TEXT,                -- populated for source='cooldown-skipped'
     created_at      INTEGER NOT NULL,
     updated_at      INTEGER NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_shadow_day_label ON shadow_trades(trading_day, level_label);
-  CREATE INDEX IF NOT EXISTS idx_shadow_open_ts   ON shadow_trades(open_ts);
-  CREATE INDEX IF NOT EXISTS idx_shadow_close     ON shadow_trades(close_ts);
+  CREATE INDEX IF NOT EXISTS idx_shadow_day_label  ON shadow_trades(trading_day, level_label);
+  CREATE INDEX IF NOT EXISTS idx_shadow_open_ts    ON shadow_trades(open_ts);
+  CREATE INDEX IF NOT EXISTS idx_shadow_close      ON shadow_trades(close_ts);
+  CREATE INDEX IF NOT EXISTS idx_shadow_source     ON shadow_trades(source);
+  CREATE INDEX IF NOT EXISTS idx_shadow_signal_id  ON shadow_trades(signal_id);
 `);
 
 const stmtInsertEvent = _db.prepare(
@@ -755,9 +785,11 @@ export const db = {
     open(o: ShadowOpenInput): number {
       const now = Date.now();
       const res = stmtShadowInsert.run(
+        o.source ?? 'level',
         o.symbol, o.trading_day, o.level_label, o.level_price, o.classification, o.bucket,
         o.open_ts, o.open_price, o.direction, o.approach_dir,
         o.tp_pt, o.sl_pt, o.tp_price, o.sl_price,
+        o.signal_id ?? null, o.rule_id ?? null,
         now, now,
       );
       return Number(res.lastInsertRowid);
@@ -874,11 +906,12 @@ const stmtTradableUpsert = _db.prepare(`
 // ── shadow_trades prepared statements ───────────────────────────────────────
 const stmtShadowInsert = _db.prepare(`
   INSERT INTO shadow_trades (
-    symbol, trading_day, level_label, level_price, classification, bucket,
+    source, symbol, trading_day, level_label, level_price, classification, bucket,
     open_ts, open_price, direction, approach_dir,
     tp_pt, sl_pt, tp_price, sl_price,
+    signal_id, rule_id,
     created_at, updated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const stmtShadowClose = _db.prepare(`
   UPDATE shadow_trades
@@ -892,20 +925,23 @@ const stmtShadowGetOpen = _db.prepare(`
 `);
 
 export interface ShadowOpenInput {
+  source?: 'level' | 'cooldown-skipped';   // defaults to 'level' for backwards compat
   symbol: string;
   trading_day: string;
   level_label: string;
   level_price: number;
-  classification: 'FADE' | 'BREAKOUT';
+  classification: 'FADE' | 'BREAKOUT' | 'COOLDOWN';
   bucket: 'OPEN' | 'MID' | 'CLOSE';
   open_ts: number;
   open_price: number;
   direction: 'long' | 'short';
-  approach_dir: 'up' | 'down';
+  approach_dir: 'up' | 'down' | 'N/A';
   tp_pt: number;
   sl_pt: number;
   tp_price: number;
   sl_price: number;
+  signal_id?: number;
+  rule_id?: string;
 }
 export interface ShadowCloseInput {
   id: number;
