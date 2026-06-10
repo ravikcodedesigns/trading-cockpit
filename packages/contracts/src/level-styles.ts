@@ -62,6 +62,19 @@ export const LEVEL_STYLES: Record<string, LevelStyle> = {
   'Bull L':     { color: '#2BB673', style: 'solid',  width: 2 },
   'Bear H':     { color: '#D64545', style: 'solid',  width: 2 },
   'Bear L':     { color: '#D64545', style: 'solid',  width: 2 },
+
+  // ─── Today's-session levels (added by evening cron at 17:55) ───────────
+  'IBH':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance high (soft teal)
+  'IBL':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance low
+  'RTHO':       { color: '#E91E63', style: 'solid',  width: 2 },   // RTH open (magenta)
+  'VWAP':       { color: '#DAA520', style: 'solid',  width: 2 },   // VWAP close (goldenrod)
+  'HVN1':       { color: '#B39DDB', style: 'dotted', width: 1 },   // 2nd high-volume node (light purple)
+  'HVN2':       { color: '#9575CD', style: 'dotted', width: 1 },   // 3rd high-volume node (med purple)
+  'LVN↑':       { color: '#777777', style: 'dotted', width: 1 },   // low-vol node above POC (grey)
+  'LVN↓':       { color: '#777777', style: 'dotted', width: 1 },   // low-vol node below POC
+  'WkH':        { color: '#00BFFF', style: 'large-dashed', width: 3 }, // rolling 5d high (bright cyan)
+  'WkL':        { color: '#FF4500', style: 'large-dashed', width: 3 }, // rolling 5d low (orange-red)
+  'nPOC':       { color: '#BC8F8F', style: 'dotted', width: 2 },   // naked POC (rosy brown)
 };
 
 /** Lookup the canonical style for a level label. Returns undefined if unknown. */

@@ -35,8 +35,24 @@ const LEVELS_PATH_BY_SYMBOL: Record<string, string> = {
   ES: path.resolve(__dirname, '../../../daily_levels_es.json'),
 };
 
-const STRUCTURAL_LABELS = ['PDH', 'PDL', 'PDC', 'ONH', 'ONL', 'ONO', 'POC', 'VAH', 'VAL'] as const;
-type StructuralLabel = typeof STRUCTURAL_LABELS[number];
+// Morning labels: derived from PRIOR day's RTH + overnight session.
+// Always written by the 09:23 cron; also re-written to TODAY's entry by --evening
+// for completeness (idempotent). The pre-fill to tomorrow's entry uses the
+// PD-subset (excludes ON*).
+const MORNING_LABELS = ['PDH', 'PDL', 'PDC', 'ONH', 'ONL', 'ONO', 'POC', 'VAH', 'VAL'] as const;
+type MorningLabel = typeof MORNING_LABELS[number];
+
+// Evening labels: derived from TODAY's completed RTH. Only emitted when
+// running with --evening (after 16:00 ET). Backfill mode also uses --evening.
+const EVENING_LABELS = ['IBH', 'IBL', 'RTHO', 'VWAP', 'HVN1', 'HVN2', 'LVN↑', 'LVN↓', 'WkH', 'WkL', 'nPOC'] as const;
+type EveningLabel = typeof EVENING_LABELS[number];
+
+// Subset of MORNING_LABELS used for next-day pre-fill (excludes ON* — overnight
+// data doesn't exist at 17:55 the night before).
+const NEXT_DAY_PREFILL_LABELS = ['PDH', 'PDL', 'PDC', 'POC', 'VAH', 'VAL'] as const;
+
+const ALL_MANAGED_LABELS = [...MORNING_LABELS, ...EVENING_LABELS] as const;
+type ManagedLabel = MorningLabel | EveningLabel;
 
 interface AdditionalLevel {
   price: number;
@@ -107,17 +123,21 @@ function etDateTimeToMs(date: string, hh: number, mm: number): number {
 
 // ---- args ----
 
-function parseArgs(): { date?: string; dryRun: boolean; symbols: string[] } {
+function parseArgs(): { date?: string; dryRun: boolean; symbols: string[]; evening: boolean; prefillNextDay: boolean } {
   const argv = process.argv.slice(2);
   let date: string | undefined;
   let dryRun = false;
+  let evening = false;
+  let prefillNextDay = false;
   let symbols: string[] = ['NQ', 'ES'];   // default: process both
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--date') date = argv[++i];
     else if (argv[i] === '--dry-run') dryRun = true;
+    else if (argv[i] === '--evening') evening = true;
+    else if (argv[i] === '--prefill-next-day') prefillNextDay = true;
     else if (argv[i] === '--symbol') symbols = [argv[++i].toUpperCase()];
   }
-  return { date, dryRun, symbols };
+  return { date, dryRun, symbols, evening, prefillNextDay };
 }
 
 // ---- file I/O (per-symbol) ----
@@ -227,27 +247,153 @@ function computeVolumeProfile(db: Database.Database, priorDay: string, symbol: s
   return { poc: rows[pocIdx].bin, val: rows[low].bin, vah: rows[high].bin };
 }
 
+// ---- evening-mode computations (today's RTH session) ----
+
+// IBH/IBL: high/low of first hour of RTH (09:30-10:30 ET).
+function computeIB(db: Database.Database, day: string, symbol: string):
+  { ibh: number; ibl: number } | null {
+  const start = etDateTimeToMs(day, 9, 30);
+  const end = etDateTimeToMs(day, 10, 30);
+  const row = db.prepare(
+    `SELECT MAX(price) AS hi, MIN(price) AS lo FROM trades WHERE symbol=? AND ts >= ? AND ts < ?`
+  ).get(symbol, start, end) as { hi: number | null; lo: number | null };
+  if (row.hi == null || row.lo == null) return null;
+  return { ibh: row.hi, ibl: row.lo };
+}
+
+// RTHO: first print at/after 09:30 ET.
+function computeRTHOpen(db: Database.Database, day: string, symbol: string): number | null {
+  const start = etDateTimeToMs(day, 9, 30);
+  const end = etDateTimeToMs(day, 16, 0);
+  const row = db.prepare(
+    `SELECT price FROM trades WHERE symbol=? AND ts >= ? AND ts < ? ORDER BY ts ASC LIMIT 1`
+  ).get(symbol, start, end) as { price: number } | undefined;
+  return row?.price ?? null;
+}
+
+// VWAP: volume-weighted average price across RTH session.
+function computeVWAP(db: Database.Database, day: string, symbol: string): number | null {
+  const start = etDateTimeToMs(day, 9, 30);
+  const end = etDateTimeToMs(day, 16, 0);
+  const row = db.prepare(
+    `SELECT SUM(price * size) AS pv, SUM(size) AS v FROM trades WHERE symbol=? AND ts >= ? AND ts < ?`
+  ).get(symbol, start, end) as { pv: number | null; v: number | null };
+  if (!row.pv || !row.v) return null;
+  return row.pv / row.v;
+}
+
+// HVN1/HVN2/LVN↑/LVN↓: from the same RTH volume profile used for POC/VAH/VAL.
+// HVN = 2nd and 3rd highest-volume bins (skipping POC and its 2 immediate neighbors
+// to avoid clustering). LVN↑ = lowest-volume bin between POC and VAH (or VAH+5pt
+// if none). LVN↓ = lowest-volume bin between VAL and POC. Each must be ≥1pt away
+// from POC to be meaningful; otherwise return null for that slot.
+function computeHVNLVN(db: Database.Database, day: string, symbol: string, vp: { poc: number; vah: number; val: number }):
+  { hvn1: number | null; hvn2: number | null; lvnUp: number | null; lvnDown: number | null } {
+  const start = etDateTimeToMs(day, 9, 30);
+  const end = etDateTimeToMs(day, 16, 0);
+  const rows = db.prepare(`
+    SELECT ROUND(price * 4) / 4.0 AS bin, SUM(size) AS vol
+    FROM trades
+    WHERE symbol=? AND ts >= ? AND ts < ?
+    GROUP BY bin
+    ORDER BY bin ASC
+  `).all(symbol, start, end) as Array<{ bin: number; vol: number }>;
+
+  if (rows.length === 0) return { hvn1: null, hvn2: null, lvnUp: null, lvnDown: null };
+
+  // Sort by volume desc, exclude POC ±1pt, pick top 2 → HVN1/HVN2
+  const ranked = [...rows]
+    .filter(r => Math.abs(r.bin - vp.poc) >= 1.0)
+    .sort((a, b) => b.vol - a.vol);
+  const hvn1 = ranked[0]?.bin ?? null;
+  // For HVN2, also exclude HVN1 ±1pt to spread the nodes
+  const hvn2 = ranked.find(r => hvn1 == null || Math.abs(r.bin - hvn1) >= 1.0)?.bin ?? null;
+  const hvn2Final = hvn2 === hvn1 ? null : hvn2;
+
+  // LVN↑: between POC+0.5 and VAH+5pt, pick lowest-volume bin (must be ≥1pt above POC)
+  const upRange = rows.filter(r => r.bin > vp.poc + 0.5 && r.bin <= vp.vah + 5);
+  upRange.sort((a, b) => a.vol - b.vol);
+  const lvnUp = upRange[0] && upRange[0].bin >= vp.poc + 1.0 ? upRange[0].bin : null;
+
+  // LVN↓: between VAL-5pt and POC-0.5, pick lowest-volume bin (must be ≥1pt below POC)
+  const downRange = rows.filter(r => r.bin < vp.poc - 0.5 && r.bin >= vp.val - 5);
+  downRange.sort((a, b) => a.vol - b.vol);
+  const lvnDown = downRange[0] && downRange[0].bin <= vp.poc - 1.0 ? downRange[0].bin : null;
+
+  return { hvn1, hvn2: hvn2Final, lvnUp, lvnDown };
+}
+
+// WkH/WkL: highest high / lowest low across last 5 completed RTH sessions
+// (inclusive of `day` if it has RTH data). Walks back day-by-day, skips weekends
+// and days with <1000 RTH ticks.
+function computeWeekly(db: Database.Database, day: string, symbol: string):
+  { wkh: number; wkl: number } | null {
+  const sessions: { hi: number; lo: number }[] = [];
+  for (let i = 0; sessions.length < 5 && i < 15; i++) {
+    const d = addDays(day, -i);
+    const dow = dayOfWeek(d);
+    if (dow === 0 || dow === 6) continue;
+    const start = etDateTimeToMs(d, 9, 30);
+    const end = etDateTimeToMs(d, 16, 0);
+    const row = db.prepare(
+      `SELECT MAX(price) AS hi, MIN(price) AS lo, COUNT(*) AS n FROM trades WHERE symbol=? AND ts >= ? AND ts < ?`
+    ).get(symbol, start, end) as { hi: number | null; lo: number | null; n: number };
+    if (row.n < 1000 || row.hi == null || row.lo == null) continue;
+    sessions.push({ hi: row.hi, lo: row.lo });
+  }
+  if (sessions.length === 0) return null;
+  return {
+    wkh: Math.max(...sessions.map(s => s.hi)),
+    wkl: Math.min(...sessions.map(s => s.lo)),
+  };
+}
+
+// nPOC: most recent "naked POC" — a POC from a past session whose price has
+// NOT been touched since (price hasn't traded at POC ± 0.25 in any subsequent
+// RTH or overnight). Scans back up to 10 trading days.
+function computeNakedPOC(db: Database.Database, day: string, symbol: string): number | null {
+  for (let i = 1; i <= 10; i++) {
+    const candidate = addDays(day, -i);
+    const dow = dayOfWeek(candidate);
+    if (dow === 0 || dow === 6) continue;
+    const start = etDateTimeToMs(candidate, 9, 30);
+    const end = etDateTimeToMs(candidate, 16, 0);
+    const rows = db.prepare(`
+      SELECT ROUND(price * 4) / 4.0 AS bin, SUM(size) AS vol
+      FROM trades WHERE symbol=? AND ts >= ? AND ts < ?
+      GROUP BY bin
+    `).all(symbol, start, end) as Array<{ bin: number; vol: number }>;
+    if (rows.length === 0) continue;
+    const pocBin = rows.reduce((a, b) => (b.vol > a.vol ? b : a)).bin;
+
+    // Check if price has touched pocBin ± 0.25 in any session AFTER candidate's
+    // RTH close (16:00 ET candidate → 16:00 ET day). If touched, POC is no longer naked.
+    const checkStart = end; // candidate's RTH close
+    const checkEnd = etDateTimeToMs(day, 16, 0);
+    const touched = db.prepare(
+      `SELECT 1 FROM trades WHERE symbol=? AND ts >= ? AND ts < ? AND price >= ? AND price <= ? LIMIT 1`
+    ).get(symbol, checkStart, checkEnd, pocBin - 0.25, pocBin + 0.25);
+    if (!touched) return pocBin;
+  }
+  return null;
+}
+
 // ---- upsert ----
 
 // Pulled from the shared LEVEL_STYLES palette (packages/contracts/src/level-styles.ts)
 // — single source of truth for level colors/widths/styles across the app.
-const STYLES: Record<StructuralLabel, { color: string; style: string; width: number }> = {
-  PDH: LEVEL_STYLES['PDH']!,
-  PDL: LEVEL_STYLES['PDL']!,
-  PDC: LEVEL_STYLES['PDC']!,
-  ONH: LEVEL_STYLES['ONH']!,
-  ONL: LEVEL_STYLES['ONL']!,
-  ONO: LEVEL_STYLES['ONO']!,
-  POC: LEVEL_STYLES['POC']!,
-  VAH: LEVEL_STYLES['VAH']!,
-  VAL: LEVEL_STYLES['VAL']!,
-};
+function styleFor(label: ManagedLabel): { color: string; style: string; width: number } {
+  const s = LEVEL_STYLES[label];
+  if (!s) throw new Error(`No LEVEL_STYLES entry for label '${label}'`);
+  return s;
+}
 
 function upsertLevels(
   file: FileShape,
   today: string,
   symbol: string,
-  computed: Partial<Record<StructuralLabel, number>>,
+  computed: Partial<Record<ManagedLabel, number>>,
+  labelsToRefresh: readonly ManagedLabel[],
 ): RawLevel | null {
   // Auto-create the day entry if absent.
   // - ES: empty stub (no RS framework needed)
@@ -293,15 +439,15 @@ function upsertLevels(
     }
   }
   level.additionalLevels = level.additionalLevels ?? [];
-  // Remove any prior structural labels
-  level.additionalLevels = level.additionalLevels.filter(
-    a => !(STRUCTURAL_LABELS as readonly string[]).includes(a.label),
-  );
+  // Remove any labels we are about to refresh — preserve everything else
+  // (RS framework levels, QQQ/SPY/SPX opens, custom user levels, etc.).
+  const refreshSet = new Set<string>(labelsToRefresh);
+  level.additionalLevels = level.additionalLevels.filter(a => !refreshSet.has(a.label));
   // Add fresh ones
-  for (const label of STRUCTURAL_LABELS) {
+  for (const label of labelsToRefresh) {
     const price = computed[label];
     if (price == null) continue;
-    const sty = STYLES[label];
+    const sty = styleFor(label);
     level.additionalLevels.push({ price, label, ...sty });
   }
   level.additionalLevels.sort((a, b) => b.price - a.price);
@@ -310,11 +456,25 @@ function upsertLevels(
 
 // ---- main ----
 
-function processSymbol(symbol: string, today: string, dryRun: boolean): boolean {
-  console.log(`\n── ${symbol} ──`);
+// Find the NEXT trading day after `day` (skips Sat/Sun).
+function findNextTradingDay(day: string): string {
+  for (let i = 1; i <= 7; i++) {
+    const candidate = addDays(day, i);
+    const dow = dayOfWeek(candidate);
+    if (dow !== 0 && dow !== 6) return candidate;
+  }
+  throw new Error(`No next trading day found within 7 days of ${day}`);
+}
+
+function processSymbol(symbol: string, today: string, dryRun: boolean, evening: boolean, prefillNextDay: boolean): boolean {
+  console.log(`\n── ${symbol}${evening ? ' (evening)' : ''} ──`);
   const db = new Database(TICKS_DB, { readonly: true });
   db.pragma('journal_mode = WAL');
 
+  // Morning mode: PDH/PDL/etc come from prior trading day, ON* from overnight.
+  // Evening mode: same MORNING_LABELS still come from prior day (so today's entry
+  // shows yesterday's reference levels as usual), PLUS evening labels from today's
+  // RTH, PLUS optional next-day pre-fill with today's RTH as that day's PD-set.
   const priorDay = findPriorTradingDay(today, db, symbol);
   if (!priorDay) {
     console.error(`  ${symbol}: no prior trading day with RTH data before ${today}`);
@@ -327,31 +487,57 @@ function processSymbol(symbol: string, today: string, dryRun: boolean): boolean 
   const overnight = computeOvernight(db, priorDay, today, symbol);
   const vp = computeVolumeProfile(db, priorDay, symbol);
 
-  db.close();
-
-  // 2026-06-04: relaxed null check — RTH+VP must succeed (those are the
-  // critical prior-day levels), but overnight may be empty if this runs
-  // right after the close (overnight session starts at 18:00 ET). When
-  // overnight is missing, write partial data; re-running the script after
-  // the overnight session has data will fill ONH/ONL/ONO in.
   if (!rth || !vp) {
     console.error(`  ${symbol}: critical computations returned null.`, { rth: !!rth, overnight: !!overnight, vp: !!vp });
+    db.close();
     return false;
   }
   if (!overnight) {
     console.warn(`  ${symbol}: overnight session has no data yet — writing partial (ONH/ONL/ONO will be filled on re-run).`);
   }
 
-  const computed: Partial<Record<StructuralLabel, number>> = {
+  const morningComputed: Partial<Record<ManagedLabel, number>> = {
     PDH: rth.pdh, PDL: rth.pdl, PDC: rth.pdc,
     ONH: overnight?.onh, ONL: overnight?.onl, ONO: overnight?.ono ?? undefined,
     POC: vp.poc, VAH: vp.vah, VAL: vp.val,
   };
 
-  for (const k of STRUCTURAL_LABELS) {
-    const v = computed[k];
-    console.log(`    ${k.padEnd(4)} ${v ?? '(skip)'}`);
+  for (const k of MORNING_LABELS) {
+    const v = morningComputed[k];
+    console.log(`    ${k.padEnd(5)} ${v ?? '(skip)'}`);
   }
+
+  // ─── Evening labels (computed from TODAY's RTH) ─────────────────────────
+  let eveningComputed: Partial<Record<ManagedLabel, number>> = {};
+  let todayVP: { poc: number; vah: number; val: number } | null = null;
+  if (evening) {
+    const ib = computeIB(db, today, symbol);
+    const rtho = computeRTHOpen(db, today, symbol);
+    const vwap = computeVWAP(db, today, symbol);
+    todayVP = computeVolumeProfile(db, today, symbol);
+    const hvnlvn = todayVP ? computeHVNLVN(db, today, symbol, todayVP) : { hvn1: null, hvn2: null, lvnUp: null, lvnDown: null };
+    const weekly = computeWeekly(db, today, symbol);
+    const nakedPOC = computeNakedPOC(db, today, symbol);
+    eveningComputed = {
+      IBH: ib?.ibh, IBL: ib?.ibl,
+      RTHO: rtho ?? undefined,
+      VWAP: vwap ?? undefined,
+      HVN1: hvnlvn.hvn1 ?? undefined,
+      HVN2: hvnlvn.hvn2 ?? undefined,
+      'LVN↑': hvnlvn.lvnUp ?? undefined,
+      'LVN↓': hvnlvn.lvnDown ?? undefined,
+      WkH: weekly?.wkh, WkL: weekly?.wkl,
+      nPOC: nakedPOC ?? undefined,
+    };
+    console.log(`  ── evening (today=${today}) ──`);
+    for (const k of EVENING_LABELS) {
+      const v = eveningComputed[k];
+      const vs = typeof v === 'number' ? v.toFixed(2) : '(skip)';
+      console.log(`    ${k.padEnd(5)} ${vs}`);
+    }
+  }
+
+  db.close();
 
   if (dryRun) {
     console.log(`  ${symbol}: --dry-run, not writing file.`);
@@ -359,17 +545,44 @@ function processSymbol(symbol: string, today: string, dryRun: boolean): boolean 
   }
 
   const file = loadFile(symbol);
-  const level = upsertLevels(file, today, symbol, computed);
+
+  // 1. Today's entry: refresh MORNING_LABELS (+ EVENING_LABELS if evening mode)
+  const todayRefresh: ManagedLabel[] = [...MORNING_LABELS];
+  const todayComputed: Partial<Record<ManagedLabel, number>> = { ...morningComputed };
+  if (evening) {
+    todayRefresh.push(...EVENING_LABELS);
+    Object.assign(todayComputed, eveningComputed);
+  }
+  const level = upsertLevels(file, today, symbol, todayComputed, todayRefresh);
   if (!level) return false;
+  console.log(`  ${symbol}: wrote ${level.additionalLevels?.length ?? 0} additionalLevels for ${today}`);
+
+  // 2. Next-day pre-fill: PDH/PDL/PDC/POC/VAH/VAL derived from TODAY's RTH
+  if (evening && prefillNextDay && todayVP) {
+    const todayRTH = computePriorDayRTH(new Database(TICKS_DB, { readonly: true }), today, symbol);
+    if (todayRTH) {
+      const nextDay = findNextTradingDay(today);
+      const prefillComputed: Partial<Record<ManagedLabel, number>> = {
+        PDH: todayRTH.pdh, PDL: todayRTH.pdl, PDC: todayRTH.pdc,
+        POC: todayVP.poc, VAH: todayVP.vah, VAL: todayVP.val,
+      };
+      const nextLevel = upsertLevels(file, nextDay, symbol, prefillComputed, NEXT_DAY_PREFILL_LABELS);
+      if (nextLevel) {
+        console.log(`  ${symbol}: pre-filled ${NEXT_DAY_PREFILL_LABELS.length} labels for next day ${nextDay}`);
+      }
+    }
+  }
+
   saveFile(symbol, file);
-  console.log(`  ${symbol}: wrote ${level.additionalLevels?.length ?? 0} additionalLevels to ${LEVELS_PATH_BY_SYMBOL[symbol]}`);
   return true;
 }
 
 function main() {
-  const { date, dryRun, symbols } = parseArgs();
+  const { date, dryRun, symbols, evening, prefillNextDay } = parseArgs();
   const today = date ?? todayInET();
-  console.log(`Computing structural levels for ${today}${dryRun ? ' (dry-run)' : ''}  symbols: ${symbols.join(', ')}`);
+  const flags = [evening ? 'evening' : 'morning', dryRun ? 'dry-run' : null, prefillNextDay ? 'prefill-next-day' : null]
+    .filter(Boolean).join(', ');
+  console.log(`Computing structural levels for ${today}  [${flags}]  symbols: ${symbols.join(', ')}`);
 
   let ok = true;
   for (const sym of symbols) {
@@ -378,7 +591,7 @@ function main() {
       ok = false;
       continue;
     }
-    const success = processSymbol(sym, today, dryRun);
+    const success = processSymbol(sym, today, dryRun, evening, prefillNextDay);
     if (!success) ok = false;
   }
 
