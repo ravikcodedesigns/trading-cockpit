@@ -305,6 +305,15 @@ async function ingestFile(filePath: string): Promise<FileStats> {
         }
         stats.events++;
         opsInBatch += 2;
+        // 2026-06-10: bound the in-memory maps. Without this, orderSeen and
+        // orderSide grow unboundedly over a session (~218M order sends in
+        // a single 47 GB NQ file) and eventually trigger V8's Set/Map size
+        // RangeError. After cancel the order can't receive further events
+        // tied to its order_id (per Bookmap's protocol), so it's safe to
+        // drop from both lookups. Note: cumOrders below comes from
+        // mbo_orders SQL, not orderSeen.size — see line ~377.
+        orderSide.delete(orderId);
+        orderSeen.delete(orderId);
         break;
       }
 
@@ -368,13 +377,17 @@ async function ingestFile(filePath: string): Promise<FileStats> {
 
   // Record the file's progress (upsert with cumulative counts).
   // bytes_at_ingest stores the final processed offset so subsequent runs resume from here.
-  // stats.orders/orphans are pass-local; orderSeen.size is the running cumulative total.
+  // 2026-06-10: cumOrders previously read orderSeen.size, but we now delete
+  // from orderSeen on cancel to bound memory — so read it from the mbo_orders
+  // SQL row count instead. Stats are still pass-local.
   const finalBytes = Math.min(bytesProcessed, sizeBytes);
   const cumEvents  = (prior?.num_events  ?? 0) + stats.events;
   const cumTrades  = (prior?.num_trades  ?? 0) + stats.trades;
   const cumOrphans = (prior?.num_orphans ?? 0) + stats.orphans;
   const cumDepth   = (prior?.num_depth   ?? 0) + stats.depth;
-  const cumOrders  = orderSeen.size;  // total unique orders seen for this symbol
+  const cumOrders  = (db.prepare(
+    `SELECT COUNT(*) AS n FROM mbo_orders WHERE symbol = ?`
+  ).get(symbol) as { n: number }).n;
 
   upsertCaptureRow.run(
     filePath, symbol, alias, date, Date.now(),
