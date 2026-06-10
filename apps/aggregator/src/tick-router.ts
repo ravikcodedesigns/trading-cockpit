@@ -33,6 +33,7 @@ import { config } from './config.js';
 import { logger } from './logger.js';
 import { cvdSession } from './cvd-session.js';
 import { tradeManager } from './trade-manager.js';
+import { shadowTrader } from './shadow-trader.js';
 
 const POLL_INTERVAL_MS = 250;
 
@@ -114,6 +115,14 @@ class TickRouter {
       for (const r of rows) {
         cvdSession.onTick(sym, r.ts, r.size, r.is_bid_aggressor as 0 | 1);
         tradeManager.onTick(sym, r.ts, r.price);
+        // Shadow strategy is purely observational — writes to the shadow_trades
+        // table only. Wrap in try/catch so a bug in shadow code can NEVER halt
+        // the per-tick loop or affect tradeManager/cvdSession.
+        try {
+          shadowTrader.onTick(sym, r.ts, r.price);
+        } catch (err) {
+          logger.warn({ err: String(err), sym, ts: r.ts }, 'shadowTrader.onTick threw — live path unaffected');
+        }
         if (r.ts > maxTs) maxTs = r.ts;
       }
       this.lastSeenTs.set(sym, maxTs);

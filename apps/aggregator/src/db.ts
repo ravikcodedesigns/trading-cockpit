@@ -268,6 +268,43 @@ _db.exec(`
   CREATE INDEX IF NOT EXISTS idx_tradable_symbol_ts     ON tradable_signals(symbol, signal_ts);
   CREATE INDEX IF NOT EXISTS idx_tradable_action        ON tradable_signals(action);
   CREATE INDEX IF NOT EXISTS idx_tradable_symbol_action ON tradable_signals(symbol, action);
+
+  -- shadow_trades: parallel "would-have-fired" trades on the structural-level
+  -- touch strategy (WkH/PDH/onVAL/PML/Bull L/Bear H). Pure observational —
+  -- no live order placement, separate from the V3 pipeline. One row per
+  -- (trading_day × level) that triggered an open; updated on close.
+  --
+  -- Forward-walking validation for the TP=50/SL=20 strategy whose backtest
+  -- showed +$1400 / 52% WR on 12 TEST sessions (n=42 trades). Tiny sample,
+  -- which is why we shadow before risking capital.
+  CREATE TABLE IF NOT EXISTS shadow_trades (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol          TEXT    NOT NULL,
+    trading_day     TEXT    NOT NULL,    -- YYYY-MM-DD ET
+    level_label     TEXT    NOT NULL,    -- 'WkH','PDH','onVAL','PML','Bull L','Bear H'
+    level_price     REAL    NOT NULL,    -- the structural level value at fire
+    classification  TEXT    NOT NULL,    -- 'FADE' | 'BREAKOUT'
+    bucket          TEXT,                -- 'OPEN' | 'MID' | 'CLOSE' (RTH bucket of open)
+    open_ts         INTEGER NOT NULL,
+    open_price      REAL    NOT NULL,
+    direction       TEXT    NOT NULL,    -- 'long' | 'short'
+    approach_dir    TEXT    NOT NULL,    -- 'up' | 'down' (price approach to level)
+    tp_pt           REAL    NOT NULL,
+    sl_pt           REAL    NOT NULL,
+    tp_price        REAL    NOT NULL,
+    sl_price        REAL    NOT NULL,
+    close_ts        INTEGER,             -- null until closed
+    close_price     REAL,
+    close_reason    TEXT,                -- 'TP' | 'SL' | 'EOD'
+    pnl_pts         REAL,
+    pnl_usd         REAL,                -- pnl_pts × $2 (MNQ)
+    duration_ms     INTEGER,
+    created_at      INTEGER NOT NULL,
+    updated_at      INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_shadow_day_label ON shadow_trades(trading_day, level_label);
+  CREATE INDEX IF NOT EXISTS idx_shadow_open_ts   ON shadow_trades(open_ts);
+  CREATE INDEX IF NOT EXISTS idx_shadow_close     ON shadow_trades(close_ts);
 `);
 
 const stmtInsertEvent = _db.prepare(
@@ -712,6 +749,29 @@ export const db = {
       );
     },
   },
+
+  // ── shadow_trades helpers (structural-level shadow strategy) ────────────
+  shadow: {
+    open(o: ShadowOpenInput): number {
+      const now = Date.now();
+      const res = stmtShadowInsert.run(
+        o.symbol, o.trading_day, o.level_label, o.level_price, o.classification, o.bucket,
+        o.open_ts, o.open_price, o.direction, o.approach_dir,
+        o.tp_pt, o.sl_pt, o.tp_price, o.sl_price,
+        now, now,
+      );
+      return Number(res.lastInsertRowid);
+    },
+    close(c: ShadowCloseInput): void {
+      stmtShadowClose.run(
+        c.close_ts, c.close_price, c.close_reason,
+        c.pnl_pts, c.pnl_usd, c.duration_ms, Date.now(), c.id,
+      );
+    },
+    getOpenForDay(symbol: string, tradingDay: string): ShadowOpenRow[] {
+      return stmtShadowGetOpen.all(symbol, tradingDay) as ShadowOpenRow[];
+    },
+  },
 };
 
 // V3 types and prepared statements
@@ -810,5 +870,68 @@ const stmtTradableUpsert = _db.prepare(`
     entry        = excluded.entry,
     evaluated_at = excluded.evaluated_at
 `);
+
+// ── shadow_trades prepared statements ───────────────────────────────────────
+const stmtShadowInsert = _db.prepare(`
+  INSERT INTO shadow_trades (
+    symbol, trading_day, level_label, level_price, classification, bucket,
+    open_ts, open_price, direction, approach_dir,
+    tp_pt, sl_pt, tp_price, sl_price,
+    created_at, updated_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+const stmtShadowClose = _db.prepare(`
+  UPDATE shadow_trades
+     SET close_ts = ?, close_price = ?, close_reason = ?,
+         pnl_pts = ?, pnl_usd = ?, duration_ms = ?, updated_at = ?
+   WHERE id = ?
+`);
+const stmtShadowGetOpen = _db.prepare(`
+  SELECT * FROM shadow_trades
+   WHERE symbol = ? AND trading_day = ? AND close_ts IS NULL
+`);
+
+export interface ShadowOpenInput {
+  symbol: string;
+  trading_day: string;
+  level_label: string;
+  level_price: number;
+  classification: 'FADE' | 'BREAKOUT';
+  bucket: 'OPEN' | 'MID' | 'CLOSE';
+  open_ts: number;
+  open_price: number;
+  direction: 'long' | 'short';
+  approach_dir: 'up' | 'down';
+  tp_pt: number;
+  sl_pt: number;
+  tp_price: number;
+  sl_price: number;
+}
+export interface ShadowCloseInput {
+  id: number;
+  close_ts: number;
+  close_price: number;
+  close_reason: 'TP' | 'SL' | 'EOD';
+  pnl_pts: number;
+  pnl_usd: number;
+  duration_ms: number;
+}
+export interface ShadowOpenRow {
+  id: number;
+  symbol: string;
+  trading_day: string;
+  level_label: string;
+  level_price: number;
+  classification: string;
+  bucket: string | null;
+  open_ts: number;
+  open_price: number;
+  direction: string;
+  approach_dir: string;
+  tp_pt: number;
+  sl_pt: number;
+  tp_price: number;
+  sl_price: number;
+}
 
 logger.info({ path: config.dbPath }, 'database ready');

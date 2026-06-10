@@ -63,6 +63,19 @@ export const LEVEL_STYLES: Record<string, LevelStyle> = {
   'Bear H':     { color: '#D64545', style: 'solid',  width: 2 },
   'Bear L':     { color: '#D64545', style: 'solid',  width: 2 },
 
+  // ─── RTH-context levels (added by morning cron at 09:23) ──────────────
+  //     Derived from prior session + overnight; reference levels for today's RTH.
+  'PMH':        { color: '#FFB347', style: 'dotted', width: 2 },   // pre-market high (light orange)
+  'PML':        { color: '#FFB347', style: 'dotted', width: 2 },   // pre-market low
+  'gnVWAP':     { color: '#D4AC0D', style: 'solid',  width: 2 },   // overnight VWAP (dark goldenrod)
+  'onPOC':      { color: '#C39BD3', style: 'solid',  width: 2 },   // overnight POC (light purple)
+  'onVAH':      { color: '#F7DC6F', style: 'solid',  width: 1 },   // overnight VAH (light beige)
+  'onVAL':      { color: '#B7950B', style: 'solid',  width: 1 },   // overnight VAL (dark beige)
+  'Pivot':      { color: '#FF6F91', style: 'solid',  width: 2 },   // classic floor pivot (bright pink)
+  'R1':         { color: '#FFC1CC', style: 'dotted', width: 2 },   // resistance 1 (pale pink)
+  'S1':         { color: '#FFC1CC', style: 'dotted', width: 2 },   // support 1
+  'Halfback':   { color: '#95A5A6', style: 'dashed', width: 1 },   // 50% of PDH-PDL (medium grey)
+
   // ─── Today's-session levels (added by evening cron at 17:55) ───────────
   'IBH':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance high (soft teal)
   'IBL':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance low

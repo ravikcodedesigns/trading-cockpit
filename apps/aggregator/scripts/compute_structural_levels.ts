@@ -35,11 +35,19 @@ const LEVELS_PATH_BY_SYMBOL: Record<string, string> = {
   ES: path.resolve(__dirname, '../../../daily_levels_es.json'),
 };
 
-// Morning labels: derived from PRIOR day's RTH + overnight session.
-// Always written by the 09:23 cron; also re-written to TODAY's entry by --evening
-// for completeness (idempotent). The pre-fill to tomorrow's entry uses the
-// PD-subset (excludes ON*).
-const MORNING_LABELS = ['PDH', 'PDL', 'PDC', 'ONH', 'ONL', 'ONO', 'POC', 'VAH', 'VAL'] as const;
+// Morning labels: derived from PRIOR day's RTH + overnight session + this morning's
+// pre-market. Always written by the 09:23 cron; also re-written to TODAY's entry
+// by --evening for completeness (idempotent). The pre-fill to tomorrow's entry
+// uses the PD-subset (excludes ON*/PM* and time-of-cron-specific entries).
+const MORNING_LABELS = [
+  // Core: prior day RTH + overnight
+  'PDH', 'PDL', 'PDC', 'ONH', 'ONL', 'ONO', 'POC', 'VAH', 'VAL',
+  // RTH-context (added 2026-06-10): pre-market, overnight VWAP/profile, pivots, halfback
+  'PMH', 'PML',
+  'gnVWAP', 'onPOC', 'onVAH', 'onVAL',
+  'Pivot', 'R1', 'S1',
+  'Halfback',
+] as const;
 type MorningLabel = typeof MORNING_LABELS[number];
 
 // Evening labels: derived from TODAY's completed RTH. Only emitted when
@@ -247,6 +255,80 @@ function computeVolumeProfile(db: Database.Database, priorDay: string, symbol: s
   return { poc: rows[pocIdx].bin, val: rows[low].bin, vah: rows[high].bin };
 }
 
+// ---- RTH-context computations (prior session + overnight + pre-market) ----
+// Added 2026-06-10. All written by the morning cron at 09:23 to today's entry.
+
+// PMH/PML: pre-market high/low. Window = 06:00 → 09:30 ET on `today`.
+// At 09:23 (when the morning cron fires), the window's last 7 min are still
+// in progress — H/L will reflect 06:00-09:23 data. Backfill calls are exact.
+function computePremarket(db: Database.Database, today: string, symbol: string):
+  { pmh: number; pml: number } | null {
+  const start = etDateTimeToMs(today, 6, 0);
+  const end = etDateTimeToMs(today, 9, 30);
+  const row = db.prepare(
+    `SELECT MAX(price) AS hi, MIN(price) AS lo, COUNT(*) AS n FROM trades WHERE symbol=? AND ts >= ? AND ts < ?`
+  ).get(symbol, start, end) as { hi: number | null; lo: number | null; n: number };
+  if (row.n < 100 || row.hi == null || row.lo == null) return null;
+  return { pmh: row.hi, pml: row.lo };
+}
+
+// gnVWAP: VWAP across the overnight Globex session (prior 18:00 → today 09:30).
+function computeOvernightVWAP(db: Database.Database, priorDay: string, today: string, symbol: string): number | null {
+  const start = etDateTimeToMs(priorDay, 18, 0);
+  const end = etDateTimeToMs(today, 9, 30);
+  const row = db.prepare(
+    `SELECT SUM(price * size) AS pv, SUM(size) AS v FROM trades WHERE symbol=? AND ts >= ? AND ts < ?`
+  ).get(symbol, start, end) as { pv: number | null; v: number | null };
+  if (!row.pv || !row.v) return null;
+  return row.pv / row.v;
+}
+
+// onPOC/onVAH/onVAL: volume profile across the overnight Globex session.
+// Same algorithm as computeVolumeProfile but with the overnight window.
+function computeOvernightProfile(db: Database.Database, priorDay: string, today: string, symbol: string):
+  { onPoc: number; onVah: number; onVal: number } | null {
+  const start = etDateTimeToMs(priorDay, 18, 0);
+  const end = etDateTimeToMs(today, 9, 30);
+  const rows = db.prepare(`
+    SELECT ROUND(price * 4) / 4.0 AS bin, SUM(size) AS vol
+    FROM trades WHERE symbol=? AND ts >= ? AND ts < ?
+    GROUP BY bin ORDER BY bin ASC
+  `).all(symbol, start, end) as Array<{ bin: number; vol: number }>;
+  if (rows.length === 0) return null;
+  const totalVol = rows.reduce((s, r) => s + r.vol, 0);
+  const targetVol = totalVol * 0.7;
+  let pocIdx = 0;
+  for (let i = 1; i < rows.length; i++) if (rows[i]!.vol > rows[pocIdx]!.vol) pocIdx = i;
+  let low = pocIdx, high = pocIdx, cumVol = rows[pocIdx]!.vol;
+  while (cumVol < targetVol && (low > 0 || high < rows.length - 1)) {
+    const upVol = high < rows.length - 1 ? rows[high + 1]!.vol : -1;
+    const downVol = low > 0 ? rows[low - 1]!.vol : -1;
+    if (upVol >= 0 && upVol >= downVol) { high++; cumVol += rows[high]!.vol; }
+    else if (downVol >= 0) { low--; cumVol += rows[low]!.vol; }
+    else break;
+  }
+  return { onPoc: rows[pocIdx]!.bin, onVal: rows[low]!.bin, onVah: rows[high]!.bin };
+}
+
+// Classic floor pivots from prior day RTH:
+//   Pivot = (PDH + PDL + PDC) / 3
+//   R1 = 2*Pivot - PDL  (resistance 1)
+//   S1 = 2*Pivot - PDH  (support 1)
+function computePivots(rth: { pdh: number; pdl: number; pdc: number }):
+  { pivot: number; r1: number; s1: number } {
+  const pivot = (rth.pdh + rth.pdl + rth.pdc) / 3;
+  return {
+    pivot,
+    r1: 2 * pivot - rth.pdl,
+    s1: 2 * pivot - rth.pdh,
+  };
+}
+
+// Halfback: midpoint of prior day's RTH range. Common mean-reversion target.
+function computeHalfback(rth: { pdh: number; pdl: number }): number {
+  return (rth.pdh + rth.pdl) / 2;
+}
+
 // ---- evening-mode computations (today's RTH session) ----
 
 // IBH/IBL: high/low of first hour of RTH (09:30-10:30 ET).
@@ -323,13 +405,17 @@ function computeHVNLVN(db: Database.Database, day: string, symbol: string, vp: {
   return { hvn1, hvn2: hvn2Final, lvnUp, lvnDown };
 }
 
-// WkH/WkL: highest high / lowest low across last 5 completed RTH sessions
-// (inclusive of `day` if it has RTH data). Walks back day-by-day, skips weekends
-// and days with <1000 RTH ticks.
+// WkH/WkL: highest high / lowest low across last 5 PRIOR completed RTH sessions
+// (EXCLUDES `day` itself — i starts at 1). This makes WkH a clean prior-only
+// reference level: useful as a forward-looking magnet for today's RTH without
+// introducing look-ahead in backtests. Previously included today's RTH in the
+// window which made WkH tautologically "touched" most days (its value
+// incorporated today's high). Walks back day-by-day, skips weekends and
+// sub-1000-tick days.
 function computeWeekly(db: Database.Database, day: string, symbol: string):
   { wkh: number; wkl: number } | null {
   const sessions: { hi: number; lo: number }[] = [];
-  for (let i = 0; sessions.length < 5 && i < 15; i++) {
+  for (let i = 1; sessions.length < 5 && i < 15; i++) {
     const d = addDays(day, -i);
     const dow = dayOfWeek(d);
     if (dow === 0 || dow === 6) continue;
@@ -496,15 +582,28 @@ function processSymbol(symbol: string, today: string, dryRun: boolean, evening: 
     console.warn(`  ${symbol}: overnight session has no data yet — writing partial (ONH/ONL/ONO will be filled on re-run).`);
   }
 
+  // ── RTH-context additions (2026-06-10) ────────────────────────────────
+  const pm = computePremarket(db, today, symbol);
+  const gnVwap = computeOvernightVWAP(db, priorDay, today, symbol);
+  const onProf = computeOvernightProfile(db, priorDay, today, symbol);
+  const pivots = computePivots(rth);
+  const halfback = computeHalfback(rth);
+
   const morningComputed: Partial<Record<ManagedLabel, number>> = {
     PDH: rth.pdh, PDL: rth.pdl, PDC: rth.pdc,
     ONH: overnight?.onh, ONL: overnight?.onl, ONO: overnight?.ono ?? undefined,
     POC: vp.poc, VAH: vp.vah, VAL: vp.val,
+    PMH: pm?.pmh, PML: pm?.pml,
+    gnVWAP: gnVwap ?? undefined,
+    onPOC: onProf?.onPoc, onVAH: onProf?.onVah, onVAL: onProf?.onVal,
+    Pivot: pivots.pivot, R1: pivots.r1, S1: pivots.s1,
+    Halfback: halfback,
   };
 
   for (const k of MORNING_LABELS) {
     const v = morningComputed[k];
-    console.log(`    ${k.padEnd(5)} ${v ?? '(skip)'}`);
+    const vs = typeof v === 'number' ? v.toFixed(2) : '(skip)';
+    console.log(`    ${k.padEnd(8)} ${vs}`);
   }
 
   // ─── Evening labels (computed from TODAY's RTH) ─────────────────────────
