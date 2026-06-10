@@ -351,7 +351,18 @@ export class TradovateClient {
         logger.warn('tradovate WS closed — will reconnect in 5s');
         this.wsReady = false;
         if (this.wsHeartbeatTimer) clearInterval(this.wsHeartbeatTimer);
-        setTimeout(() => this.connectWebSocket().catch(e => logger.error({ e }, 'WS reconnect failed')), 5_000);
+        // Refresh access token before reconnecting. Without this, an expired
+        // or server-invalidated token causes Tradovate to silently close every
+        // reconnect attempt — a hard loop with no way out. ensureAuth() no-ops
+        // when the cached token is still valid, so this is cheap.
+        setTimeout(async () => {
+          try {
+            await this.ensureAuth();
+            await this.connectWebSocket();
+          } catch (e) {
+            logger.error({ e }, 'WS reconnect failed');
+          }
+        }, 5_000);
       });
     });
 

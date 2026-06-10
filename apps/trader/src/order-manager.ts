@@ -2,7 +2,7 @@ import { config, signalParams } from './config.js';
 import { posDb } from './db.js';
 import { createHaltFile } from './risk-guard.js';
 import { logger } from './logger.js';
-import { discord } from './discord.js';
+import { notify } from './notify.js';
 import type { TradovateClient } from './broker/tradovate.js';
 import type { ConfluenceSignal } from '@trading/contracts';
 import type { TradeCloseEvent } from './signal-gate.js';
@@ -125,7 +125,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
     logger.info({ posId, fillPrice, slPrice, tpPrice, slOrderId, tpOrderId }, 'bracket live');
 
     // Discord OPEN notification
-    discord.open({
+    notify.open({
       ruleId, direction, symbol: contractRoot,
       entry: fillPrice, tp: tpPrice, sl: slPrice,
       pointValue, qty: config.qty,
@@ -135,7 +135,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
     monitorBracket(broker, posId, entryOrderId, slOrderId, tpOrderId, fillPrice, contractName, closeAction, pointValue, params, ruleId, direction, contractRoot);
   } catch (err: any) {
     logger.error({ posId, entryFilled, entryFillPrice, err: err?.message }, 'order flow failed');
-    discord.reject({ ruleId, direction, symbol: contractRoot, reason: err?.message ?? String(err) });
+    notify.reject({ ruleId, direction, symbol: contractRoot, reason: err?.message ?? String(err) });
 
     // If we got the entry fill but never attached the bracket — position is
     // naked. Record the fill price (so position-watcher can compute PnL when
@@ -144,7 +144,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
       posDb.setErrorWithFill(posId, entryFillPrice);
       logger.error({ posId, entryFillPrice }, 'UNPROTECTED POSITION — halting trader');
       createHaltFile(`unprotected position id=${posId} symbol=${symbol} fillPrice=${entryFillPrice}`);
-      discord.halt(`unprotected position posId=${posId} symbol=${symbol} fill=${entryFillPrice} — FLATTEN MANUALLY then clear /tmp/trader.halt`);
+      notify.halt(`unprotected position posId=${posId} symbol=${symbol} fill=${entryFillPrice} — FLATTEN MANUALLY then clear /tmp/trader.halt`);
     } else {
       // No fill yet (e.g. placeMarketOrder threw, or waitForFill timed out).
       // Mark plain 'error' so position-watcher ignores it.
@@ -197,7 +197,7 @@ function monitorBracket(
     posDb.setClosed(posId, status_, exitPrice, reason, pnlPts, pnlUsd);
     logger.info({ posId, reason, exitPrice, pnlPts, pnlUsd }, 'position closed');
 
-    discord.close({
+    notify.close({
       reason: isSL ? 'SL_HIT' : 'TP_HIT',
       ruleId, direction, symbol: contractRoot,
       exitPx: exitPrice, pnlPts, pnlUsd,
@@ -291,29 +291,78 @@ export async function handleV3Close(broker: TradovateClient, evt: TradeCloseEven
   for (const pos of openPos) {
     logger.info({ posId: pos.id, symbol, reason: evt.reason, exitPxHint: evt.exitPx }, 'V3 close: starting flatten sequence');
 
-    // 1+2. Cancel SL and TP (race-safe: do these before placing market order)
-    if (pos.sl_order_id) {
+    // Race-safe close (2026-06-10): the SL/TP brackets sit on Tradovate as
+    // real working orders. When price crosses an SL level, Tradovate fires
+    // its Stop server-side BEFORE our pipeline emits trade-close. By the
+    // time we call cancelOrder, the SL is already Filled — and the
+    // subsequent market flatten over-shoots, opening an opposite position.
+    //
+    // Fix: query each bracket's status FIRST. If Filled, the position is
+    // already flat; record that fill price and skip the market order.
+    // Otherwise cancel + proceed with market as before.
+    //
+    // Bug observed at 11:15:05 ET — NQ long SL filled on broker; trader's
+    // redundant market sell opened a -1 short Ravi had to flatten manually.
+    let brokerFillPx: number | null = null;
+    let brokerFilledSide: 'SL' | 'TP' | null = null;
+
+    // Parallelize SL/TP status queries — they're independent REST GETs.
+    // Cuts the added latency from ~2× round-trip (sequential) to ~1× (concurrent).
+    const [slStatus, tpStatus] = await Promise.all([
+      pos.sl_order_id
+        ? broker.getOrderStatus(parseInt(pos.sl_order_id, 10)).catch(err => {
+            logger.warn({ posId: pos.id, slOrderId: pos.sl_order_id, err }, 'V3 close: SL status query failed');
+            return null;
+          })
+        : Promise.resolve(null),
+      pos.tp_order_id
+        ? broker.getOrderStatus(parseInt(pos.tp_order_id, 10)).catch(err => {
+            logger.warn({ posId: pos.id, tpOrderId: pos.tp_order_id, err }, 'V3 close: TP status query failed');
+            return null;
+          })
+        : Promise.resolve(null),
+    ]);
+
+    if (slStatus?.status === 'Filled') {
+      brokerFillPx = slStatus.avgPx ?? null;
+      brokerFilledSide = 'SL';
+      logger.info({ posId: pos.id, slOrderId: pos.sl_order_id, fillPx: slStatus.avgPx }, 'V3 close: SL already filled on broker');
+    } else if (pos.sl_order_id) {
       try { await broker.cancelOrder(parseInt(pos.sl_order_id, 10)); }
       catch (err) { logger.warn({ posId: pos.id, slOrderId: pos.sl_order_id, err }, 'V3 close: SL cancel failed (already gone?)'); }
     }
-    if (pos.tp_order_id) {
+
+    if (tpStatus?.status === 'Filled') {
+      if (brokerFilledSide == null) {
+        brokerFillPx = tpStatus.avgPx ?? null;
+        brokerFilledSide = 'TP';
+      }
+      logger.info({ posId: pos.id, tpOrderId: pos.tp_order_id, fillPx: tpStatus.avgPx }, 'V3 close: TP already filled on broker');
+    } else if (pos.tp_order_id) {
       try { await broker.cancelOrder(parseInt(pos.tp_order_id, 10)); }
       catch (err) { logger.warn({ posId: pos.id, tpOrderId: pos.tp_order_id, err }, 'V3 close: TP cancel failed (already gone?)'); }
     }
 
-    // 3. Place market order to flatten
-    let exitFill: number | null = null;
-    try {
-      const closeOrderId = await broker.placeMarketOrder({ contractName, action: closeAction, qty: pos.qty });
-      logger.info({ posId: pos.id, closeOrderId }, 'V3 close: market order placed, waiting for fill');
+    // 3. Place market order to flatten — ONLY if no bracket already filled.
+    //    If a bracket DID fill, the position is flat; skipping the market is
+    //    what prevents the over-shoot bug.
+    let exitFill: number | null = brokerFillPx;
+    if (brokerFilledSide == null) {
+      try {
+        const closeOrderId = await broker.placeMarketOrder({ contractName, action: closeAction, qty: pos.qty });
+        logger.info({ posId: pos.id, closeOrderId }, 'V3 close: market order placed, waiting for fill');
 
-      // 4. Wait for fill confirmation
-      exitFill = await broker.waitForFill(closeOrderId, 15_000);
-    } catch (err: any) {
-      logger.error({ posId: pos.id, err: err?.message }, 'V3 close: market flatten failed — position MAY still be open');
-      createHaltFile(`V3 close failed posId=${pos.id} symbol=${symbol} err=${err?.message ?? err}`);
-      discord.halt(`V3 close flatten failed posId=${pos.id} symbol=${symbol} err=${err?.message ?? err}`);
-      continue;
+        // 4. Wait for fill confirmation
+        exitFill = await broker.waitForFill(closeOrderId, 15_000);
+      } catch (err: any) {
+        logger.error({ posId: pos.id, err: err?.message }, 'V3 close: market flatten failed — position MAY still be open');
+        createHaltFile(`V3 close failed posId=${pos.id} symbol=${symbol} err=${err?.message ?? err}`);
+        notify.halt(`V3 close flatten failed posId=${pos.id} symbol=${symbol} err=${err?.message ?? err}`);
+        continue;
+      }
+    } else {
+      logger.info({ posId: pos.id, brokerFilledSide, brokerFillPx },
+        'V3 close: skipped redundant market flatten — broker bracket already filled, position is flat');
     }
 
     // 5. Update local DB
@@ -327,7 +376,7 @@ export async function handleV3Close(broker: TradovateClient, evt: TradeCloseEven
     posDb.setClosed(pos.id, status, exitPx, evt.reason, pnlPts, pnlUsd);
     logger.info({ posId: pos.id, reason: evt.reason, exitPx, pnlPts, pnlUsd }, 'V3 close: position flattened + recorded');
 
-    discord.close({
+    notify.close({
       reason: evt.reason,
       ruleId: pos.rule_id, direction, symbol: contractRoot,
       exitPx, pnlPts, pnlUsd,
