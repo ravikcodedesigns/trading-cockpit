@@ -31,14 +31,28 @@ export function KillSwitch() {
       const ok = window.confirm('Halt the trader? All new signals will be blocked until you re-enable.');
       if (!ok) return;
     }
+    const prevState = state;
+    // Optimistic flip — UI updates instantly; reverted below if the API call fails.
+    setState(prevState.halted
+      ? { halted: false, reason: null }
+      : { halted: true, reason: 'cockpit kill-switch button' });
     setBusy(true);
     try {
-      const res = await fetch('/trader/halt', {
-        method: state.halted ? 'DELETE' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: state.halted ? undefined : JSON.stringify({ reason: 'cockpit kill-switch button' }),
-      });
-      if (res.ok) setState(await res.json());
+      const res = await fetch('/trader/halt', prevState.halted
+        ? { method: 'DELETE' }
+        : {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason: 'cockpit kill-switch button' }),
+          });
+      if (res.ok) {
+        const data = await res.json();
+        setState({ halted: !!data.halted, reason: data.reason ?? null });
+      } else {
+        setState(prevState);
+      }
+    } catch {
+      setState(prevState);
     } finally {
       setBusy(false);
     }

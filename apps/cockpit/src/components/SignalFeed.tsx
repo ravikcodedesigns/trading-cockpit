@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../lib/ws';
-import type { AggregatorEvent, ConfluenceSignal, RSTier } from '@trading/contracts';
+import type { ConfluenceSignal, RSTier } from '@trading/contracts';
 
 // ── RS visual helpers ──────────────────────────────────────────────────────────
 
@@ -186,71 +186,9 @@ function SignalCard({ sig }: { sig: ConfluenceSignal }) {
   );
 }
 
-// ── Event log helper ───────────────────────────────────────────────────────────
-
-function eventLabel(e: AggregatorEvent): { tag: string; detail: string; tone: string } {
-  if (e.source === 'bookmap' && e.type === 'absorption') {
-    return {
-      tag: `ABS ${e.side.toUpperCase()}`,
-      detail: `${e.symbol} @ ${e.price} · ${e.size} contracts · ${e.durationMs}ms`,
-      tone: e.side === 'bid' ? 'var(--long)' : 'var(--short)',
-    };
-  }
-  if (e.source === 'bookmap' && e.type === 'iceberg') {
-    return {
-      tag: `ICE ${e.side.toUpperCase()}`,
-      detail: `${e.symbol} @ ${e.price} · ~${e.estimatedTotalSize}`,
-      tone: 'var(--accent)',
-    };
-  }
-  if (e.source === 'bookmap' && e.type === 'heartbeat') {
-    return { tag: 'HB', detail: 'bookmap', tone: 'var(--text-2)' };
-  }
-  if (e.source === 'bookmap' && e.type === 'bar') {
-    return {
-      tag: 'BAR',
-      detail: `${e.symbol} ${e.close} · vol ${e.volume}`,
-      tone: 'var(--text-2)',
-    };
-  }
-  if (e.source === 'bookmap' && e.type === 'sweep') {
-    const arrow = e.direction === 'long' ? '↑' : '↓';
-    return {
-      tag: `SWEEP ${arrow}`,
-      detail: `${e.symbol} · ${e.levels} lvls · ${e.volume} ct · ${e.durationMs}ms · ${e.startPrice}→${e.endPrice}`,
-      tone: e.direction === 'long' ? 'var(--long)' : 'var(--short)',
-    };
-  }
-  if (e.source === 'bookmap' && e.type === 'delta_divergence') {
-    const arrow = e.direction === 'bullish' ? '↑' : '↓';
-    return {
-      tag: `DIV ${arrow}`,
-      detail: `${e.symbol} · ${e.priorPrice}→${e.currentPrice} · Δ ${e.priorDelta}→${e.currentDelta} (diff ${e.deltaDiff}) · mag ${e.magnitude}`,
-      tone: e.direction === 'bullish' ? 'var(--long)' : 'var(--short)',
-    };
-  }
-  if (e.source === 'flashalpha' && e.type === 'snapshot') {
-    return {
-      tag: 'GEX',
-      detail: `${e.symbol} · ${e.gammaRegime} · 0γ ${e.zeroGamma}`,
-      tone: 'var(--accent)',
-    };
-  }
-  if (e.source === 'levels' && e.type === 'daily') {
-    return { tag: 'LVL', detail: `${e.symbol} loaded`, tone: 'var(--text-1)' };
-  }
-  if (e.source === 'tradovate' && e.type === 'tick') {
-    return { tag: 'TICK', detail: `${e.symbol} ${e.price}`, tone: 'var(--text-2)' };
-  }
-  if ((e.source === 'rules' || e.source === 'rules-v2') && e.type === 'confluence') {
-    return {
-      tag: `SIG ${e.direction.toUpperCase()}`,
-      detail: `${e.ruleId} · score ${e.score}`,
-      tone: e.direction === 'long' ? 'var(--long)' : 'var(--short)',
-    };
-  }
-  return { tag: e.type.toUpperCase(), detail: e.source, tone: 'var(--text-2)' };
-}
+// (Event log panel removed 2026-06-08 — heartbeat + bar events dominated, and
+// the actually-interesting events were already covered by chart markers and
+// Pushover. Reclaimed panel space went to the signals list.)
 
 // ── Test signal injection ──────────────────────────────────────────────────────
 
@@ -269,14 +207,9 @@ function fmtTime(ts: number) {
 }
 
 export function SignalFeed() {
-  const recentEvents   = useStore((s) => s.recentEvents);
   const recentSignals  = useStore((s) => s.recentSignals);
   const selectedSymbol = useStore((s) => s.selectedSymbol);
 
-  const filteredEvents = useMemo(
-    () => recentEvents.filter((e) => !('symbol' in e) || !e.symbol || e.symbol === selectedSymbol).slice(-100).reverse(),
-    [recentEvents, selectedSymbol]
-  );
   const filteredSignals = useMemo(
     // 2026-06-04: hide wall-broken-fade from the panel (user request, live trading).
     () => recentSignals.filter((s) => s.symbol === selectedSymbol && (s as any).ruleId !== 'wall-broken-fade'),
@@ -325,37 +258,13 @@ export function SignalFeed() {
             }}>D</button>
         </div>
       </div>
-      <div style={{ padding: 8, maxHeight: '40%', overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
         {filteredSignals.length === 0 && (
           <div style={{ padding: '12px 4px', color: 'var(--text-2)', fontSize: 11 }}>
             no signals yet — observe-only mode
           </div>
         )}
         {filteredSignals.map((s, i) => <SignalCard key={`${s.ts}-${i}`} sig={s} />)}
-      </div>
-
-      <div style={{
-        padding: '10px 12px 6px',
-        borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-        fontSize: 11, letterSpacing: 1, color: 'var(--text-2)', textTransform: 'uppercase',
-      }}>
-        Event log
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
-        {filteredEvents.map((e, i) => {
-          const { tag, detail, tone } = eventLabel(e);
-          return (
-            <div key={`${e.ts}-${i}`} style={{
-              display: 'grid', gridTemplateColumns: '64px 56px 1fr',
-              gap: 8, padding: '3px 12px', fontSize: 11,
-              borderBottom: '1px solid var(--bg-2)', alignItems: 'baseline',
-            }}>
-              <span className="mono" style={{ color: 'var(--text-2)' }}>{fmtTime(e.ts)}</span>
-              <span style={{ color: tone, fontWeight: 500 }}>{tag}</span>
-              <span style={{ color: 'var(--text-1)' }}>{detail}</span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );

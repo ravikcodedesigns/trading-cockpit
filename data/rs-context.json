@@ -1,18 +1,34 @@
 {
   "greaterMarket": "bear",
-  "ddRatio": 0.6,
-  "lmCode": "BrLU",
-  "mhpResilience": 11.9,
-  "hpResilience": -39.3,
-  "redistResilience": -12.2,
-  "resilience": -12.2,
-  "vx": 20.62,
+  "ddRatio": 0.42,
+  "lmCode": "BLU",
+  "mhpResilience": -17.7,
+  "hpResilience": -78,
+  "redistResilience": -15.8,
+  "resilience": -15.8,
+  "vx": 19.51,
   "bbb": 18.97,
-  "vvix": 99.28,
-  "setAt": "2026-06-05T19:59:27.195Z",
-  "tradingDay": "2026-06-05",
+  "vvix": 101.89,
+  "setAt": "2026-06-11T19:57:31.598Z",
+  "tradingDay": "2026-06-11",
   "vxAboveBBB": true,
-  "vvixElevated": false,
+  "vvixElevated": true,
   "vvixGolden": false,
-  "isRational": false
+  "isRational": false,
+  "bySymbol": {
+    "NQ": {
+      "mhpResilience": -17.7,
+      "hpResilience": -78,
+      "redistResilience": -15.8,
+      "resilience": -15.8,
+      "lmCode": "BLU"
+    },
+    "ES": {
+      "mhpResilience": -17.7,
+      "hpResilience": -78,
+      "redistResilience": -15.8,
+      "resilience": -15.8,
+      "lmCode": "BrLUf"
+    }
+  }
 }

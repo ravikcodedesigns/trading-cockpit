@@ -30,12 +30,18 @@ function resColor(v: number): string {
 
 const POLL_MS = 30_000;
 
-export function RSContextBar() {
+interface Props {
+  /** Symbol to fetch per-symbol resilience for (NQ / ES). Omit for global defaults. */
+  symbol?: string;
+}
+
+export function RSContextBar({ symbol }: Props = {}) {
   const [ctx, setCtx] = useState<RSContext | null>(null);
 
   useEffect(() => {
+    const url = symbol ? `/context/rs?symbol=${encodeURIComponent(symbol)}` : '/context/rs';
     const fetch_ = () =>
-      fetch('/context/rs')
+      fetch(url)
         .then(r => r.ok ? r.json() : null)
         .then(data => { if (data) setCtx(data as RSContext); })
         .catch(() => {});
@@ -43,7 +49,7 @@ export function RSContextBar() {
     fetch_();
     const id = setInterval(fetch_, POLL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [symbol]);
 
   if (!ctx) return null;
 

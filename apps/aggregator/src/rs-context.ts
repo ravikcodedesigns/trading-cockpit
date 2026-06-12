@@ -17,16 +17,25 @@ const CONTEXT_PATH = path.resolve(__dirname, '../../../data/rs-context.json');
 export type GreaterMarket = 'bull' | 'bear' | 'neutral';
 export type Resilience = number; // actual float from RS platform (e.g. -11.3, +55.7). Sign is all that matters for direction.
 
-export interface RSContext {
+/** The four resilience readings — same shape per symbol, also at top-level for back-compat. */
+export interface ResilienceSet {
+  mhpResilience: Resilience;        // orange — MHP resilience. tiebreaker at MHP. >0 = 90% bounce, <0 = ~73%
+  hpResilience: Resilience;         // cyan   — HP/weekly resilience. tiebreaker at HP.
+  redistResilience: Resilience;     // white  — half-gap/redistribution resilience. only valid inside redist zone.
+  resilience: Resilience;           // kept for backward compat — mirrors redistResilience
+}
+
+export interface RSContext extends ResilienceSet {
   // Greater market (3 indicators: DD ratio + SPY vs MHP + Monthly Maps)
   greaterMarket: GreaterMarket;    // 'bull' | 'bear' | 'neutral'
   ddRatio: number;                  // 0-1, >0.5 = bullish
   lmCode?: string;                  // LM code for the day: BLU / BLD / BSD / BrD etc.
-  // Three resilience readings — each is a tiebreaker at its respective level
-  mhpResilience: Resilience;        // orange — MHP resilience. tiebreaker at MHP. >0 = 90% bounce, <0 = ~73%
-  hpResilience: Resilience;         // blue   — HP/weekly resilience. tiebreaker at HP.
-  redistResilience: Resilience;     // white  — half-gap/redistribution resilience. only valid inside redist zone.
-  resilience: Resilience;           // kept for backward compat — mirrors redistResilience
+  // Top-level resilience fields (mhpResilience/hpResilience/redistResilience/resilience)
+  // are inherited from ResilienceSet and act as the GLOBAL / default values.
+  // Per-symbol overrides live in `bySymbol` below — when present, getContext(symbol)
+  // overlays them on top of the flat fields. Callers that don't pass a symbol still
+  // see the global (= default-symbol) values unchanged.
+  bySymbol?: Record<string, ResilienceSet>;
   // Volatility environment
   vx: number;                       // /VX futures price
   bbb: number;                      // contango/backwardation midpoint (monthly, set Tuesday before VIX OPEX)
@@ -102,8 +111,23 @@ export function saveContext(updates: Partial<Omit<RSContext, 'vxAboveBBB' | 'vvi
   return _context;
 }
 
-export function getContext(): RSContext {
-  return _context;
+/**
+ * Returns the RS context. If `symbol` is provided and bySymbol[symbol] exists,
+ * the per-symbol resilience values are overlaid on top of the flat fields.
+ * Otherwise (no symbol, or symbol not in bySymbol), the flat-field defaults are
+ * returned — matching pre-bySymbol behavior, so existing callers don't break.
+ */
+export function getContext(symbol?: string): RSContext {
+  if (!symbol) return _context;
+  const overlay = _context.bySymbol?.[symbol];
+  if (!overlay) return _context;
+  return {
+    ..._context,
+    mhpResilience:    overlay.mhpResilience,
+    hpResilience:     overlay.hpResilience,
+    redistResilience: overlay.redistResilience,
+    resilience:       overlay.resilience,
+  };
 }
 
 // Watch the context file for external changes (CLI writes) and reload.
