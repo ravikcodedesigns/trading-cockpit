@@ -23,6 +23,12 @@ export default defineConfig({
       '/levels':     { target: AGG, changeOrigin: true },
       '/calendar':   { target: AGG, changeOrigin: true },
       '/trader':     { target: AGG, changeOrigin: true },
+      // /signals/marks for chart-marker timestamps, /signals/<other> for
+      // future fetches. Without this, requests fall through to Vite's SPA
+      // fallback which returns the index HTML — fetch() resolves with a 200
+      // text/html body, JSON.parse() throws, and the marks-fetcher swallows
+      // the error silently so qualifiedTsRef stays empty.
+      '/signals':    { target: AGG, changeOrigin: true },
     },
   },
 });

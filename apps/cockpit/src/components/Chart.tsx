@@ -50,6 +50,59 @@ function gapsToFetch(ranges: Range[], from: number, to: number): Range[] {
   return gaps;
 }
 
+// ── Bar-cache persistence (localStorage) ───────────────────────────────────
+// Keeps the last-fetched bar window across page reloads so a refresh, or a
+// cold-boot on /es, doesn't wait on a full /history/bars round-trip before
+// the chart paints. On hit, the in-session symbol toggle (NQ↔ES) and the
+// browser refresh both skip the bulk fetch and only backfill the gap
+// [lastCachedTs → now]. One key per (symbol, timeframe); stored as a
+// compact tuple array so a week of 1-min bars (~10k rows) fits comfortably
+// in localStorage's 5–10 MB origin quota.
+type CachedBarRow = [t: number, o: number, h: number, l: number, c: number, v: number];
+type BarsCachePayload = { storedAtMs: number; bars: CachedBarRow[] };
+const BARS_CACHE_PREFIX = 'cockpit:bars:v1:';
+const BARS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+function barsCacheKey(symbol: string, tf: number): string {
+  return `${BARS_CACHE_PREFIX}${symbol}:${tf}`;
+}
+
+function loadBarsCache(
+  symbol: string,
+  tf: number,
+): Map<number, { open: number; high: number; low: number; close: number; volume: number }> | null {
+  try {
+    const raw = localStorage.getItem(barsCacheKey(symbol, tf));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BarsCachePayload;
+    if (!parsed?.storedAtMs || Date.now() - parsed.storedAtMs > BARS_CACHE_TTL_MS) return null;
+    const m = new Map<number, { open: number; high: number; low: number; close: number; volume: number }>();
+    for (const [t, o, h, l, c, v] of parsed.bars) {
+      m.set(t, { open: o, high: h, low: l, close: c, volume: v });
+    }
+    return m.size > 0 ? m : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveBarsCache(
+  symbol: string,
+  tf: number,
+  cache: Map<number, { open: number; high: number; low: number; close: number; volume: number }>,
+): void {
+  if (cache.size === 0) return;
+  try {
+    const bars: CachedBarRow[] = [];
+    for (const [t, b] of cache) bars.push([t, b.open, b.high, b.low, b.close, b.volume]);
+    bars.sort((a, b) => a[0] - b[0]);
+    const payload: BarsCachePayload = { storedAtMs: Date.now(), bars };
+    localStorage.setItem(barsCacheKey(symbol, tf), JSON.stringify(payload));
+  } catch {
+    // Quota / serialisation errors — cache write is best-effort.
+  }
+}
+
 // ── Drawing tool types ─────────────────────────────────────────────────────
 type DrawMode = 'line' | 'text' | 'measure' | null;
 type Drawing =
@@ -409,7 +462,13 @@ export function Chart() {
   // drawing overlay (positioned at top-right of each line) so we can control
   // font-size and placement beyond what lightweight-charts' price-axis chip
   // allows.
-  const levelLabelsRef = useRef<Array<{ price: number; label: string; color: string }>>([]);
+  // Per-level badge tracking. startTs/endTs span the level's line segment
+  // (prior-day 18:00 ET → trading-day 16:00 ET). The badge prefers to anchor
+  // to endTs (segment-end), but clamps to the right edge of the visible pane
+  // when endTs scrolls off-screen — so it sticks to the end of the line
+  // wherever the line is still visible. Skipped entirely when the segment
+  // is fully off-screen.
+  const levelLabelsRef = useRef<Array<{ price: number; label: string; color: string; startTs: number; endTs: number }>>([]);
   const flashAlphaLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
   // TP/DD price lines drawn per signal — rebuilt whenever the markers effect runs.
   // Using IPriceLine (attached to the candlestick series) instead of separate
@@ -980,16 +1039,146 @@ export function Chart() {
   }, []);
 
   // Fetch historical bars from the aggregator on mount or symbol change.
-  // The cockpit's in-memory bar history is wiped on browser refresh, but
-  // the aggregator's SQLite has all bars persisted. This call rehydrates
-  // the chart so users don't lose context after every reload.
+  //
+  // Fast-path: if barHistoryRef has data for (selectedSymbol, selectedTimeframe)
+  // — either left over from an in-session toggle to/from this symbol, or just
+  // hydrated from localStorage on cold-boot — we render from cache instantly
+  // and only fetch the gap [lastCachedTs → now] to backfill bars the WS feed
+  // missed while the other symbol was active or the tab was closed.
+  //
+  // Slow-path (cold cache, no localStorage hit): existing bulk fetch of the
+  // last week, then setData + VWAP from the fetch response.
   useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
 
     let cancelled = false;
+
+    // Helper: render the chart from a bar map (sorted entries → setData,
+    // visible-range anchor, VWAP recompute). Shared by the fast and slow paths
+    // — and called twice on the fast path (once from cache, once after backfill).
+    const renderFromCache = (
+      cache: Map<number, { open: number; high: number; low: number; close: number; volume: number }>,
+      anchorVisible: boolean,
+    ) => {
+      const entries = Array.from(cache.entries()).sort((a, b) => a[0] - b[0]);
+      if (entries.length === 0) return;
+      const seriesData = entries.map(([t, b]) => ({
+        time: t as UTCTimestamp,
+        open: b.open, high: b.high, low: b.low, close: b.close,
+      }));
+      // Anchor the visible range BEFORE setData so lightweight-charts skips
+      // its autofit pass (otherwise ~1.5s flicker). Skip on backfill renders
+      // so we don't jump the user's current pan/zoom.
+      if (anchorVisible) {
+        const chart = chartRef.current;
+        if (chart) {
+          const targetBars = Math.min(seriesData.length, Math.floor(240 / selectedTimeframe));
+          const lastLogical = seriesData.length - 1;
+          chart.timeScale().setVisibleLogicalRange({
+            from: lastLogical - targetBars,
+            to:   lastLogical + 5,
+          });
+        }
+      }
+      series.setData(seriesData);
+
+      // Session VWAP — recompute from the cache so it matches what's on screen.
+      // RTH only, volume-weighted (HLC/3), resets per trading day.
+      vwapSessionsRef.current.clear();
+      const sessAcc = new Map<string, { sumPV: number; sumV: number }>();
+      const vwapPoints: { time: UTCTimestamp; value: number }[] = [];
+      for (const [t, b] of entries) {
+        const tsMs = t * 1000;
+        if (!isRTHBar(tsMs)) continue;
+        const vol = b.volume ?? 0;
+        if (vol === 0) continue;
+        const day = tradingDayFor(tsMs);
+        let s = sessAcc.get(day);
+        if (!s) { s = { sumPV: 0, sumV: 0 }; sessAcc.set(day, s); }
+        s.sumPV += ((b.high + b.low + b.close) / 3) * vol;
+        s.sumV  += vol;
+        vwapPoints.push({ time: t as UTCTimestamp, value: s.sumPV / s.sumV });
+        vwapSessionsRef.current.set(day, { sumPV: s.sumPV, sumV: s.sumV, lastBucket: t });
+      }
+      if (vwapSeriesRef.current && vwapPoints.length > 0) {
+        vwapSeriesRef.current.setData(vwapPoints);
+      }
+    };
+
     (async () => {
       try {
+        // ── Fast-path: in-memory cache or localStorage hydration ──────────
+        let cache = barHistoryRef.current[selectedSymbol];
+        let loaded = historyLoadedRef.current[selectedSymbol] === true;
+
+        if (!loaded || !cache || cache.size === 0) {
+          const hydrated = loadBarsCache(selectedSymbol, selectedTimeframe);
+          if (hydrated) {
+            cache = hydrated;
+            barHistoryRef.current[selectedSymbol] = cache;
+            historyLoadedRef.current[selectedSymbol] = true;
+            loaded = true;
+            // Mark the cached range as covered so the dynamic-scroll loader
+            // doesn't re-request it on pan.
+            const ks = Array.from(cache.keys()).sort((a, b) => a - b);
+            const firstMs = ks[0]! * 1000;
+            const lastMs  = ks[ks.length - 1]! * 1000;
+            const rk = `${selectedSymbol}:${selectedTimeframe}`;
+            loadedRangesRef.current[rk] = mergeRange(
+              loadedRangesRef.current[rk] ?? [],
+              firstMs,
+              lastMs,
+            );
+          }
+        }
+
+        if (loaded && cache && cache.size > 0) {
+          renderFromCache(cache, /* anchorVisible= */ true);
+          setHistoryReady((prev) =>
+            prev[selectedSymbol] ? prev : { ...prev, [selectedSymbol]: true },
+          );
+          setBarsVersion(v => v + 1);
+
+          // Backfill the gap between last cached bar and now. Skip if the
+          // gap is smaller than one TF bucket (cache is already current).
+          const ks = Array.from(cache.keys()).sort((a, b) => a - b);
+          const lastMs = ks[ks.length - 1]! * 1000;
+          const nowMs = Date.now();
+          if (nowMs - lastMs > selectedTimeframe * 60_000) {
+            const url = `/history/bars?symbol=${selectedSymbol}&from=${lastMs}&to=${nowMs}&interval=${selectedTimeframe}`;
+            const res = await fetch(url);
+            if (!cancelled && res.ok) {
+              const data = (await res.json()) as {
+                bars: { ts: number; open: number; high: number; low: number; close: number; buyVolume: number; sellVolume: number }[];
+              };
+              let added = false;
+              for (const bar of data.bars) {
+                const t = Math.floor(bar.ts / 1000);
+                if (!cache.has(t)) {
+                  cache.set(t, {
+                    open: bar.open, high: bar.high, low: bar.low, close: bar.close,
+                    volume: (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0),
+                  });
+                  added = true;
+                }
+              }
+              if (added && !cancelled) {
+                renderFromCache(cache, /* anchorVisible= */ false);
+                const rk = `${selectedSymbol}:${selectedTimeframe}`;
+                loadedRangesRef.current[rk] = mergeRange(
+                  loadedRangesRef.current[rk] ?? [],
+                  lastMs,
+                  nowMs,
+                );
+                setBarsVersion(v => v + 1);
+              }
+            }
+          }
+          return;
+        }
+
+        // ── Slow-path: cold cache, do the bulk fetch ──────────────────────
         // Chart history: 1 week (10080 minutes). Reduced from 1 month
         // (43200) on 2026-06-04 — month-of-1m-bars was making the cockpit slow.
         // The dynamic-load effect below fills in older windows on demand when
@@ -1023,50 +1212,8 @@ export function Chart() {
           }
         }
 
-        const seriesData = Array.from(history.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([time, ohlc]) => ({ time: time as UTCTimestamp, open: ohlc.open, high: ohlc.high, low: ohlc.low, close: ohlc.close }));
+        renderFromCache(history, /* anchorVisible= */ true);
 
-        // Anchor the visible range FIRST, then call setData. lightweight-charts
-        // skips its default fitContent autofit if a manual range is already in
-        // place when data arrives. Doing it the other way around (setData →
-        // setVisibleLogicalRange) produces a visible flicker: the autofit pass
-        // renders for ~1.5s before the explicit range catches up.
-        //
-        // The window scales with timeframe so 1m shows ~last 4 hours, 5m ~last
-        // day, 15m ~last 3 days. The user can scroll left freely from here.
-        const chart = chartRef.current;
-        if (chart && seriesData.length > 0) {
-          const targetBars = Math.min(seriesData.length, Math.floor(240 / selectedTimeframe));
-          const lastLogical = seriesData.length - 1;
-          chart.timeScale().setVisibleLogicalRange({
-            from: lastLogical - targetBars,
-            to:   lastLogical + 5,
-          });
-        }
-        series.setData(seriesData);
-
-        // Compute session VWAP from historical bars (resets at RTH 09:30 ET each day).
-        // data.bars is already sorted ascending by ts from the server.
-        vwapSessionsRef.current.clear();
-        const sessAcc = new Map<string, { sumPV: number; sumV: number }>();
-        const vwapPoints: { time: UTCTimestamp; value: number }[] = [];
-        for (const bar of data.bars) {
-          if (!isRTHBar(bar.ts)) continue;
-          const vol = (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0);
-          if (vol === 0) continue;
-          const day = tradingDayFor(bar.ts);
-          let s = sessAcc.get(day);
-          if (!s) { s = { sumPV: 0, sumV: 0 }; sessAcc.set(day, s); }
-          s.sumPV += ((bar.high + bar.low + bar.close) / 3) * vol;
-          s.sumV  += vol;
-          const t = Math.floor(bar.ts / 1000) as UTCTimestamp;
-          vwapPoints.push({ time: t, value: s.sumPV / s.sumV });
-          vwapSessionsRef.current.set(day, { sumPV: s.sumPV, sumV: s.sumV, lastBucket: t as number });
-        }
-        if (vwapSeriesRef.current && vwapPoints.length > 0) {
-          vwapSeriesRef.current.setData(vwapPoints);
-        }
         // History is now in the series — let live-bar updates start calling
         // setData. (Live bars that arrived during the fetch were buffered into
         // barHistoryRef without rendering, so nothing was dropped.)
@@ -1094,6 +1241,28 @@ export function Chart() {
 
     return () => {
       cancelled = true;
+    };
+  }, [selectedSymbol, selectedTimeframe]);
+
+  // Persist the active (symbol, timeframe) bar cache to localStorage so a
+  // page refresh hits the fast-path on next mount. Saves on a 30s cadence
+  // and on tab hide / unload — best-effort, swallows quota errors.
+  useEffect(() => {
+    const save = () => {
+      const cache = barHistoryRef.current[selectedSymbol];
+      if (cache && cache.size > 0 && historyLoadedRef.current[selectedSymbol]) {
+        saveBarsCache(selectedSymbol, selectedTimeframe, cache);
+      }
+    };
+    const interval = window.setInterval(save, 30_000);
+    const onVis = () => { if (document.visibilityState === 'hidden') save(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('beforeunload', save);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('beforeunload', save);
+      save();
     };
   }, [selectedSymbol, selectedTimeframe]);
 
@@ -1317,11 +1486,13 @@ export function Chart() {
       const { start, end } = dayBoundsSeconds(tradingDay);
       const isToday = tradingDay === today;
 
-      // Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) get a custom
-      // SVG badge above the line at the chart's right edge.  RS levels keep
-      // their built-in price-axis chip so the two systems stay visually
-      // distinct.
-      const STRUCTURAL_LABELS = new Set(['PDH','PDL','PDC','ONH','ONL','ONO','POC','VAH','VAL']);
+      // 2026-06-11: every level (every day, every label) now gets a custom
+      // SVG badge anchored to the segment END timestamp (16:00 ET of the
+      // level's trading day). The built-in price-axis chip and inline title
+      // are both disabled — badges are the single source of label rendering.
+      // This way badges scroll with their day's line segment instead of
+      // floating at a fixed pane offset, and past-day labels are visible
+      // when the user scrolls into history.
 
       // addLevelLine consults the standardized LEVEL_STYLES palette
       // (packages/contracts/src/level-styles.ts) before falling back to the
@@ -1334,17 +1505,15 @@ export function Chart() {
         const finalStyle = canonical
           ? (styleMap[canonical.style] ?? style)
           : style;
-        const isStructural = STRUCTURAL_LABELS.has(title);
         const ls = chart.addLineSeries({
           color: finalColor,
           lineWidth: finalWidth,
           lineStyle: finalStyle,
           priceLineVisible: false,
-          // RS levels: show last-value chip on price axis (only for today).
-          // Structural levels: chip disabled — we draw an SVG badge instead.
-          lastValueVisible: isToday && !isStructural,
+          // SVG badge is the only label — disable both price-axis chip and inline title.
+          lastValueVisible: false,
           crosshairMarkerVisible: false,
-          title: isToday ? title : '',  // hover tooltip; only meaningful for today
+          title: '',
           // Exclude level lines from the price scale's autoscale calc. With
           // levels like DD↑ at 30650 and ON MHP at 28713 alongside candles at
           // ~29100, default autoscale stretches the price scale across 2000+
@@ -1359,9 +1528,7 @@ export function Chart() {
           { time: end as UTCTimestamp, value: price },
         ]);
         levelLinesRef.current.push(ls);
-        if (isToday && isStructural) {
-          levelLabelsRef.current.push({ price, label: title, color: finalColor });
-        }
+        levelLabelsRef.current.push({ price, label: title, color: finalColor, startTs: start, endTs: end });
       };
 
       // Pass clean labels (no date suffix). RS structural lines (Bull/Bear/DD/HP)
@@ -1369,13 +1536,26 @@ export function Chart() {
       // framework data (e.g., ES Step 1) render only their additionalLevels.
       // NOTE: the color/style/width args below are now fallbacks — LEVEL_STYLES
       // overrides them when the label matches a known entry.
+      // Bull/Bear zones: when only ONE side of the zone is real (the JSON
+      // stores low === high to signal "single edge, the other side is not
+      // a thing"), draw a SINGLE line labelled with the meaningful side
+      // — Bull = bottom edge, Bear = top edge per Ravi's RS convention.
+      // When low ≠ high, the zone has width and both edges render as before.
       if (dayLevels.bullZone) {
-        addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
-        addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+        if (dayLevels.bullZone.high === dayLevels.bullZone.low) {
+          addLevelLine(dayLevels.bullZone.low, '#2bb673', 'Bull Zone Bottom', LineStyle.Solid, 2);
+        } else {
+          addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
+          addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+        }
       }
       if (dayLevels.bearZone) {
-        addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
-        addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+        if (dayLevels.bearZone.high === dayLevels.bearZone.low) {
+          addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear Zone Top', LineStyle.Solid, 2);
+        } else {
+          addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
+          addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+        }
       }
       if (dayLevels.ddBands) {
         addLevelLine(dayLevels.ddBands.upper, '#9ee04a', 'DD↑', LineStyle.Solid, 2);
@@ -1790,61 +1970,11 @@ export function Chart() {
     const todaySignals = symbolSignals.filter(s => s.ts >= todayRthStart);
     const nowSec = Math.floor(Date.now() / 1000);
 
-    // Clean-flip signals: draw structural SL from payload + TP lines for each recent signal.
-    const todayCleanFlips = todaySignals.filter(s => {
-      const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? '';
-      return ruleId === 'clean-impulse';
-    });
-    for (const sig of todayCleanFlips) {
-      const bucket = bucketSecs(sig.ts);
-      const isRecent = nowSec - bucket < 4 * 3600;
-      if (!isRecent) continue;
-      const stopLevel: number | undefined = (sig as any).stopLevel;
-      const entry: number = (sig as any).entry ?? history.get(bucket)?.close;
-      if (!entry) continue;
-      const isLong = sig.direction?.toLowerCase() === 'long';
-      const sign   = isLong ? 1 : -1;
-      const addLine = (price: number, color: string, title: string, style: LineStyle) => {
-        const pl = series.createPriceLine({
-          price, color, lineWidth: 1, lineStyle: style,
-          axisLabelVisible: true, title,
-        });
-        signalLinesRef.current.push(pl);
-      };
-      if (stopLevel) addLine(stopLevel, '#d64545', 'SL', LineStyle.Solid);
-      addLine(entry + sign * 20, '#2bb673', 'TP1', LineStyle.Dashed);
-      addLine(entry + sign * 40, '#2bb673', 'TP2', LineStyle.SparseDotted);
-    }
-
-    // All other signals: latest one gets generic TP/DD offset lines.
-    const latestOther = todaySignals
-      .filter(s => {
-        const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? '';
-        return ruleId !== 'clean-impulse';
-      })
-      .reduce((a, b) => a && a.ts > b.ts ? a : b, null as typeof todaySignals[0] | null);
-    if (latestOther) {
-      const bucket = bucketSecs(latestOther.ts);
-      const bar = history.get(bucket);
-      if (bar) {
-        const entry  = bar.close;
-        const isLong = latestOther.direction?.toLowerCase() === 'long';
-        const sign   = isLong ? 1 : -1;
-        const isRecent = nowSec - bucket < 4 * 3600;
-        const addPriceLine = (offset: number, color: string, title: string, style: LineStyle) => {
-          const pl = series.createPriceLine({
-            price: entry + sign * offset,
-            color, lineWidth: 1, lineStyle: style,
-            axisLabelVisible: isRecent, title,
-          });
-          signalLinesRef.current.push(pl);
-        };
-        addPriceLine( 20, '#2bb673', 'TP1', LineStyle.Dashed);
-        addPriceLine( 40, '#2bb673', 'TP2', LineStyle.SparseDotted);
-        addPriceLine(-10, '#d64545', 'DD1', LineStyle.Dashed);
-        addPriceLine(-20, '#d64545', 'DD2', LineStyle.SparseDotted);
-      }
-    }
+    // 2026-06-10: removed per-signal SL/TP/DD overlay lines. They were
+    // distracting and no longer carry information not already in the
+    // signal card / trade marker. signalLinesRef still teared down each
+    // run via the loop at the top of this effect — leaving it empty is
+    // fine.
   }, [recentSignals, recentSignals.length, recentEvents, selectedSymbol, barsVersion, regimeCheckpoints]);
 
   // Keep computeCardsRef up-to-date; also fire immediately when inputs change.
@@ -1996,6 +2126,130 @@ export function Chart() {
     const ts = chart.timeScale();
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
+    // Overnight / ETH session shading. Paint a low-alpha tint over the entire
+    // non-RTH stretch in the visible range so RTH (09:30–16:00 ET) stands out
+    // as the clean window. Added FIRST so all other SVG drawings (measure
+    // boxes, level badges, drawings) render on top and stay crisp.
+    //
+    // ONE rect per RTH day, spanning [prior session close → that day's RTH
+    // open]. Anchoring on the RTH day avoids the midnight seam that a
+    // per-calendar-day approach produces (where 16:00→24:00 and 00:00→09:30
+    // are drawn as separate adjacent rects). For Mondays the prior close is
+    // Friday 16:00 ET, which gives a single continuous gray rect across the
+    // weekend.
+    const visRange = ts.getVisibleRange();
+    const paneH = svg.clientHeight || svg.getBoundingClientRect().height;
+    if (visRange && paneH > 0) {
+      const fromSec = Number(visRange.from);
+      const toSec   = Number(visRange.to);
+      const paneW = ts.width();
+      const hourFmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', hour: '2-digit', hour12: false,
+      });
+      // DST-safe ET wall-clock → epoch seconds. Only called with mid-day hours
+      // (9:30 and 16:00), so the cross-midnight wrap in the hourFmt correction
+      // doesn't apply here.
+      const etSec = (yy: number, mm: number, dd: number, h: number, mi: number): number => {
+        const naive = new Date(Date.UTC(yy, mm - 1, dd, h + 4, mi, 0));
+        const nyHour = parseInt(hourFmt.format(naive), 10);
+        return Math.floor((naive.getTime() + (h - nyHour) * 3_600_000) / 1000);
+      };
+      const dateFmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+      });
+      const weekdayFmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', weekday: 'short',
+      });
+
+      // First/last cached bar times for the active symbol. Used to extrapolate
+      // x-coordinates for shade endpoints that fall in the "empty space"
+      // regions of the visible range (right of last bar or left of first bar),
+      // where timeToCoordinate returns null because no bar exists at that
+      // exact time. Without this, scrolling the chart so empty space appears
+      // between the last bar and the right axis caused the ON shade to vanish
+      // even though we were still in the overnight session.
+      const symbolCache = barHistoryRef.current[selectedSymbol];
+      let lastBarTimeSec = -Infinity;
+      let firstBarTimeSec = Infinity;
+      if (symbolCache) {
+        for (const t of symbolCache.keys()) {
+          if (t > lastBarTimeSec)  lastBarTimeSec  = t;
+          if (t < firstBarTimeSec) firstBarTimeSec = t;
+        }
+      }
+      const barSpacing = (ts.options() as { barSpacing?: number }).barSpacing ?? 12;
+      const intervalSec = Math.max(1, parseInt(String(selectedTimeframe), 10) || 1) * 60;
+
+      const timeToX = (timeSec: number): number | null => {
+        const x = ts.timeToCoordinate(timeSec as UTCTimestamp);
+        if (x !== null) return x;
+        // Past the last bar — extrapolate forward from lastBarX using uniform
+        // bar spacing. Clamped to paneW so the shade naturally extends to the
+        // right edge of the empty space.
+        if (lastBarTimeSec > -Infinity && timeSec > lastBarTimeSec) {
+          const lastBarX = ts.timeToCoordinate(lastBarTimeSec as UTCTimestamp);
+          if (lastBarX === null) return null;
+          const dx = (timeSec - lastBarTimeSec) / intervalSec * barSpacing;
+          return Math.min(paneW, lastBarX + dx);
+        }
+        // Before the first bar — extrapolate backward, clamped to 0.
+        if (firstBarTimeSec < Infinity && timeSec < firstBarTimeSec) {
+          const firstBarX = ts.timeToCoordinate(firstBarTimeSec as UTCTimestamp);
+          if (firstBarX === null) return null;
+          const dx = (firstBarTimeSec - timeSec) / intervalSec * barSpacing;
+          return Math.max(0, firstBarX - dx);
+        }
+        return null;
+      };
+
+      const shade = (a: number, b: number) => {
+        const lo = Math.max(a, fromSec);
+        const hi = Math.min(b, toSec);
+        if (lo >= hi) return;
+        const x1 = timeToX(lo);
+        const x2 = timeToX(hi);
+        if (x1 === null || x2 === null) return;
+        const xL = Math.min(x1, x2);
+        const w  = Math.abs(x2 - x1);
+        if (w < 0.5) return;
+        const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        r.setAttribute('x', String(xL));
+        r.setAttribute('y', '0');
+        r.setAttribute('width',  String(w));
+        r.setAttribute('height', String(paneH));
+        r.setAttribute('fill', 'rgba(255, 255, 255, 0.05)');
+        r.setAttribute('pointer-events', 'none');
+        svg.appendChild(r);
+      };
+      // Walk every calendar day touching the visible range. Start 4 days
+      // before fromSec so a Friday→Monday weekend that began before the view
+      // is still covered (Monday's shade goes back to Friday 16:00).
+      const ONE_DAY_MS = 86_400_000;
+      let cursor = (fromSec * 1000) - 4 * ONE_DAY_MS;
+      const stop = (toSec * 1000) + ONE_DAY_MS;
+      while (cursor < stop) {
+        const probe = new Date(cursor);
+        const weekday = weekdayFmt.format(probe);
+        cursor += ONE_DAY_MS;
+        if (weekday === 'Sat' || weekday === 'Sun') continue;
+        const parts = dateFmt.formatToParts(probe);
+        const y = Number(parts.find(p => p.type === 'year')!.value);
+        const m = Number(parts.find(p => p.type === 'month')!.value);
+        const d = Number(parts.find(p => p.type === 'day')!.value);
+        const rthOpen = etSec(y, m, d, 9, 30);
+        // Prior session close: previous calendar day 16:00 ET, except Monday
+        // which steps back to Friday 16:00 so the whole weekend stays shaded.
+        const stepBack = weekday === 'Mon' ? 3 : 1;
+        const priorProbe = new Date(Date.UTC(y, m - 1, d - stepBack, 12, 0, 0));
+        const priorParts = dateFmt.formatToParts(priorProbe);
+        const py = Number(priorParts.find(p => p.type === 'year')!.value);
+        const pm = Number(priorParts.find(p => p.type === 'month')!.value);
+        const pd = Number(priorParts.find(p => p.type === 'day')!.value);
+        const priorClose = etSec(py, pm, pd, 16, 0);
+        shade(priorClose, rthOpen);
+      }
+    }
+
     // Timeframe (1/5/15) used to compute "bars covered" inside measure boxes.
     const tfMin = Math.max(1, parseInt(String(selectedTimeframe), 10) || 1);
 
@@ -2141,45 +2395,92 @@ export function Chart() {
       }
     }
 
-    // Structural level badges: drawn as a filled pill ABOVE each line, pulled
-    // ~80px in from the right edge of the chart pane so they sit clearly
-    // inside the pane (NOT in the price-axis column where RS chips live).
+    // Level badges: one pill per level per day. Anchored to the segment END
+    // (16:00 ET of that day) when visible, but CLAMPED to the right edge of
+    // the pane when segment-end has scrolled off-screen to the right — so
+    // the badge stays "stuck" to the visible portion of its line wherever
+    // that line is still on-screen. Skipped only when the full segment is
+    // off-screen (entirely left or entirely right of the pane).
+    //
+    // Collision avoidance: when two badges would overlap (either because the
+    // levels share a close price, or because the chart is zoomed out and many
+    // segments converge near the right edge), the colliding badge is shifted
+    // LEFT along its own line by one badge-width + gap. The badge stays on
+    // its price (y position fixed), so the level it labels is unambiguous;
+    // only x moves. Processed right-to-left, so the rightmost badge keeps
+    // the prime real estate.
     const paneWidth = ts.width();
     if (paneWidth > 0 && levelLabelsRef.current.length > 0) {
-      const RIGHT_INSET = 80;
-      const xRight = paneWidth - RIGHT_INSET;
       const FONT_PX = 16;
       const CHAR_W = 9.6;
       const PAD_X = 8;
       const PAD_Y = 4;
       const PILL_H = FONT_PX + PAD_Y * 2;
       const LINE_GAP = 5;
+      const COLLIDE_GAP = 4;
+
+      type Badge = { label: string; color: string; pillW: number; pillX: number; pillY: number };
+      const candidates: Badge[] = [];
       for (const lbl of levelLabelsRef.current) {
+        const xStart = ts.timeToCoordinate(lbl.startTs as UTCTimestamp);
+        const xEnd = ts.timeToCoordinate(lbl.endTs as UTCTimestamp);
+        if (xEnd === null) continue;
+        // Skip when the entire segment is off-screen.
+        if (xStart !== null && xStart >= paneWidth) continue;
+        if (xEnd <= 0) continue;
         const yLine = series.priceToCoordinate(lbl.price);
         if (yLine === null) continue;
         const textW = lbl.label.length * CHAR_W;
         const pillW = textW + PAD_X * 2;
-        const pillX = xRight - pillW;
+        // Sticky anchor: prefer the segment-end x, but clamp to paneWidth
+        // when the end has scrolled past the right edge.
+        const xAnchor = Math.min(xEnd, paneWidth);
+        let pillX = xAnchor - pillW;
+        if (pillX < 0) pillX = 0;
         const pillY = yLine - LINE_GAP - PILL_H;
+        candidates.push({ label: lbl.label, color: lbl.color, pillW, pillX, pillY });
+      }
+
+      // Place right-to-left. The first badge at any given y wins the
+      // segment-end spot; subsequent badges at the same y shift further left.
+      candidates.sort((a, b) => b.pillX - a.pillX);
+      const placed: Badge[] = [];
+      for (const b of candidates) {
+        // Shift left until no collision, or we run out of left-space.
+        for (let tries = 0; tries < 50; tries++) {
+          const hit = placed.find(p =>
+            b.pillX < p.pillX + p.pillW + COLLIDE_GAP &&
+            b.pillX + b.pillW + COLLIDE_GAP > p.pillX &&
+            b.pillY < p.pillY + PILL_H + COLLIDE_GAP &&
+            b.pillY + PILL_H + COLLIDE_GAP > p.pillY,
+          );
+          if (!hit) break;
+          b.pillX = hit.pillX - b.pillW - COLLIDE_GAP;
+          if (b.pillX < 0) { b.pillX = 0; break; }
+        }
+        placed.push(b);
+      }
+
+      for (const b of placed) {
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', String(pillX));
-        rect.setAttribute('y', String(pillY));
-        rect.setAttribute('width', String(pillW));
+        rect.setAttribute('x', String(b.pillX));
+        rect.setAttribute('y', String(b.pillY));
+        rect.setAttribute('width', String(b.pillW));
         rect.setAttribute('height', String(PILL_H));
         rect.setAttribute('rx', '4');
-        rect.setAttribute('fill', lbl.color);
+        rect.setAttribute('fill', b.color);
         rect.setAttribute('stroke', '#0a0a0b');
         rect.setAttribute('stroke-width', '1');
         svg.appendChild(rect);
         const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        el.setAttribute('x', String(xRight - PAD_X));
-        el.setAttribute('y', String(pillY + PILL_H - PAD_Y - 2));
+        el.setAttribute('x', String(b.pillX + b.pillW - PAD_X));
+        el.setAttribute('y', String(b.pillY + PILL_H - PAD_Y - 2));
         el.setAttribute('text-anchor', 'end');
         el.setAttribute('fill', '#0a0a0b');
         el.setAttribute('font-family', 'IBM Plex Mono, monospace');
         el.setAttribute('font-size', String(FONT_PX));
         el.setAttribute('font-weight', '800');
-        el.textContent = lbl.label;
+        el.textContent = b.label;
         svg.appendChild(el);
       }
     }

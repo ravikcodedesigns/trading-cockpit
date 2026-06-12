@@ -29,6 +29,28 @@ interface CockpitStore {
 
 const MAX_EVENTS = 200;
 
+// Symbol deep-linking: pathname → initial symbol, and setSymbol pushes the URL
+// back so refreshing /es stays on ES instead of bouncing to NQ default.
+//   /  or /nq → NQ
+//   /es      → ES
+function symbolFromPath(): Sym {
+  if (typeof window === 'undefined') return 'NQ';
+  const p = window.location.pathname.toLowerCase();
+  if (p === '/es' || p.startsWith('/es/')) return 'ES';
+  return 'NQ';
+}
+
+function pushSymbolToUrl(s: Sym) {
+  if (typeof window === 'undefined') return;
+  const target = s === 'ES' ? '/es' : '/nq';
+  const here = window.location.pathname;
+  // Treat "/" as canonical NQ — don't rewrite to /nq if we landed there fresh.
+  const matches = (s === 'NQ' && (here === '/' || here === '/nq')) ||
+                  (s === 'ES' && here === '/es');
+  if (matches) return;
+  window.history.replaceState(null, '', target + window.location.search + window.location.hash);
+}
+
 export const useStore = create<CockpitStore>((set) => ({
   wsStatus: 'connecting',
   connections: {},
@@ -38,13 +60,23 @@ export const useStore = create<CockpitStore>((set) => ({
   recentSignals: [],
   eventsLogged: 0,
   uptimeSec: 0,
-  selectedSymbol: 'NQ',
+  selectedSymbol: symbolFromPath(),
   selectedTimeframe: 1,
   soundOn: true,
-  setSymbol: (s) => set({ selectedSymbol: s }),
+  setSymbol: (s) => { pushSymbolToUrl(s); set({ selectedSymbol: s }); },
   setTimeframe: (t) => set({ selectedTimeframe: t }),
   setSoundOn: (v) => set({ soundOn: v }),
 }));
+
+// Back/forward navigation: sync store from URL without re-pushing.
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    const next = symbolFromPath();
+    if (useStore.getState().selectedSymbol !== next) {
+      useStore.setState({ selectedSymbol: next });
+    }
+  });
+}
 
 
 function applyMessage(msg: CockpitMessage) {
