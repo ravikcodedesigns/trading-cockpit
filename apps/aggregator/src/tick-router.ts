@@ -35,6 +35,7 @@ import { cvdSession } from './cvd-session.js';
 import { tradeManager } from './trade-manager.js';
 import { shadowTrader } from './shadow-trader.js';
 import { cooldownShadow } from './cooldown-shadow.js';
+import { post1430Shadow } from './post-1430-shadow.js';
 
 const POLL_INTERVAL_MS = 250;
 
@@ -130,6 +131,13 @@ class TickRouter {
           cooldownShadow.onTick(sym, r.ts, r.price);
         } catch (err) {
           logger.warn({ err: String(err), sym, ts: r.ts }, 'cooldownShadow.onTick threw — live path unaffected');
+        }
+        // Post-14:30 shadow walks NQ FLIP-short virtual positions opened after
+        // the trader's universal stop time. Same isolation guarantee.
+        try {
+          post1430Shadow.onTick(sym, r.ts, r.price);
+        } catch (err) {
+          logger.warn({ err: String(err), sym, ts: r.ts }, 'post1430Shadow.onTick threw — live path unaffected');
         }
         if (r.ts > maxTs) maxTs = r.ts;
       }

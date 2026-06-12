@@ -7,6 +7,7 @@ import { classifySignalQuality } from './quality.js';
 import type { QualityContext } from './quality.js';
 import { evaluateTechnical, evaluateActionability } from './signal-pipeline.js';
 import { cooldownShadow } from './cooldown-shadow.js';
+import { post1430Shadow } from './post-1430-shadow.js';
 import { cvdSession } from './cvd-session.js';
 import { tradeManager, type CloseEvent } from './trade-manager.js';
 import type {
@@ -398,6 +399,30 @@ class State {
             });
           } catch (err) {
             logger.warn({ err: String(err), signalId }, 'cooldown-shadow record failed — live path unaffected');
+          }
+        }
+      }
+
+      // ── Post-14:30 NQ FLIP-short shadow ──────────────────────────────────
+      // Pipeline marks qualified NQ FLIP-shorts that fire after 14:30 ET as
+      // action='OPEN' but the trader's risk-guard universal stop blocks them.
+      // Module filters internally for symbol/rule/pattern/direction/time —
+      // we just hand it every OPEN signal and let it decide.
+      if (act.action === 'OPEN' && tech.qualified) {
+        const entry = (signal as { entry?: number }).entry;
+        if (typeof entry === 'number' && Number.isFinite(entry)) {
+          try {
+            post1430Shadow.recordSignalIfApplicable({
+              symbol,
+              signalId,
+              ruleId: signal.ruleId,
+              direction: signal.direction as 'long' | 'short',
+              entry,
+              ts: signal.ts,
+              pattern,
+            });
+          } catch (err) {
+            logger.warn({ err: String(err), signalId }, 'post-1430 shadow record failed — live path unaffected');
           }
         }
       }

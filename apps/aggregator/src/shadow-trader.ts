@@ -96,11 +96,13 @@ interface SymbolState {
   currentEtDate: string | null;
   recentTicks: Array<{ ts: number; price: number }>;  // rolling 5min
   levelsLoadedForDate: string | null;
+  levelsFileMtimeMs: number;                   // 0 = never loaded; reload when stat.mtime > this
   levelsPriceByLabel: Map<string, number>;
   openedToday: Set<string>;        // labels already opened (or attempted) today
   openPositions: Map<string, ShadowPosition>;
   rthOpenMs: number;
   rthCloseMs: number;
+  lastMtimeCheckMs: number;        // throttle stat() calls; we don't need per-tick frequency
 }
 
 function newState(): SymbolState {
@@ -108,13 +110,21 @@ function newState(): SymbolState {
     currentEtDate: null,
     recentTicks: [],
     levelsLoadedForDate: null,
+    levelsFileMtimeMs: 0,
     levelsPriceByLabel: new Map(),
     openedToday: new Set(),
     openPositions: new Map(),
     rthOpenMs: 0,
     rthCloseMs: 0,
+    lastMtimeCheckMs: 0,
   };
 }
+
+// Throttle: only stat() the levels file every N seconds. The morning cron
+// runs once at 09:23 ET and writes once; we don't need to detect changes
+// at tick-rate. 10s is fast enough to catch the rewrite within seconds while
+// adding ≤0.1 syscalls per second per symbol.
+const MTIME_CHECK_INTERVAL_MS = 10_000;
 
 // ── Levels loader: reads today's NQ entry from daily_levels.json ────────────
 function levelsFilePath(symbol: string): string {
@@ -191,14 +201,27 @@ class ShadowTrader {
       st.recentTicks.shift();
     }
 
-    // Lazy-load today's levels (on first tick of the day in or after RTH).
-    // We try to load any time; if the entry isn't in daily_levels.json yet
-    // (e.g. pre-09:23 cron), this is a no-op map and we'll retry next tick.
-    if (st.levelsLoadedForDate !== etDate) {
+    // Lazy-load today's levels — reloads when (a) ET day changes, (b) the
+    // levels file mtime advances past our cached version. (b) catches the
+    // morning 09:23 ET cron rewriting onVAL/PML/PMH/etc. after we first
+    // loaded a partial pre-fill at midnight. Bug observed 2026-06-10 09:38 ET:
+    // aggregator started at 04:18, loaded a stale onVAL=28971.5 from the
+    // overnight pre-fill, then never re-read after the 09:23 cron wrote the
+    // correct 28834. Shadow opened a FADE short on the wrong price.
+    let shouldReload = st.levelsLoadedForDate !== etDate;
+    if (!shouldReload && ts - st.lastMtimeCheckMs >= MTIME_CHECK_INTERVAL_MS) {
+      st.lastMtimeCheckMs = ts;
+      try {
+        const stat = fs.statSync(levelsFilePath(symbol));
+        if (stat.mtimeMs > st.levelsFileMtimeMs) shouldReload = true;
+      } catch { /* file missing — handled by load below */ }
+    }
+    if (shouldReload) {
       const loaded = loadLevelsForDay(symbol, etDate);
       if (loaded.size > 0) {
         st.levelsPriceByLabel = loaded;
         st.levelsLoadedForDate = etDate;
+        try { st.levelsFileMtimeMs = fs.statSync(levelsFilePath(symbol)).mtimeMs; } catch { /* ignore */ }
         const summary: Record<string, number> = {};
         for (const [l, p] of loaded) summary[l] = p;
         logger.info({ symbol, etDate, levels: summary }, 'shadow levels loaded');
