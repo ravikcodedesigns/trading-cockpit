@@ -40,6 +40,15 @@ const wantAll = args.includes('--all');
 const fileArgIdx = args.indexOf('--file');
 const fileArg = fileArgIdx >= 0 ? args[fileArgIdx + 1] : null;
 
+// Optional symbol filter (2026-06-11): added to support parallel-by-symbol
+// ingest. Accepts product names (NQ, ES) which get translated to the
+// file-prefix symbol returned by parseFilename() (MNQM, MESM). Also accepts
+// the raw prefix directly. When omitted, all files are processed (legacy).
+const symbolArgIdx = args.indexOf('--symbol');
+const symbolArg = symbolArgIdx >= 0 ? args[symbolArgIdx + 1] : null;
+const SYMBOL_ALIAS: Record<string, string> = { NQ: 'MNQM', ES: 'MESM' };
+const symbolFilter = symbolArg ? (SYMBOL_ALIAS[symbolArg] ?? symbolArg) : null;
+
 // ─── Open DB and ensure schema ──────────────────────────────────────
 const db = new Database(MBO_DB_PATH);
 db.pragma('journal_mode = WAL');
@@ -56,10 +65,15 @@ db.exec(SCHEMA_SQL);
 // ─── Discover files ─────────────────────────────────────────────────
 function pickFiles(): string[] {
   if (fileArg) return [path.resolve(fileArg)];
-  const all = fs.readdirSync(CAPTURE_DIR)
+  let all = fs.readdirSync(CAPTURE_DIR)
     .filter(f => f.endsWith('_BMD.log'))
     .map(f => path.join(CAPTURE_DIR, f))
     .sort();
+  if (symbolFilter) {
+    all = all.filter(f => {
+      try { return parseFilename(f).symbol === symbolFilter; } catch { return false; }
+    });
+  }
   if (wantAll) return all;
   // Default: include any file that has new bytes since last ingest (incremental)
   const stateRows = db.prepare(`
