@@ -19,7 +19,7 @@
 
 import type { TradovateClient } from './broker/tradovate.js';
 import { logger } from './logger.js';
-import { discord } from './discord.js';
+import { notify } from './notify.js';
 import { posDb } from './db.js';
 import { getSymbolForContractId } from './order-manager.js';
 
@@ -81,7 +81,7 @@ export function startPositionWatcher(broker: TradovateClient): () => void {
           { contractId, orderIds: workingOrders.map(o => o.id) },
           `position-watcher: flat with ${workingOrders.length} orphan order(s) — canceling`,
         );
-        discord.orphan({
+        notify.orphan({
           symbol: `contractId=${contractId}`,
           detail: `${workingOrders.length} orphan order(s) detected — canceling: ${workingOrders.map(o => `${o.id}/${o.action}`).join(', ')}`,
         });

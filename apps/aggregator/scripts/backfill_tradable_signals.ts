@@ -1,6 +1,7 @@
-// Backfill tradable_signals from the new signal-pipeline against ALL historical
+// Backfill tradable_signals from the signal-pipeline against ALL historical
 // signals. Replays evaluateTechnical + evaluateActionability over every row in
-// `signals`, reconstructing the per-symbol open-trade state from v3_decisions.
+// `signals`, reconstructing the per-symbol open-trade state from signal_results
+// (renamed from v3_decisions 2026-06-09).
 //
 // Idempotent — upserts on signal_id. Re-runnable.
 //
@@ -16,7 +17,7 @@ interface SignalRow {
   payload: string;
 }
 
-interface V3DecisionRow {
+interface SignalResultRow {
   ts: number; symbol: string; signal_id: number | null;
   action: string; cvd_session: number | null; rule_id: string;
 }
@@ -30,12 +31,13 @@ const allSignals = db.query<SignalRow>(`
 `);
 console.log(`  Loaded ${allSignals.length} historical signals`);
 
-// V3 decisions chronologically so we can replay open-trade state. For pre-V3
-// signals (before 2026-06-01) there are no OPENs, so the open map stays empty
-// and the SKIP_COOLDOWN gate never fires — same as live behavior at the time.
-const allV3 = db.query<V3DecisionRow>(`
+// Historical OPEN/CLOSE decisions chronologically so we can replay open-trade
+// state. Pre-2026-06-01 there are no OPENs (V3 hadn't started writing yet), so
+// the open map stays empty and the SKIP_COOLDOWN gate never fires — same as
+// live behavior at the time.
+const allResults = db.query<SignalResultRow>(`
   SELECT ts, symbol, signal_id, action, cvd_session, rule_id
-  FROM v3_decisions
+  FROM signal_results
   WHERE action IN ('OPEN','CLOSE')
   ORDER BY ts ASC, action DESC
   -- action DESC puts OPEN before CLOSE at the same ts. Critical for
@@ -49,18 +51,18 @@ const allV3 = db.query<V3DecisionRow>(`
 // V3 logs both events at the same ts; live ordering was CLOSE → cooldown
 // check → OPEN, but a strict ts-< replay misses this and incorrectly flags
 // the new OPEN as cooldown-skipped against the just-closed trade.
-const closeBySignalId = new Map<number, V3DecisionRow>();
-for (const v of allV3) {
+const closeBySignalId = new Map<number, SignalResultRow>();
+for (const v of allResults) {
   if (v.action === 'CLOSE' && v.signal_id != null) {
     closeBySignalId.set(v.signal_id, v);
   }
 }
-console.log(`  Loaded ${allV3.length} V3 OPEN/CLOSE decisions for state replay`);
+console.log(`  Loaded ${allResults.length} OPEN/CLOSE decisions for state replay`);
 
 // Index v3 decisions by signal_id so we can pull cvd_session for each signal.
 // (cvd_session is needed by evaluateActionability and was V3's runtime value.)
 const cvdBySignalId = new Map<number, number>();
-for (const v of allV3) {
+for (const v of allResults) {
   if (v.signal_id != null && v.cvd_session != null) {
     cvdBySignalId.set(v.signal_id, v.cvd_session);
   }
@@ -68,15 +70,29 @@ for (const v of allV3) {
 
 // Walking pointer over v3 decisions, used to advance open-trade state up to
 // each signal's ts.
-let v3Cursor = 0;
+let resultsCursor = 0;
 const openSymbols = new Set<string>();
 
+// Mirror signal-pipeline.ts:isTradableRule(). V3 OPENed trades for rules the
+// pipeline doesn't trade (WBF, absorption) — those shouldn't block pipeline's
+// own FLIP/CONT signals via cooldown. Only count OPEN events whose rule_id
+// would be tradable by the new pipeline.
+const PIPELINE_TRADABLE_RULES = new Set([
+  'clean-impulse',         // (with FLIP pattern; coarse-grained here)
+  'cont-reentry',
+  'expl',
+  'compression-realwall',
+  'es-flip',
+]);
+
 function advanceOpenStateUpTo(sigTs: number): void {
-  while (v3Cursor < allV3.length && allV3[v3Cursor]!.ts <= sigTs) {
-    const ev = allV3[v3Cursor]!;
-    if (ev.action === 'OPEN')  openSymbols.add(ev.symbol);
+  while (resultsCursor < allResults.length && allResults[resultsCursor]!.ts <= sigTs) {
+    const ev = allResults[resultsCursor]!;
+    // OPEN: only add to openSymbols if the rule is pipeline-tradable.
+    // CLOSE: always remove — closes for non-pipeline rules are harmless no-ops.
+    if (ev.action === 'OPEN' && PIPELINE_TRADABLE_RULES.has(ev.rule_id)) openSymbols.add(ev.symbol);
     if (ev.action === 'CLOSE') openSymbols.delete(ev.symbol);
-    v3Cursor++;
+    resultsCursor++;
   }
 }
 
@@ -106,11 +122,11 @@ for (const row of allSignals) {
   // NOTE: this signal's own OPEN (if any) was emitted AT signal.ts — at that
   // exact moment the cooldown check ran BEFORE the OPEN was logged. So we
   // advance to <sigTs (strict) to mirror the live ordering.
-  while (v3Cursor < allV3.length && allV3[v3Cursor]!.ts < row.ts) {
-    const ev = allV3[v3Cursor]!;
+  while (resultsCursor < allResults.length && allResults[resultsCursor]!.ts < row.ts) {
+    const ev = allResults[resultsCursor]!;
     if (ev.action === 'OPEN')  openSymbols.add(ev.symbol);
     if (ev.action === 'CLOSE') openSymbols.delete(ev.symbol);
-    v3Cursor++;
+    resultsCursor++;
   }
   // Same-ts OPP_SIG_EXIT: if THIS signal caused a CLOSE at the same ts,
   // apply that close NOW so the cooldown check sees the cleared state.

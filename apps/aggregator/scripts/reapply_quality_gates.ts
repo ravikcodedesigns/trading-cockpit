@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH   = path.resolve(__dirname, '../../../data/trading.db');
 
 // ─── Bump this whenever quality.ts gate logic changes ───────────────────────
-const GATE_VERSION = 4;
+const GATE_VERSION = 5;
 // ────────────────────────────────────────────────────────────────────────────
 
 const db = new Database(DB_PATH);

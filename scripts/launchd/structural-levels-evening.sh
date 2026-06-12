@@ -2,7 +2,10 @@
 # Wrapper for the evening structural-levels cron job.
 # Runs `pnpm levels:structural:evening` on weekdays at 17:55 ET (after RTH close).
 # Writes TODAY's session-derived labels (IBH/IBL/RTHO/VWAP/HVN/LVN/WkH/WkL/nPOC)
-# to today's entry, AND pre-fills tomorrow's PDH/PDL/PDC/POC/VAH/VAL using today's RTH.
+# to today's entry. Tomorrow's prior-day-derived labels (PDH/PDL/PDC/POC/VAH/VAL)
+# are written by the 16:05 cron-mark-close.sh — kept separate so each cron has
+# one clear job and the cockpit's 16:00 trading-day rollover has tomorrow's
+# levels ready immediately.
 # Logs to ~/Library/Logs/cockpit-structural-levels-evening.log.
 
 set -uo pipefail
