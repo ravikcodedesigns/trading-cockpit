@@ -60,8 +60,12 @@ export const LEVEL_STYLES: Record<string, LevelStyle> = {
   'Bear Zone':  { color: '#D64545', style: 'solid',  width: 1 },
   'Bull H':     { color: '#2BB673', style: 'solid',  width: 2 },
   'Bull L':     { color: '#2BB673', style: 'solid',  width: 2 },
+  'Bull Zone Bottom': { color: '#2BB673', style: 'solid',  width: 2 },
+  'Bull2 Zone Bottom': { color: '#2BB673', style: 'dashed', width: 1 },
   'Bear H':     { color: '#D64545', style: 'solid',  width: 2 },
   'Bear L':     { color: '#D64545', style: 'solid',  width: 2 },
+  'Bear Zone Top':    { color: '#D64545', style: 'solid',  width: 2 },
+  'Bear2 Zone Top':   { color: '#D64545', style: 'dashed', width: 1 },
 
   // ─── RTH-context levels (added by morning cron at 09:23) ──────────────
   //     Derived from prior session + overnight; reference levels for today's RTH.
@@ -79,7 +83,7 @@ export const LEVEL_STYLES: Record<string, LevelStyle> = {
   // ─── Today's-session levels (added by evening cron at 17:55) ───────────
   'IBH':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance high (soft teal)
   'IBL':        { color: '#5BC0DE', style: 'dotted', width: 2 },   // initial balance low
-  'RTHO':       { color: '#E91E63', style: 'solid',  width: 2 },   // RTH open (magenta)
+  // RTHO removed 2026-06-12 — QQQ/SPY Open cover the institutional cash open.
   'VWAP':       { color: '#DAA520', style: 'solid',  width: 2 },   // VWAP close (goldenrod)
   'HVN1':       { color: '#B39DDB', style: 'dotted', width: 1 },   // 2nd high-volume node (light purple)
   'HVN2':       { color: '#9575CD', style: 'dotted', width: 1 },   // 3rd high-volume node (med purple)

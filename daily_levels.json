@@ -230,13 +230,6 @@
               "width": 2
             },
             {
-              "price": 30266.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 30255.48,
               "label": "ON MHP",
               "color": "#f2a633",
@@ -349,13 +342,6 @@
               "label": "PMH",
               "color": "#FFB347",
               "style": "dotted",
-              "width": 2
-            },
-            {
-              "price": 30756,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
               "width": 2
             },
             {
@@ -796,13 +782,6 @@
               "width": 1
             },
             {
-              "price": 30343.25,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 30342.75,
               "label": "QQQ Open",
               "color": "#ffffff",
@@ -971,13 +950,6 @@
               "label": "PMH",
               "color": "#FFB347",
               "style": "dotted",
-              "width": 2
-            },
-            {
-              "price": 30383.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
               "width": 2
             },
             {
@@ -1311,13 +1283,6 @@
               "color": "#D8D06E",
               "style": "solid",
               "width": 1
-            },
-            {
-              "price": 30053.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
             },
             {
               "price": 30053,
@@ -1818,13 +1783,6 @@
               "width": 2
             },
             {
-              "price": 28389.25,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 28372,
               "label": "PML",
               "color": "#FFB347",
@@ -2062,13 +2020,6 @@
               "label": "IBH",
               "color": "#5BC0DE",
               "style": "dotted",
-              "width": 2
-            },
-            {
-              "price": 29338.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
               "width": 2
             },
             {
@@ -2595,13 +2546,6 @@
               "width": 2
             },
             {
-              "price": 28849.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 28840.166666666664,
               "label": "S1",
               "color": "#FFC1CC",
@@ -2724,13 +2668,6 @@
               "label": "R1",
               "color": "#FFC1CC",
               "style": "dotted",
-              "width": 2
-            },
-            {
-              "price": 30187.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
               "width": 2
             },
             {
@@ -3073,13 +3010,6 @@
               "width": 2
             },
             {
-              "price": 29073.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29073.25,
               "label": "QQQ Open",
               "color": "#ffffff",
@@ -3374,13 +3304,6 @@
               "price": 30556.75,
               "label": "QQQ Open",
               "color": "#ffffff",
-              "style": "solid",
-              "width": 2
-            },
-            {
-              "price": 30556.75,
-              "label": "RTHO",
-              "color": "#E91E63",
               "style": "solid",
               "width": 2
             },
@@ -3745,13 +3668,6 @@
               "width": 1
             },
             {
-              "price": 30036,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 30035.75,
               "label": "QQQ Open",
               "color": "#ffffff",
@@ -3920,13 +3836,6 @@
               "color": "#95A5A6",
               "style": "dashed",
               "width": 1
-            },
-            {
-              "price": 29526.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
             },
             {
               "price": 29526,
@@ -4190,13 +4099,6 @@
               "width": 3
             },
             {
-              "price": 29737.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29737,
               "label": "QQQ Open",
               "color": "#FFFFFF",
@@ -4415,19 +4317,19 @@
         {
           "symbol": "NQ",
           "bullZone": {
-            "low": 29456,
-            "high": 29456
+            "low": 28872.7,
+            "high": 28872.7
           },
           "bearZone": {
-            "low": 29409.2,
-            "high": 29409.2
+            "low": 29407.4,
+            "high": 29407.4
           },
           "ddBands": {
-            "upper": 29687.61,
-            "lower": 29182.89
+            "upper": 29393.16,
+            "lower": 28887.84
           },
-          "hedgePressure": 29183,
-          "mhp": 28895,
+          "hedgePressure": 28872.7,
+          "mhp": 28482,
           "additionalLevels": [
             {
               "price": 30807.75,
@@ -4465,17 +4367,17 @@
               "width": 1
             },
             {
+              "price": 29231.75,
+              "label": "IBH",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
               "price": 29169,
               "label": "ONH",
               "color": "#175676",
               "style": "dashed",
-              "width": 2
-            },
-            {
-              "price": 29116.25,
-              "label": "NQ Close",
-              "color": "#ffd700",
-              "style": "solid",
               "width": 2
             },
             {
@@ -4486,7 +4388,14 @@
               "width": 1
             },
             {
-              "price": 29094.25,
+              "price": 29114.5,
+              "label": "QQQ Close",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 29110.75,
               "label": "onVAH",
               "color": "#F7DC6F",
               "style": "solid",
@@ -4514,13 +4423,6 @@
               "width": 1
             },
             {
-              "price": 29018.143674520787,
-              "label": "gnVWAP",
-              "color": "#D4AC0D",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29010,
               "label": "onPOC",
               "color": "#C39BD3",
@@ -4528,11 +4430,32 @@
               "width": 2
             },
             {
-              "price": 28971.5,
-              "label": "onVAL",
-              "color": "#B7950B",
-              "style": "solid",
+              "price": 28991.5,
+              "label": "PMH",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28983.75,
+              "label": "HG",
+              "color": "#FFFFFF",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 28969,
+              "label": "LVN↑",
+              "color": "#777777",
+              "style": "dotted",
               "width": 1
+            },
+            {
+              "price": 28913.391424612662,
+              "label": "gnVWAP",
+              "color": "#D4AC0D",
+              "style": "solid",
+              "width": 2
             },
             {
               "price": 28860,
@@ -4543,9 +4466,72 @@
             },
             {
               "price": 28853,
+              "label": "QQQ Open",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 28844.306062436935,
+              "label": "VWAP",
+              "color": "#DAA520",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28837,
+              "label": "onVAL",
+              "color": "#B7950B",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28771.75,
+              "label": "IBL",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28750,
+              "label": "HVN2",
+              "color": "#9575CD",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28647,
+              "label": "HVN1",
+              "color": "#B39DDB",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28610.25,
               "label": "ONL",
               "color": "#D45E77",
               "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 28610.25,
+              "label": "PML",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28562.75,
+              "label": "LVN↓",
+              "color": "#777777",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28532,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
               "width": 2
             },
             {
@@ -4665,13 +4651,6 @@
               "price": 28884,
               "label": "onPOC",
               "color": "#C39BD3",
-              "style": "solid",
-              "width": 2
-            },
-            {
-              "price": 28876.5,
-              "label": "RTHO",
-              "color": "#E91E63",
               "style": "solid",
               "width": 2
             },
@@ -4936,13 +4915,6 @@
               "width": 2
             },
             {
-              "price": 29305,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29286,
               "label": "onVAL",
               "color": "#B7950B",
@@ -5175,13 +5147,6 @@
               "width": 2
             },
             {
-              "price": 29213,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29132.25,
               "label": "onVAL",
               "color": "#B7950B",
@@ -5362,13 +5327,6 @@
               "label": "IBH",
               "color": "#5BC0DE",
               "style": "dotted",
-              "width": 2
-            },
-            {
-              "price": 29287.25,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
               "width": 2
             },
             {
@@ -5625,13 +5583,6 @@
               "width": 1
             },
             {
-              "price": 29485.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29480,
               "label": "POC",
               "color": "#545FDE",
@@ -5885,13 +5836,6 @@
               "width": 2
             },
             {
-              "price": 29281.25,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29275,
               "label": "onPOC",
               "color": "#C39BD3",
@@ -6097,13 +6041,6 @@
               "width": 2
             },
             {
-              "price": 29210.75,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29202,
               "label": "Halfback",
               "color": "#95A5A6",
@@ -6265,13 +6202,6 @@
               "color": "#777777",
               "style": "dotted",
               "width": 1
-            },
-            {
-              "price": 29580.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
             },
             {
               "price": 29553.75,
@@ -6475,13 +6405,6 @@
               "price": 29947.560106509474,
               "label": "VWAP",
               "color": "#DAA520",
-              "style": "solid",
-              "width": 2
-            },
-            {
-              "price": 29940.5,
-              "label": "RTHO",
-              "color": "#E91E63",
               "style": "solid",
               "width": 2
             },
@@ -6803,13 +6726,6 @@
               "width": 3
             },
             {
-              "price": 29903.5,
-              "label": "RTHO",
-              "color": "#E91E63",
-              "style": "solid",
-              "width": 2
-            },
-            {
               "price": 29885,
               "label": "onVAH",
               "color": "#F7DC6F",
@@ -6870,6 +6786,374 @@
               "label": "WkL",
               "color": "#FF4500",
               "style": "large-dashed",
+              "width": 3
+            }
+          ]
+        }
+      ]
+    },
+    "2026-06-11": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 28823.6,
+            "high": 28823.6
+          },
+          "bearZone": {
+            "low": 28782.4,
+            "high": 28782.4
+          },
+          "ddBands": {
+            "upper": 28724.34,
+            "lower": 28219.66
+          },
+          "hedgePressure": 28638.5,
+          "mhp": 28371.3,
+          "additionalLevels": [
+            {
+              "price": 30685,
+              "label": "nPOC",
+              "color": "#BC8F8F",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 30603.25,
+              "label": "WkH",
+              "color": "#00BFFF",
+              "style": "large-dashed",
+              "width": 3
+            },
+            {
+              "price": 29460,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29251,
+              "label": "PDH",
+              "color": "#2596BE",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 29193.6,
+              "label": "Bull2 Zone Bottom",
+              "color": "#2BB673",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 29049.5,
+              "label": "LVN↑",
+              "color": "#777777",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 29048.75,
+              "label": "IBH",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 29024.166666666664,
+              "label": "R1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 29006.25,
+              "label": "VAH",
+              "color": "#D8D06E",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28988,
+              "label": "Bear2 Zone Top",
+              "color": "#D64545",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 28960.14098940082,
+              "label": "VWAP",
+              "color": "#DAA520",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28935,
+              "label": "ONH",
+              "color": "#175676",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 28916.75,
+              "label": "PMH",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28872.25,
+              "label": "Halfback",
+              "color": "#95A5A6",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 28870,
+              "label": "HVN1",
+              "color": "#B39DDB",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28817.75,
+              "label": "onVAH",
+              "color": "#F7DC6F",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28800,
+              "label": "HVN2",
+              "color": "#9575CD",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28758.833333333332,
+              "label": "Pivot",
+              "color": "#FF6F91",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28753.25,
+              "label": "QQQ Open",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 28730,
+              "label": "onPOC",
+              "color": "#C39BD3",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28658.804611505766,
+              "label": "gnVWAP",
+              "color": "#D4AC0D",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 28651,
+              "label": "IBL",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28650,
+              "label": "POC",
+              "color": "#545FDE",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 28641.13,
+              "label": "HG",
+              "color": "#FFFFFF",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 28638.25,
+              "label": "PML",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28581,
+              "label": "LVN↓",
+              "color": "#777777",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28563.25,
+              "label": "VAL",
+              "color": "#8C8641",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28532,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28529,
+              "label": "QQQ Close",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 28493.5,
+              "label": "PDL",
+              "color": "#BF3C24",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 28458,
+              "label": "ONO",
+              "color": "#FF9A3C",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 28387.25,
+              "label": "onVAL",
+              "color": "#B7950B",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28266.666666666664,
+              "label": "S1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28264.25,
+              "label": "ONL",
+              "color": "#D45E77",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 28227.25,
+              "label": "WkL",
+              "color": "#FF4500",
+              "style": "large-dashed",
+              "width": 3
+            }
+          ]
+        }
+      ]
+    },
+    "2026-06-12": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 28823.6,
+            "high": 28823.6
+          },
+          "bearZone": {
+            "low": 28782.4,
+            "high": 28782.4
+          },
+          "ddBands": {
+            "upper": 28724.34,
+            "lower": 28219.66
+          },
+          "hedgePressure": 28638.5,
+          "mhp": 28371.3,
+          "additionalLevels": [
+            {
+              "price": 29809,
+              "label": "R1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 29542.25,
+              "label": "PDH",
+              "color": "#2596BE",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 29460,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 29460,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29193.25,
+              "label": "Pivot",
+              "color": "#FF6F91",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 29059.875,
+              "label": "Halfback",
+              "color": "#95A5A6",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 29044.5,
+              "label": "VAH",
+              "color": "#D8D06E",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28850,
+              "label": "POC",
+              "color": "#545FDE",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 28844.25,
+              "label": "S1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28585.75,
+              "label": "VAL",
+              "color": "#8C8641",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 28577.5,
+              "label": "PDL",
+              "color": "#BF3C24",
+              "style": "dashed",
               "width": 3
             }
           ]

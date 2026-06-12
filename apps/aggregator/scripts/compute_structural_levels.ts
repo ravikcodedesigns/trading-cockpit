@@ -42,9 +42,12 @@ const LEVELS_PATH_BY_SYMBOL: Record<string, string> = {
 const MORNING_LABELS = [
   // Core: prior day RTH + overnight
   'PDH', 'PDL', 'PDC', 'ONH', 'ONL', 'ONO', 'POC', 'VAH', 'VAL',
-  // RTH-context (added 2026-06-10): pre-market, overnight VWAP/profile, pivots, halfback
+  // RTH-context (added 2026-06-10): pre-market, overnight profile, pivots, halfback.
+  // gnVWAP removed 2026-06-12 — single-snapshot overnight VWAP has no institutional
+  // benchmark weight as a horizontal level; the live VWAP curve in Chart.tsx
+  // covers the intraday reference.
   'PMH', 'PML',
-  'gnVWAP', 'onPOC', 'onVAH', 'onVAL',
+  'onPOC', 'onVAH', 'onVAL',
   'Pivot', 'R1', 'S1',
   'Halfback',
 ] as const;
@@ -52,7 +55,12 @@ type MorningLabel = typeof MORNING_LABELS[number];
 
 // Evening labels: derived from TODAY's completed RTH. Only emitted when
 // running with --evening (after 16:00 ET). Backfill mode also uses --evening.
-const EVENING_LABELS = ['IBH', 'IBL', 'RTHO', 'VWAP', 'HVN1', 'HVN2', 'LVN↑', 'LVN↓', 'WkH', 'WkL', 'nPOC'] as const;
+// VWAP removed 2026-06-12 — yesterday's full-session VWAP as a flat horizontal
+// line has no edge per backtests (lookahead-excluded) and competes poorly with
+// the live curve.
+// RTHO removed 2026-06-12 — QQQ Open / SPY Open serve as the institutional
+// cash-equity opening reference; futures-side RTHO duplicates the role.
+const EVENING_LABELS = ['IBH', 'IBL', 'HVN1', 'HVN2', 'LVN↑', 'LVN↓', 'WkH', 'WkL', 'nPOC'] as const;
 type EveningLabel = typeof EVENING_LABELS[number];
 
 // Subset of MORNING_LABELS used for next-day pre-fill (excludes ON* — overnight
@@ -343,15 +351,9 @@ function computeIB(db: Database.Database, day: string, symbol: string):
   return { ibh: row.hi, ibl: row.lo };
 }
 
-// RTHO: first print at/after 09:30 ET.
-function computeRTHOpen(db: Database.Database, day: string, symbol: string): number | null {
-  const start = etDateTimeToMs(day, 9, 30);
-  const end = etDateTimeToMs(day, 16, 0);
-  const row = db.prepare(
-    `SELECT price FROM trades WHERE symbol=? AND ts >= ? AND ts < ? ORDER BY ts ASC LIMIT 1`
-  ).get(symbol, start, end) as { price: number } | undefined;
-  return row?.price ?? null;
-}
+// computeRTHOpen removed 2026-06-12 — RTHO label retired; QQQ Open / SPY Open
+// cover the institutional opening reference. If RTHO ever resurfaces, restore
+// the original from git history.
 
 // VWAP: volume-weighted average price across RTH session.
 function computeVWAP(db: Database.Database, day: string, symbol: string): number | null {
@@ -611,7 +613,6 @@ function processSymbol(symbol: string, today: string, dryRun: boolean, evening: 
   let todayVP: { poc: number; vah: number; val: number } | null = null;
   if (evening) {
     const ib = computeIB(db, today, symbol);
-    const rtho = computeRTHOpen(db, today, symbol);
     const vwap = computeVWAP(db, today, symbol);
     todayVP = computeVolumeProfile(db, today, symbol);
     const hvnlvn = todayVP ? computeHVNLVN(db, today, symbol, todayVP) : { hvn1: null, hvn2: null, lvnUp: null, lvnDown: null };
@@ -619,7 +620,6 @@ function processSymbol(symbol: string, today: string, dryRun: boolean, evening: 
     const nakedPOC = computeNakedPOC(db, today, symbol);
     eveningComputed = {
       IBH: ib?.ibh, IBL: ib?.ibl,
-      RTHO: rtho ?? undefined,
       VWAP: vwap ?? undefined,
       HVN1: hvnlvn.hvn1 ?? undefined,
       HVN2: hvnlvn.hvn2 ?? undefined,
