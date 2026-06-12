@@ -275,7 +275,7 @@ _db.exec(`
     direction    TEXT    NOT NULL,
     score        INTEGER NOT NULL,
     qualified    INTEGER NOT NULL,    -- 1 if evaluateTechnical returned gold
-    action       TEXT    NOT NULL,    -- 'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_COOLDOWN'
+    action       TEXT    NOT NULL,    -- 'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_FLIP_LONG_DELTA15' | 'SKIP_CVD' | 'SKIP_COOLDOWN'
     reason       TEXT    NOT NULL,
     shadow       INTEGER NOT NULL DEFAULT 0,  -- 1 = logged for analysis, not traded (force-shadow rules)
     cvd_session  REAL,

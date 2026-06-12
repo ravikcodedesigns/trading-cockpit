@@ -62,6 +62,7 @@ export type ActionabilityAction =
   | 'SKIP_SILENCED'
   | 'SKIP_FORCE_SHADOW'
   | 'SKIP_FLIP_SHORT'
+  | 'SKIP_FLIP_LONG_DELTA15'
   | 'SKIP_CVD'
   | 'SKIP_COOLDOWN';
 
@@ -138,6 +139,31 @@ export function evaluateActionability(
       && direction === 'short') {
     return { action: 'SKIP_FLIP_SHORT', reason: 'V3 drops qualified FLIP shorts' };
   }
+  // ── FLIP-long delta15_ratio gate ──────────────────────────────────────
+  // Require the prior 15 bars to show meaningful net selling pressure
+  // (delta15 / vol15 ≤ threshold). Backed by permutation-validated edge
+  // on Net$ (p=0.007 sweep-corrected). In shadow mode we annotate the
+  // reason field but DO NOT block — letting the trade flow through so we
+  // can compare actual vs would-have-skipped over a real out-of-sample
+  // week before flipping the env flag.
+  let flipLongDelta15ShadowNote = '';
+  if (signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'long') {
+    const sig = signal as unknown as { delta15?: number; vol15?: number };
+    if (typeof sig.delta15 === 'number' && typeof sig.vol15 === 'number' && sig.vol15 > 0) {
+      const ratio = sig.delta15 / sig.vol15;
+      const thresh = config.pipeline.flipLongDelta15Gate.threshold;
+      const wouldBlock = ratio > thresh; // not exhausted enough
+      if (wouldBlock) {
+        const blockReason = `delta15_ratio=${ratio.toFixed(4)} > gate=${thresh}`;
+        if (config.pipeline.flipLongDelta15Gate.enabled) {
+          return { action: 'SKIP_FLIP_LONG_DELTA15', reason: blockReason };
+        }
+        // Shadow mode: pass through, note in reason for later analysis.
+        // Query: SELECT … FROM tradable_signals WHERE reason LIKE '[D15-SHADOW%';
+        flipLongDelta15ShadowNote = `[D15-SHADOW: would-block ${blockReason}] `;
+      }
+    }
+  }
   if (direction === 'long' && ctx.cvdSession <= config.pipeline.cvdLongFloor) {
     return {
       action: 'SKIP_CVD',
@@ -153,5 +179,7 @@ export function evaluateActionability(
   if (ctx.hasOpenTrade) {
     return { action: 'SKIP_COOLDOWN', reason: 'V3 cooldown: a trade is already open' };
   }
-  return { action: 'OPEN', reason: qualifiedReason };
+  // Prepend shadow note (if any) so reviewer can later filter for
+  // would-have-blocked rows: `WHERE reason LIKE '[D15-SHADOW:%'`.
+  return { action: 'OPEN', reason: flipLongDelta15ShadowNote + qualifiedReason };
 }

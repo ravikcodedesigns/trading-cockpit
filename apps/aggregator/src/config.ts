@@ -99,6 +99,28 @@ export const config = {
     //     -62 EV. Both losing; detector kept for research.
     forceShadowRules: ['es-flip', 'expl'] as string[],
 
+    // ── FLIP-long delta15_ratio gate (2026-06-12) ──────────────────────────
+    //
+    // Backtest on 72 historical FLIP-long signals (May → mid-June 2026):
+    //   • Baseline                       n=72 WR=44.4% Net=+$2,260 ($31/trade)
+    //   • delta15_ratio ≤ -0.02 filter   n=50 WR=54.0% Net=+$2,890 ($58/trade)
+    //
+    // Permutation test (10k shuffles) — multiple-comparison corrected:
+    //   • Sweep-corrected p(Net$) = 0.007 → significant
+    //   • Sweep-corrected p(WR)   = 0.168 → NOT significant on WR alone
+    //
+    // Conclusion: there's a real $-edge but the WR lift might be partly
+    // overfit. We shadow-track for ~1 week (live aggregator emits the marker
+    // but does NOT skip the trade), then review and decide whether to flip
+    // `enabled` to true.
+    //
+    // Env override: FLIP_LONG_DELTA15_GATE=enabled flips it live.
+    flipLongDelta15Gate: {
+      enabled: (process.env.FLIP_LONG_DELTA15_GATE ?? 'shadow') === 'enabled',
+      // Threshold derived from sweep — best $-edge with sample preserved at 69%.
+      threshold: -0.02,
+    },
+
     // Per-rule TP/SL points. Number → both directions; { long, short } → asymmetric.
     perRule: {
       'absorption':              { tp: 80, sl: 140 },

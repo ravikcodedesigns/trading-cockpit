@@ -76,6 +76,10 @@ interface DetectedSignal {
   delta5: number;
   delta15: number;
   deltaLast3: number;
+  // 15-bar total volume (= sum of buyVol + sellVol over the same window as
+  // delta15). Carried on the signal so downstream actionability can compute
+  // a regime-stable delta15_ratio = delta15 / vol15 without re-reading bars.
+  vol15: number;
   body: number;
   entry: number;
   stopLevel: number;
@@ -240,6 +244,8 @@ function detect(bars: OHLCBar[], nowMs: number): DetectedSignal | null {
   const delta5     = last5.reduce((s, b) => s + b.delta, 0);
   const deltaLast3 = last3.reduce((s, b) => s + b.delta, 0);
   const deltaT     = cur.delta;
+  // Total volume across the 15-bar window for normalization downstream.
+  const vol15      = last15.reduce((s, b) => s + b.vol, 0);
 
   // Prior bars for SHORT impulse check
   const prevBar  = completed[completed.length - 2];
@@ -268,7 +274,7 @@ function detect(bars: OHLCBar[], nowMs: number): DetectedSignal | null {
 
     return {
       direction: 'long', pattern: 'FLIP', score,
-      compPos, deltaT, delta5, delta15, deltaLast3,
+      compPos, deltaT, delta5, delta15, deltaLast3, vol15,
       body: bodyLong,
       entry: cur.close, stopLevel: cur.low, barTs: cur.ts,
     };
@@ -298,7 +304,7 @@ function detect(bars: OHLCBar[], nowMs: number): DetectedSignal | null {
 
     return {
       direction: 'short', pattern: 'FLIP', score,
-      compPos: compPosHigh, deltaT, delta5, delta15, deltaLast3,
+      compPos: compPosHigh, deltaT, delta5, delta15, deltaLast3, vol15,
       body: bodyShort,
       entry: cur.close, stopLevel: cur.high, barTs: cur.ts,
     };
@@ -396,6 +402,13 @@ export async function runStrategyH(
     delta5: hit.delta5,
     delta15: hit.delta15,
     deltaLast3: hit.deltaLast3,
+    // vol15: total 15-bar volume in the same window as delta15. Both
+    // directions carry this — actively used by the FLIP-long delta15_ratio
+    // shadow gate (signal-pipeline.ts), and passively logged for FLIP shorts
+    // so the same permutation analysis can be re-run when the FLIP-short
+    // sample reaches ~80 trades (currently 27, too small for statistical
+    // power).
+    vol15: hit.vol15,
     isPositionFlip,
   } as any;
 }
