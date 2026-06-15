@@ -18,7 +18,8 @@ mkdir -p "$DEST_DIR"
 chmod +x "$SRC_DIR/mbo-ingest.sh" \
          "$SRC_DIR/structural-levels.sh" \
          "$SRC_DIR/reminder.sh" \
-         "$SRC_DIR/trader.sh"
+         "$SRC_DIR/trader.sh" \
+         "$SRC_DIR/mbo-parquet-converter.sh"
 
 for PLIST in "$SRC_DIR"/com.cockpit.*.plist; do
   NAME=$(basename "$PLIST")

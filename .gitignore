@@ -22,3 +22,18 @@ daily-rs-levels/
 explosive-moves/
 snapshots/
 .claude/
+
+# Parquet MBO store (regenerable from .log files in ~/cockpit-mbo-capture/)
+data/mbo-parquet/
+data/mbo-parquet-old-checkpoints/
+data/depth.db
+
+# Python venv for the parquet converter (regenerable from requirements pinned in script)
+scripts/.venv-mbo/
+
+# Backtest / research outputs at repo root (run-specific, not source)
+phase1-*.json
+phase2-*.json
+
+# Local backups (e.g., from daily_levels.json patches)
+*.bak-*

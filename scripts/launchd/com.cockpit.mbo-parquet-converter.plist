@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.mbo-parquet-converter</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/mbo-parquet-converter.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/ravikumarbasker/trading-cockpit</string>
+
+  <!-- Long-running daemon (not cron). KeepAlive restarts it on crash;
+       ThrottleInterval prevents a tight crash loop from hammering the box. -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-mbo-parquet.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-mbo-parquet.stderr.log</string>
+</dict>
+</plist>

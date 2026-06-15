@@ -30,6 +30,7 @@
     "qualify": "tsx scripts/reapply_quality_gates.ts"
   },
   "dependencies": {
+    "@duckdb/node-api": "1.5.3-r.3",
     "@fastify/static": "^7.0.4",
     "@fastify/websocket": "^10.0.1",
     "@trading/contracts": "workspace:*",
