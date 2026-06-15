@@ -1,0 +1,43 @@
+# Phase 2 — Human-labeled tier-1 reversal setups (NQ first; ES later).
+#
+# Lines starting with # are ignored. Header below MUST stay as-is.
+# Columns are tab-separated. Use a real editor with "show whitespace" on.
+#
+# ─── Column reference ────────────────────────────────────────────────────────
+#   date          YYYY-MM-DD trading day in ET (cohort buckets below)
+#   symbol        NQ  (ES rows will be added later if the pattern works)
+#   entry_ts_et   HH:MM:SS.mmm in ET — the exact tick where the trade would
+#                 have triggered. Millisecond precision matters: the analysis
+#                 only looks at data strictly BEFORE this ts (no look-ahead).
+#   level_label   one of: PDH PDL PDC POC VAH VAL
+#   direction     long | short
+#   outcome       pos = price reversed favorably to your TP / clean win
+#                 neg = price approached the same level the same way but did
+#                       NOT reverse (failed setup). Used as negatives so the
+#                       feature search isn't poisoned by selection bias.
+#   sl_pts        stop distance in points (your acceptable risk for this trade)
+#   tp_pts        target distance in points (your minimum acceptable reward)
+#   note          free text — what you saw, conviction notes, anything useful
+#
+# ─── Cohort buckets ─────────────────────────────────────────────────────────
+#  Tier A (price-action analysis, ticks-only OK):
+#    TRAIN: 2026-05-06 05-08 05-12 05-14 05-18 05-20 05-22 05-27 05-29
+#           2026-06-02 06-04 06-08 06-10
+#    TEST : 2026-05-11 05-13 05-15 05-19 05-21 05-26 05-28
+#           2026-06-01 06-03 06-05 06-09 06-11
+#  Tier B (deep L2/L3 MBO analysis, June days only — nested inside Tier A):
+#    TRAIN: 2026-06-02 06-04 06-08 06-10
+#    TEST : 2026-06-03 06-05 06-09 06-11
+#  HOLDOUT (don't touch until final lock-in): 2026-06-12
+#
+# ─── Suggested cadence ──────────────────────────────────────────────────────
+#  Per day: 3-5 positives + 1-2 negatives feels right. Don't force quantity —
+#  if a day was choppy and no clean tier-1 reversal occurred, leave it empty.
+#  Negatives should be "this LOOKED like a setup I'd have considered, and it
+#  didn't work" — not just any non-reversal touch.
+#
+# ─── Example rows (delete or replace) ───────────────────────────────────────
+date	symbol	entry_ts_et	level_label	direction	outcome	sl_pts	tp_pts	note
+2026-06-04	NQ	10:14:32.500	PDH	short	pos	15	40	clean rejection with absorption tape
+2026-06-04	NQ	13:47:08.200	VAL	long	neg	10	30	looked like a fade setup but VAL broke clean
+2026-06-08	NQ	09:33:11.080	POC	long	pos	12	35	high-volume node, immediate rotation up
