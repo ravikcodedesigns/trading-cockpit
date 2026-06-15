@@ -469,6 +469,18 @@ export function Chart() {
   // wherever the line is still visible. Skipped entirely when the segment
   // is fully off-screen.
   const levelLabelsRef = useRef<Array<{ price: number; label: string; color: string; startTs: number; endTs: number }>>([]);
+  // Signal markers — replaces lightweight-charts series.setMarkers() so we can
+  // control font-weight and font-size per badge (the LWC marker plugin uses
+  // canvas with a hardcoded regular weight). Rendered as SVG in the existing
+  // overlay so font-weight=800 + font-size=14 actually applies.
+  const signalMarkersRef = useRef<Array<{
+    ts: number;
+    price: number;
+    text: string;
+    color: string;
+    shape: 'arrowUp' | 'arrowDown' | 'circle' | 'square';
+    position: 'aboveBar' | 'belowBar' | 'inBar';
+  }>>([]);
   const flashAlphaLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
   // TP/DD price lines drawn per signal — rebuilt whenever the markers effect runs.
   // Using IPriceLine (attached to the candlestick series) instead of separate
@@ -796,7 +808,7 @@ export function Chart() {
         background: { type: ColorType.Solid, color: '#0a0a0b' },
         textColor: '#a8a8b0',
         fontFamily: 'IBM Plex Mono, monospace',
-        fontSize: 11,
+        fontSize: 13,  // bumped 11 → 13 for marker readability
       },
       grid: {
         vertLines: { color: '#17171c' },
@@ -1474,6 +1486,15 @@ export function Chart() {
       'sparse-dotted': LineStyle.SparseDotted,
     };
 
+    // Tier-1 filter: only the canonical 6 (matches phase1/days.ts TIER1).
+    // Everything else (Bull/Bear zones, DD, HP, MHP, IBH/IBL, ON*, VWAPs,
+    // pivots, weekly H/L, etc.) is kept in the data + plotting code but
+    // hidden from the chart. Flip HIDE_NON_TIER1_LEVELS to false to show
+    // everything again.
+    const HIDE_NON_TIER1_LEVELS = true;
+    const TIER1_LABELS = new Set(['PDH', 'PDL', 'PDC', 'POC', 'VAH', 'VAL']);
+    const isTier1 = (label: string) => TIER1_LABELS.has(label);
+
     // For each day, render all of that day's levels as line segments.
     // Today's levels show clean labels on the price axis (no date suffix).
     // Past days' levels are visible on the chart but their labels are
@@ -1499,6 +1520,7 @@ export function Chart() {
       // caller's args. This means daily_levels.json entries with stale
       // colors get auto-canonicalized to the current spec.
       const addLevelLine = (price: number, color: string, title: string, style: LineStyle, width: 1 | 2 | 3 | 4) => {
+        if (HIDE_NON_TIER1_LEVELS && !isTier1(title)) return;
         const canonical = lookupLevelStyle(title);
         const finalColor = canonical?.color ?? color;
         const finalWidth = canonical?.width ?? width;
@@ -1805,7 +1827,7 @@ export function Chart() {
             color: exWarning ? '#fb923c' : '#00ff88',
             shape,
             text: label,
-            size: 3,
+            size: 5,
           };
         } else if (ruleId === 'clean-impulse') {
           shape = isLong ? 'arrowUp' : 'arrowDown';
@@ -1819,7 +1841,7 @@ export function Chart() {
             color: cfWarning ? '#fb923c' : '#f59e0b',
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'ala-bounce') {
           shape = 'arrowUp';
@@ -1832,7 +1854,7 @@ export function Chart() {
             color: '#06b6d4',           // cyan — clean support bounce
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'ala-reclaim') {
           shape = 'arrowUp';
@@ -1845,7 +1867,7 @@ export function Chart() {
             color: '#10b981',           // emerald — failed breakdown / reclaim
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'ala-zone-reclaim') {
           shape = 'arrowUp';
@@ -1858,7 +1880,7 @@ export function Chart() {
             color: '#f59e0b',           // amber — zone reclaim at BZB/BrZT
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'reject-resistance') {
           shape = 'arrowDown';
@@ -1871,7 +1893,7 @@ export function Chart() {
             color: '#a855f7',           // purple — distinct from FLIP (amber) and EXPL (green)
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'absorption') {
           shape = isLong ? 'arrowUp' : 'arrowDown';
@@ -1885,7 +1907,7 @@ export function Chart() {
             color: abWarning ? '#fb923c' : getSignalPaletteColor(sig.ts),
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'cont-reentry') {
           // CONT-REENTRY shadow signal (Strategy CONT). Violet to stand apart from
@@ -1898,7 +1920,7 @@ export function Chart() {
             color: '#8b5cf6',  // violet
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'es-flip') {
           // ES-FLIP shadow signal (ES-tuned FLIP detector). Hot pink to be unmistakably
@@ -1913,7 +1935,7 @@ export function Chart() {
             color: '#ec4899',  // hot pink
             shape,
             text: label,
-            size: 2,
+            size: 4,
           };
         } else if (ruleId === 'wall-broken-fade') {
           // Wall-broken-fade: cyan-magenta to stand apart from FLIP(orange)/EXPL(green)/ABSO.
@@ -1929,7 +1951,30 @@ export function Chart() {
             color: '#22d3ee',  // cyan
             shape,
             text: label,
-            size: 2,
+            size: 4,
+          };
+        } else if (ruleId === 'KEY-LVL-FADE') {
+          // Phase 1 structural-level fade signal. Shows the level being faded
+          // (PDH/PDL/PDC/POC/VAH/VAL) plus simulated outcome if backfilled.
+          //   LONG  = approached from above, faded back UP    → arrowUp BELOW bar
+          //   SHORT = approached from below, faded back DOWN  → arrowDown ABOVE bar
+          shape = isLong ? 'arrowUp' : 'arrowDown';
+          const lvl = (sig as any).levelLabel ?? '?';
+          const outcome = (sig as any).outcomeResult;
+          const arrow = isLong ? '↑' : '↓';
+          // Color codes: green=TP win, red=SL loss, gold=neutral/no outcome yet
+          let levColor = '#fcd34d'; // gold (default — no outcome)
+          if (outcome === 'TP') levColor = '#22c55e'; // green
+          else if (outcome === 'SL') levColor = '#ef4444'; // red
+          const outStr = outcome === 'TP' ? ' ✓' : outcome === 'SL' ? ' ✗' : '';
+          label = `KLV-FADE ${arrow}·${lvl}${outStr}`;
+          return {
+            time: bucket as UTCTimestamp,
+            position,
+            color: levColor,
+            shape,
+            text: label,
+            size: 4,  // bumped from 2 → 4 for readability
           };
         } else {
           shape = isLong ? 'arrowUp' : 'arrowDown';
@@ -1954,7 +1999,28 @@ export function Chart() {
     const allMarkers = [...markers]
       .sort((a, b) => (a.time as number) - (b.time as number));
 
-    series.setMarkers(allMarkers);
+    // Hand off to the SVG overlay renderer (renderDrawingsRef). We don't call
+    // series.setMarkers() because lightweight-charts renders marker text to
+    // canvas at a hardcoded regular font-weight — SVG gives us font-weight=800
+    // + font-size=14 control. Clear LWC-side markers so they don't double up.
+    series.setMarkers([]);
+    signalMarkersRef.current = allMarkers.map(m => {
+      const tsSec = m.time as number;            // UTCTimestamp = seconds
+      const bar = history.get(tsSec);
+      const price = m.position === 'aboveBar' ? (bar?.high ?? 0)
+                  : m.position === 'belowBar' ? (bar?.low ?? 0)
+                  : ((bar?.high ?? 0) + (bar?.low ?? 0)) / 2;
+      return {
+        ts: tsSec,
+        price,
+        text: m.text ?? '',
+        color: m.color ?? '#999',
+        shape: m.shape as 'arrowUp' | 'arrowDown' | 'circle' | 'square',
+        position: m.position as 'aboveBar' | 'belowBar' | 'inBar',
+      };
+    });
+    // Trigger SVG render
+    renderDrawingsRef.current?.();
 
     // Draw TP1/TP2/DD1/DD2 price lines only for today's signals.
     // Historical signals from previous sessions get their markers but no level lines.
@@ -2482,6 +2548,123 @@ export function Chart() {
         el.setAttribute('font-weight', '800');
         el.textContent = b.label;
         svg.appendChild(el);
+      }
+    }
+
+    // ── Signal markers (SVG overlay, text-only) ─────────────────────────────
+    // Text-only style: colored bold label anchored above/below the bar.
+    // No pill background, no arrow shape — the ↑/↓ glyph in the label text is
+    // the directional indicator. A thin dark stroke on the text provides
+    // readability against the dark chart background.
+    if (signalMarkersRef.current.length > 0) {
+      const M_FONT = 16;                  // bumped 14 → 16 (per user)
+      const M_LINE_H = M_FONT + 4;
+      const M_CHAR_W = 9;
+      const M_GAP = 8;                    // padding between arrow base and text
+      const M_ARROW_H = 18;               // arrow height (tip → base) — substantial
+      const M_ARROW_W = 14;               // arrow base width
+      const M_STEM_H  = 8;                // small connecting stem from arrow base toward text
+      // Per-bar vertical stacking to avoid overlap when multiple markers share a bar
+      const placedAbove = new Map<number, number[]>();
+      const placedBelow = new Map<number, number[]>();
+      const visRangeForMarkers = ts.getVisibleRange();
+      const visFromSec = visRangeForMarkers ? Number(visRangeForMarkers.from) : -Infinity;
+      const visToSec   = visRangeForMarkers ? Number(visRangeForMarkers.to)   : Infinity;
+      // Single color per direction (overrides per-rule color).
+      // LONG  = lime  (entered expecting price up)
+      // SHORT = red   (entered expecting price down)
+      const COLOR_LONG  = '#a3e635';
+      const COLOR_SHORT = '#ef4444';
+      for (const m of signalMarkersRef.current) {
+        if (m.ts < visFromSec || m.ts > visToSec) continue;
+        const x = ts.timeToCoordinate(m.ts as UTCTimestamp);
+        const y = series.priceToCoordinate(m.price);
+        if (x === null || y === null) continue;
+        if (x < 0 || x > paneWidth) continue;
+
+        // Direction → color
+        const isLong = m.shape === 'arrowUp';
+        const color = isLong ? COLOR_LONG : COLOR_SHORT;
+
+        const textW = m.text.length * M_CHAR_W;
+        let txtX = x;
+        if (txtX - textW / 2 < 2) txtX = textW / 2 + 2;
+        if (txtX + textW / 2 > paneWidth - 2) txtX = paneWidth - textW / 2 - 2;
+
+        // Vertical layout (from candle outward): arrow tip → arrow base → stem → text
+        let txtY: number;
+        let arrowTipY: number, arrowBaseY: number, stemEndY: number;
+        if (m.position === 'aboveBar') {
+          arrowTipY  = y;
+          arrowBaseY = y - M_ARROW_H;
+          stemEndY   = arrowBaseY - M_STEM_H;
+          let candidate = stemEndY - M_GAP;
+          const rowsKey = Math.round(x);
+          const rows = placedAbove.get(rowsKey) ?? [];
+          while (rows.some(r => Math.abs(r - candidate) < M_LINE_H)) candidate -= M_LINE_H;
+          rows.push(candidate);
+          placedAbove.set(rowsKey, rows);
+          txtY = candidate;
+        } else if (m.position === 'belowBar') {
+          arrowTipY  = y;
+          arrowBaseY = y + M_ARROW_H;
+          stemEndY   = arrowBaseY + M_STEM_H;
+          let candidate = stemEndY + M_GAP + M_FONT;
+          const rowsKey = Math.round(x);
+          const rows = placedBelow.get(rowsKey) ?? [];
+          while (rows.some(r => Math.abs(r - candidate) < M_LINE_H)) candidate += M_LINE_H;
+          rows.push(candidate);
+          placedBelow.set(rowsKey, rows);
+          txtY = candidate;
+        } else {
+          txtY = y + M_FONT / 2;
+          arrowTipY = y;
+          arrowBaseY = y;
+          stemEndY = y;
+        }
+
+        // Arrow + stem assembly pointing at the candle the signal triggered on.
+        // Drawn FIRST so the text stroke overlays it cleanly when they touch.
+        if (m.position !== 'inBar') {
+          // Filled triangle (the actual arrow head)
+          const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          arrow.setAttribute(
+            'points',
+            `${x - M_ARROW_W / 2},${arrowBaseY} ${x + M_ARROW_W / 2},${arrowBaseY} ${x},${arrowTipY}`,
+          );
+          arrow.setAttribute('fill', color);
+          arrow.setAttribute('stroke', '#0a0a0b');
+          arrow.setAttribute('stroke-width', '1.5');
+          arrow.setAttribute('stroke-linejoin', 'round');
+          svg.appendChild(arrow);
+          // Stem connecting arrow base to text — gives the marker a clear visual
+          // axis without crowding the candle wick.
+          const stem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          stem.setAttribute('x1', String(x));
+          stem.setAttribute('y1', String(arrowBaseY));
+          stem.setAttribute('x2', String(x));
+          stem.setAttribute('y2', String(stemEndY));
+          stem.setAttribute('stroke', color);
+          stem.setAttribute('stroke-width', '3');
+          stem.setAttribute('stroke-linecap', 'round');
+          svg.appendChild(stem);
+        }
+
+        // Label text — bold, large, dark stroke for legibility
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', String(txtX));
+        text.setAttribute('y', String(txtY));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', color);
+        text.setAttribute('stroke', '#0a0a0b');
+        text.setAttribute('stroke-width', '3');
+        text.setAttribute('stroke-linejoin', 'round');
+        text.setAttribute('paint-order', 'stroke fill');
+        text.setAttribute('font-family', 'IBM Plex Mono, monospace');
+        text.setAttribute('font-size', String(M_FONT));
+        text.setAttribute('font-weight', '800');
+        text.textContent = m.text;
+        svg.appendChild(text);
       }
     }
 
