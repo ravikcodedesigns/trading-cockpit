@@ -1098,9 +1098,11 @@ A new Claude session will not see the Claude `CronList` jobs because those are s
 
 ### 22.1 ⚠️ Open issues / immediate next-steps (read first)
 
-1. **Parquet duplicate-row bug (§22.9)** — the store carries ~30% duplicate trades
-   from the converter crash-loop. CVD/volume absolute numbers are inflated. **Dedup
-   pass + converter idempotency hardening are NOT done.** Highest-priority data task.
+1. **Parquet duplicate-row bug (§22.9)** — ✅ **FIXED 2026-06-16.** Store deduped
+   (59 GB → ~8 GB live; 3.9 B+ duplicate rows removed), converter hardened
+   (flush-then-checkpoint), nightly compaction job added. Acceptance: NQ 06-16 RTH
+   CVD = −18,141, matches Bookmap −18.1k…−19k. Remaining: delete `.trash` (54 GB of
+   originals) after you're satisfied the deduped store is correct.
 2. **Uncommitted cockpit-styling batch (§22.8)** — Geist fonts, de-blur, bold/size/
    color tweaks, 2026-06-16 levels. All in working tree on branch
    `feat/2026-06-16-regime-research-cockpit-levels`, not yet committed.
@@ -1270,7 +1272,7 @@ files roll at the day boundary instead of growing unbounded.
 day's RTH close (`bar1.open − priorClose`; priorClose = last bar in 15:00–17:00 ET
 window before today's open, derived from 1-min bars, not exchange settlement).
 
-### 22.9 ⚠️ Parquet duplicate-row data-integrity bug (discovered 2026-06-16, NOT fixed)
+### 22.9 Parquet duplicate-row data-integrity bug (discovered + FIXED 2026-06-16)
 
 Cross-checking CVD against Bookmap surfaced a real bug **on our side**:
 
@@ -1292,12 +1294,29 @@ trustworthy**; relative winner/loser comparisons may survive if dupes are ~unifo
 The cockpit's CVD indicator (from `ticks.db`, inferred aggressor) is separately ~3.5×
 too small — use parquet (deduped) for definitive CVD, anchored to RTH 09:30 ET.
 
-**Fix still required (two parts, NOT done)**:
-1. **Dedup the store** — rebuild June partitions with `DISTINCT` (or re-convert from
-   the clean `.log` source of truth).
-2. **Harden the converter** — verify the byte-offset checkpoint actually prevents
-   re-processing a segment after restart (idempotent writes / stricter checkpoint);
-   the `ts_ms` guard stopped crashes but not necessarily the dup-on-restart path.
+**Root cause**: each crashed converter life re-read the day's `.log` from offset 0
+(`off > size` truncation reset + crash-loop) and re-flushed overlapping whole-day
+files. Confirmed via file naming: many `tail-<sameStartTs>-<growingEndTs>-<diffPID>.parquet`.
+
+**Fix applied (2026-06-16)** — three parts:
+1. **Deduped the store** — `scripts/dedup_parquet_store.py` (DISTINCT-* per
+   partition, originals moved to `data/mbo-parquet/.trash`, verified). Only touched
+   partitions with ≥2 files. Huge partitions (mbo ES 06-15 = 2.62 B rows / ~190 GB
+   uncompressed) use a **batched-incremental `EXCEPT`** path so they never
+   materialize whole (one-shot DISTINCT OOM'd even at 190 GiB temp spill). Result:
+   3.9 B+ rows removed; every partition now `total == distinct`; store 59 GB → ~8 GB
+   live. **Acceptance**: NQ 06-16 RTH CVD = −18,141 (Bookmap −18.1k…−19k). ✅
+2. **Hardened the converter** (`mbo_parquet_converter.py`): **flush-then-checkpoint**
+   ordering — the on-disk checkpoint only advances past rows already in parquet, so a
+   hard crash re-reads (at-least-once) instead of losing buffered rows; loud `[warn]`
+   on the `off > size` truncation/re-read path.
+3. **Nightly compaction backstop** — `scripts/launchd/parquet-compaction.sh` +
+   `com.cockpit.parquet-compaction.plist` (03:10 daily) folds each day's ~2000 small
+   tail files into one DISTINCT-deduped file and cleans any at-least-once overlap.
+   Runs the same dedup script (`--execute`, only ≥2-file partitions).
+
+**Still TODO**: delete `data/mbo-parquet/.trash` (54 GB of originals) once the deduped
+store is confirmed good. The store dir is gitignored — only the scripts are committed.
 
 ### 22.10 `ff0e465` — converter corrupt-`ts_ms` guard
 

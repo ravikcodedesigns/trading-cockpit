@@ -436,9 +436,19 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
 
     buffers = TailBuffers(out_dir)
 
-    # file offsets: path -> int
+    # file read positions (in-memory) and the checkpoint path for each log file.
     offsets: Dict[Path, int] = {}
+    ckpts: Dict[Path, Path] = {}
     leftover: Dict[Path, bytes] = {}
+
+    def _persist_checkpoints() -> None:
+        # Only call AFTER a successful flush: at that point every row read up to
+        # offsets[path] is durably in parquet, so it's safe to advance the
+        # on-disk checkpoint past it.
+        for p, o in offsets.items():
+            ck = ckpts.get(p)
+            if ck is not None:
+                _save_ckpt(ck, o)
 
     stop = {"flag": False}
     def _sig(_s, _f):
@@ -453,6 +463,7 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
         files = sorted(log_dir.glob("*.log"))
         for path in files:
             ck = ckpt_dir / f"{path.name}.ckpt"
+            ckpts[path] = ck
             if path not in offsets:
                 offsets[path] = _load_ckpt(ck)
                 leftover[path] = b""
@@ -464,7 +475,13 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
 
             off = offsets[path]
             if off > size:
-                # File was truncated/rotated. Treat as fresh.
+                # File shrank — truncation/rotation under the same name. We
+                # re-read from 0, which re-emits rows already written: at-least-
+                # once, so the nightly compaction (dedup_parquet_store.py) will
+                # collapse the overlap. Log loudly since this should be rare
+                # (capture uses per-calendar-day filenames since 86ec5a0).
+                print(f"[warn] {path.name} shrank ({off} > {size}); re-reading from 0 "
+                      f"(dup rows expected, compaction will dedup)", flush=True)
                 off = 0
                 leftover[path] = b""
             if size <= off:
@@ -495,10 +512,13 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
                     continue
                 buffers.append(table, sym, date, row)
 
+            # Advance the in-memory read position only. The on-disk checkpoint
+            # is persisted AFTER the next successful flush (see below) so a hard
+            # crash between read and flush re-reads rather than loses rows.
             offsets[path] = off + consumed_bytes
-            _save_ckpt(ck, offsets[path])
 
-        # Flush triggers
+        # Flush triggers. Order is flush -> persist-checkpoints (at-least-once):
+        # never advance a checkpoint past data that isn't yet in parquet.
         now = time.time()
         if (
             buffers.total_rows() >= TAIL_FLUSH_ROWS
@@ -506,12 +526,15 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
         ):
             n = buffers.flush()
             if n:
+                _persist_checkpoints()
                 print(f"[flush] {n:,} rows", flush=True)
 
         time.sleep(TAIL_POLL_SECONDS)
 
-    # Drain on shutdown
+    # Drain on shutdown: flush, then persist checkpoints past the flushed rows.
     n = buffers.flush()
+    if n:
+        _persist_checkpoints()
     print(f"[shutdown] final flush {n:,} rows", flush=True)
 
 
