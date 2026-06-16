@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.reminder-parquet-fix</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-parquet-fix</string>
+    <string>2026</string>
+    <string>Cockpit: MBO parquet-converter fix</string>
+    <string>Market closed — do the converter fix now: guard ts_ms-&gt;date in mbo_parquet_converter.py (skip/clamp out-of-range ts, stops the 60x year-58425 crash-loop) + clean the 43 junk-date partitions (1969/1970/2534/etc). See project memory parquet_converter_fix.</string>
+  </array>
+
+  <!-- One-shot: fires 2026-06-15 at 17:10 local (5:10 PM ET). Wrapper checks
+       the year and self-disables (bootout + rm) after firing. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key><integer>6</integer>
+    <key>Day</key><integer>15</integer>
+    <key>Hour</key><integer>17</integer>
+    <key>Minute</key><integer>10</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stderr.log</string>
+</dict>
+</plist>

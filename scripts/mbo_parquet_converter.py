@@ -137,9 +137,20 @@ def contract_from_alias(alias: str) -> Optional[str]:
     return before_at or None
 
 
-def et_date_str(ts_ms: int) -> str:
-    """YYYY-MM-DD in America/New_York (handles DST)."""
-    return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).astimezone(ET).strftime("%Y-%m-%d")
+# Sane ts_ms window: reject corrupt timestamps that would crash strftime
+# ("year out of range") or land in junk partitions (1970, 2534, ...).
+_TS_MIN_MS = 1_700_000_000_000  # ~2023-11-14
+
+
+def et_date_str(ts_ms: int) -> Optional[str]:
+    """YYYY-MM-DD in America/New_York (handles DST), or None if ts_ms is
+    implausible/corrupt (out of a sane window, or unconvertible)."""
+    try:
+        if ts_ms is None or ts_ms < _TS_MIN_MS or ts_ms > (time.time() + 2 * 86400) * 1000:
+            return None
+        return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).astimezone(ET).strftime("%Y-%m-%d")
+    except (ValueError, OverflowError, OSError, TypeError):
+        return None
 
 
 def parse_event(line: str) -> Optional[Tuple[str, str, dict]]:
@@ -315,6 +326,9 @@ def run_backfill(log_files: List[Path], out_dir: Path) -> None:
                         continue
                     table, sym, row = parsed
                     date = et_date_str(row["ts_ms"])
+                    if date is None:        # corrupt/out-of-range ts_ms -> skip
+                        n_unknown += 1
+                        continue
                     sinks.append(table, sym, date, row)
                     n_parsed += 1
 
@@ -477,6 +491,8 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
                     continue
                 table, sym, row = parsed
                 date = et_date_str(row["ts_ms"])
+                if date is None:            # corrupt/out-of-range ts_ms -> skip
+                    continue
                 buffers.append(table, sym, date, row)
 
             offsets[path] = off + consumed_bytes
