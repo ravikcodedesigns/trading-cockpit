@@ -132,48 +132,46 @@ function getSignalPaletteColor(ts: number): string {
 // without looking at the screen.
 // Takes a persistent AudioContext so it survives tab switches (browsers suspend
 // a per-call context when the tab is hidden; a shared one can be resumed).
-function playSignalSound(ac: AudioContext, direction: string, ruleId: string): void {
+// Fire-engine "wail" siren, ~3 seconds. The frequency sweeps up and down
+// repeatedly (sawtooth + detuned square for a fuller engine timbre). Direction
+// only shifts the pitch band slightly (short = lower) so long/short differ.
+function playSignalSound(ac: AudioContext, direction: string, _ruleId: string): void {
   try {
-    const master = ac.createGain();
-    master.gain.value = 0.25;
-    master.connect(ac.destination);
+    const t0 = ac.currentTime;
+    const DUR = 3;            // seconds
+    const HALF = 0.65;        // seconds per up- or down-sweep
 
-    const tone = (freq: number, startSec: number, durSec: number) => {
+    const master = ac.createGain();
+    master.connect(ac.destination);
+    master.gain.setValueAtTime(0.0001, t0);
+    master.gain.linearRampToValueAtTime(0.3, t0 + 0.05);        // attack
+    master.gain.setValueAtTime(0.3, t0 + DUR - 0.25);
+    master.gain.linearRampToValueAtTime(0.0001, t0 + DUR);      // release
+
+    const [lo, hi] = direction === 'short' ? [500, 1150] : [650, 1400];
+
+    const wail = (type: OscillatorType, detune: number, gain: number) => {
       const osc = ac.createOscillator();
-      const env = ac.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      env.gain.setValueAtTime(0, startSec);
-      env.gain.linearRampToValueAtTime(1, startSec + 0.01);
-      env.gain.exponentialRampToValueAtTime(0.001, startSec + durSec);
-      osc.connect(env);
-      env.connect(master);
-      osc.start(startSec);
-      osc.stop(startSec + durSec);
+      const g = ac.createGain();
+      g.gain.value = gain;
+      osc.type = type;
+      osc.detune.value = detune;
+      osc.frequency.setValueAtTime(lo, t0);
+      let t = t0, up = true;
+      while (t < t0 + DUR) {
+        const next = Math.min(t + HALF, t0 + DUR);
+        osc.frequency.linearRampToValueAtTime(up ? hi : lo, next);
+        up = !up;
+        t = next;
+      }
+      osc.connect(g);
+      g.connect(master);
+      osc.start(t0);
+      osc.stop(t0 + DUR + 0.05);
     };
 
-    const t = ac.currentTime;
-    if (ruleId === 'expl') {
-      tone(440, t,        0.18);
-      tone(660, t + 0.18, 0.18);
-      tone(880, t + 0.36, 0.22);
-    } else if (ruleId === 'clean-impulse') {
-      const [f1, f2] = direction === 'long' ? [440, 660] : [660, 440];
-      tone(f1, t,        0.18);
-      tone(f2, t + 0.18, 0.28);
-    } else if (ruleId === 'reject-resistance') {
-      // descending three-tone — distinct from FLIP and EXPL
-      tone(800, t,         0.14);
-      tone(600, t + 0.14,  0.14);
-      tone(400, t + 0.28,  0.22);
-    } else if (ruleId === 'ala-bounce' || ruleId === 'ala-reclaim' || ruleId === 'ala-zone-reclaim') {
-      // ascending three-tone — long bias signal at hedge-pressure / zone level
-      tone(400, t,         0.14);
-      tone(600, t + 0.14,  0.14);
-      tone(800, t + 0.28,  0.22);
-    } else {
-      tone(direction === 'long' ? 528 : 396, t, 0.35);
-    }
+    wail('sawtooth', 0, 0.8);   // main siren
+    wail('square', 7, 0.25);    // detuned layer for a fuller "engine" timbre
   } catch {
     // Fail silently if audio is blocked
   }
@@ -1491,7 +1489,7 @@ export function Chart() {
     // pivots, weekly H/L, etc.) is kept in the data + plotting code but
     // hidden from the chart. Flip HIDE_NON_TIER1_LEVELS to false to show
     // everything again.
-    const HIDE_NON_TIER1_LEVELS = true;
+    const HIDE_NON_TIER1_LEVELS = false;
     const TIER1_LABELS = new Set(['PDH', 'PDL', 'PDC', 'POC', 'VAH', 'VAL']);
     const isTier1 = (label: string) => TIER1_LABELS.has(label);
 
@@ -1665,6 +1663,13 @@ export function Chart() {
       const play = () => {
         for (const sig of newSignals) {
           const ruleId = (sig as any).ruleId ?? (sig as any).rule_id ?? '';
+          const pattern = (sig as any).pattern ?? null;
+          // Beep ONLY on the tradable rules: FLIP (clean-impulse / pattern FLIP)
+          // and CONT (cont-reentry). The high-frequency tick rules (tape-speed,
+          // large-print, absorption) stay silent.
+          const isFlip = ruleId === 'clean-impulse' && (pattern == null || pattern === 'FLIP');
+          const isCont = ruleId === 'cont-reentry';
+          if (!isFlip && !isCont) continue;
           playSignalSound(ac, sig.direction ?? '', ruleId);
         }
       };
