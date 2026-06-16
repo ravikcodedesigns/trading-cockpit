@@ -37,3 +37,6 @@ phase2-*.json
 
 # Local backups (e.g., from daily_levels.json patches)
 *.bak-*
+
+# Regenerable research shadow DB (regime_gate scorer output)
+data/regime_shadow.db
