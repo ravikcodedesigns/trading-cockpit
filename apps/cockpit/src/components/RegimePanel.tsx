@@ -56,7 +56,7 @@ function FactorArrow({ name, dir }: { name: string; dir: FactorDir }) {
           borderRadius: 3,
           padding: '2px 6px',
           fontSize: 10,
-          fontWeight: 600,
+          fontWeight: 700,
           color: '#d0d0d8',
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
@@ -80,7 +80,7 @@ export function RegimePanel({ checkpoints }: { checkpoints: CheckpointData[] }) 
       background: 'rgba(10,10,12,0.95)',
       border: '1px dotted #555',
       borderRadius: 4,
-      fontFamily: 'IBM Plex Mono, monospace',
+      fontFamily: 'Geist Mono, monospace',
       fontSize: 11,
       fontWeight: 700,
       color: '#e8e8ec',
@@ -107,7 +107,7 @@ export function RegimePanel({ checkpoints }: { checkpoints: CheckpointData[] }) 
           alignItems: 'center',
           overflow: 'visible',
         }}>
-          <span style={{ color: '#e0e6f0' }}>{cp.time}</span>
+          <span style={{ color: '#e0e6f0', fontWeight: 700 }}>{cp.time}</span>
           <span style={{ color: labelColor(cp.label), fontWeight: 700 }}>
             {cp.label ?? '—'}
           </span>

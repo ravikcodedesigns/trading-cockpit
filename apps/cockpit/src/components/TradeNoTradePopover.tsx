@@ -49,7 +49,7 @@ export function TradeNoTradePopover({ open, onToggle }: { open: boolean; onToggl
           borderRadius: 3,
           background: open ? `${btnColor}1a` : 'rgba(10,10,12,0.85)',
           color: btnColor,
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'Geist Mono, monospace',
           transition: 'background 0.15s, color 0.15s',
           whiteSpace: 'nowrap',
         }}
@@ -66,7 +66,7 @@ export function TradeNoTradePopover({ open, onToggle }: { open: boolean; onToggl
           background: 'rgba(10,10,12,0.95)',
           border: '1px dotted #444',
           borderRadius: 4,
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'Geist Mono, monospace',
           fontSize: 11,
           fontWeight: 700,
           color: '#d0d0d8',

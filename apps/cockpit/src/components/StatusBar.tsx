@@ -34,6 +34,7 @@ export function StatusBar() {
       background: 'var(--bg-1)',
       fontSize: 12,
       color: 'var(--text-1)',
+      fontWeight: 700,
       flexShrink: 0,
     }}>
       {/* ── Row 1: controls + status ── */}
@@ -57,7 +58,7 @@ export function StatusBar() {
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '2px 8px', borderRadius: 3,
             background: '#3d2c10', border: '1px solid #f2a633',
-            color: '#f2a633', fontWeight: 600, fontSize: 11, letterSpacing: 0.5,
+            color: '#f2a633', fontWeight: 700, fontSize: 11, letterSpacing: 0.5,
           }}>
             ⚠ STALE
           </div>
@@ -72,7 +73,7 @@ export function StatusBar() {
                 borderColor: s === selectedSymbol ? 'var(--accent)' : 'var(--border)',
                 color: s === selectedSymbol ? 'var(--accent)' : 'var(--text-1)',
                 fontFamily: 'var(--font-mono)',
-                fontWeight: 500,
+                fontWeight: 700,
               }}>
               {s}
             </button>
@@ -90,7 +91,7 @@ export function StatusBar() {
               style={{
                 padding: '2px 8px',
                 fontSize: 11,
-                fontWeight: 600,
+                fontWeight: 700,
                 letterSpacing: 0.4,
                 cursor: 'pointer',
                 border: 'none',

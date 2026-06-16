@@ -143,7 +143,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
   if (gapPts === null && bar1Pos === null) return null;
 
   const color = (v: number, hi: number, lo: number) =>
-    v > hi ? '#2bb673' : v < lo ? '#d64545' : '#a8a8b0';
+    v > hi ? '#2bb673' : v < lo ? '#f87171' : '#a8a8b0';
   const arrow = (v: number, hi: number, lo: number) =>
     v > hi ? '↑' : v < lo ? '↓' : '→';
 
@@ -153,18 +153,18 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
   const posA  = bar1Pos !== null ? arrow(bar1Pos, 0.65, 0.35) : '';
   const cvdC  = cvd3    !== null ? color(cvd3,    800, -800)  : '#a8a8b0';
   const cvdA  = cvd3    !== null ? arrow(cvd3,    800, -800)  : '';
-  const biasC = bias === 'LONG' ? '#2bb673' : bias === 'SHORT' ? '#d64545' : '#a8a8b0';
+  const biasC = bias === 'LONG' ? '#2bb673' : bias === 'SHORT' ? '#f87171' : '#a8a8b0';
   const biasI = bias === 'LONG' ? '▲' : bias === 'SHORT' ? '▼' : '—';
 
   return (
     <div style={{
-      background: 'rgba(10,10,11,0.85)',
-      backdropFilter: 'blur(4px)',
+      background: 'rgba(10,10,11,0.96)',
       border: '1px solid #28282f',
       borderRadius: 4,
       padding: '5px 9px',
-      fontFamily: 'IBM Plex Mono, monospace',
-      fontSize: 10,
+      fontFamily: 'Geist Mono, monospace',
+      fontSize: 13,
+      fontWeight: 700,
       color: '#a8a8b0',
       lineHeight: 1.75,
       pointerEvents: 'none',
@@ -172,7 +172,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
     }}>
       {gapPts !== null && (
         <div>
-          <span style={{ color: '#4a5568', marginRight: 6 }}>09:29</span>
+          <span style={{ color: '#ffffff', marginRight: 6 }}>09:29</span>
           <span style={{ color: gapC }}>
             {gapA} Gap {gapPts >= 0 ? '+' : ''}{gapPts.toFixed(2)}pts
           </span>
@@ -180,7 +180,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
       )}
       {bar1Pos !== null && (
         <div>
-          <span style={{ color: '#4a5568', marginRight: 6 }}>09:31</span>
+          <span style={{ color: '#ffffff', marginRight: 6 }}>09:31</span>
           <span style={{ color: posC }}>
             {posA} Bar1 {(bar1Pos * 100).toFixed(0)}% in range
           </span>
@@ -188,7 +188,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
       )}
       {cvd3 !== null && (
         <div>
-          <span style={{ color: '#4a5568', marginRight: 6 }}>09:33</span>
+          <span style={{ color: '#ffffff', marginRight: 6 }}>09:33</span>
           <span style={{ color: cvdC }}>
             {cvdA} CVD3 {cvd3 >= 0 ? '+' : ''}{cvd3.toLocaleString()}ct
           </span>
@@ -197,7 +197,7 @@ export function OpeningBias({ symbol, barHistoryRef, barsVersion }: Props) {
       {bias !== null && (
         <div style={{
           marginTop: 3, borderTop: '1px solid #28282f', paddingTop: 3,
-          fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+          fontSize: 14, fontWeight: 800, letterSpacing: 0.5,
         }}>
           <span style={{ color: biasC }}>{biasI} BIAS: {bias}</span>
         </div>

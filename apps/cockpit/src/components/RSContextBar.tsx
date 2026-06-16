@@ -16,6 +16,8 @@ interface RSContext {
   vvixGolden: boolean;
   isRational: boolean;
   setAt: string;
+  vxn?: number;               // Nasdaq vol index (prior close) — input to the range forecast
+  expectedRangePts?: number;  // forecast next-day NQ High-Low in points (VXN->range, R^2 0.40)
 }
 
 function resLabel(v: number): string {
@@ -64,8 +66,8 @@ export function RSContextBar({ symbol }: Props = {}) {
 
   const chip = (label: string, value: string, color: string) => (
     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-      <span style={{ color: 'var(--text-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>{label}</span>
-      <span style={{ color, fontSize: 13, fontWeight: 800 }}>{value}</span>
+      <span style={{ color: 'var(--text-1)', fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>{label}</span>
+      <span style={{ color, fontSize: 15, fontWeight: 700 }}>{value}</span>
     </span>
   );
 
@@ -77,30 +79,36 @@ export function RSContextBar({ symbol }: Props = {}) {
       {chip('GM', ctx.greaterMarket.toUpperCase(), gmColor)}
       {ctx.lmCode && (
         <>
-          <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+          <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
           {chip('LM', ctx.lmCode, ctx.lmCode.startsWith('Br') ? 'var(--short)' : 'var(--long)')}
         </>
       )}
-      <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+      <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
       {chip('VX', ctx.vx.toFixed(2), vxColor)}
       {chip('BBB', ctx.bbb.toFixed(2), 'var(--text-1)')}
-      <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+      <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
       {chip('VVIX', ctx.vvix.toFixed(0), vvixColor)}
-      <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+      <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
       {chip('DD', ctx.ddRatio.toFixed(2), ctx.ddRatio > 0.5 ? 'var(--long)' : ctx.ddRatio < 0.5 ? 'var(--short)' : 'var(--text-1)')}
-      <span style={{ color: 'var(--text-2)', fontSize: 11 }}>|</span>
+      <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
       <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-        <span style={{ color: 'var(--text-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>MHP</span>
-        <span style={{ color: resColor(ctx.mhpResilience), fontSize: 13, fontWeight: 800 }}>{resLabel(ctx.mhpResilience)}</span>
+        <span style={{ color: 'var(--text-1)', fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>MHP</span>
+        <span style={{ color: resColor(ctx.mhpResilience), fontSize: 15, fontWeight: 700 }}>{resLabel(ctx.mhpResilience)}</span>
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-        <span style={{ color: 'var(--text-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>HP</span>
-        <span style={{ color: resColor(ctx.hpResilience), fontSize: 13, fontWeight: 800 }}>{resLabel(ctx.hpResilience)}</span>
+        <span style={{ color: 'var(--text-1)', fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>HP</span>
+        <span style={{ color: resColor(ctx.hpResilience), fontSize: 15, fontWeight: 700 }}>{resLabel(ctx.hpResilience)}</span>
       </span>
       <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-        <span style={{ color: 'var(--text-1)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>RES</span>
-        <span style={{ color: resColor(ctx.resilience), fontSize: 13, fontWeight: 800 }}>{resLabel(ctx.resilience)}</span>
+        <span style={{ color: 'var(--text-1)', fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}>RES</span>
+        <span style={{ color: resColor(ctx.resilience), fontSize: 15, fontWeight: 700 }}>{resLabel(ctx.resilience)}</span>
       </span>
+      {ctx.expectedRangePts != null && (
+        <>
+          <span style={{ color: 'var(--text-2)', fontSize: 13 }}>|</span>
+          {chip('PRICE RANGE', `${Math.round(ctx.expectedRangePts)}pt`, 'var(--text-1)')}
+        </>
+      )}
     </div>
   );
 }

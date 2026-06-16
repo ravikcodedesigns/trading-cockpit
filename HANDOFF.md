@@ -1,8 +1,16 @@
 # Trading Cockpit — Handoff Document
 
-> **Author**: Session handoff as of 2026-06-07 (Sunday)
+> **Author**: Session handoff originally as of 2026-06-07 (Sunday)
+> **Last updated**: 2026-06-16 (Tuesday) — see **§22** for everything since 2026-06-08
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
+>
+> ⚠️ **Sections 1–21 are a 2026-06-07/08 snapshot and are now partly stale.** The
+> biggest drift: (1) the **V3 framework was fully removed** — §6 is historical,
+> read §22.2; (2) **mbo.db (SQLite) was replaced by a Parquet + DuckDB store** —
+> §3.3 is historical, read §22.3; (3) there is a **known data-integrity bug in the
+> Parquet store** (≈30% duplicate trade rows) — read §22.9 **before trusting any
+> parquet CVD/volume number**.
 
 ---
 
@@ -1063,3 +1071,245 @@ A new Claude session will not see the Claude `CronList` jobs because those are s
 ---
 
 **End of section 21.** Project state as of 2026-06-08 ~01:00 ET (last commit `048d5d3`).
+
+---
+
+## 22. Changes since 2026-06-08 (2026-06-08 → 2026-06-16)
+
+> This section supersedes the relevant parts of §1–21. It covers ~40 commits across
+> five working days plus one batch of uncommitted cockpit-styling work. Ordered by
+> theme, not chronology. Commit hashes cited inline.
+
+### 22.0 TL;DR — what materially changed
+
+| Area | Before (2026-06-07) | Now (2026-06-16) |
+|------|---------------------|-------------------|
+| Signal engine | V3 cascade in `state.ts:applySignalV3` | **3-stage pipeline** raw → qualified → tradable; V3 fully deleted (§22.2) |
+| MBO storage | `mbo.db` SQLite (76 GB, single-writer) | **Parquet + DuckDB**, Hive-partitioned by symbol/date (§22.3) |
+| Config namespace | `config.v3.*` | `config.pipeline.*` |
+| Audit table | `v3_decisions` | `signal_results` |
+| Trader daemon | `pnpm dev` child | **launchd-managed singleton** w/ crash recovery (§22.6) |
+| Live rules | clean-impulse (FLIP) only | **clean-impulse + cont-reentry** both live MNQ (§22.6) |
+| Alerts | Discord only | **Discord + Pushover** fan-out via `notify.ts` |
+| MBO ingest cron | single hourly job | **two parallel jobs** (NQ + ES) at `:23` |
+| Levels crons | 1 morning (09:23) | morning (09:23) **+ evening (17:55)** |
+| Contract | MNQM6 / MESM6 | rolled to **MNQU6 / MESU6** on 2026-06-14; contract column tags both |
+| Research verdict | (open) | pre-entry overlays **don't generalize** at ~25-day sample; edge stays in raw FLIP/CONT @ flat 80/70 (§22.4) |
+
+### 22.1 ⚠️ Open issues / immediate next-steps (read first)
+
+1. **Parquet duplicate-row bug (§22.9)** — the store carries ~30% duplicate trades
+   from the converter crash-loop. CVD/volume absolute numbers are inflated. **Dedup
+   pass + converter idempotency hardening are NOT done.** Highest-priority data task.
+2. **Uncommitted cockpit-styling batch (§22.8)** — Geist fonts, de-blur, bold/size/
+   color tweaks, 2026-06-16 levels. All in working tree on branch
+   `feat/2026-06-16-regime-research-cockpit-levels`, not yet committed.
+3. **Stale "V3 close:" log strings** in the trader (cleanup task #18) — translate
+   when reading; rename pending.
+
+### 22.2 Pipeline refactor — V3 fully removed (Phases A–H, 2026-06-09)
+
+The intertwined quality + actionability + side-effects in `state.ts:applySignalV3`
+were replaced with a clean **3-stage pipeline: raw signal → qualified → tradable**.
+Cutover went live 2026-06-09 16:00 ET (`PIPELINE_ACTIVE_MODE=live`), then the legacy
+cascade was deleted phase by phase.
+
+| Commit | Phase | What |
+|--------|-------|------|
+| `ccf72b9` | PR 1–4 | `signal-pipeline.ts` (`evaluateTechnical` / `evaluateActionability`), `tradable_signals` table, backfill (39k+ rows), diff-vs-V3 acceptance, soft `activeMode` cutover flag |
+| `35f6162` | — | qualified-marker reader → live `tradable_signals.qualified=1` |
+| `6820762` | B | deleted `applySignalV3` / `isV3EntryRule` / `v3PatternFor` / `logV3Decision` from `state.ts` |
+| `e8aa7a9` | C+D | merged `config.v3.*` → `config.pipeline.*`; default mode now `live` |
+| `5291058` | E | `v3_decisions` table → `signal_results`; `V3Decision`→`SignalResult`, `V3OpenTrade`→`OpenTradeRow`, `db.v3.*`→`db.openTrades.*`+`db.signalResults.*`; dropped `v3OpenTs`/`v3OpenSignals` from `/signals/marks` |
+| `263ba3c` | F+G+H | `git mv` v3-rth-timer.ts→`rth-timer.ts`, v3-tick-router.ts→`tick-router.ts` (+ class/singleton renames); deleted dead `v3_*_smoke` / `diff_pipeline_vs_v3` scripts; dropped `*_pre_refactor` backup tables |
+| `a39fedc` | — | close-then-reopen on qualified opposing signal |
+
+**Acceptance data** (retained rules clean-impulse + cont-reentry): pipeline 5W/4L
+55.6% +85.5 pts vs V3 baseline 5W/6L 45.5% −38.1 pts (Δ +123.6 pts ≈ +$247 MNQ).
+Only 2 "unexpected lost OPENs", both losses — pipeline is marginally more conservative.
+
+**Exit policy** is now Variant A (`trade-manager.ts:shouldExitOnSignal`): single
+symmetric rule = opposing-direction + qualified + `rule_id ∈
+config.pipeline.tradableExitRules` (`['clean-impulse','cont-reentry']`). Chosen via
+`backtest_exit_variants.ts`: 40 trades, 67.5% WR, +1,138.5 pts on FLIP+CONT.
+
+Net: **`grep -rn "v3" src/` is clean** except historical "REMOVED 2026-06-09"
+comments. `/pipeline/state` → `{"pipelineMode":"live","symbols":["NQ"]}`. The
+trader's `"V3 close:"` log prefix is the only remaining leak (cosmetic).
+
+### 22.3 MBO storage: SQLite → Parquet + DuckDB (`d132861`, `91dada6`)
+
+**Why**: single-writer `mbo.db` couldn't keep up — WAL contention serialized NQ+ES
+depth/trade/mbo writes, and on **2026-06-13 an orphan-inode incident wiped 277 GB**
+of in-flight data while two ingest procs held fds to a dead inode. Replaced with
+columnar Parquet read in place by DuckDB; the JSON-lines `.log` files in
+`~/cockpit-mbo-capture/` remain the canonical source of truth + safety net.
+
+- **Converter**: `scripts/mbo_parquet_converter.py` (pyarrow 17.0.0 + duckdb 1.1.3
+  pinned in `scripts/.venv-mbo`). Two modes: `backfill` (whole `.log` end-to-end,
+  atomic `.tmp`→rename) and `tail` (1s poll, flush per-(table,symbol,date) every 60s
+  / 250K rows, byte-offset checkpoints).
+- **Schema**: 3 tables `mbo_trades` / `mbo_depth` / `mbo_events`, Hive-partitioned
+  `symbol={NQ,ES}/date={YYYY-MM-DD ET}`, ZSTD-3. Adds a **`contract` column**
+  (MNQM6/MNQU6/MESM6/MESU6…) so the 2026-06-14 M6→U6 roll keeps contracts separate
+  (per the keep-multi-contract memory).
+- **Query layer**: `apps/aggregator/src/lib/mbo-reader.ts` (`@duckdb/node-api`)
+  exposes views with the legacy SQLite table names → analysis-script migrations are
+  mechanical. Empty-typed fallback views for unwritten partitions.
+- **Daemon**: `com.cockpit.mbo-parquet-converter.plist` runs `tail` at login,
+  KeepAlive, 30s throttle.
+- **Compression**: 198 GB raw `.log` → 6.9 GB parquet (**28.7×**); per-day rollup
+  1–25 ms cold, 30s trade window 25 ms cold.
+- **Gitignored**: `data/mbo-parquet/`, `scripts/.venv-mbo/`, `phase1-*.json`, `*.bak-*`.
+
+**Parallel ingest** (`91dada6`): the single hourly `mbo_ingest` cron was split into
+two per-symbol launchd jobs (`com.cockpit.mbo-ingest-{nq,es}`) firing at `:23`,
+because sequential processing left ES ~17h behind NQ. Each has a symbol-scoped
+`pgrep` guard so ES is no longer blocked by an in-flight NQ run. **Note**: the older
+`mbo_ingest.ts` SQLite path predates the parquet converter; the parquet `tail`
+daemon is now the live ingest. Confirm which one is authoritative before running a
+manual ingest (don't double-write).
+
+To query CVD/volume from parquet (Python): use `scripts/.venv-mbo/bin/python` with
+DuckDB over `data/mbo-parquet/`. **`last` is a reserved word in DuckDB — alias around
+it.** And see §22.9 — dedup with `DISTINCT` or you'll over-count by ~30%.
+
+### 22.4 Research — Phase 1/2 reversal + regime/vol/VWAP studies (`00c9e3c`, `a83f820`, `e18465a`)
+
+Disciplined train/test studies on the ~25-day NQ tick sample. **Bottom line: no
+pre-entry selection overlay generalizes at this sample size; edge stays in raw
+FLIP/CONT at flat 80/70 TP/SL.** Parked pending 5-yr MBO data.
+
+- **Phase 1** (`scripts/phase1/`): stratified TRAIN(13)/TEST(12)/HOLDOUT(1) split,
+  state-machine touch detector with `IB_LOCK_TIME=10:30 ET` (IBH/IBL leak future
+  info pre-10:30), and a **true intratick simulator** that fixed an intra-bar
+  look-ahead trap (the bar-walker had inflated fade WR to a fake 90%). Honest
+  re-run: fade is **22% train / 31% test — losing net**. Permutation test (50K
+  shuffles) + Wilson CI confirm no edge.
+- **Phase 2** (`scripts/phase2/`): human-labeled pos/neg setups, two-cohort design
+  (cohort_a price-action 25-day; cohort_b deep L2/L3 MBO 9-day BMD subset).
+- **`e18465a` findings**:
+  - tier-1 reversal: `book_dir` separated in-sample (June L3 AUC 0.73) but failed
+    OOS (May L2 AUC 0.60); dropped trades still +EV.
+  - regime_gate: variance-ratio/efficiency/autocorr wash out; `AC1≥0 & priorSL==0`
+    looked good (82% WR) but fails multiple-testing correction.
+  - **vol_regime**: prior-day VXN predicts next-day NQ **RANGE** (rho 0.62, R²0.40,
+    1400 days) but NOT trend/chop/direction. VXN-scaled brackets LOSE to flat 80/70.
+  - chop_adx_regime: Choppiness+ADX don't separate W/L (AUC ~0.54).
+  - vwap_reversal/continuation: both ~break-even; every train pattern collapsed OOS;
+    disproves the "flip a low-WR strategy" idea.
+  - `regime_shadow` logs live gate decisions for fresh OOS (its `.db` is gitignored).
+- **Backtest script batch** (`a83f820`): Variant A family (`backtest_a_detail.ts` is
+  the canonical FLIP+CONT replay engine), `backtest_exit_variants.ts` (drove the
+  exit-policy decision), `perf_es*.ts`, `persist_simulated_outcomes.ts` (writes
+  `sim_pnl_pts`/`sim_exit_reason`/`sim_exit_ts` back into `tradable_signals` with a
+  `--write` flag), `pipeline_breakdown.ts`. Research artifacts, not production.
+
+Cross-reference memories: `project_phase2_reversal`, `project_vol_regime`,
+`project_vwap_reversal`.
+
+### 22.5 Structural-level + shadow strategy work (`c900d06`, `c4232d1`, `175b66d`)
+
+- **`c900d06`**: 10 new chart labels (IBH/IBL/RTHO/VWAP/HVN/LVN/WkH/WkL/nPOC) added
+  to `LEVEL_STYLES`; `compute_structural_levels.ts` gained `--evening` /
+  `--prefill-next-day`; **new 17:55 ET evening cron** closes the 17h gap so the
+  overnight session has reference levels. (Note: `--prefill-next-day` was later
+  dropped — see `6faabc4` — next-day prefill moved to the 16:05 close cron.)
+- **`c4232d1`**: shadow-trader infrastructure. `apps/aggregator/src/shadow-trader.ts`
+  watches the live tick stream, detects first touches of structural levels, opens a
+  **pure-observational** shadow trade (TP=50/SL=20), writes to a new `shadow_trades`
+  table. **Fully isolated from live**: own state Map, no SSE/bus broadcast, called
+  after `tradeManager.onTick`, wrapped in try/catch in `tick-router.ts`. Backtest
+  surfaced WkH/PDH/onVAL as the strongest levels (68% WR top-3 on TEST) but CIs too
+  wide to deploy capital — hence shadow-first. Also fixed `computeWeekly` (i=0→i=1)
+  so WkH/WkL exclude today.
+- **`175b66d`**: cooldown-shadow + corrected structural-TP analyses.
+- **Levels behavior**: `8d83a2e` set `HIDE_NON_TIER1_LEVELS=false` so the chart now
+  plots all levels again (Bull/Bear zones, DD bands, HP/MHP, ON levels, QQQ/SPY
+  Open/Close, etc.). `6774469` had introduced the tier-1-only filter + an **SVG
+  marker overlay** (replaces lightweight-charts `setMarkers` — lets us control
+  weight/size/color/arrow geometry; visible-range gated).
+
+### 22.6 Trader (Tradovate) — daemon + live cont-reentry + race fixes
+
+| Commit | What |
+|--------|------|
+| `83fc334` | Trader runs as **launchd singleton** (`com.cockpit.trader`), KeepAlive on crash only, 60s throttle, `pgrep` guard prevents duplicate Tradovate sessions (root cause of a 429 storm). Exponential-backoff WS connect replaces fatal-exit-on-429. `pnpm dev` now tails the launchd log instead of spawning the trader (`pnpm dev:with-trader` for emergencies). |
+| `52d2797` | halt-file watcher + composite-key dedup in signal gate |
+| `ab56d86` | **cont-reentry enabled for live MNQ** (`TRADER_ENABLED_RULES=clean-impulse,cont-reentry`), TP=80/SL=70 symmetric. 23-day backtest: FLIP+CONT 108 trades 62% WR +$5,014 ($218/day) vs FLIP-only 90 trades 60% +$3,860 ($175/day). CONT lift +$50/day. |
+| `b913bae` | **race-safe trade-close**: query each bracket's status BEFORE cancel+flatten; if broker already filled SL/TP, record the fill and SKIP the market order. Fixes an overshoot that opened a −1 opposite position on 2026-06-10 11:13. Also: WS reconnect now calls `ensureAuth()` (token-expiry infinite-loop fix). |
+| `fcac3c8` | bound `orderSeen`/`orderSide` on cancel to prevent RangeError in mbo-ingest |
+| `6faabc4` | Pushover wiring: `notify.ts` fans alerts to Discord (audit) + Pushover (<1s phone push); `PUSHOVER_USER`/`PUSHOVER_TOKEN` env; `reapply_quality_gates.ts` GATE_VERSION 4→5 |
+
+Tradovate live account **1557816**; daily-loss cap −$1000; qty=1 MNQ (no size-up).
+
+### 22.7 Bookmap capture fix (`86ec5a0`)
+
+`fix(bookmap-java)`: calendar-day file rotation (v1.0 → v1.1) so capture `.log`
+files roll at the day boundary instead of growing unbounded.
+
+### 22.8 Cockpit UI — committed + UNCOMMITTED batch
+
+**Committed**:
+- `2fafa4d` chart polish — ON shading, sticky labels, badge collision avoidance, bar cache.
+- `b2c88d3` TRADABLE + EXPERIMENTAL chart toggles + pipeline-mode badge (replaced the old V3 button).
+- `4283ebe` chart-load / "go to latest" button / no-flicker fixes.
+- `f7a4d6c` per-symbol resilience override (rs-context) + UI tweaks.
+- `8d83a2e` **fire-engine "wail" siren** (3s, sawtooth+detuned square, ~650–1400 Hz sweep; lower band = short) replaces per-rule synth beeps. Fires ONLY on clean-impulse FLIP + cont-reentry OPEN tradables — never shadow/qualified-only.
+
+**UNCOMMITTED** (working tree, this session 2026-06-16) — readability pass driven by Ravi finding text pixelated:
+- **Fonts**: IBM Plex → **Geist + Geist Mono** (`index.html` Google Fonts link, `styles.css` `--font-mono`). Real 400/700/800 weights fix the faux-bold/pixelation.
+- **Canvas webfont-race fix** (`Chart.tsx` ~L870): lightweight-charts painted axis/labels before Geist Mono downloaded and never redrew. Now force-loads the font then re-applies `layout.fontFamily` on `document.fonts.ready` to repaint.
+- **De-blur**: removed `backdropFilter: blur(4px)` from `OpeningBias.tsx` panel and the `App.tsx` top-left levels panel; bumped backgrounds to `rgba(10,10,11,0.96)`. The blur (not the font) was the real "pixelation" cause.
+- **OpeningBias**: body `fontWeight:700`, BIAS line 800; font sizes bumped (rows 13, BIAS 14); negative-value red lightened `#d64545`→`#f87171` (Gap/Bar1/CVD/BIAS-SHORT); 09:29/09:31/09:33 timestamps → white.
+- **RSContextBar**: label 11→13, value 13→15; PRICE RANGE chip.
+- Minor tweaks: `RegimePanel.tsx`, `StatusBar.tsx`, `TradeNoTradePopover.tsx`, `Chart.tsx` TRADE RULES box weight 700→800.
+- **Data**: `daily_levels.json` / `daily_levels_es.json` (2026-06-16 RS levels, NQ+ES, ES backfill) + `data/rs-context.json` refresh. (Levels themselves committed at `3e650b7`/`812b5c3`; the working-tree changes are the in-progress 06-16 batch.)
+
+**OpeningBias semantics** (for reference): Gap = today's RTH open − prior trading
+day's RTH close (`bar1.open − priorClose`; priorClose = last bar in 15:00–17:00 ET
+window before today's open, derived from 1-min bars, not exchange settlement).
+
+### 22.9 ⚠️ Parquet duplicate-row data-integrity bug (discovered 2026-06-16, NOT fixed)
+
+Cross-checking CVD against Bookmap surfaced a real bug **on our side**:
+
+| Measure | RTH 09:30–16:00 CVD | trades |
+|---------|---------------------|--------|
+| Parquet **with duplicates** | −27,035 | 4,110,012 |
+| Parquet **deduplicated** | **−16,188** | 2,879,919 |
+| Bookmap (MNQ, 09:30 anchor) | −18,100 → −19,038 | — |
+
+The converter crash-loop (~96 crashes before the `ff0e465` `ts_ms` guard) re-processed
+log segments on each restart, leaving **~1.24M duplicate trade rows (~30%)**. Confirmed
+true duplication (identical ts + price + size + order IDs), not OTC/block (zero
+`is_otc`). Deduped, we match Bookmap closely (residual ~2–3k = post-16:00 prints +
+aggressor edge cases).
+
+**Implications**: the entire June parquet store likely carries ~30% duplicate
+trade/depth/mbo rows. **Absolute volume/CVD numbers from parquet are inflated and not
+trustworthy**; relative winner/loser comparisons may survive if dupes are ~uniform.
+The cockpit's CVD indicator (from `ticks.db`, inferred aggressor) is separately ~3.5×
+too small — use parquet (deduped) for definitive CVD, anchored to RTH 09:30 ET.
+
+**Fix still required (two parts, NOT done)**:
+1. **Dedup the store** — rebuild June partitions with `DISTINCT` (or re-convert from
+   the clean `.log` source of truth).
+2. **Harden the converter** — verify the byte-offset checkpoint actually prevents
+   re-processing a segment after restart (idempotent writes / stricter checkpoint);
+   the `ts_ms` guard stopped crashes but not necessarily the dup-on-restart path.
+
+### 22.10 `ff0e465` — converter corrupt-`ts_ms` guard
+
+The tail converter crash-looped on malformed `ts_ms` overflowing datetime ("year
+58425 out of range"), and moderately-bad timestamps (1970, 2534…) were written to
+**70 junk `date=` partitions**. `et_date_str()` now clamps `ts_ms` to a sane window
+(≥~2023-11, ≤now+2d) and try/excepts → `None`; both call sites skip None-date rows.
+70 junk partitions were removed. Unit-tested. (This stopped the crashes that caused
+the §22.9 duplication, but did not retroactively dedup the already-polluted store.)
+
+---
+
+**End of section 22.** Project state as of 2026-06-16 (Tuesday). Last commit
+`e18465a`. Branch `feat/2026-06-16-regime-research-cockpit-levels` with the §22.8
+cockpit-styling batch uncommitted in the working tree.

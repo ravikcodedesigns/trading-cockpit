@@ -7567,7 +7567,7 @@
               "width": 3
             },
             {
-              "price": 30874.5,
+              "price": 30312.75,
               "label": "NQ Close",
               "color": "#ffd700",
               "style": "solid",
@@ -7676,6 +7676,106 @@
               "label": "QQQ Open",
               "color": "#ffffff",
               "style": "solid",
+              "width": 2
+            }
+          ]
+        }
+      ]
+    },
+    "2026-06-17": {
+      "levels": [
+        {
+          "symbol": "NQ",
+          "bullZone": {
+            "low": 29916.4,
+            "high": 29916.4
+          },
+          "bearZone": {
+            "low": 30532.8,
+            "high": 30532.8
+          },
+          "ddBands": {
+            "upper": 30787,
+            "lower": 30272.74
+          },
+          "hedgePressure": 29895.9,
+          "mhp": 29895.9,
+          "additionalLevels": [
+            {
+              "price": 30889,
+              "label": "PDH",
+              "color": "#2596BE",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 30700.5,
+              "label": "R1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 30689.5,
+              "label": "VAH",
+              "color": "#D8D06E",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30595.5,
+              "label": "Halfback",
+              "color": "#95A5A6",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 30501.25,
+              "label": "Pivot",
+              "color": "#FF6F91",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30482,
+              "label": "POC",
+              "color": "#545FDE",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 30347.25,
+              "label": "VAL",
+              "color": "#8C8641",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30312.75,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 30312.75,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30302,
+              "label": "PDL",
+              "color": "#BF3C24",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 30113.5,
+              "label": "S1",
+              "color": "#FFC1CC",
+              "style": "dotted",
               "width": 2
             }
           ]

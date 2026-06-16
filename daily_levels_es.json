@@ -1,5 +1,5 @@
 {
-  "_comment": "ES daily levels \u2014 Step 1 of multi-instrument expansion (2026-06-03 evening). ALL RS values for 2026-06-04 are TEST placeholders to verify chart rendering \u2014 user will overwrite with the morning RocketScooter snapshot exactly the same way as NQ. ON HP / ON MHP are real (from June 4 ON screenshot). Same schema as daily_levels.json (NQ); chart applies the same rendering logic.",
+  "_comment": "ES daily levels — Step 1 of multi-instrument expansion (2026-06-03 evening). ALL RS values for 2026-06-04 are TEST placeholders to verify chart rendering — user will overwrite with the morning RocketScooter snapshot exactly the same way as NQ. ON HP / ON MHP are real (from June 4 ON screenshot). Same schema as daily_levels.json (NQ); chart applies the same rendering logic.",
   "days": {
     "2026-06-04": {
       "levels": [
@@ -126,7 +126,7 @@
               "width": 2
             }
           ],
-          "notes": "2026-06-04 ES \u2014 TEST RS values (placeholder, user will overwrite with morning RocketScooter snapshot). Real values: ON HP 7527.83, ON MHP 7496.47 (from June 4 ON screenshot). Bull/Bear zones, DD bands, HP, MHP, SPY Open/Close, HG, Bull2-3, Bear2-3 are all placeholders sized around yesterday's ES price action (PDH 7614.75, PDL 7562.5, PDC 7572). Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) will be auto-populated at 09:23 ET by structural-levels cron."
+          "notes": "2026-06-04 ES — TEST RS values (placeholder, user will overwrite with morning RocketScooter snapshot). Real values: ON HP 7527.83, ON MHP 7496.47 (from June 4 ON screenshot). Bull/Bear zones, DD bands, HP, MHP, SPY Open/Close, HG, Bull2-3, Bear2-3 are all placeholders sized around yesterday's ES price action (PDH 7614.75, PDL 7562.5, PDC 7572). Structural levels (PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL) will be auto-populated at 09:23 ET by structural-levels cron."
         }
       ]
     },
@@ -582,7 +582,7 @@
             },
             {
               "price": 7405.75,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -652,7 +652,7 @@
             },
             {
               "price": 7282.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -780,7 +780,7 @@
             },
             {
               "price": 7362,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -864,7 +864,7 @@
             },
             {
               "price": 7284,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -971,7 +971,7 @@
             },
             {
               "price": 7341.25,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1132,7 +1132,7 @@
             },
             {
               "price": 7263,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1218,7 +1218,7 @@
             },
             {
               "price": 7447.25,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1288,7 +1288,7 @@
             },
             {
               "price": 7400.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1430,7 +1430,7 @@
           "additionalLevels": [
             {
               "price": 7483.75,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1444,7 +1444,7 @@
             },
             {
               "price": 7454.75,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1628,7 +1628,7 @@
           "additionalLevels": [
             {
               "price": 7533.25,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1649,7 +1649,7 @@
             },
             {
               "price": 7507,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1931,7 +1931,7 @@
             },
             {
               "price": 7463.5,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -1973,7 +1973,7 @@
             },
             {
               "price": 7430,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2094,7 +2094,7 @@
             },
             {
               "price": 7435.25,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2164,7 +2164,7 @@
             },
             {
               "price": 7395.25,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2320,7 +2320,7 @@
             },
             {
               "price": 7396.75,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2390,7 +2390,7 @@
             },
             {
               "price": 7356.25,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2413,7 +2413,7 @@
             },
             {
               "price": 7458,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2469,7 +2469,7 @@
             },
             {
               "price": 7410.75,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2646,7 +2646,7 @@
             },
             {
               "price": 7447,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2744,7 +2744,7 @@
             },
             {
               "price": 7408.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2788,7 +2788,7 @@
           "additionalLevels": [
             {
               "price": 7520.5,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -2837,7 +2837,7 @@
             },
             {
               "price": 7498.25,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3098,7 +3098,7 @@
             },
             {
               "price": 7544,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3154,7 +3154,7 @@
             },
             {
               "price": 7517,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3233,7 +3233,7 @@
             },
             {
               "price": 7547.25,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3331,7 +3331,7 @@
             },
             {
               "price": 7524.25,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3382,7 +3382,7 @@
           "additionalLevels": [
             {
               "price": 7586.5,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3438,7 +3438,7 @@
             },
             {
               "price": 7551.25,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3587,7 +3587,7 @@
             },
             {
               "price": 7608.75,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3671,7 +3671,7 @@
             },
             {
               "price": 7585.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3827,7 +3827,7 @@
             },
             {
               "price": 7609.5,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3925,7 +3925,7 @@
             },
             {
               "price": 7577,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -3990,7 +3990,7 @@
             },
             {
               "price": 7632,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4032,7 +4032,7 @@
             },
             {
               "price": 7611.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4300,7 +4300,7 @@
             },
             {
               "price": 7593.75,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4328,7 +4328,7 @@
             },
             {
               "price": 7565.75,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4351,7 +4351,7 @@
           "additionalLevels": [
             {
               "price": 7636.5,
-              "label": "LVN\u2191",
+              "label": "LVN↑",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4386,7 +4386,7 @@
             },
             {
               "price": 7603.5,
-              "label": "LVN\u2193",
+              "label": "LVN↓",
               "color": "#777777",
               "style": "dotted",
               "width": 1
@@ -4590,7 +4590,7 @@
               "width": 1
             },
             {
-              "price": 7630.25,
+              "price": 7589,
               "label": "ES Close",
               "color": "#ffd700",
               "style": "solid",
@@ -4723,6 +4723,92 @@
           },
           "hedgePressure": 7496.7,
           "mhp": 7491.7
+        }
+      ]
+    },
+    "2026-06-17": {
+      "levels": [
+        {
+          "symbol": "ES",
+          "additionalLevels": [
+            {
+              "price": 7636.5,
+              "label": "PDH",
+              "color": "#2596BE",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 7622.75,
+              "label": "R1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 7621.25,
+              "label": "VAH",
+              "color": "#D8D06E",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7614.25,
+              "label": "POC",
+              "color": "#545FDE",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7609.625,
+              "label": "Halfback",
+              "color": "#95A5A6",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 7602.75,
+              "label": "Pivot",
+              "color": "#FF6F91",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7594,
+              "label": "VAL",
+              "color": "#8C8641",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7589,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7589,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7582.75,
+              "label": "PDL",
+              "color": "#BF3C24",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 7569,
+              "label": "S1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            }
+          ]
         }
       ]
     }

@@ -805,7 +805,7 @@ export function Chart() {
       layout: {
         background: { type: ColorType.Solid, color: '#0a0a0b' },
         textColor: '#a8a8b0',
-        fontFamily: 'IBM Plex Mono, monospace',
+        fontFamily: 'Geist Mono, monospace',
         fontSize: 13,  // bumped 11 → 13 for marker readability
       },
       grid: {
@@ -866,6 +866,21 @@ export function Chart() {
     });
     chartRef.current = chart;
     (window as any).__cockpitChart = chart;  // CDP navigation hook
+
+    // Canvas + webfont race: lightweight-charts paints the axis/labels before
+    // the Google webfont (Geist Mono) finishes downloading, so it falls back to
+    // system mono and never redraws on its own. Force the font to load, then
+    // re-apply the layout font to trigger a repaint with Geist Mono.
+    if (typeof document !== 'undefined' && (document as any).fonts) {
+      const fonts = (document as any).fonts;
+      Promise.all([
+        fonts.load('400 13px "Geist Mono"'),
+        fonts.load('700 13px "Geist Mono"'),
+      ]).catch(() => {});
+      fonts.ready.then(() => {
+        try { chart.applyOptions({ layout: { fontFamily: 'Geist Mono, monospace' } }); } catch { /* chart disposed */ }
+      }).catch(() => {});
+    }
 
     // Suppress lightweight-charts' default fitContent autoscale. Without this,
     // every series.setData() call (level lines, FlashAlpha lines, VWAP, the
@@ -2391,7 +2406,7 @@ export function Chart() {
       ltxt.setAttribute('y', String(labelY + labelH - PAD));
       ltxt.setAttribute('text-anchor', 'middle');
       ltxt.setAttribute('fill', '#f5f5f5');
-      ltxt.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      ltxt.setAttribute('font-family', 'Geist Mono, monospace');
       ltxt.setAttribute('font-size', String(FONT_PX));
       ltxt.setAttribute('font-weight', '700');
       ltxt.textContent = label;
@@ -2459,7 +2474,7 @@ export function Chart() {
         const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         el.setAttribute('x', String(x)); el.setAttribute('y', String(y));
         el.setAttribute('fill', '#fde047');
-        el.setAttribute('font-family', 'IBM Plex Mono, monospace');
+        el.setAttribute('font-family', 'Geist Mono, monospace');
         el.setAttribute('font-size', '12'); el.setAttribute('font-weight', '600');
         el.textContent = d.text;
         svg.appendChild(el);
@@ -2548,7 +2563,7 @@ export function Chart() {
         el.setAttribute('y', String(b.pillY + PILL_H - PAD_Y - 2));
         el.setAttribute('text-anchor', 'end');
         el.setAttribute('fill', '#0a0a0b');
-        el.setAttribute('font-family', 'IBM Plex Mono, monospace');
+        el.setAttribute('font-family', 'Geist Mono, monospace');
         el.setAttribute('font-size', String(FONT_PX));
         el.setAttribute('font-weight', '800');
         el.textContent = b.label;
@@ -2665,7 +2680,7 @@ export function Chart() {
         text.setAttribute('stroke-width', '3');
         text.setAttribute('stroke-linejoin', 'round');
         text.setAttribute('paint-order', 'stroke fill');
-        text.setAttribute('font-family', 'IBM Plex Mono, monospace');
+        text.setAttribute('font-family', 'Geist Mono, monospace');
         text.setAttribute('font-size', String(M_FONT));
         text.setAttribute('font-weight', '800');
         text.textContent = m.text;
@@ -2760,7 +2775,7 @@ export function Chart() {
           borderRadius: 4,
           padding: '4px 10px',
           color: '#5a9bff',
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'Geist Mono, monospace',
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: 0.5,
@@ -2785,7 +2800,7 @@ export function Chart() {
             position: 'absolute', left: textInput.x, top: textInput.y - 18,
             background: 'rgba(10,10,12,0.9)', border: '1px solid #5a9bff',
             borderRadius: 2, color: '#fde047',
-            fontFamily: 'IBM Plex Mono, monospace', fontSize: 12, fontWeight: 600,
+            fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 600,
             padding: '2px 6px', outline: 'none', zIndex: 50, minWidth: 80,
           }}
         />
@@ -2812,13 +2827,13 @@ export function Chart() {
           background: active ? `${color}33` : 'rgba(10,10,12,0.85)',
           // Active: full-saturation label. Inactive: dimmed (80 = 50% alpha)
           // so off-buttons clearly recede.
-          color: active ? color : `${color}80`,
+          color: active ? color : `${color}b0`,
           // Active: outer glow + inset border doubles the visual weight without
           // changing pixel dimensions. Inactive: no shadow.
           boxShadow: active
             ? `0 0 12px ${color}55, inset 0 0 0 1px ${color}`
             : 'none',
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'Geist Mono, monospace',
           transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s',
           whiteSpace: 'nowrap' as const,
           pointerEvents: 'auto' as const,
@@ -2926,9 +2941,9 @@ export function Chart() {
           border: '1.5px solid #22c55e',
           borderRadius: 5,
           background: 'rgba(7, 18, 11, 0.92)',
-          fontFamily: 'IBM Plex Mono, monospace',
+          fontFamily: 'Geist Mono, monospace',
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 800,
           color: '#f5f5f5',
           letterSpacing: 0.3,
           whiteSpace: 'nowrap',

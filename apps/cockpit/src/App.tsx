@@ -160,11 +160,10 @@ function ContextStrip({
       top: 8,
       left: 8,
       padding: '6px 10px',
-      background: 'rgba(10,10,11,0.85)',
+      background: 'rgba(10,10,11,0.96)',
       border: '1px solid var(--border)',
       fontSize: 11,
       color: 'var(--text-1)',
-      backdropFilter: 'blur(4px)',
       pointerEvents: 'none',
       maxWidth: 360,
     }}>

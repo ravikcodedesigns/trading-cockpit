@@ -6,10 +6,10 @@
   "hpResilience": 0,
   "redistResilience": 0,
   "resilience": 0,
-  "vx": 15.96,
+  "vx": 16.14,
   "bbb": 18.97,
-  "vvix": 86.54,
-  "setAt": "2026-06-16T17:07:13.259Z",
+  "vvix": 86.33,
+  "setAt": "2026-06-16T19:59:31.728Z",
   "tradingDay": "2026-06-16",
   "vxAboveBBB": false,
   "vvixElevated": false,
@@ -30,5 +30,7 @@
       "resilience": 0,
       "lmCode": "BLU"
     }
-  }
+  },
+  "vxn": 25.92,
+  "expectedRangePts": 686
 }
