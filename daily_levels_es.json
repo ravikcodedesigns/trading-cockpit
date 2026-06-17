@@ -4837,6 +4837,13 @@
               "width": 3
             },
             {
+              "price": 7612.5,
+              "label": "ONH",
+              "color": "#175676",
+              "style": "dashed",
+              "width": 2
+            },
+            {
               "price": 7609.625,
               "label": "Halfback",
               "color": "#95A5A6",
@@ -4851,10 +4858,24 @@
               "width": 2
             },
             {
+              "price": 7603.5,
+              "label": "onVAH",
+              "color": "#F7DC6F",
+              "style": "solid",
+              "width": 1
+            },
+            {
               "price": 7602.75,
               "label": "Pivot",
               "color": "#FF6F91",
               "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7598.75,
+              "label": "PMH",
+              "color": "#FFB347",
+              "style": "dotted",
               "width": 2
             },
             {
@@ -4865,6 +4886,27 @@
               "width": 1
             },
             {
+              "price": 7592.5,
+              "label": "onPOC",
+              "color": "#C39BD3",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7590,
+              "label": "onVAL",
+              "color": "#B7950B",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7492,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
               "price": 7589,
               "label": "PDC",
               "color": "#BBBBBB",
@@ -4872,11 +4914,11 @@
               "width": 1
             },
             {
-              "price": 7589,
-              "label": "ES Close",
-              "color": "#ffd700",
-              "style": "solid",
-              "width": 2
+              "price": 7583.5,
+              "label": "ONO",
+              "color": "#FF9A3C",
+              "style": "dotted",
+              "width": 1
             },
             {
               "price": 7582.75,
@@ -4884,6 +4926,20 @@
               "color": "#BF3C24",
               "style": "dashed",
               "width": 3
+            },
+            {
+              "price": 7582.75,
+              "label": "ONL",
+              "color": "#D45E77",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 7582.75,
+              "label": "PML",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
             },
             {
               "price": 7574.08,
@@ -4894,6 +4950,146 @@
             },
             {
               "price": 7569,
+              "label": "S1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 7544,
+              "label": "Bull Zone Bottom",
+              "color": "#2BB673",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7534,
+              "label": "Bear Zone Top",
+              "color": "#D64545",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7527,
+              "label": "SPY Open",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7524,
+              "label": "Bull Zone",
+              "color": "#2BB673",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7523.13,
+              "label": "HG",
+              "color": "#FFFFFF",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 7519,
+              "label": "SPY Close",
+              "color": "#FFFFFF",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7514,
+              "label": "Bear Zone",
+              "color": "#D64545",
+              "style": "solid",
+              "width": 1
+            }
+          ],
+          "hedgePressure": 7474,
+          "mhp": 7489,
+          "bullZone": null,
+          "bearZone": null,
+          "ddBands": null
+        }
+      ]
+    },
+    "2026-06-18": {
+      "levels": [
+        {
+          "symbol": "ES",
+          "additionalLevels": [
+            {
+              "price": 7604.25,
+              "label": "PDH",
+              "color": "#2596BE",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 7600,
+              "label": "VAH",
+              "color": "#D8D06E",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7586.75,
+              "label": "POC",
+              "color": "#545FDE",
+              "style": "solid",
+              "width": 3
+            },
+            {
+              "price": 7573.416666666666,
+              "label": "R1",
+              "color": "#FFC1CC",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 7542.5,
+              "label": "VAL",
+              "color": "#8C8641",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7538.25,
+              "label": "Halfback",
+              "color": "#95A5A6",
+              "style": "dashed",
+              "width": 1
+            },
+            {
+              "price": 7522.833333333333,
+              "label": "Pivot",
+              "color": "#FF6F91",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7492,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
+            },
+            {
+              "price": 7492,
+              "label": "ES Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 7472.25,
+              "label": "PDL",
+              "color": "#BF3C24",
+              "style": "dashed",
+              "width": 3
+            },
+            {
+              "price": 7441.416666666666,
               "label": "S1",
               "color": "#FFC1CC",
               "style": "dotted",
