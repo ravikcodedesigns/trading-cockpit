@@ -8,8 +8,10 @@ deaths, terminal closes, and machine restarts.
 
 | Plist | Schedule | What it does |
 |---|---|---|
-| `com.cockpit.mbo-ingest.plist` | Every hour at :23 | Pulls new bytes from `~/cockpit-mbo-capture/` into `data/mbo.db`. Skips if another ingest is in flight. |
+| `com.cockpit.mbo-parquet-converter.plist` | Long-running (tail, KeepAlive) | Follows `~/cockpit-mbo-capture/*.log` and writes the Parquet store (`data/mbo-parquet/`). **Replaced the old SQLite `mbo-ingest` crons (retired 2026-06-16).** |
+| `com.cockpit.parquet-compaction.plist` | Daily 03:10 local | Compacts each day's ~2000 tail files into one DISTINCT-deduped file (`dedup_parquet_store.py`). |
 | `com.cockpit.structural-levels.plist` | Mon-Fri 9:23 AM local | Pre-RTH compute of PDH/PDL/PDC/ONH/ONL/ONO/POC/VAH/VAL into `daily_levels.json` |
+| `com.cockpit.structural-levels-evening.plist` | Mon-Fri 17:55 local | Post-RTH session-derived levels + next-day prefill |
 | `com.cockpit.reminder-cvd.plist` | One-shot 2026-06-09 8:43 AM | Reminder: re-evaluate CVD short-gate (`cvdShortFloor=+3000` for wall-broken-fade). Self-disables after firing. |
 | `com.cockpit.reminder-flipshorts.plist` | One-shot 2026-07-07 8:53 AM | Reminder: re-evaluate FLIP SHORTS in qualified_signals after 5+ weeks of data. Self-disables after firing. |
 
@@ -23,7 +25,7 @@ bash ~/trading-cockpit/scripts/launchd/install-all.sh
 ```
 
 What it does:
-1. `chmod +x` the wrapper scripts (mbo-ingest.sh, structural-levels.sh, reminder.sh)
+1. `chmod +x` the wrapper scripts (mbo-parquet-converter.sh, parquet-compaction.sh, structural-levels.sh, reminder.sh)
 2. Copies each `com.cockpit.*.plist` to `~/Library/LaunchAgents/`
 3. `launchctl bootstrap`s each one under your gui session (`gui/$(id -u)`)
 
@@ -42,9 +44,8 @@ Should show all 4 with PID `-` (not currently running) and exit code `0`
 
 | File | Source |
 |---|---|
-| `~/Library/Logs/cockpit-mbo-ingest.log` | mbo-ingest wrapper output (success summaries + skips) |
-| `~/Library/Logs/cockpit-mbo-ingest.stdout.log` | raw stdout (will rotate naturally — small) |
-| `~/Library/Logs/cockpit-mbo-ingest.stderr.log` | errors during launchctl invocation |
+| `~/Library/Logs/cockpit-mbo-parquet.log` | parquet converter (tail) output (flush summaries) |
+| `~/Library/Logs/cockpit-parquet-compaction.log` | nightly compaction output |
 | `~/Library/Logs/cockpit-structural-levels.log` | structural-levels wrapper output |
 | `~/Library/Logs/cockpit-structural-levels.stdout.log` | raw stdout |
 | `~/Library/Logs/cockpit-structural-levels.stderr.log` | launchctl errors |
@@ -53,7 +54,7 @@ Should show all 4 with PID `-` (not currently running) and exit code `0`
 Tail the wrapper logs to verify jobs fire correctly:
 
 ```bash
-tail -f ~/Library/Logs/cockpit-mbo-ingest.log
+tail -f ~/Library/Logs/cockpit-mbo-parquet.log
 tail -f ~/Library/Logs/cockpit-structural-levels.log
 tail -f ~/Library/Logs/cockpit-reminders.log
 ```
@@ -81,11 +82,12 @@ changes on next install.
 
 ## How the recurring jobs avoid pile-up
 
-Both `mbo-ingest.sh` and `structural-levels.sh` write to SQLite. If a prior
-run overlaps with a new launchd fire, you'd get concurrent writes. Mitigations:
-
-- **mbo-ingest.sh** explicitly checks `pgrep -f 'tsx.*mbo_ingest'` and skips
-  the new fire if a previous one is still running.
+- **mbo-parquet-converter.sh** is a single long-running daemon (KeepAlive),
+  not a cron — only one instance runs, so no overlap. It checkpoints per log
+  file and is at-least-once (flush-then-checkpoint), with the nightly
+  compaction deduping any overlap.
+- **parquet-compaction.sh** snapshots the file list, writes a verified staging
+  file, then swaps it in — safe to run while the converter is live.
 - **structural-levels.sh** writes to a JSON file (not SQLite) and runs
   quickly (<10s typical), so overlap is unlikely.
 

@@ -15,8 +15,7 @@ UID_GUI="gui/$(id -u)"
 mkdir -p "$DEST_DIR"
 
 # Make wrapper scripts executable
-chmod +x "$SRC_DIR/mbo-ingest.sh" \
-         "$SRC_DIR/structural-levels.sh" \
+chmod +x "$SRC_DIR/structural-levels.sh" \
          "$SRC_DIR/reminder.sh" \
          "$SRC_DIR/trader.sh" \
          "$SRC_DIR/mbo-parquet-converter.sh" \
@@ -42,7 +41,7 @@ echo "All launchd jobs installed. Verify with:"
 echo "  launchctl list | grep cockpit"
 echo ""
 echo "Logs:"
-echo "  ~/Library/Logs/cockpit-mbo-ingest.log"
+echo "  ~/Library/Logs/cockpit-mbo-parquet.log"
 echo "  ~/Library/Logs/cockpit-structural-levels.log"
 echo "  ~/Library/Logs/cockpit-reminders.log"
 echo "  ~/Library/Logs/cockpit-trader.stdout.log"

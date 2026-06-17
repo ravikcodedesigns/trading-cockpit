@@ -22,6 +22,7 @@
 // confluence formed). Re-evaluate after 2+ weeks of MBO accumulation.
 
 import Database from 'better-sqlite3';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { logger } from '../logger.js';
@@ -57,9 +58,19 @@ function openTicksDb(): Database.Database {
   ticksDb = new Database(path.resolve(__dirname, '../../../../data/ticks.db'), { readonly: true });
   return ticksDb;
 }
-function openMboDb(): Database.Database {
+// Returns null if mbo.db is absent (it's being retired — the parquet store
+// replaced it). This rule is a silenced shadow, so a null here just means it
+// emits no signal; it never throws into the live pipeline.
+function openMboDb(): Database.Database | null {
   if (mboDb) return mboDb;
-  mboDb = new Database(path.resolve(__dirname, '../../../../data/mbo.db'), { readonly: true });
+  const p = path.resolve(__dirname, '../../../../data/mbo.db');
+  if (!fs.existsSync(p)) return null;
+  try {
+    mboDb = new Database(p, { readonly: true });
+  } catch (err) {
+    logger.warn({ err: String(err) }, 'compression-realwall: mbo.db unavailable; rule disabled');
+    return null;
+  }
   return mboDb;
 }
 
@@ -121,6 +132,7 @@ export async function detectCompressionRealwall(
 
   // Real-bid-wall check via MBO
   const mbo = openMboDb();
+  if (!mbo) return null;   // mbo.db retired → no MBO confirmation → no signal
   const wallSearchStart = nowMs - WALL_LOOKBACK_MS;
   const wallCount = mbo.prepare(`
     SELECT COUNT(*) as n FROM mbo_orders

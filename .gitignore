@@ -27,6 +27,8 @@ snapshots/
 data/mbo-parquet/
 data/mbo-parquet-old-checkpoints/
 data/depth.db
+# Parquet ticks store (regenerable from ticks.db via scripts/ticks_to_parquet.py)
+data/ticks-parquet/
 
 # Python venv for the parquet converter (regenerable from requirements pinned in script)
 scripts/.venv-mbo/

@@ -27,6 +27,13 @@ export const PARQUET_ROOT =
   process.env.MBO_PARQUET_ROOT ??
   path.resolve(__dirname, '../../../../data/mbo-parquet');
 
+// L1 trades + L2 depth converted from ticks.db (scripts/ticks_to_parquet.py).
+// For NEW strategy/analysis code only — the LIVE pipeline keeps reading
+// ticks.db (SQLite) directly. Views: ticks_trades / ticks_depth.
+export const TICKS_PARQUET_ROOT =
+  process.env.TICKS_PARQUET_ROOT ??
+  path.resolve(__dirname, '../../../../data/ticks-parquet');
+
 export type Symbol = 'NQ' | 'ES';
 
 let _conn: DuckDBConnection | null = null;
@@ -105,6 +112,32 @@ export async function openMbo(): Promise<DuckDBConnection> {
     const hasFiles = directoryHasParquet(path.join(PARQUET_ROOT, t.sub));
     const body = hasFiles
       ? `SELECT * FROM read_parquet('${PARQUET_ROOT}/${t.sub}/**/*.parquet', hive_partitioning=true)`
+      : `SELECT ${t.cols} WHERE 1=0`;
+    await conn.run(`CREATE OR REPLACE VIEW ${t.name} AS ${body};`);
+  }
+
+  // ticks-parquet views (L1/L2 from ticks.db). `symbol` and `date` come from
+  // the hive partition path, not the file. is_bid_aggressor / is_replace are
+  // BOOLEAN; side is TINYINT (0=bid, 1=ask).
+  const TICK_TABLES: Array<{ name: string; sub: string; cols: string }> = [
+    {
+      name: 'ticks_trades', sub: 'trades',
+      cols: `
+        NULL::BIGINT AS ts, NULL::DOUBLE AS price, NULL::INTEGER AS size,
+        NULL::BOOLEAN AS is_bid_aggressor, NULL::DATE AS date, NULL::VARCHAR AS symbol`,
+    },
+    {
+      name: 'ticks_depth', sub: 'depth',
+      cols: `
+        NULL::BIGINT AS ts, NULL::TINYINT AS side, NULL::DOUBLE AS price,
+        NULL::INTEGER AS size, NULL::BOOLEAN AS is_replace,
+        NULL::DATE AS date, NULL::VARCHAR AS symbol`,
+    },
+  ];
+  for (const t of TICK_TABLES) {
+    const hasFiles = directoryHasParquet(path.join(TICKS_PARQUET_ROOT, t.sub));
+    const body = hasFiles
+      ? `SELECT * FROM read_parquet('${TICKS_PARQUET_ROOT}/${t.sub}/**/*.parquet', hive_partitioning=true)`
       : `SELECT ${t.cols} WHERE 1=0`;
     await conn.run(`CREATE OR REPLACE VIEW ${t.name} AS ${body};`);
   }
