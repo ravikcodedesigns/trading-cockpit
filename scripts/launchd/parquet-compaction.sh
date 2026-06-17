@@ -1,16 +1,19 @@
 #!/bin/bash
-# Nightly MBO Parquet compaction + dedup.
+# Nightly Parquet maintenance: (1) MBO compaction/dedup + (2) ticks refresh.
 #
-# The tail converter writes many small per-batch Parquet files per partition
-# (~2000/day) and is at-least-once, so a hard crash / log re-read can leave
-# overlapping rows. This job folds each multi-file partition into a single
-# DISTINCT-deduped file (dedup_parquet_store.py --execute, which only touches
-# partitions with >= 2 files; clean single-file partitions are skipped).
+# (1) MBO compaction:
+#   The tail converter writes many small per-batch Parquet files per partition
+#   (~2000/day) and is at-least-once, so a hard crash / log re-read can leave
+#   overlapping rows. This folds each multi-file partition into a single
+#   DISTINCT-deduped file (dedup_parquet_store.py --execute, which only touches
+#   partitions with >= 2 files; clean single-file ones are skipped). Safe to run
+#   while the converter is live; originals go to data/mbo-parquet/.trash.
 #
-# Safe to run while the converter is live: dedup snapshots the file list, writes
-# a verified staging file, then swaps it in; any file the converter writes
-# mid-run is simply left for the next night. Originals go to data/mbo-parquet/
-# .trash (not hard-deleted).
+# (2) ticks-parquet refresh:
+#   ticks_to_parquet.py is resumable (skips existing day-partitions), so the
+#   historical store stays frozen. --redo-from re-converts the last couple ET
+#   days so the just-closed day is finalized and the live current day's snapshot
+#   is refreshed from ticks.db. Read-only on ticks.db.
 #
 # Scheduled ~03:10 local, when the prior ET-day partition no longer receives
 # writes. Logs to ~/Library/Logs/cockpit-parquet-compaction.log.
@@ -34,3 +37,10 @@ cd "$REPO" || { echo "$(date '+%Y-%m-%d %H:%M:%S')  ERROR: repo not found" >> "$
 echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction starting" >> "$LOG"
 PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
 echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction done (exit $?)" >> "$LOG"
+
+# ticks-parquet refresh: re-convert the last 2 ET days (finalize just-closed
+# day + refresh the live current-day snapshot). BSD date (macOS) for -2d.
+REDO_FROM=$(date -v-2d +%Y-%m-%d)
+echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== ticks->parquet refresh from $REDO_FROM" >> "$LOG"
+PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/ticks_to_parquet.py" --redo-from "$REDO_FROM" >> "$LOG" 2>&1
+echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== ticks refresh done (exit $?)" >> "$LOG"
