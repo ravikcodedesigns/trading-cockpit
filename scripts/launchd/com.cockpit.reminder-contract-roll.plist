@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.reminder-contract-roll</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-contract-roll</string>
+    <string>2026</string>
+    <string>Cockpit: Contract roll U6 → Z6 — restart trader</string>
+    <string>Quarterly roll today (Sep 10). The roll-aware resolver now picks Z6, but the trader caches its contract at startup — so RESTART it to move MNQU6→MNQZ6 / MESU6→MESZ6 before RTH: launchctl kickstart -k gui/$(id -u)/com.cockpit.trader  Then verify the trader log shows: front-month resolved (roll-aware) chosen=MNQZ6 / MESZ6. Until restarted it stays on U6.</string>
+  </array>
+
+  <!-- One-shot: fires 2026-09-10 (Thu) 08:00 local, pre-RTH. U6→Z6 roll
+       threshold is 2026-09-10 00:00 UTC (U6 3rd-Fri expiry Sep 18 minus the
+       8-day buffer). Wrapper self-disables after firing. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Month</key><integer>9</integer>
+    <key>Day</key><integer>10</integer>
+    <key>Hour</key><integer>8</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.stderr.log</string>
+</dict>
+</plist>

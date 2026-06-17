@@ -47,6 +47,32 @@ export interface OrderResult {
   failureText?: string;
 }
 
+// ── Front-month resolution (roll-aware) ───────────────────────────────────────
+// Quarterly index futures (NQ/ES) roll ~8 days before expiry. /contract/suggest
+// is sorted by NEAREST expiry, so after a roll its first entry is the EXPIRING
+// month (e.g. MNQM6 two days out) rather than the liquid front month (MNQU6).
+// We parse the month code from the contract name, compute its 3rd-Friday expiry,
+// skip anything within the roll buffer, and take the nearest survivor.
+const MONTH_CODE: Record<string, number> = { F: 1, G: 2, H: 3, J: 4, K: 5, M: 6, N: 7, Q: 8, U: 9, V: 10, X: 11, Z: 12 };
+const ROLL_BUFFER_DAYS = 8;
+
+function thirdFridayMs(year: number, month1: number): number {
+  const firstDow = new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
+  const firstFriday = 1 + ((5 - firstDow + 7) % 7);
+  return Date.UTC(year, month1 - 1, firstFriday + 14);
+}
+
+// "MNQU6" / "MESM6" (root + monthCode + 1–2 digit year) → expiry ms, or null.
+function contractExpiryMs(name: string, root: string): number | null {
+  if (!name.startsWith(root)) return null;
+  const rest = name.slice(root.length);
+  const month = MONTH_CODE[rest[0] ?? ''];
+  const yStr = rest.slice(1);
+  if (!month || !/^\d{1,2}$/.test(yStr)) return null;
+  const year = yStr.length === 1 ? 2020 + Number(yStr) : 2000 + Number(yStr);
+  return thirdFridayMs(year, month);
+}
+
 export interface FillEvent {
   id: number;
   orderId: number;
@@ -134,13 +160,28 @@ export class TradovateClient {
   // "Active" — accept both. Empirically demo returns DefinitionChecked.
   async findContract(root: string): Promise<TradovateContract> {
     await this.ensureAuth();
-    // suggest returns contracts sorted by expiry (front-month first)
+    // suggest returns contracts sorted by NEAREST expiry — NOT roll-aware.
     const suggestions = await this.get(`/contract/suggest?t=${encodeURIComponent(root)}&l=10`) as TradovateContract[];
     const tradeable = suggestions.filter(c => c.status === 'Active' || c.status === 'DefinitionChecked');
     if (!tradeable.length) {
       throw new Error(`No tradeable contract found for ${root} (got: ${suggestions.map(c => `${c.name}/${c.status}`).join(', ')})`);
     }
-    return tradeable[0]!;
+    // Roll-aware front month: skip contracts within ROLL_BUFFER_DAYS of expiry,
+    // pick the nearest survivor (the liquid front month after a roll).
+    const now = Date.now();
+    const bufMs = ROLL_BUFFER_DAYS * 86_400_000;
+    const dated = tradeable
+      .map(c => ({ c, exp: contractExpiryMs(c.name, root) }))
+      .filter((x): x is { c: TradovateContract; exp: number } => x.exp !== null)
+      .sort((a, b) => a.exp - b.exp);
+    const front = dated.find(x => x.exp - now >= bufMs)?.c   // nearest not-about-to-expire
+      ?? dated[0]?.c                                          // else nearest parseable
+      ?? tradeable[0]!;                                       // else original fallback
+    logger.info({
+      root, chosen: front.name,
+      candidates: dated.map(x => `${x.c.name}:${Math.round((x.exp - now) / 86_400_000)}d`),
+    }, 'front-month resolved (roll-aware)');
+    return front;
   }
 
   // ── Orders ────────────────────────────────────────────────────────────────
