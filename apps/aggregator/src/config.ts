@@ -73,7 +73,12 @@ export const config = {
     rthCloseEt: '15:54:00',
 
     // CVD regime gates at signal entry (anchored at 09:30 ET).
-    cvdLongFloor: -3000,   // LONG entries blocked when cvdSession ≤ this
+    // 2026-06-17: cvdLongFloor -3000 → -1000. Flip-long diagnostic (69 NQ
+    // clean-impulse longs): the cvd<-1000 cohort was 0W/4L (all max-loss),
+    // permutation p≈0.025 vs random. Cuts only losers; cont-reentry longs have
+    // 0 trades in this zone so no collateral effect. Small/in-sample (test had
+    // no such trades) — low-downside, concept-driven tweak, not a proven edge.
+    cvdLongFloor: -1000,   // LONG entries blocked when cvdSession ≤ this
     cvdShortFloor: 3000,   // SHORT entries blocked when cvdSession ≥ this
 
     // Direction-specific behavior baked in from backtest findings:
