@@ -24,8 +24,10 @@ const log = (...a) => console.error(new Date().toLocaleTimeString('en-US', { tim
 const RS_OWNED = ['HP', 'MHP', 'HG', 'QQQ Open', 'QQQ Close', 'Bull Zone', 'Bear Zone', 'DD'];
 
 const TARGETS = [
-  { name: 'NQ', re: /MNQ|F\.US\.ENQ/, file: path.resolve(__dirname, '../daily_levels.json'),    hpNow: 'NQHPNOW', mhpNow: 'NQMHPNOW' },
-  { name: 'ES', re: /MES|F\.US\.EP|F\.US\.ES/, file: path.resolve(__dirname, '../daily_levels_es.json'), hpNow: 'SPHPNOW', mhpNow: 'SPMHPNOW' },
+  // re matches tvWidget.chart(i).symbol() (e.g. F.US.MNQU26); paneRe matches the
+  // chart-widget's DESCRIPTIVE legend ("Micro E-mini Nasdaq-100") for the LM click.
+  { name: 'NQ', re: /MNQ|F\.US\.ENQ/, paneRe: /nasdaq/i, file: path.resolve(__dirname, '../daily_levels.json'),    hpNow: 'NQHPNOW', mhpNow: 'NQMHPNOW' },
+  { name: 'ES', re: /MES|F\.US\.EP|F\.US\.ES/, paneRe: /s&amp;p|s&p/i, file: path.resolve(__dirname, '../daily_levels_es.json'), hpNow: 'SPHPNOW', mhpNow: 'SPMHPNOW' },
 ];
 
 // Return every chart's shapes + the per-index HP/MHP "now" globals + DD.
@@ -58,6 +60,60 @@ function evalExpr(expr) {
       ws.on('error',e=>{clearTimeout(to);reject(e);});
     });}).on('error',reject);
   });
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Generic one-shot CDP command over a fresh WS (used for Input.dispatchMouseEvent).
+function cdp(method, params) {
+  return new Promise((resolve, reject) => {
+    http.get(`http://localhost:${PORT}/json`, res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>{
+      let tab; try{ const _pp=JSON.parse(b).filter(t=>t.type==='page'&&(t.url||'').includes('rocket.place/pro-plus'));
+        tab=_pp.find(t=>/\/pro-plus\/?($|[?#])/.test(t.url))||_pp.find(t=>!/\/(settings|account|pricing|dashboard)/.test(t.url))||_pp[0]; }catch(e){ return reject(new Error('cdp list')); }
+      if(!tab) return reject(new Error('no pro-plus tab'));
+      const ws=new WS(tab.webSocketDebuggerUrl,{maxPayload:50*1024*1024});
+      const to=setTimeout(()=>{try{ws.close();}catch{};reject(new Error('cdp timeout'));},8000);
+      ws.on('open',()=>ws.send(JSON.stringify({id:1,method,params})));
+      ws.on('message',m=>{const msg=JSON.parse(m);if(msg.id===1){clearTimeout(to);try{ws.close();}catch{};resolve(msg.result);}});
+      ws.on('error',e=>{clearTimeout(to);reject(e);});
+    });}).on('error',reject);
+  });
+}
+async function clickAt(x, y) {
+  await cdp('Input.dispatchMouseEvent', { type:'mousePressed',  x, y, button:'left', buttons:1, clickCount:1 });
+  await sleep(60);
+  await cdp('Input.dispatchMouseEvent', { type:'mouseReleased', x, y, button:'left', buttons:0, clickCount:1 });
+}
+
+// chart index whose symbol matches a regex (by symbol, robust to extra ETF charts).
+const findIdxExpr = reSrc => `(function(){var w=window.tvWidget,n=w.chartsCount();for(var i=0;i<n;i++){if(${reSrc}.test(w.chart(i).symbol()))return i;}return -1;})()`;
+// pane center (viewport coords) for the chart matching re — the click target that refreshes the LM text.
+const paneCenterExpr = reSrc => `(function(){var re=${reSrc};var fr=document.querySelector('iframe#tradingview_41ff2')||document.querySelector('iframe');if(!fr)return null;var off=fr.getBoundingClientRect();var doc;try{doc=fr.contentDocument||fr.contentWindow.document;}catch(e){return null;}if(!doc)return null;var ws=doc.querySelectorAll('.chart-widget');for(var i=0;i<ws.length;i++){var leg=ws[i].querySelector('[class*=legend]');var txt=leg?(leg.innerText||''):(ws[i].innerText||'');if(re.test(txt)){var r=ws[i].getBoundingClientRect();if(r.width<80)continue;return JSON.stringify({x:Math.round(off.x+r.x+r.width/2),y:Math.round(off.y+r.y+r.height/2)});}}return null;})()`;
+const lmExpr = `(document.querySelector('.liq-map-image-text')||{}).textContent||null`;
+// per-chart 1D rectangles (price+time+color) + current price for the Monthly-Map read.
+const mmScrape = idx => `(function(){var ch=window.tvWidget.chart(${idx});var out={rects:[]};try{out.res=ch.resolution();out.sym=ch.symbol();}catch(e){}try{var cbs=window.tvOnRealtimeBarsCallbacks||[];var pick=function(test){for(var i=0;i<cbs.length;i++){if(cbs[i].symbol===out.sym&&cbs[i].lastBar&&test(cbs[i])){out.price=cbs[i].lastBar.close;out.lastBarT=Math.floor(cbs[i].lastBar.time/1000);return true;}}return false;};pick(function(c){return String(c.resolution)===String(out.res);})||pick(function(){return true;});}catch(e){}try{ch.getAllShapes().forEach(function(s){if(!/rectangle/i.test(s.name||''))return;try{var o=ch.getShapeById(s.id);var pts=o.getPoints();var pr=pts.map(function(p){return p.price;});var tm=pts.map(function(p){return p.time;});var p=o.getProperties();out.rects.push({lo:Math.min.apply(null,pr),hi:Math.max.apply(null,pr),tmin:Math.min.apply(null,tm),tmax:Math.max.apply(null,tm),c:p.backgroundColor||p.color||''});}catch(e){}});}catch(e){}return JSON.stringify(out);})()`;
+
+// Monthly-Map bias: filter rectangles to the next-day projection column, then
+// price-in-#767a88-bear => bearish, else (bull zone or gap) => bullish. Returns null if unreadable.
+function computeMM(d) {
+  if (!d || d.price == null || !Array.isArray(d.rects) || !d.lastBarT) return null;
+  const DAY = 86400, lb = d.lastBarT;
+  const col = d.rects.filter(r => r.tmin >= lb - 0.5 * DAY && r.tmin <= lb + 1.5 * DAY);
+  if (!col.length) return null;
+  const norm = c => (c || '').toLowerCase().replace(/\s/g, '');
+  const inBear = col.some(z => norm(z.c).includes('767a88') && d.price >= z.lo && d.price <= z.hi);
+  return !inBear;
+}
+
+// Merge per-symbol lmCode/mmBullish into rs-context.json (preserve resiliences + everything else).
+function writeRsContext(perSym) {
+  const CTX = path.resolve(__dirname, '../data/rs-context.json');
+  let cur = {}; try { cur = JSON.parse(fs.readFileSync(CTX, 'utf8')); } catch (e) {}
+  const by = { ...(cur.bySymbol || {}) };
+  for (const [sym, vals] of Object.entries(perSym)) by[sym] = { ...(by[sym] || {}), ...vals };
+  cur.bySymbol = by;
+  if (perSym.NQ && perSym.NQ.lmCode) cur.lmCode = perSym.NQ.lmCode; // global default mirrors NQ
+  fs.writeFileSync(CTX, JSON.stringify(cur, null, 2));
 }
 
 function parseLabel(text) {
@@ -132,20 +188,69 @@ function writeFile(target, mapped) {
   return others.length;
 }
 
-async function main() {
+// Phase 1 — intraday zones/levels → daily_levels{,_es}.json (charts must be on 1m).
+// Returns true if at least one target had real zone bands (used to gate the retry).
+async function readIntraday() {
   const d = JSON.parse(await evalExpr(SCRAPE));
   if (d.err) throw new Error(d.err);
+  let zonesFound = false;
   for (const t of TARGETS) {
     const chart = d.charts.find(c => t.re.test(c.symbol || ''));
     if (!chart) { log(`${t.name}: no matching chart`); continue; }
     const mapped = mapChart(chart.shapes, d[t.hpNow], d[t.mhpNow]);
+    if (mapped.zones.bull.length + mapped.zones.bear.length > 0) zonesFound = true;
     log(`── ${t.name} (${chart.symbol}, ${chart.shapes.length} shapes) ──`);
     log(`  ${mapped.zones.bull.length} bull + ${mapped.zones.bear.length} bear zone bands`);
-    log(`  zones near mid: ${mapped._zones.sort((a, b) => b.low - a.low).filter(z => Math.abs((z.low + z.high) / 2 - ((mapped.ddBands?.upper + mapped.ddBands?.lower) / 2 || z.low)) < 700).map(z => `${z.t} ${z.low}–${z.high}`).join('  ') || '(none)'}`);
     const out = { primaryBull: mapped.bullZone, primaryBear: mapped.bearZone, ddBands: mapped.ddBands, HP: mapped.hedgePressure, MHP: mapped.mhp, additional: mapped.rsAdditionalLevels.map(a => `${a.label}@${a.price}`) };
     console.error('  →', JSON.stringify(out));
     if (!DRY) { const kept = writeFile(t, mapped); log(`  wrote ${t.file.split('/').pop()} [${etDate()}] (${kept} price-derived preserved)`); }
   }
-  if (DRY) log('DRY — no files written.');
+  return zonesFound;
 }
-main().catch(e => { log('ERROR', e.message); process.exit(1); });
+
+// Phase 2 — per-symbol LM code + Monthly-Map bias. Flips each chart to 1D briefly
+// (restores to 1m after), clicks the pane so the LM text refreshes (setResolution
+// activates the chart but leaves the LM stale), reads next-day-column zones, then
+// writes lmCode + mmBullish into rs-context. Failures are isolated per symbol.
+async function readLmMm() {
+  const perSym = {};
+  for (const t of TARGETS) {
+    try {
+      const idx = await evalExpr(findIdxExpr(t.re.toString()));
+      if (idx == null || idx < 0) { log(`${t.name}: no chart for LM/MM`); continue; }
+      await evalExpr(`window.tvWidget.chart(${idx}).setResolution("1D");"ok"`);
+      let lm = null;
+      try { const c = await evalExpr(paneCenterExpr(t.paneRe.toString())); if (c) { const p = JSON.parse(c); await clickAt(p.x, p.y); } } catch (e) {}
+      await sleep(3500); // let LM refresh + daily bars/zone rectangles render
+      try { lm = await evalExpr(lmExpr); } catch (e) {}
+      let mm = null;
+      try { mm = computeMM(JSON.parse(await evalExpr(mmScrape(idx)))); } catch (e) {}
+      await evalExpr(`window.tvWidget.chart(${idx}).setResolution("1");"ok"`);
+      const v = {};
+      if (lm) v.lmCode = ('' + lm).trim();
+      if (mm != null) v.mmBullish = mm;
+      if (Object.keys(v).length) perSym[t.name] = v;
+      log(`  ${t.name}: LM=${lm ? ('' + lm).trim() : '?'}  MM=${mm == null ? '?' : (mm ? 'bullish' : 'bearish')}`);
+    } catch (e) { log(`${t.name}: LM/MM read failed — ${e.message}`); }
+  }
+  if (!DRY && Object.keys(perSym).length) { writeRsContext(perSym); log(`  rs-context updated: ${Object.keys(perSym).join(', ')}`); }
+  return perSym;
+}
+
+async function main() {
+  const zonesFound = await readIntraday();
+  const perSym = await readLmMm();
+  // Re-assert mmBullish after one rs-feed cycle so a concurrent 5s write (which
+  // read the file just before our write) can't permanently drop it.
+  if (!DRY && Object.keys(perSym).length) { await sleep(7000); writeRsContext(perSym); }
+  if (DRY) log('DRY — no files written.');
+  return zonesFound;
+}
+
+(async () => {
+  try {
+    const ok = await main();
+    // 09:32 runs ~2 min after the open; if zones haven't drawn yet, retry once.
+    if (!ok && !DRY) { log('no zone bands yet — retrying once in 60s'); await sleep(60_000); await main(); }
+  } catch (e) { log('ERROR', e.message); process.exit(1); }
+})();

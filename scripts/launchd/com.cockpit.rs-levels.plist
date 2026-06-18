@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.rs-levels</string>
+
+  <!-- Once per trading day, ~2 min after the open (zones/levels/LM populate ~30s
+       after the open; the script self-retries once after 60s if zones aren't drawn).
+       Reads NQ+ES chart zones/levels → daily_levels{,_es}.json (preserving
+       price-derived levels) AND the Monthly-Map bias (1D flip → mmBullish) into
+       rs-context for the auto greater-market. Runs after structural-levels (09:23).
+       Machine TZ is America/New_York, so these times are ET. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/rs-levels.js</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict><key>CDP_PORT</key><string>9333</string></dict>
+
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>32</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>32</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>32</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>32</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>32</integer></dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-rs-levels.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-rs-levels.log</string>
+</dict>
+</plist>

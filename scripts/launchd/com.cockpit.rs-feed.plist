@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.rs-feed</string>
+
+  <!-- rs-feed: passively reads DD ratio + 3 resiliences from the debug Chrome's
+       rendered DOM (CDP, no network originated) every 5s and merges them into
+       data/rs-context.json, which the aggregator hot-reloads. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/rs-feed.js</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>INTERVAL</key><string>5</string>
+    <key>CDP_PORT</key><string>9333</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-rs-feed.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-rs-feed.log</string>
+</dict>
+</plist>
