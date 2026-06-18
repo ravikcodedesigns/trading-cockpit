@@ -475,15 +475,21 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
 
             off = offsets[path]
             if off > size:
-                # File shrank — truncation/rotation under the same name. We
-                # re-read from 0, which re-emits rows already written: at-least-
-                # once, so the nightly compaction (dedup_parquet_store.py) will
-                # collapse the overlap. Log loudly since this should be rare
-                # (capture uses per-calendar-day filenames since 86ec5a0).
-                print(f"[warn] {path.name} shrank ({off} > {size}); re-reading from 0 "
-                      f"(dup rows expected, compaction will dedup)", flush=True)
-                off = 0
-                leftover[path] = b""
+                # Capture files are per-calendar-day (never rotated under one name),
+                # so a "shrink" is almost always a read-during-write race: stat()
+                # caught the live file a few bytes short mid-append. The old code
+                # re-read the WHOLE multi-GB file from 0 on ANY shrink (even 2 bytes),
+                # re-emitting ~23M rows every tick and pinning a CPU core in a loop.
+                # Only a large drop is a real truncation worth re-reading; a small one
+                # we wait out — the live file grows back past our offset and we resume
+                # cleanly (no re-read, no dups).
+                if off - size > 10 * 1024 * 1024:   # >10 MB = genuine truncation/reset
+                    print(f"[warn] {path.name} truncated ({off} -> {size}); re-reading "
+                          f"from 0 (dup rows expected, compaction will dedup)", flush=True)
+                    off = 0
+                    leftover[path] = b""
+                else:
+                    continue  # transient write-race shrink — skip, resume when it regrows
             if size <= off:
                 continue
 

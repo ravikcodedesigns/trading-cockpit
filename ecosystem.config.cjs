@@ -27,15 +27,20 @@ module.exports = {
       // pm2 start ecosystem.config.cjs --only trader
       stop_exit_codes: [0],
     },
-    {
-      name: 'dd-logger',
-      cwd: './apps/aggregator',
-      script: 'node',
-      args: 'node_modules/tsx/dist/cli.mjs scripts/dd_logger.ts',
-      autorestart: true,
-      max_restarts: 20,
-      min_uptime: '10s',
-    },
+    // dd-logger RETIRED 2026-06-18 — DD-upper-band touch collection is complete
+    // (analysis done; dd_touches table retains the data). It was polling ticks.db
+    // every 60s with full-day window-function scans, burning ~47% CPU for 22 days
+    // and starving the aggregator. Re-enable only to resume collection (and add a
+    // trades(date,ts) index first so each scan is cheap).
+    // {
+    //   name: 'dd-logger',
+    //   cwd: './apps/aggregator',
+    //   script: 'node',
+    //   args: 'node_modules/tsx/dist/cli.mjs scripts/dd_logger.ts',
+    //   autorestart: true,
+    //   max_restarts: 20,
+    //   min_uptime: '10s',
+    // },
     {
       name: 'bookmap-addon',
       script: 'python3',
