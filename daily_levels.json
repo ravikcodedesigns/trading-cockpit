@@ -7770,6 +7770,13 @@
           "mhp": 29890.6,
           "additionalLevels": [
             {
+              "price": 30918.5,
+              "label": "WkH",
+              "color": "#00BFFF",
+              "style": "large-dashed",
+              "width": 3
+            },
+            {
               "price": 30889,
               "label": "PDH",
               "color": "#2596BE",
@@ -7805,18 +7812,32 @@
               "width": 2
             },
             {
-              "price": 30525.25,
+              "price": 30544.75,
+              "label": "IBH",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 30532.25,
+              "label": "PMH",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 30528,
               "label": "onVAH",
               "color": "#F7DC6F",
               "style": "solid",
               "width": 1
             },
             {
-              "price": 30520.75,
-              "label": "PMH",
-              "color": "#FFB347",
+              "price": 30526.75,
+              "label": "LVN↑",
+              "color": "#777777",
               "style": "dotted",
-              "width": 2
+              "width": 1
             },
             {
               "price": 30501.25,
@@ -7847,7 +7868,21 @@
               "width": 2
             },
             {
-              "price": 30394.5,
+              "price": 30438.75,
+              "label": "HVN2",
+              "color": "#9575CD",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30437.75,
+              "label": "HVN1",
+              "color": "#B39DDB",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30397.75,
               "label": "onVAL",
               "color": "#B7950B",
               "style": "solid",
@@ -7868,18 +7903,25 @@
               "width": 1
             },
             {
+              "price": 30345.75,
+              "label": "LVN↓",
+              "color": "#777777",
+              "style": "dotted",
+              "width": 1
+            },
+            {
+              "price": 30319.75,
+              "label": "IBL",
+              "color": "#5BC0DE",
+              "style": "dotted",
+              "width": 2
+            },
+            {
               "price": 30314,
               "label": "ONO",
               "color": "#FF9A3C",
               "style": "dotted",
               "width": 1
-            },
-            {
-              "price": 30007.75,
-              "label": "NQ Close",
-              "color": "#ffd700",
-              "style": "solid",
-              "width": 2
             },
             {
               "price": 30312.75,
@@ -7952,6 +7994,13 @@
               "width": 1
             },
             {
+              "price": 30007.75,
+              "label": "NQ Close",
+              "color": "#ffd700",
+              "style": "solid",
+              "width": 2
+            },
+            {
               "price": 29993,
               "label": "Bull Zone Bottom",
               "color": "#2BB673",
@@ -7964,6 +8013,20 @@
               "color": "#FFFFFF",
               "style": "solid",
               "width": 3
+            },
+            {
+              "price": 28850,
+              "label": "nPOC",
+              "color": "#BC8F8F",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 28493.5,
+              "label": "WkL",
+              "color": "#FF4500",
+              "style": "large-dashed",
+              "width": 3
             }
           ]
         }
@@ -7973,12 +8036,35 @@
       "levels": [
         {
           "symbol": "NQ",
-          "bullZone": null,
-          "bearZone": null,
-          "ddBands": null,
-          "hedgePressure": 29993.3,
-          "mhp": 29890.6,
+          "bullZone": {
+            "low": 30299.8,
+            "high": 30304
+          },
+          "bearZone": {
+            "high": 30092.3,
+            "low": 30005.1
+          },
+          "ddBands": {
+            "upper": 30403.84,
+            "lower": 29879.66
+          },
+          "hedgePressure": 30403.6,
+          "mhp": 30611.1,
           "additionalLevels": [
+            {
+              "price": 30545.5,
+              "label": "ONH",
+              "color": "#175676",
+              "style": "dashed",
+              "width": 2
+            },
+            {
+              "price": 30545.5,
+              "label": "PMH",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
             {
               "price": 30544.75,
               "label": "PDH",
@@ -7994,6 +8080,13 @@
               "width": 1
             },
             {
+              "price": 30469.5,
+              "label": "onVAH",
+              "color": "#F7DC6F",
+              "style": "solid",
+              "width": 1
+            },
+            {
               "price": 30450,
               "label": "POC",
               "color": "#545FDE",
@@ -8001,11 +8094,32 @@
               "width": 3
             },
             {
+              "price": 30400,
+              "label": "onPOC",
+              "color": "#C39BD3",
+              "style": "solid",
+              "width": 2
+            },
+            {
               "price": 30394.333333333336,
               "label": "R1",
               "color": "#FFC1CC",
               "style": "dotted",
               "width": 2
+            },
+            {
+              "price": 30359.5,
+              "label": "PML",
+              "color": "#FFB347",
+              "style": "dotted",
+              "width": 2
+            },
+            {
+              "price": 30323.5,
+              "label": "onVAL",
+              "color": "#B7950B",
+              "style": "solid",
+              "width": 1
             },
             {
               "price": 30294.25,
@@ -8029,11 +8143,18 @@
               "width": 2
             },
             {
-              "price": 30007.75,
-              "label": "PDC",
-              "color": "#BBBBBB",
-              "style": "solid",
+              "price": 30146,
+              "label": "ONO",
+              "color": "#FF9A3C",
+              "style": "dotted",
               "width": 1
+            },
+            {
+              "price": 30092.25,
+              "label": "ONL",
+              "color": "#D45E77",
+              "style": "dashed",
+              "width": 2
             },
             {
               "price": 30007.75,
@@ -8041,6 +8162,13 @@
               "color": "#ffd700",
               "style": "solid",
               "width": 2
+            },
+            {
+              "price": 30007.75,
+              "label": "PDC",
+              "color": "#BBBBBB",
+              "style": "solid",
+              "width": 1
             },
             {
               "price": 29922,
@@ -8055,8 +8183,128 @@
               "color": "#FFC1CC",
               "style": "dotted",
               "width": 2
+            },
+            {
+              "label": "QQQ Open",
+              "price": 30594.5
+            },
+            {
+              "label": "HG",
+              "price": 30293.13
+            },
+            {
+              "label": "QQQ Close",
+              "price": 29991.75
+            },
+            {
+              "price": 29895,
+              "label": "ON MHP",
+              "color": "#FFA500",
+              "style": "solid",
+              "width": 2
+            },
+            {
+              "price": 30206,
+              "label": "ON HP",
+              "color": "#00FFFF",
+              "style": "solid",
+              "width": 2
             }
-          ]
+          ],
+          "zones": {
+            "bull": [
+              {
+                "low": 22455.1,
+                "high": 22459.2
+              },
+              {
+                "low": 24073.8,
+                "high": 24078
+              },
+              {
+                "low": 25941.6,
+                "high": 25945.8
+              },
+              {
+                "low": 26564.2,
+                "high": 26568.4
+              },
+              {
+                "low": 27186.8,
+                "high": 27191
+              },
+              {
+                "low": 28016.9,
+                "high": 28224.5
+              },
+              {
+                "low": 28639.5,
+                "high": 28643.7
+              },
+              {
+                "low": 29469.7,
+                "high": 29473.8
+              },
+              {
+                "low": 29718.7,
+                "high": 29884.7
+              },
+              {
+                "low": 30299.8,
+                "high": 30304
+              },
+              {
+                "low": 30465.8,
+                "high": 30839.4
+              }
+            ],
+            "bear": [
+              {
+                "high": 22413.6,
+                "low": 19628.5
+              },
+              {
+                "high": 23658.8,
+                "low": 22824.5
+              },
+              {
+                "high": 25734.1,
+                "low": 24484.7
+              },
+              {
+                "high": 26481.2,
+                "low": 26145
+              },
+              {
+                "high": 26979.3,
+                "low": 26975.1
+              },
+              {
+                "high": 27809.4,
+                "low": 27390.2
+              },
+              {
+                "high": 28556.5,
+                "low": 28344.8
+              },
+              {
+                "high": 29262.1,
+                "low": 28718.4
+              },
+              {
+                "high": 29677.2,
+                "low": 29673.1
+              },
+              {
+                "high": 30092.3,
+                "low": 30005.1
+              },
+              {
+                "high": 30341.3,
+                "low": 30337.2
+              }
+            ]
+          }
         }
       ]
     }

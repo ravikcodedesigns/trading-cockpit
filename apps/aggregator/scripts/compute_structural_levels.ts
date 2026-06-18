@@ -80,10 +80,12 @@ interface AdditionalLevel {
 
 interface RawLevel {
   symbol: string;
-  bullZone: { low: number; high: number };
-  bearZone: { low: number; high: number };
-  ddBands: { upper: number; lower: number };
-  hedgePressure: number;
+  // RS framework levels — optional: structural-only entries (and ES) omit them.
+  // They are populated by rs-levels (platform read) or manual entry, not here.
+  bullZone?: { low: number; high: number };
+  bearZone?: { low: number; high: number };
+  ddBands?: { upper: number; lower: number };
+  hedgePressure?: number;
   mhp?: number;
   openPrice?: number;
   lmCode?: string;
@@ -483,48 +485,24 @@ function upsertLevels(
   computed: Partial<Record<ManagedLabel, number>>,
   labelsToRefresh: readonly ManagedLabel[],
 ): RawLevel | null {
-  // Auto-create the day entry if absent.
-  // - ES: empty stub (no RS framework needed)
-  // - NQ: carry forward bullZone/bearZone/ddBands/HP/MHP from the most recent
-  //       prior day's entry, per the RS-Levels-Carry-Forward convention.
-  //       User can update these manually in the morning if they've shifted.
+  // Auto-create the day entry if absent — a CLEAN stub for both symbols
+  // (just symbol + empty additionalLevels). No RS framework levels are written
+  // here.
+  //
+  // 2026-06-18 (Ravi): RS-level carry-forward removed. The structural cron must
+  // only manage price-derived levels (PDH/PDL/POC/VWAP/IB/etc.). RS levels
+  // (bullZone/bearZone/ddBands/HP/MHP and RS additionalLevels) come solely from
+  // rs-levels (the platform read) or manual entry — never carried forward here.
   if (!file.days[today]) {
-    if (symbol === 'ES') {
-      file.days[today] = { levels: [{ symbol: 'ES', additionalLevels: [] }] };
-    } else {
-      // NQ — find most recent prior day with an NQ entry
-      const prior = Object.keys(file.days).sort().filter(d => d < today).pop();
-      if (!prior) {
-        console.warn(`No prior NQ entry to carry forward from. Create RS levels first via 'levels:add new'.`);
-        return null;
-      }
-      const priorEntry = file.days[prior]!.levels.find(l => l.symbol === 'NQ');
-      if (!priorEntry) {
-        console.warn(`Prior day ${prior} has no NQ entry. Cannot carry forward.`);
-        return null;
-      }
-      const carried: RawLevel = {
-        symbol: 'NQ',
-        bullZone: priorEntry.bullZone,
-        bearZone: priorEntry.bearZone,
-        ddBands: priorEntry.ddBands,
-        hedgePressure: priorEntry.hedgePressure,
-        mhp: priorEntry.mhp,
-        additionalLevels: [],
-      };
-      file.days[today] = { levels: [carried] };
-      console.log(`  ${symbol}: auto-created entry for ${today} (carried bullZone/bearZone/ddBands/HP/MHP from ${prior})`);
-    }
+    file.days[today] = { levels: [{ symbol, additionalLevels: [] }] };
+    console.log(`  ${symbol}: auto-created clean entry for ${today} (no RS carry-forward)`);
   }
   let level = file.days[today].levels.find(l => l.symbol === symbol);
   if (!level) {
-    if (symbol === 'ES') {
-      level = { symbol: 'ES', additionalLevels: [] };
-      file.days[today].levels.push(level);
-    } else {
-      console.warn(`No ${symbol} entry for ${today}. Skipping.`);
-      return null;
-    }
+    // Clean stub for any symbol whose entry doesn't exist yet (e.g. the other
+    // symbol created today's day-entry first). RS levels are not seeded here.
+    level = { symbol, additionalLevels: [] };
+    file.days[today].levels.push(level);
   }
   level.additionalLevels = level.additionalLevels ?? [];
   // Remove any labels we are about to refresh — preserve everything else
