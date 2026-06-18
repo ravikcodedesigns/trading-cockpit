@@ -44,7 +44,27 @@ const SCRAPE = `(function(){
     spyMhp: n('sp-MHP'),  // SP500 MHP price (vs SPY for ES greater-market)
     qqqMhp: n('nq-MHP'),  // NQ100 MHP price (vs QQQ for NQ greater-market)
     // VX gamma HP/MHP (UVXY-scale) — vs live UVXY for the vol-inflection read.
-    vxg: (function(){ var v=(window.DYN_HP||{}).VX; return v?{hp:v.hp,mhp:v.mhp}:null; })()
+    vxg: (function(){ var v=(window.DYN_HP||{}).VX; return v?{hp:v.hp,mhp:v.mhp}:null; })(),
+    // Dynamic/overnight HP/MHP estimate (window.DYN_HP), ETF scale (QQQ for NQ, SPY for ES).
+    dyn: (function(){ var d=window.DYN_HP||{}; var p=function(o){return o?{hp:o.hp,mhp:o.mhp,close:o.close}:null;}; return {nq:p(d.NQ), es:p(d.ES)}; })(),
+    // Irrational/Unusual Rules panel: per-row {section,name,state,dir}. state from the
+    // .rule-item status class (red=active / yellow=caution / green=none); dir from the
+    // .direction svg path (up='M4 10…' / down='M4 6…'). The engine derives the sit-out gate.
+    irr: (function(){
+      var out=[];
+      document.querySelectorAll('.rules-container').forEach(function(box){
+        var sect=((box.querySelector('.title')||{}).textContent||'').trim();
+        box.querySelectorAll('.rule-item').forEach(function(el){
+          var nm=((el.querySelector('.rule-name')||{}).textContent||'').trim(); if(!nm) return;
+          var cls=''+(el.className||'');
+          var st=/status-red/.test(cls)?'red':/status-yellow/.test(cls)?'yellow':/status-green/.test(cls)?'green':null;
+          var dr=null, p=el.querySelector('.direction svg path');
+          if(p){ var d=''+(p.getAttribute('d')||''); dr=d.indexOf('M4 10')===0?'up':d.indexOf('M4 6')===0?'down':null; }
+          out.push({section:sect, name:nm, state:st, dir:dr});
+        });
+      });
+      return out.length?out:null;
+    })()
   });
 })()`;
 
@@ -79,6 +99,9 @@ function buildUpdate(v) {
   if (v.spyMhp != null) upd.spyMhp = v.spyMhp;  // SP500 MHP price → GM SPY>MHP leg (ES)
   if (v.qqqMhp != null) upd.qqqMhp = v.qqqMhp;  // NQ100 MHP price → GM QQQ>MHP leg (NQ)
   if (v.vxg) { upd.vxGammaHp = v.vxg.hp; upd.vxGammaMhp = v.vxg.mhp; }  // VX gamma levels (UVXY scale)
+  if (v.irr) upd.irrational = v.irr;  // Irrational/Unusual panel states → engine sit-out gate
+  if (v.dyn && v.dyn.nq) Object.assign(upd.bySymbol.NQ, { dynHpEtf: v.dyn.nq.hp, dynMhpEtf: v.dyn.nq.mhp, dynCloseEtf: v.dyn.nq.close });
+  if (v.dyn && v.dyn.es) Object.assign(upd.bySymbol.ES, { dynHpEtf: v.dyn.es.hp, dynMhpEtf: v.dyn.es.mhp, dynCloseEtf: v.dyn.es.close });
   Object.assign(upd, map(v.nq)); // global defaults mirror NQ (the symbol we trade)
   return upd;
 }
@@ -89,7 +112,9 @@ async function tick() {
   const v = JSON.parse(raw);
   if (!sane(v)) throw new Error('insane values: ' + raw);
   const upd = buildUpdate(v);
-  log(`DD=${v.dd}  NQ[redist/mhp/hp]=${v.nq.redist}/${v.nq.mhp}/${v.nq.hp}  SP=${v.sp.redist}/${v.sp.mhp}/${v.sp.hp}`);
+  const reds = (v.irr || []).filter(r => r.state === 'red').map(r => `${r.name}${r.dir ? (r.dir === 'up' ? '↑' : '↓') : ''}`);
+  log(`DD=${v.dd}  NQ[redist/mhp/hp]=${v.nq.redist}/${v.nq.mhp}/${v.nq.hp}  SP=${v.sp.redist}/${v.sp.mhp}/${v.sp.hp}` +
+      (v.irr ? `  IRR[${reds.length}]${reds.length ? ' ' + reds.join(',') : ''}` : ''));
   const cur = fs.existsSync(CTX) ? JSON.parse(fs.readFileSync(CTX, 'utf8')) : {};
   // Deep-merge per-symbol so we preserve lmCode/mmBullish (written once-daily by
   // rs-levels) while refreshing the resiliences every 5s.

@@ -17,6 +17,15 @@ const CONTEXT_PATH = path.resolve(__dirname, '../../../data/rs-context.json');
 export type GreaterMarket = 'bull' | 'bear' | 'neutral';
 export type Resilience = number; // actual float from RS platform (e.g. -11.3, +55.7). Sign is all that matters for direction.
 
+/** One row of the platform's Irrational/Unusual Rules panel, read passively by rs-feed.
+ *  state: red=active break, yellow=caution (broke + returned), green=none. dir=break direction. */
+export interface IrrationalRule {
+  section: string;                            // 'Irrational Rules:' | 'Unusual Rules:'
+  name: string;                               // '/ENQ DD-Band Break' | 'QQQ MHP Break' | 'UVXY Bull Zone Bottom' …
+  state: 'red' | 'yellow' | 'green' | null;
+  dir: 'up' | 'down' | null;
+}
+
 /** The four resilience readings — same shape per symbol, also at top-level for back-compat. */
 export interface ResilienceSet {
   mhpResilience: Resilience;        // orange — MHP resilience. tiebreaker at MHP. >0 = 90% bounce, <0 = ~73%
@@ -30,6 +39,11 @@ export interface SymbolContext extends ResilienceSet {
   lmCode?: string;                  // per-symbol Liquidity-Map code (NQ=BLD, ES=MRLD, …)
   mmBullish?: boolean;              // Monthly-Map (1D) bias — true=price not in bear zone
   gm?: GreaterMarket;              // COMPUTED greater-market for this symbol (see compute())
+  // Dynamic/overnight HP/MHP estimate (window.DYN_HP), ETF scale (QQQ for NQ, SPY for ES).
+  // Converted to futures scale downstream in deriveMarketState (ratio = futures/ETF).
+  dynHpEtf?: number;
+  dynMhpEtf?: number;
+  dynCloseEtf?: number;             // ETF close reference for the ETF→futures conversion
 }
 
 export interface RSContext extends ResilienceSet {
@@ -43,6 +57,9 @@ export interface RSContext extends ResilienceSet {
   // overlays them on top of the flat fields. Callers that don't pass a symbol still
   // see the global (= default-symbol) values unchanged.
   bySymbol?: Record<string, SymbolContext>;
+  // Irrational/Unusual Rules panel — raw per-row states read passively by rs-feed.
+  // The level engine derives the sit-out gate from these (deriveGate in rules-v2).
+  irrational?: IrrationalRule[];
   // Greater-market index inputs (ETF price from Yahoo poller; MHP threshold from RS platform header)
   spy?: number;                     // SPY ETF live price (Yahoo) — vs spyMhp for ES greater-market
   qqq?: number;                     // QQQ ETF live price (Yahoo) — vs qqqMhp for NQ greater-market
