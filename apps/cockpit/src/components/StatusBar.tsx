@@ -2,6 +2,7 @@ import { useStore } from '../lib/ws';
 import type { ConnectionStatus, SourceName } from '@trading/contracts';
 import { RSContextBar } from './RSContextBar';
 import { KillSwitch } from './KillSwitch';
+import { DayRegime } from './DayRegime';
 import { PipelineModeBadge } from './PipelineModeBadge';
 import { TraderStatus } from './TraderStatus';
 
@@ -134,6 +135,9 @@ export function StatusBar() {
 
         {/* Trader kill-switch */}
         <KillSwitch />
+
+        {/* Day regime — how's the day (greater-market dir + vol environment) */}
+        <DayRegime symbol={selectedSymbol} />
 
         {/* Source dots + uptime — pushed to the right */}
         <div style={{ display: 'flex', gap: 14, marginLeft: 'auto', flexShrink: 0 }}>
