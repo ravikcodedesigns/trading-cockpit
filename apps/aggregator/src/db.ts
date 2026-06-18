@@ -275,7 +275,7 @@ _db.exec(`
     direction    TEXT    NOT NULL,
     score        INTEGER NOT NULL,
     qualified    INTEGER NOT NULL,    -- 1 if evaluateTechnical returned gold
-    action       TEXT    NOT NULL,    -- 'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_FLIP_LONG_DELTA15' | 'SKIP_CVD' | 'SKIP_COOLDOWN'
+    action       TEXT    NOT NULL,    -- 'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_FLIP_LONG_DELTA15' | 'SKIP_TRAP_VETO' | 'SKIP_CVD' | 'SKIP_COOLDOWN'
     reason       TEXT    NOT NULL,
     shadow       INTEGER NOT NULL DEFAULT 0,  -- 1 = logged for analysis, not traded (force-shadow rules)
     cvd_session  REAL,
@@ -516,6 +516,14 @@ export const db = {
 
   lastSignalTsFor(ruleId: string, symbol: string, direction: string): number {
     const row = _db.prepare('SELECT MAX(ts) AS ts FROM signals WHERE rule_id = ? AND symbol = ? AND direction = ?').get(ruleId, symbol, direction) as { ts: number | null };
+    return row?.ts ?? 0;
+  },
+
+  // Most recent signal ts for ruleId+symbol+direction at/before `beforeMs`
+  // (0 = none). Used by the FLIP-long trap veto (signal-pipeline.ts) to find a
+  // same-direction trap firing shortly before a flip-long candidate.
+  lastSignalTsBefore(ruleId: string, symbol: string, direction: string, beforeMs: number): number {
+    const row = _db.prepare('SELECT MAX(ts) AS ts FROM signals WHERE rule_id = ? AND symbol = ? AND direction = ? AND ts <= ?').get(ruleId, symbol, direction, beforeMs) as { ts: number | null };
     return row?.ts ?? 0;
   },
 
@@ -829,7 +837,7 @@ export interface TradableSignalRow {
   direction:    'long' | 'short';
   score:        number;
   qualified:    boolean;
-  action:       'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_CVD' | 'SKIP_COOLDOWN';
+  action:       'OPEN' | 'SKIP_NOT_V3_RULE' | 'SKIP_SILENCED' | 'SKIP_FORCE_SHADOW' | 'SKIP_FLIP_SHORT' | 'SKIP_FLIP_LONG_DELTA15' | 'SKIP_TRAP_VETO' | 'SKIP_CVD' | 'SKIP_COOLDOWN';
   reason:       string;
   shadow:       boolean;
   cvd_session?: number;

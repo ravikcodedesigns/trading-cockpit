@@ -63,6 +63,7 @@ export type ActionabilityAction =
   | 'SKIP_FORCE_SHADOW'
   | 'SKIP_FLIP_SHORT'
   | 'SKIP_FLIP_LONG_DELTA15'
+  | 'SKIP_TRAP_VETO'
   | 'SKIP_CVD'
   | 'SKIP_COOLDOWN';
 
@@ -76,6 +77,12 @@ export interface ActionabilityContext {
   cvdSession: number;
   /** True if symbol already has an open V3 trade (tradeManager.getOpen(symbol) != null). */
   hasOpenTrade: boolean;
+  /**
+   * Timestamp (ms) of the most recent SAME-direction trap for this symbol at or
+   * before the signal (0 / undefined = none). Only populated by the caller for
+   * FLIP-long candidates; used by the trap veto. See config.pipeline.flipTrapVeto.
+   */
+  lastSameDirTrapMs?: number;
 }
 
 /**
@@ -162,6 +169,24 @@ export function evaluateActionability(
         // Query: SELECT … FROM tradable_signals WHERE reason LIKE '[D15-SHADOW%';
         flipLongDelta15ShadowNote = `[D15-SHADOW: would-block ${blockReason}] `;
       }
+    }
+  }
+  // ── FLIP-long trap veto (2026-06-18) ───────────────────────────────────
+  // Skip a FLIP long if a SAME-direction (long) trap fired within the veto
+  // window before this signal. The flip is then a late echo of a reversal the
+  // faster trap already captured (or the level is chopping). LONGS ONLY —
+  // validated on the NQ tradable book (flip-long 53%→60% WR, June OOS 42%→47%,
+  // permutation pnl p=0.030). Subtractive-only. See config.pipeline.flipTrapVeto.
+  if (signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'long'
+      && config.pipeline.flipTrapVeto.enabled
+      && typeof ctx.lastSameDirTrapMs === 'number' && ctx.lastSameDirTrapMs > 0) {
+    const ageMs = signal.ts - ctx.lastSameDirTrapMs;
+    if (ageMs >= 0 && ageMs <= config.pipeline.flipTrapVeto.windowMs) {
+      return {
+        action: 'SKIP_TRAP_VETO',
+        reason: `same-dir trap ${Math.round(ageMs / 60_000)}m before flip-long `
+          + `(veto window ${config.pipeline.flipTrapVeto.windowMs / 60_000}m)`,
+      };
     }
   }
   if (direction === 'long' && ctx.cvdSession <= config.pipeline.cvdLongFloor) {

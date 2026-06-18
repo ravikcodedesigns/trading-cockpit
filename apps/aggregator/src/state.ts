@@ -358,8 +358,19 @@ class State {
              pattern,
            );
       const hasOpenTrade = (openTrade != null) && !willCloseOnOpp;
+
+      // Trap-veto context (FLIP-long only): most recent same-direction trap at or
+      // before this signal. Cheap indexed lookup; 0 for non-flip-long candidates
+      // so the gate is a no-op for everything else. See config.pipeline.flipTrapVeto.
+      const isFlipLong = signal.ruleId === 'clean-impulse'
+        && (signal as { pattern?: string }).pattern === 'FLIP'
+        && signal.direction === 'long';
+      const lastSameDirTrapMs = isFlipLong
+        ? db.lastSignalTsBefore('trap', symbol, 'long', signal.ts)
+        : 0;
+
       const act = evaluateActionability(signal, tech.qualified, tech.reason,
-                                        { cvdSession: cvd, hasOpenTrade });
+                                        { cvdSession: cvd, hasOpenTrade, lastSameDirTrapMs });
 
       // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule (es-flip,
       // expl) that would otherwise OPEN is logged but not traded.

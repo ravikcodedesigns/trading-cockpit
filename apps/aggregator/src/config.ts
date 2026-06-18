@@ -126,6 +126,27 @@ export const config = {
       threshold: -0.02,
     },
 
+    // ── FLIP-long trap veto (2026-06-18) ───────────────────────────────────
+    //
+    // Skip a FLIP LONG when a SAME-direction (long) trap fired within windowMs
+    // before the signal. A trap is a fast spike+reclaim fade at a structural
+    // level; a flip long arriving right after a same-dir trap is a LATE ECHO of
+    // a reversal the trap already captured (or the level is being chopped), and
+    // underperforms badly.
+    //
+    // Validated on the NQ tradable book (97 OPEN flips, May–Jun 2026), longs only:
+    //   • flip-long baseline      n=68  WR=53%  +$2,044
+    //   • same-dir trap veto      kept 52  WR=60%  +$2,437  (drops 16 @ 33% WR)
+    //   • June (held-out) OOS      42% → 47%
+    //   • permutation: pnl p=0.030, WR p=0.051 (flagged n=16)
+    // LONGS ONLY — flip shorts already 71% WR and show no benefit (veto flags
+    // only n=2, not significant). Subtractive-only: it can only SKIP a flip,
+    // never opens/sizes/flips a trade. Env FLIP_TRAP_VETO=off reverts instantly.
+    flipTrapVeto: {
+      enabled: (process.env.FLIP_TRAP_VETO ?? 'enabled') !== 'off',
+      windowMs: 30 * 60_000,
+    },
+
     // Per-rule TP/SL points. Number → both directions; { long, short } → asymmetric.
     perRule: {
       'absorption':              { tp: 80, sl: 140 },
