@@ -16,11 +16,14 @@ actionability (signal-pipeline.ts → action `SKIP_TRAP_VETO`). Config flag
 0 mismatch). Directional split decided longs-only (shorts: n=2 flagged, not significant,
 already 71% WR). Monitor: `SELECT * FROM tradable_signals WHERE action='SKIP_TRAP_VETO'`.
 **Open follow-ups:** (a) any-trap variant (stronger stats, looser mechanism) — promote if
-forward data backs the opp-dir cohort; (b) CONT-LONG same-dir trap CONFLUENCE
-(require a same-dir trap) — cont-long 88% WR with vs 59% without, but n=8, p=0.085 (not
-significant); cont SHORT shows no effect (62% vs 71%, p=0.66). Promising + mechanistically
-sensible (continuation + confirming thrust), too thin to ship — revisit cont-LONG as the cont
-sample grows. (c) consider flip shorts only if a real short-veto sample accumulates.
+forward data backs the opp-dir cohort; (b) CONT × trap confluence as a
+SIZING lever — promoted to its own entry, **item #5** below. (c) flip shorts only if a real
+short-veto sample accumulates.
+
+**Trap as a SCALP = DEAD (don't re-litigate):** the trapped-flush is real but the trap signal
+fires 16–39s after the spike, so it's unfillable. Real-tick entry at signal time loses both
+directions (EV −3.3 to −4.5pt); placebo trap-entry EV −3.27 vs random +0.04, p=0.976 (worse than
+random). To trade the flush you'd need sub-second failed-break detection, not this signal.
 Original validation details below for reference.
 
 **Status (history):** Validated 2026-06-18. The one OOS-surviving win of the CVD/long research.
@@ -189,3 +192,159 @@ direction/trend not). Test whether long FLIPs only pay in specific regimes.
 
 **Decision gate:** a regime split that holds OOS and materially lifts long WR/PnL vs taking all
 longs. Larger research effort — scope before starting.
+
+---
+
+## 5. CONT × trap CONFLUENCE — sizing lever (parked: promising, not yet significant)
+
+**Status:** Parked 2026-06-18. Mirror of the flip veto (item #0) — opposite direction: for
+continuation trades a same-direction trap CONFIRMS the trend resuming, so it's a **confluence**,
+not a veto. Intended as a **SIZING** lever, NOT a skip rule (conts WITHOUT a trap still win).
+
+**Why it exists:** A trap is a failed counter-move rejected at a level. Before a CONT that's in
+the trend's favor → confirmation the trend is resuming. Mechanistically the clean inverse of the
+flip case (where a same-dir trap means a reversal is late/crowded).
+
+**Evidence (tradable OPEN cont book, NQ, May–Jun 2026):**
+- baseline conts already strong: long 75% / short 75% WR.
+- WITH same-dir trap: 83% WR (+$1,320) vs WITHOUT 69% (+$918).
+- WITH any trap: 86% WR (+$1,640) vs WITHOUT 64% (+$598).
+- Shows on BOTH cont directions on the tradable book (raw signal set earlier showed long-only —
+  cohort-unstable, a small-sample warning).
+
+**Why it's parked, not shipped:** NOT significant — best permutation p=0.090 (cont-short,
+any-trap); the rest 0.11–0.30. Cells are n=6–14. And without-trap conts are already 64–70% WR, so
+the confluence adds a modest, unproven bump on a sliver of trades.
+
+**The feature (when it earns it):** at signal time, if a same-direction trap fired in the prior
+30 min, **size the cont up** (e.g. 2× base) rather than skipping anything. Reuse the same
+`db.lastSignalTsBefore('trap', sym, dir, ts)` lookup the flip veto already added; apply in the
+sizing path, not the OPEN/SKIP gate. Keep base size for conts without a trap.
+
+**Decision gate:** permutation p<0.05 on an accumulated (≥~40 with-trap conts) sample, holding
+OOS. Until then, trade conts at base size regardless of trap. Revisit as the cont sample grows.
+
+**Reference:** scripts/cvd_migration/{trap_cont_confluence.py, trap_cont_by_dir.py}; memory
+`project_trap_signals`.
+
+---
+
+## 6. Rocket Scooter platform integration (PASSIVE read of debug Chrome)
+
+**Hard rule:** PASSIVE ONLY — read what the platform already rendered/loaded into the local
+debug Chrome (CDP DOM read + buffered responses). NEVER originate API calls / replay the token /
+reload. See memory `project_rs_platform_feed` for access method + full data inventory.
+
+**6a. rs-feed v1 — ✅ DONE/LIVE (2026-06-18).** scripts/rs-feed.js + launchd com.cockpit.rs-feed
+(+ com.cockpit.rs-chrome guard). DD + 3 resiliences (NQ/SP) → data/rs-context.json every 5s,
+preserving manual fields. Resilience mapping: redist=NQValues-w, mhp=NQMHP-w, hp=NQHP-w.
+
+**6b. Auto-levels → daily_levels{,_es}.json — ✅ DONE/LIVE 2026-06-18.** scripts/rs-levels.js +
+launchd `com.cockpit.rs-levels` (once/day, weekdays 09:37 ET, one-shot — levels static intraday).
+Reads NQ (MNQ) + ES (MES) chart shapes via CDP TV-widget API: rectangles = full zone bands
+(Bull label at bottom, Bear label at top), trend_lines+text = point levels. Writes bullZone/bearZone
+(nearest primary, scorer back-compat) + NEW `zones:{bull:[{low,high}],bear:[{high,low}]}` (ALL bands,
+top+bottom → enables liquidity-pocket/sandwich) + ddBands/HP/MHP + RS additionalLevels (HG, QQQ/SPY
+Open/Close); PRESERVES price-derived levels (PDH/POC/VWAP from structural-levels cron 09:23, runs
+before). Validated vs chart (NQ bull 30299.8–30304). NOTE: tab-selector must exclude /settings (2
+pro-plus tabs exist) — fixed in rs-levels + rs-feed. Cockpit still needs UI to render the full `zones`
+bands (band fills) — currently only primary bullZone/bearZone render.
+
+**6c. Risk interval — sit-out filter (DEPRIORITIZED → do LAST).** Clarified 2026-06-18: the RI
+sit-out is a LINE anchored at an **event-trigger point** (the moment the market suddenly moved on a
+catalyst — news/tweet/announcement), measured in risk-intervals from there; "1 Risk Interval VX up
+→ sit out." The `ddbands.ri` value is only the interval SIZE (NQ≈262, per-ticker incl VX) — easy.
+**The blocker is auto-identifying the exact catalyst/event point** (a sudden, fast, large move
+attributable to news vs normal vol) = real event/catalyst detection, which is hard and unreliable
+without a news feed. Because of that, parked as the LAST 6-series item. (ri also gives DD-band
+widths; ties to project_rsscore_rewrite irrational penalty.)
+
+**6d. Gamma-wall-derived levels (NEW potential — validate first).** From `hpa.man_MHP_walls`
+(call/put OI by strike, for the tracking ETF — QQQ for NQ, SPY for ES), construct levels of interest
+(largest call wall=ceiling, put wall=floor, gamma flip). **Nuance:** HP/MHP we ALREADY use ARE the
+dominant gamma walls — so the new piece is the **full strike-by-strike ladder** (secondary walls +
+call/put distribution), not the primary wall. **Test: do the secondary walls match our BZB/BrZT/etc,
+or are there strong walls we don't plot?** If new → real potential.
+
+  **PREP (do at RTH):**
+  1. On the platform, **enable the WALLS indicator** (currently OFF per `tview/indicators` WALLS:false)
+     → populates `window.WALLS_HP` / `WALLS_MHP` (currently empty) + draws wall lines on the chart.
+  2. Passively capture the full ladder from the **`hpa` response** (`man_MHP_walls` = {strike,call,put})
+     for QQQ (NQ) and SPY (ES) — it's loaded by the page; read via CDP getResponseBody (no origination).
+  3. Note: `DYN_HP` global already gives per-future HP/MHP via ETF (NQ→QQQ 725/722.5, ES→SPY 742.5/741),
+     ETF-price → convert to futures via the ratio (NQ≈QQQ×~41.3).
+  4. Convert ETF strikes → futures price, overlay vs our existing levels, quantify overlap.
+
+  **Decision gate:** backtest whether wall-confluence (flip-short at a call wall / flip-long at a put
+  wall) or wall-targets improve flip/cont WR/PnL — same discipline as the trap veto. Feeds 6f.
+
+**6e. Top-10 Nasdaq constituent behavior at MHP/HP/HG → bias/entry (NEW potential).** `eventsLog`
+gives real-time constituent level-crosses; `db/nq` gives mcap weights. Study how the top-10 NQ
+names behave at their HP/MHP/HG and whether aggregate breadth ("X% of top-10 crossed up MHP")
+predicts NQ direction → use as bias/entry confluence for flips/conts. Currently these are just
+decorative on the chart — put to real use. Validate like the trap veto (train/test + permutation).
+
+**6f. Gamma-wall entry/exit dimensionality (NEW).** Build entries/exits around the gamma walls as
+foundational options-based S/R (targets at walls, stops beyond walls, fade at wall rejections).
+Depends on 6d proving the walls are useful.
+
+**6g. Greater-market auto-computation.** Per Greater_Market_Analysis: BULL if ANY 1 of 3 positional
+bullish (DD>0.5 [have], SPY>MHP [hpa Price vs man_MHP], Monthly Map=bullish [liq-map/monthly, Ravi
+to show at RTH]); BEAR if all 3 bearish. + volatility VX<BBB & VVIX<100 (Ravi supplies VVIX/BBB).
+Auto-derive `greaterMarket` instead of manual context:set.
+
+**6h. Historical OHLCV datafeed (situational).** datafeed history for vol tickers we lack
+(UVXY/VX/VVIX) — cross-asset vol research ([[project_vol_regime]]). Only what the page loads.
+
+## 7. Regime-aware gating + daily gate save/cost tracker
+
+**Status:** Finding 2026-06-18. First live look at whether the CVD-long-floor + trap-veto gates
+help or hurt.
+
+**Finding (2026-06-18, one strong bull-TREND day):** the gates were **0-for-5** — they skipped 5
+FLIP/CONT signals that *all* won at the fixed bracket → **cost ~400 pt / −$800 MNQ, saved 0.**
+Breakdown: 09:59 longFLIP (CVD), 10:31 longFLIP (trap-veto), 10:50 shortFLIP (CVD), 11:39 longFLIP
+(CVD), 11:43 longCONT (CVD) — each +80 TP. Method: no-lookahead walk-forward in ticks.db, entry =
+signal-bar close (walk from signal_ts+60s — an earlier lookahead bug falsely showed the 09:59 long
+as a −55 SL; its true post-entry low was only −18.5). Brackets: FLIP tp80/sl55L/sl105S, CONT
+tp80/sl70 (config.ts ruleBrackets).
+
+**Read:** classic CVD-gate failure mode on a *trend* day — the divergence filter (built for fragile
+chop/reversal entries) blocked trend-following winners. ONE adverse day; the gates' edge is
+statistical over many days (trap-veto 66/72% WR p=0.0004 [[project_trap_signals]]; CVD floor
+[[project_longflip_findings]]). DON'T over-update — but clean evidence the gates cost on trend days,
+and today's DAY badge was BULLISH.
+
+**Design rule for the level auto-trader ([[project_level_autotrader]]):** gate by **regime, not
+blanket** — relax/disable the CVD-long-floor + trap-veto when GM is bullish + trend confirmed.
+
+**Relative CVD (Ravi's preference — absolute floor is volume-fragile):** replace the hardcoded
+cvdSession floor (−1000 long / +3000 short) with a **volume-scaled imbalance ratio = cvdSession ÷
+cumulative session volume** (net order-flow imbalance, −1…+1) — same raw CVD means very different
+things on a 500k vs 2M day; the ratio self-scales. CVD is **inferred** (is_bid_aggressor tape,
+cvd-session.ts; true MBO shelved [[project_cvd_migration]]), and ticks.db has both size + aggressor,
+so the ratio is computable from the same tape and **backtestable**. Alternatives to A/B: windowed
+CVD (last 15–30m), CVD position within day's CVD hi/lo, VXN/expected-range-scaled floor.
+
+**TODO:**
+1. Build a **daily gate save/cost tracker**: walk each SKIP_CVD/SKIP_TRAP_VETO signal forward to its
+   bracket (WIN/LOSS, no MFE/MAE), accumulate saved-vs-cost **by DAY regime** (trend/chop, bull/bear).
+   For each skip, **compute BOTH** the absolute-floor decision AND the imbalance-ratio (cvd ÷ cum
+   volume) so we can see which generalizes. `sim_*` cols in `tradable_signals` only populate for
+   OPENED rows (stale to 06-09) — skips must be walked forward. Run nightly after close, append to a table.
+2. After ~3–4 weeks of sample, test **regime-conditioned gating** (gate active only on chop/reversal/
+   bear-GM days). Quantify before changing anything live; keep shadow.
+
+**OUTCOME (2026-06-18) — backtested, nothing beat the floor; LEAVING −1000/+3000 UNCHANGED.**
+First-pass on 171 resolved NQ FLIP/CONT signals (cvd backfilled from tape; scripts:
+`cvd_ratio_backtest.cjs`, `cvd_ratio_traintest.cjs`, `feature_scan.cjs`, `alignment_validate.cjs`):
+- **Relative CVD ratio** — clean *in-sample* monotonic (long WR 39→75% by quintile) but **failed
+  chronological OOS** (train kept 72%/skip 38% → test kept 48%/skip 44%; skipped still +EV).
+- **Directional alignment** (prior-30m momentum agrees) — looked good on a *random* split (65/53,
+  leakage) but **failed chrono** (test 52% vs 51%) and **permutation p=0.14** (not significant).
+- **Distance-to-level** and **trend-efficiency** — sign-flipped train↔test (noise).
+**Conclusion: no bar-level pre-entry filter generalizes on this ~170-signal / 30-day sample**
+(7th confirmation of the overfit wall). Decision: keep the live −1000/+3000 floor as-is; do NOT
+ship a relative/alignment gate on this sample. Revisit only with a much larger FORWARD sample and
+regime-conditioning. The level auto-trader should rely on **level + regime structure**, not bar
+features, and be validated forward — not backfit. See [[project_level_autotrader]].
