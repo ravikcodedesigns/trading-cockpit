@@ -16,6 +16,7 @@ interface RawLevel {
   openPrice?: number;     // RTH 09:30 open — triggers LM code auto-computation
   lmCode?: LmCode;        // override; computed automatically if absent and openPrice+mhp present
   additionalLevels?: AdditionalLevel[];
+  zones?: { bull: { low: number; high: number }[]; bear: { low: number; high: number }[] };
   notes?: string;
 }
 
@@ -138,6 +139,7 @@ function loadAndApply(): void {
           openPrice: lv.openPrice,
           lmCode,
           additionalLevels: lv.additionalLevels,
+          zones: lv.zones,
           notes: lv.notes,
         };
         dayLevels.push(event);

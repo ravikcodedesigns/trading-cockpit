@@ -148,6 +148,11 @@ export interface DailyLevels extends BaseEvent {
   mhp?: number;          // MHP — Monthly Hedge Pressure (orange line); required for LM code auto-computation
   additionalLevels?: AdditionalLevel[];  // RS reference lines (QQQ Open/Close, HG, ON HP, etc.)
   extraZones?: ExtraZone[];              // secondary zone clusters, ordered top-to-bottom
+  // Full liquidity-map zone BANDS (top+bottom) — ALL of them, as read off the RS
+  // platform chart by rs-levels.js. Used to shade the zone rectangles on the
+  // cockpit chart (bull #4a4f61, bear #c5b1ab). Distinct from the single primary
+  // bullZone/bearZone above (which stay for the scorer).
+  zones?: { bull: ZoneRange[]; bear: ZoneRange[] };
   openPrice?: number;                    // RTH 09:30 open price — required for LM code auto-computation
   lmCode?: LmCode;                       // Liquidity Map code — auto-derived if openPrice + mhp are set
   notes?: string;

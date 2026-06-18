@@ -15,6 +15,7 @@ import {
 import { useStore } from '../lib/ws';
 import { tradingDayFor, lookupLevelStyle } from '@trading/contracts';
 import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
+import { ZoneBandsPrimitive } from './zoneBands';
 import { SignalChartCard } from './SignalFeed';
 
 // ── Range arithmetic for the dynamic bar-fetch loader ──────────────────────
@@ -456,6 +457,8 @@ export function Chart() {
   // day is its own short line series confined to that day's bar range.
   // We track them so we can clean up on level updates / symbol switches.
   const levelLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
+  // Shaded bull/bear zone bands (today's RS liquidity-map zones), drawn behind candles.
+  const zoneBandsRef = useRef<ZoneBandsPrimitive | null>(null);
   // Per-level label entries for today's levels, drawn as SVG text in the
   // drawing overlay (positioned at top-right of each line) so we can control
   // font-size and placement beyond what lightweight-charts' price-axis chip
@@ -507,6 +510,10 @@ export function Chart() {
   // by lightweight-charts is the bulk one with the full window, and the
   // visible-range anchor right after it lands in one shot (no autofit flash).
   const historyLoadedRef = useRef<Record<string, boolean>>({});
+  // Last bar timestamp (sec) pushed to the candle series per symbol. Lets live
+  // updates use series.update() (which preserves pan/zoom) instead of a full
+  // series.setData() on every bar event (which interrupts user interaction).
+  const lastLiveSecRef = useRef<Record<string, number>>({});
   // Symbols currently mid-fetch (prevents redundant requests).
   const fetchInFlightRef = useRef<Set<string>>(new Set());
   // Debounce timer for the scroll-driven dynamic loader.
@@ -790,6 +797,7 @@ export function Chart() {
               open: b.open, high: b.high, low: b.low, close: b.close,
             }));
           series.setData(seriesData);
+          lastLiveSecRef.current[selectedSymbol] = seriesData[seriesData.length - 1]!.time as number;
         }
         setBarsVersion(v => v + 1);
       } finally {
@@ -1107,6 +1115,9 @@ export function Chart() {
         }
       }
       series.setData(seriesData);
+      // Remember the last bar so live updates can append via series.update()
+      // instead of replacing the whole dataset (which fights the user's pan).
+      lastLiveSecRef.current[selectedSymbol] = seriesData[seriesData.length - 1]!.time as number;
 
       // Session VWAP — recompute from the cache so it matches what's on screen.
       // RTH only, volume-weighted (HLC/3), resets per trading day.
@@ -1360,7 +1371,30 @@ export function Chart() {
         open: b.open, high: b.high, low: b.low, close: b.close,
       }));
 
-    series.setData(data);
+    // Live updates: use series.update() for the live bar + any newly-formed
+    // buckets, which leaves the user's pan/zoom untouched. Only fall back to a
+    // full setData() if we have no anchor yet or update() rejects an out-of-order
+    // bar. (Previously this called setData() on EVERY bar event, which rebuilt
+    // the whole series and made the chart impossible to drag during active tape.)
+    const prevMax = lastLiveSecRef.current[selectedSymbol];
+    if (prevMax === undefined) {
+      series.setData(data);
+      lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : 0;
+    } else {
+      try {
+        let curMax = prevMax;
+        for (const bar of data) {
+          const t = bar.time as number;
+          if (t < prevMax) continue;        // already finalized & older than live bar
+          series.update(bar);               // t === prevMax refreshes live bar; t > prevMax appends
+          if (t > curMax) curMax = t;
+        }
+        lastLiveSecRef.current[selectedSymbol] = curMax;
+      } catch {
+        series.setData(data);               // defensive: out-of-order bar → full redraw
+        lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : prevMax;
+      }
+    }
 
     // 2026-06-04 fix: when a new minute bucket appears, bump barsVersion so
     // the markers useEffect re-evaluates. Without this, a signal that
@@ -1447,6 +1481,25 @@ export function Chart() {
     }
     flashAlphaLinesRef.current = [];
 
+    // ── Shaded zone bands (today's RS liquidity-map zones) ──────────────────
+    // Full bull/bear bands (top+bottom) shaded behind the candles, colors
+    // matching the RS platform (bull #4a4f61, bear #c5b1ab). Attach the
+    // primitive once to the candle series, then just refresh its bands.
+    {
+      const todayTD = tradingDayFor(Date.now());
+      const z = levelsByDay[todayTD]?.[selectedSymbol]?.zones;
+      const s = seriesRef.current;
+      if (s) {
+        // Re-attach if the candle series was recreated (symbol switch / HMR),
+        // otherwise the primitive is bound to a dead series and nothing draws.
+        if (!zoneBandsRef.current || zoneBandsRef.current.series !== s) {
+          zoneBandsRef.current = new ZoneBandsPrimitive();
+          try { (s as unknown as { attachPrimitive: (p: unknown) => void }).attachPrimitive(zoneBandsRef.current); } catch { /* older LWC */ }
+        }
+        zoneBandsRef.current.setBands(z?.bull ?? [], z?.bear ?? []);
+      }
+    }
+
     // Helper: compute the [start, end] timestamps for a trading session in
     // seconds since epoch, suitable for lightweight-charts UTCTimestamp.
     //
@@ -1508,6 +1561,14 @@ export function Chart() {
     const TIER1_LABELS = new Set(['PDH', 'PDL', 'PDC', 'POC', 'VAH', 'VAL']);
     const isTier1 = (label: string) => TIER1_LABELS.has(label);
 
+    // Labels explicitly hidden from the chart (declutter) — case/space-insensitive.
+    // (ES Close included as the ES-side equivalent of NQ Close.)
+    const HIDE_LABELS = new Set([
+      'onval', 'onvah', 'onpoc', 'r1', 's1', 'pivot', 'halfback', 'nq close', 'es close',
+      'onl', 'onh', 'pmh', 'pml', 'ono', 'pdc',
+    ]);
+    const isHidden = (label: string) => HIDE_LABELS.has((label || '').trim().toLowerCase());
+
     // For each day, render all of that day's levels as line segments.
     // Today's levels show clean labels on the price axis (no date suffix).
     // Past days' levels are visible on the chart but their labels are
@@ -1533,6 +1594,7 @@ export function Chart() {
       // caller's args. This means daily_levels.json entries with stale
       // colors get auto-canonicalized to the current spec.
       const addLevelLine = (price: number, color: string, title: string, style: LineStyle, width: 1 | 2 | 3 | 4) => {
+        if (isHidden(title)) return;
         if (HIDE_NON_TIER1_LEVELS && !isTier1(title)) return;
         const canonical = lookupLevelStyle(title);
         const finalColor = canonical?.color ?? color;
@@ -1576,20 +1638,30 @@ export function Chart() {
       // a thing"), draw a SINGLE line labelled with the meaningful side
       // — Bull = bottom edge, Bear = top edge per Ravi's RS convention.
       // When low ≠ high, the zone has width and both edges render as before.
-      if (dayLevels.bullZone) {
-        if (dayLevels.bullZone.high === dayLevels.bullZone.low) {
-          addLevelLine(dayLevels.bullZone.low, '#2bb673', 'Bull Zone Bottom', LineStyle.Solid, 2);
-        } else {
-          addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
-          addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+      // Full liquidity-map zone bands: label EVERY bull-zone bottom (BZB) and
+      // EVERY bear-zone top (BrZT), matching the shaded bands the zone primitive
+      // draws. The `zones` array supersedes the single primary bullZone/bearZone
+      // lines below (kept as a fallback for non-RS days without a `zones` field).
+      const zb = dayLevels.zones;
+      if (zb && (zb.bull.length || zb.bear.length)) {
+        for (const z of zb.bull) addLevelLine(z.low,  '#2bb673', 'BZB',  LineStyle.Solid, 1);
+        for (const z of zb.bear) addLevelLine(z.high, '#d64545', 'BrZT', LineStyle.Solid, 1);
+      } else {
+        if (dayLevels.bullZone) {
+          if (dayLevels.bullZone.high === dayLevels.bullZone.low) {
+            addLevelLine(dayLevels.bullZone.low, '#2bb673', 'Bull Zone Bottom', LineStyle.Solid, 2);
+          } else {
+            addLevelLine(dayLevels.bullZone.high, '#2bb673', 'Bull H', LineStyle.Solid, 2);
+            addLevelLine(dayLevels.bullZone.low,  '#2bb673', 'Bull L', LineStyle.Solid, 2);
+          }
         }
-      }
-      if (dayLevels.bearZone) {
-        if (dayLevels.bearZone.high === dayLevels.bearZone.low) {
-          addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear Zone Top', LineStyle.Solid, 2);
-        } else {
-          addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
-          addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+        if (dayLevels.bearZone) {
+          if (dayLevels.bearZone.high === dayLevels.bearZone.low) {
+            addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear Zone Top', LineStyle.Solid, 2);
+          } else {
+            addLevelLine(dayLevels.bearZone.high, '#d64545', 'Bear H', LineStyle.Solid, 2);
+            addLevelLine(dayLevels.bearZone.low,  '#d64545', 'Bear L', LineStyle.Solid, 2);
+          }
         }
       }
       if (dayLevels.ddBands) {
@@ -2523,7 +2595,9 @@ export function Chart() {
         const xAnchor = Math.min(xEnd, paneWidth);
         let pillX = xAnchor - pillW;
         if (pillX < 0) pillX = 0;
-        const pillY = yLine - LINE_GAP - PILL_H;
+        // Sit the label snug just above its level line (small LINE_GAP), rather
+        // than a full pill-height above it — the box is gone, so hug the line.
+        const pillY = yLine - PILL_H + PAD_Y - LINE_GAP;
         candidates.push({ label: lbl.label, color: lbl.color, pillW, pillX, pillY });
       }
 
@@ -2548,21 +2622,17 @@ export function Chart() {
       }
 
       for (const b of placed) {
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', String(b.pillX));
-        rect.setAttribute('y', String(b.pillY));
-        rect.setAttribute('width', String(b.pillW));
-        rect.setAttribute('height', String(PILL_H));
-        rect.setAttribute('rx', '4');
-        rect.setAttribute('fill', b.color);
-        rect.setAttribute('stroke', '#0a0a0b');
-        rect.setAttribute('stroke-width', '1');
-        svg.appendChild(rect);
+        // Box-free labels (per Ravi 2026-06-18): no pill background — just the
+        // text in the level's own color, with a dark outline (paint-order:stroke)
+        // so it stays readable over candles/zone shading.
         const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         el.setAttribute('x', String(b.pillX + b.pillW - PAD_X));
         el.setAttribute('y', String(b.pillY + PILL_H - PAD_Y - 2));
         el.setAttribute('text-anchor', 'end');
-        el.setAttribute('fill', '#0a0a0b');
+        el.setAttribute('fill', b.color);
+        el.setAttribute('stroke', '#0a0a0b');
+        el.setAttribute('stroke-width', '2.5');
+        el.setAttribute('paint-order', 'stroke');
         el.setAttribute('font-family', 'Geist Mono, monospace');
         el.setAttribute('font-size', String(FONT_PX));
         el.setAttribute('font-weight', '800');
@@ -2927,7 +2997,7 @@ export function Chart() {
         left: 0,
         right: 0,
         zIndex: 11,
-        display: 'flex',
+        display: 'none', // TRADE RULES box hidden per Ravi 2026-06-18
         justifyContent: 'center',
         pointerEvents: 'none',
       }}>
@@ -3158,6 +3228,7 @@ export function Chart() {
                           open: b.open, high: b.high, low: b.low, close: b.close,
                         }));
                       series.setData(seriesData);
+                      lastLiveSecRef.current[selectedSymbol] = seriesData[seriesData.length - 1]!.time as number;
                     }
                     // Mark this day as covered for the dynamic loader.
                     const rk = `${selectedSymbol}:${selectedTimeframe}`;
