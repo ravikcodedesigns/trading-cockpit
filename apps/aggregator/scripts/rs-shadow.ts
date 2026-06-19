@@ -13,6 +13,7 @@ import { loadContext, getContext } from '../src/rs-context.js';
 import { deriveMarketState } from '../src/rules-v2/derive-market-state.js';
 import { evaluateEst } from '../src/rules-v2/est-engine.js';
 import { annotateWithLm, lmRead, evaluateLmSetups } from '../src/rules-v2/lm-engine.js';
+import { evaluateSandwich } from '../src/rules-v2/zone-engine.js';
 import type { Setup } from '../src/rules-v2/engine-types.js';
 import type { DailyLevels } from '@trading/contracts';
 
@@ -109,7 +110,10 @@ function tick(): void {
     // LM playbook legs — the active LM code's own setups.
     const lm = evaluateLmSetups(ms);
     for (const s of lm) logRow(s, { lm_code: ms.lmCode ?? null, lm_bias: read?.bias ?? null, lm_prob: s.baseProb, lm_agrees: null });
-    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length}(+${fresh})`);
+    // ZONE — sandwich / zone-combination setups (annotated with LM agreement).
+    const zone = annotateWithLm(ms, evaluateSandwich(ms));
+    for (const s of zone) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
+    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length} zone=${zone.length}(+${fresh})`);
   }
   log(summary.join('  |  '));
 }
