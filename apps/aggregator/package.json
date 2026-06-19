@@ -29,7 +29,9 @@
     "context:resilience": "tsx scripts/context_set.ts res",
     "qualify": "tsx scripts/reapply_quality_gates.ts",
     "shadow": "tsx scripts/rs-shadow.ts",
-    "shadow:resolve": "tsx scripts/rs-shadow-resolve.ts"
+    "shadow:resolve": "tsx scripts/rs-shadow-resolve.ts",
+    "l3:worker": "tsx scripts/l3-book-worker.ts",
+    "l3:smoke": "tsx scripts/l3-book-smoke.ts"
   },
   "dependencies": {
     "@duckdb/node-api": "1.5.3-r.3",

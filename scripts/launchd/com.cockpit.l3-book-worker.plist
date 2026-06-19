@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.l3-book-worker</string>
+
+  <!-- Lightspeed L3 book worker. Tails the live full-size NQ+ES Bookmap .log,
+       reconstructs the L3 order book in memory, loads the RS levels for the
+       current ET day (reloading until they land ~09:32 ET), and logs the live
+       L3 confluence read at each level as price approaches → data/l3-shadow.db.
+       Shadow only — NO orders. Runs continuously so the book seeds across the
+       session and follows the per-ET-day log rollover. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/l3-book-worker.sh</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-l3-book-worker.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-l3-book-worker.log</string>
+</dict>
+</plist>

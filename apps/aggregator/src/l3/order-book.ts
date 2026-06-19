@@ -173,6 +173,15 @@ export class OrderBook {
     return { size, orders };
   }
 
+  /** Total MBO-reconstructed order size within ±ticks of a price, on the given
+   *  side. The gap (depthNear.size − l3Near) is untracked/implied liquidity. */
+  l3Near(priceInt: number, ticks: number, side: 'bid' | 'ask'): number {
+    const sz = side === 'bid' ? this.bidL3 : this.askL3;
+    let size = 0;
+    for (const [pi, s] of sz) if (Math.abs(pi - priceInt) <= ticks) size += s;
+    return size;
+  }
+
   /** Recent tape prints near a price (within ±ticks) since a timestamp. */
   tapeNear(priceInt: number, ticks: number, sinceMs = 0): TapePrint[] {
     const lo = priceFromInt(priceInt - ticks), hi = priceFromInt(priceInt + ticks);
