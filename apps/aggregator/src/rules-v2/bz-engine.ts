@@ -79,19 +79,14 @@ export function evaluateBullBearZone(ms: MarketState, opts: { proximityPts?: num
   }
   // Open MR (pocket) — DD>0.5 long (MR breaks upside → BZB tap); DD<0.5 short (breaks downside → BrZT tap).
   else if (oz === 'MR' && brztBelow != null && bzbAbove != null && price > brztBelow && price < bzbAbove) {
-    if (ddBull) {
-      out.push({
-        family: 'BZ', pivot: 'open-MR(pocket)', level: bzbAbove, direction: 'long', sizeTier: sizeGate('N'),
-        entry: price, stop: +(price - strike).toFixed(2), targets: [bzbAbove, ...tgtUp(bzbAbove)].slice(0, maxT), bounceVsBreak: 'bounce', baseProb: 0.70,
-        confluenceNote: `open in MR pocket · DD ${dd} → breaks MR tie UPSIDE, bull-zone tap @${bzbAbove}`,
-      });
-    } else if (!ms.gate.longOnly) {
-      out.push({
-        family: 'BZ', pivot: 'open-MR(pocket)', level: brztBelow, direction: 'short', sizeTier: sizeGate('S'),
-        entry: price, stop: +(price + strike).toFixed(2), targets: [brztBelow, ...tgtDn(brztBelow)].slice(0, maxT), bounceVsBreak: 'bounce', baseProb: 0.65,
-        confluenceNote: `open in MR pocket · DD ${dd} → breaks MR tie DOWNSIDE, bear-zone tap @${brztBelow}`,
-      });
-    }
+    // Both MR cells are LONG (blind-monkey); DD sets size — N when bullish, S when bearish.
+    out.push({
+      family: 'BZ', pivot: 'open-MR(pocket)', level: bzbAbove, direction: 'long', sizeTier: sizeGate(ddBull ? 'N' : 'S'),
+      entry: price, stop: +(price - strike).toFixed(2), targets: [bzbAbove, ...tgtUp(bzbAbove)].slice(0, maxT), bounceVsBreak: 'bounce', baseProb: ddBull ? 0.70 : 0.65,
+      confluenceNote: ddBull
+        ? `open in MR pocket · DD ${dd} → breaks MR tie UPSIDE, long N, bull-zone tap @${bzbAbove}`
+        : `open in MR pocket · DD ${dd} → small long S (MR tie tends downside/bear-zone tap; blind-monkey small long)`,
+    });
   }
   return out;
 }

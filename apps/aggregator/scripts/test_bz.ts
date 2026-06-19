@@ -26,7 +26,7 @@ show('Open B @BZB, DD<0.5 → long M', ms(30560, 'BLD', 0.40));
 show('Open Br @BrZT, DD>0.5 → long N (tap only)', ms(30340, 'BrLD', 0.66));
 show('Open Br @BrZT, DD<0.5 → short N (down)', ms(30340, 'BrLD', 0.40));
 show('Open MR pocket, DD>0.5 → long N (upside)', ms(30450, undefined, 0.66));
-show('Open MR pocket, DD<0.5 → short S (downside)', ms(30450, undefined, 0.40));
+show('Open MR pocket, DD<0.5 → long S (small, downside tendency)', ms(30450, undefined, 0.40));
 show('Open Br @BrZT, DD<0.5 but long-only gate → none', ms(30340, 'BrLD', 0.40, { mode: 'strong-pivots-small', longOnly: true }));
 show('Open B but price not at BZB → none', ms(30450, 'BLD', 0.66));
 show('gate sit-out → none', ms(30560, 'BLD', 0.66, { mode: 'sit-out' }));
