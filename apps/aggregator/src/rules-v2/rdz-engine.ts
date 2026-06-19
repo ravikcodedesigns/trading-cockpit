@@ -1,13 +1,19 @@
-// Redistribution-Zone engine (Phase 6). From Light_10/11 (resilience) + transcripts
-// 4 & 13. The RDZ is the open↔prev-close gap "box"; the half-gap (HG) is its most
-// decisive pivot, tie-broken by WHITE (redistribution) resilience.
+// Redistribution-Zone engine (Phase 6, full resilience modes). From Light_10 (bullish)
+// + Light_11 (bearish) + transcripts 4 & 13. The RDZ is the open↔prev-close gap "box";
+// WHITE (redistribution) resilience tie-breaks it. Direction at every RDZ pivot = the
+// sign of resilience (resW>0 long / resW<0 short). Three modes:
 //
-//   resW>0 → long to the TOP of the box (gap-and-go);  resW<0 → short to the BOTTOM
-//   (gap fade). Valid only when RATIONAL; skip flat days (gap < 1 strike AND |resW|
-//   <= 50 → resilience is noise). RDZ is a B+ tier (weaker than the strong pivots),
-//   so it only fires on a NORMAL gate. open/half-gap/close double as gap-fill exit
-//   targets (gapFillTargets, for the future exit layer).
-// Pure, gate-aware, emits candidate Setups (family 'RDZ') for the shadow harness.
+//   Mode I  — INSIDE the box (at HG): tiebreak to the TOP (long, Res>0) or BOTTOM
+//             (short, Res<0) of the box.
+//   Mode II — OUTSIDE the box (at the near edge):
+//             • top edge:    Res>0 → top-of-box is support, gap holds (long)
+//                            Res<0 → gap likely to fade down (short)
+//             • bottom edge: Res<0 → bottom-of-box is resistance, gap holds (short)
+//                            Res>0 → gap likely to fade up (long)
+//
+// Valid only when RATIONAL + a NORMAL gate (B+ tier). Flat-day skip: gap < 1 strike AND
+// |resW| <= 50 (resilience is noise; |resW|>50 overrides). open/half-gap/close double as
+// gap-fill exit levels (gapFillTargets). Pure, gate-aware, emits Setups (family 'RDZ').
 import type { MarketState, Setup, SizeTier } from './engine-types.js';
 
 const RDZ_STRIKE: Record<'NQ' | 'ES', number> = { NQ: 40, ES: 10 };
@@ -28,34 +34,40 @@ export function evaluateRdz(ms: MarketState, opts: { proximityPts?: number; maxT
   const price = ms.price;
   const resW = ms.confluence.resWhite;
   const gap = Math.abs(open - close);
-  // Flat-day gate: gap under 1 strike AND weak resilience → resilience is noise.
-  if (gap < strike && Math.abs(resW) <= 50) return out;
+  if (gap < strike && Math.abs(resW) <= 50) return out; // flat-day skip
   if (resW === 0) return out;
 
   const lo = Math.min(open, close), hi = Math.max(open, close);
+  const long = resW > 0;
+  if (!long && ms.gate.longOnly) return out; // long-only gate drops the bearish RDZ
+
   const all = rdzUniqSort([
     ...ms.levels.bzb, ...ms.levels.brzt, ms.levels.hp, ms.levels.mhp, ms.levels.dynHp, ms.levels.dynMhp,
     ms.levels.onHp, ms.levels.onMhp, ms.levels.ddUpper, ms.levels.ddLower, hg, open, close,
   ]);
   const sizeGate = (base: SizeTier): SizeTier => (ms.gate.sizeDown ? rdzDown(base) : base);
+  const emit = (pivot: string, level: number, note: string) => {
+    out.push({
+      family: 'RDZ', pivot, level, direction: long ? 'long' : 'short', sizeTier: sizeGate('M'),
+      entry: price, stop: long ? +(level - strike).toFixed(2) : +(level + strike).toFixed(2),
+      targets: long ? all.filter(l => l > price + 1).slice(0, maxT) : all.filter(l => l < price - 1).reverse().slice(0, maxT),
+      bounceVsBreak: 'bounce', baseProb: 0.72, confluenceNote: note,
+    });
+  };
+  const box = `box ${lo}-${hi}`;
+  const res = `Res ${resW > 0 ? '+' : ''}${resW}`;
 
-  // Half-gap (HG) tiebreak — the most decisive RDZ pivot.
-  if (Math.abs(price - hg) <= prox) {
-    if (resW > 0) {
-      out.push({
-        family: 'RDZ', pivot: 'HG', level: hg, direction: 'long', sizeTier: sizeGate('M'),
-        entry: price, stop: +(hg - strike).toFixed(2),
-        targets: [hi, ...all.filter(l => l > hi + 1)].slice(0, maxT), bounceVsBreak: 'bounce', baseProb: 0.72,
-        confluenceNote: `half-gap tiebreak · Res +${resW} → top of box (gap-and-go) · box ${lo}-${hi}`,
-      });
-    } else if (!ms.gate.longOnly) {
-      out.push({
-        family: 'RDZ', pivot: 'HG', level: hg, direction: 'short', sizeTier: sizeGate('M'),
-        entry: price, stop: +(hg + strike).toFixed(2),
-        targets: [lo, ...all.filter(l => l < lo - 1).reverse()].slice(0, maxT), bounceVsBreak: 'bounce', baseProb: 0.72,
-        confluenceNote: `half-gap tiebreak · Res ${resW} → bottom of box (gap fade) · box ${lo}-${hi}`,
-      });
-    }
+  // Mode I — inside the box, at the half-gap.
+  if (price > lo && price < hi && Math.abs(price - hg) <= prox) {
+    emit('HG', hg, `Mode I (inside RDZ) · HG tiebreak to ${long ? 'top' : 'bottom'} of box · ${res} · ${box}`);
+  }
+  // Mode II — top edge.
+  if (Math.abs(price - hi) <= prox) {
+    emit('RDZ-top', hi, `Mode II (top edge) · ${res} → ${long ? 'top of box is support, gap holds' : 'gap likely to fade down'} · ${box}`);
+  }
+  // Mode II — bottom edge.
+  if (Math.abs(price - lo) <= prox) {
+    emit('RDZ-bottom', lo, `Mode II (bottom edge) · ${res} → ${long ? 'gap likely to fade up' : 'bottom of box is resistance, gap holds'} · ${box}`);
   }
   return out;
 }

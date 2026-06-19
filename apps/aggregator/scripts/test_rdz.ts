@@ -29,5 +29,9 @@ show('flat day (gap 20 < strike, |Res| 20 ≤ 50) → none', ms({ open: 30620, c
 show('flat day but |Res| 60 > 50 → fires', ms({ open: 30620, close: 30600, hg: 30610, price: 30610, resW: 60 }));
 show('irrational (vol) → none', ms({ resW: 73, rational: false }));
 show('gate strong-pivots-small → none (RDZ is B+)', ms({ resW: 73, gate: { mode: 'strong-pivots-small' } }));
-show('not at HG → none', ms({ price: 30560, resW: 73 }));
+show('not at a pivot → none', ms({ price: 30500, resW: 73 }));
+show('Mode II top edge (price=hi), Res>0 → long (top support, gap holds)', ms({ price: 30620, resW: 73 }));
+show('Mode II top edge, Res<0 → short (gap fade down)', ms({ price: 30620, resW: -73 }));
+show('Mode II bottom edge (price=lo), Res<0 → short (bottom resistance, gap holds)', ms({ price: 30200, resW: -73 }));
+show('Mode II bottom edge, Res>0 → long (gap fade up)', ms({ price: 30200, resW: 73 }));
 console.log('\ngapFillTargets:', gapFillTargets(ms({})));
