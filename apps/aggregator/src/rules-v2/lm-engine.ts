@@ -154,3 +154,55 @@ export function lmLegs(ms: MarketState): Array<LmLeg & { size: SizeTier }> {
   const c = { ddRatio: ms.confluence.ddRatio, resWhite: ms.confluence.resWhite, resOrange: ms.confluence.resOrange };
   return legs.map(l => ({ ...l, size: legSize(l.gate, c) }));
 }
+
+// ── LM playbook → candidate Setups (gate-aware), for the shadow harness ────────────
+const LM_STRIKE: Record<'NQ' | 'ES', number> = { NQ: 40, ES: 10 };
+const LM_TIERS: SizeTier[] = ['N', 'M', 'S', '0'];
+const lmDown = (t: SizeTier): SizeTier => (t === 'N' ? 'M' : t === 'M' ? 'S' : t === 'S' ? 'S' : '0');
+const lmCap = (t: SizeTier, max: SizeTier): SizeTier => (LM_TIERS.indexOf(t) >= LM_TIERS.indexOf(max) ? t : max);
+const lmUniqSort = (xs: Array<number | undefined>): number[] =>
+  Array.from(new Set(xs.filter((x): x is number => x != null && Number.isFinite(x)))).sort((a, b) => a - b);
+
+/** Emit the active LM-code's playbook legs as candidate Setups when price is at each
+ *  leg's pivot. Gate-aware (sit-out→none, strong-pivots-small→cap S, long-only→drop
+ *  shorts, sizeDown→step down). 'break' legs are skipped (need break-state wiring). */
+export function evaluateLmSetups(ms: MarketState, opts: { proximityPts?: number; maxTargets?: number } = {}): Setup[] {
+  const out: Setup[] = [];
+  if (ms.price == null || ms.gate.mode === 'sit-out' || !ms.lmCode) return out;
+  const strike = LM_STRIKE[ms.symbol];
+  const prox = opts.proximityPts ?? strike / 5;
+  const maxT = opts.maxTargets ?? 3;
+  const price = ms.price;
+  const read = lmRead(ms);
+  const all = lmUniqSort([
+    ...ms.levels.bzb, ...ms.levels.brzt, ms.levels.hp, ms.levels.mhp, ms.levels.dynHp, ms.levels.dynMhp,
+    ms.levels.onHp, ms.levels.onMhp, ms.levels.ddUpper, ms.levels.ddLower, ms.halfGap, ms.prevClose,
+  ]);
+  const legLevel = (at: LmLeg['at'], dir: Dir): number | undefined => {
+    switch (at) {
+      case 'open': return ms.open;
+      case 'hp': return ms.levels.hp;
+      case 'mhp': return ms.levels.mhp;
+      case 'zone': return dir === 'long' ? nearest(ms.levels.bzb, price) : nearest(ms.levels.brzt, price);
+      case 'break': return undefined; // break legs need break-state — skipped for now
+    }
+  };
+  for (const leg of lmLegs(ms)) {
+    if (leg.size === '0' || leg.breakOnly) continue;            // sit-out + break legs skipped
+    if (leg.dir === 'short' && ms.gate.longOnly) continue;
+    const level = legLevel(leg.at, leg.dir);
+    if (level == null || Math.abs(price - level) > prox) continue;
+    let tier: SizeTier = ms.gate.sizeDown ? lmDown(leg.size) : leg.size;
+    if (ms.gate.mode === 'strong-pivots-small') tier = lmCap(tier, 'S');
+    out.push({
+      family: 'LM', pivot: `${ms.lmCode}#${leg.id}`, level, direction: leg.dir, sizeTier: tier,
+      entry: price,
+      stop: leg.dir === 'long' ? +(level - strike).toFixed(2) : +(level + strike).toFixed(2),
+      targets: leg.dir === 'long' ? all.filter(l => l > level + 1).slice(0, maxT) : all.filter(l => l < level - 1).reverse().slice(0, maxT),
+      bounceVsBreak: 'bounce',
+      baseProb: read?.prob ?? 0,
+      confluenceNote: `LM ${ms.lmCode} leg ${leg.id} @${leg.at}${leg.note ? ` · ${leg.note}` : ''}`,
+    });
+  }
+  return out;
+}

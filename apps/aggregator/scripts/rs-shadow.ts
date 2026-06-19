@@ -12,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 import { loadContext, getContext } from '../src/rs-context.js';
 import { deriveMarketState } from '../src/rules-v2/derive-market-state.js';
 import { evaluateEst } from '../src/rules-v2/est-engine.js';
+import { annotateWithLm, lmRead, evaluateLmSetups } from '../src/rules-v2/lm-engine.js';
+import type { Setup } from '../src/rules-v2/engine-types.js';
 import type { DailyLevels } from '@trading/contracts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,11 +52,15 @@ db.exec(`CREATE TABLE IF NOT EXISTS shadow_setups (
   outcome TEXT, exit_price REAL, exit_ts_ms INTEGER, pnl_pts REAL, resolved_at INTEGER,
   UNIQUE(trading_day, symbol, pivot, direction, level)
 )`);
+// Idempotent migration: LM-agreement columns (lm_code is in the base schema).
+for (const col of ['lm_bias TEXT', 'lm_prob REAL', 'lm_agrees INTEGER']) {
+  try { db.exec(`ALTER TABLE shadow_setups ADD COLUMN ${col}`); } catch { /* column exists */ }
+}
 const insert = db.prepare(`INSERT OR IGNORE INTO shadow_setups
   (trading_day,ts_ms,ts_et,symbol,family,pivot,direction,size_tier,level,entry,stop,targets,bounce_vs_break,base_prob,
-   gate_mode,gate_reasons,lm_code,dd_ratio,res_white,res_blue,res_orange,gm,vx,bbb,vvix,price,state_json)
+   gate_mode,gate_reasons,lm_code,lm_bias,lm_prob,lm_agrees,dd_ratio,res_white,res_blue,res_orange,gm,vx,bbb,vvix,price,state_json)
   VALUES (@trading_day,@ts_ms,@ts_et,@symbol,@family,@pivot,@direction,@size_tier,@level,@entry,@stop,@targets,@bounce_vs_break,@base_prob,
-   @gate_mode,@gate_reasons,@lm_code,@dd_ratio,@res_white,@res_blue,@res_orange,@gm,@vx,@bbb,@vvix,@price,@state_json)`);
+   @gate_mode,@gate_reasons,@lm_code,@lm_bias,@lm_prob,@lm_agrees,@dd_ratio,@res_white,@res_blue,@res_orange,@gm,@vx,@bbb,@vvix,@price,@state_json)`);
 
 const ticks = new Database(TICKS_DB, { readonly: true, fileMustExist: true });
 const lastPriceQ = ticks.prepare('SELECT price FROM trades WHERE symbol=? ORDER BY ts DESC LIMIT 1');
@@ -80,23 +86,30 @@ function tick(): void {
     const price = (lastPriceQ.get(sym) as { price: number } | undefined)?.price;
     if (price == null) { summary.push(`${sym}:noPrice`); continue; }
     const ms = deriveMarketState({ symbol: sym, rs, levels, price, open: levels?.openPrice });
-    const setups = evaluateEst(ms);
+    const read = lmRead(ms);
     let fresh = 0;
-    for (const s of setups) {
+    const logRow = (s: Setup, lm: { lm_code: string | null; lm_bias: string | null; lm_prob: number | null; lm_agrees: number | null }) => {
       const info = insert.run({
         trading_day: day, ts_ms: Date.now(), ts_et: etTime(),
         symbol: sym, family: s.family, pivot: s.pivot, direction: s.direction, size_tier: s.sizeTier,
         level: s.level, entry: s.entry, stop: s.stop, targets: JSON.stringify(s.targets),
         bounce_vs_break: s.bounceVsBreak, base_prob: s.baseProb,
-        gate_mode: ms.gate.mode, gate_reasons: JSON.stringify(ms.gate.reasons), lm_code: ms.lmCode ?? null,
+        gate_mode: ms.gate.mode, gate_reasons: JSON.stringify(ms.gate.reasons),
+        lm_code: lm.lm_code, lm_bias: lm.lm_bias, lm_prob: lm.lm_prob, lm_agrees: lm.lm_agrees,
         dd_ratio: ms.confluence.ddRatio, res_white: ms.confluence.resWhite, res_blue: ms.confluence.resBlue,
         res_orange: ms.confluence.resOrange, gm: ms.confluence.gm,
         vx: ms.confluence.vx, bbb: ms.confluence.bbb, vvix: ms.confluence.vvix,
         price, state_json: JSON.stringify(ms),
       });
-      if (info.changes) { fresh++; log(`NEW ${sym} ${s.pivot} ${s.direction} ${s.sizeTier} @${s.entry} stop ${s.stop} (gate ${ms.gate.mode}) · ${s.confluenceNote}`); }
-    }
-    summary.push(`${sym}@${price} gate=${ms.gate.mode} setups=${setups.length}(+${fresh})`);
+      if (info.changes) { fresh++; log(`NEW ${sym} ${s.family}:${s.pivot} ${s.direction} ${s.sizeTier} @${s.entry} stop ${s.stop} (gate ${ms.gate.mode}) · ${s.confluenceNote}`); }
+    };
+    // EST setups — annotated with whether they agree with the LM-code bias.
+    const est = annotateWithLm(ms, evaluateEst(ms));
+    for (const s of est) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
+    // LM playbook legs — the active LM code's own setups.
+    const lm = evaluateLmSetups(ms);
+    for (const s of lm) logRow(s, { lm_code: ms.lmCode ?? null, lm_bias: read?.bias ?? null, lm_prob: s.baseProb, lm_agrees: null });
+    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length}(+${fresh})`);
   }
   log(summary.join('  |  '));
 }
