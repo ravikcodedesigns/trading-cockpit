@@ -15,6 +15,7 @@ import { evaluateEst } from '../src/rules-v2/est-engine.js';
 import { annotateWithLm, lmRead, evaluateLmSetups } from '../src/rules-v2/lm-engine.js';
 import { evaluateSandwich } from '../src/rules-v2/zone-engine.js';
 import { evaluateDdBands } from '../src/rules-v2/dd-engine.js';
+import { evaluateRdz } from '../src/rules-v2/rdz-engine.js';
 import type { Setup } from '../src/rules-v2/engine-types.js';
 import type { DailyLevels } from '@trading/contracts';
 
@@ -117,7 +118,10 @@ function tick(): void {
     // DDBAND — full DD-band setups (lower long / upper short), annotated with LM agreement.
     const ddb = annotateWithLm(ms, evaluateDdBands(ms));
     for (const s of ddb) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
-    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length} zone=${zone.length} dd=${ddb.length}(+${fresh})`);
+    // RDZ — half-gap / redistribution-zone setups, annotated with LM agreement.
+    const rdz = annotateWithLm(ms, evaluateRdz(ms));
+    for (const s of rdz) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
+    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length} zone=${zone.length} dd=${ddb.length} rdz=${rdz.length}(+${fresh})`);
   }
   log(summary.join('  |  '));
 }
