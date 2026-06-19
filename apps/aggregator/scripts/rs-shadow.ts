@@ -16,6 +16,7 @@ import { annotateWithLm, lmRead, evaluateLmSetups } from '../src/rules-v2/lm-eng
 import { evaluateSandwich } from '../src/rules-v2/zone-engine.js';
 import { evaluateDdBands } from '../src/rules-v2/dd-engine.js';
 import { evaluateRdz } from '../src/rules-v2/rdz-engine.js';
+import { evaluateBullBearZone } from '../src/rules-v2/bz-engine.js';
 import type { Setup } from '../src/rules-v2/engine-types.js';
 import type { DailyLevels } from '@trading/contracts';
 
@@ -121,7 +122,10 @@ function tick(): void {
     // RDZ — half-gap / redistribution-zone setups, annotated with LM agreement.
     const rdz = annotateWithLm(ms, evaluateRdz(ms));
     for (const s of rdz) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
-    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length} zone=${zone.length} dd=${ddb.length} rdz=${rdz.length}(+${fresh})`);
+    // BZ — bull/bear-zone DD-Ratio matrix (open-zone × DD), annotated with LM agreement.
+    const bz = annotateWithLm(ms, evaluateBullBearZone(ms));
+    for (const s of bz) logRow(s, { lm_code: s.lmCode, lm_bias: s.lmBias, lm_prob: s.lmProb, lm_agrees: s.lmAgrees == null ? null : (s.lmAgrees ? 1 : 0) });
+    summary.push(`${sym}@${price} gate=${ms.gate.mode} est=${est.length} lm=${lm.length} zone=${zone.length} dd=${ddb.length} rdz=${rdz.length} bz=${bz.length}(+${fresh})`);
   }
   log(summary.join('  |  '));
 }

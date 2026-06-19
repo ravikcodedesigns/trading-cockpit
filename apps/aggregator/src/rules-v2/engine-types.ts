@@ -5,7 +5,7 @@ export type SizeTier = 'N' | 'M' | 'S' | '0';   // 0 = no-position leg (LM-Summa
 export type Dir = 'long' | 'short';
 export type GateMode = 'normal' | 'strong-pivots-small' | 'sit-out';
 export type BreakState = 'red' | 'yellow' | 'green' | null;  // active / caution / none
-export type SetupFamily = 'EST' | 'LM' | 'ZONE' | 'DDBAND' | 'RDZ';
+export type SetupFamily = 'EST' | 'LM' | 'ZONE' | 'DDBAND' | 'RDZ' | 'BZ';
 export type BounceVsBreak = 'bounce' | 'break' | 'reclaim' | 'hold-through';
 
 /** Layer-0 global sit-out gate, derived from the platform's irrational/unusual panel + vol. */
