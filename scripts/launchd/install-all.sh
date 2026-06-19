@@ -19,7 +19,8 @@ chmod +x "$SRC_DIR/structural-levels.sh" \
          "$SRC_DIR/reminder.sh" \
          "$SRC_DIR/trader.sh" \
          "$SRC_DIR/mbo-parquet-converter.sh" \
-         "$SRC_DIR/parquet-compaction.sh"
+         "$SRC_DIR/parquet-compaction.sh" \
+         "$SRC_DIR/rs-shadow.sh"
 
 for PLIST in "$SRC_DIR"/com.cockpit.*.plist; do
   NAME=$(basename "$PLIST")
