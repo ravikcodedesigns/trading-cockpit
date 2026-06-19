@@ -6,6 +6,7 @@ data/ticks.db*
 data/ticks_corrupted_backup.db
 data/mbo.db*
 data/positions.db*
+data/rs-shadow.db*
 dist/
 .turbo/
 .vite/
