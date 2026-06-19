@@ -28,9 +28,6 @@ const show = (label: string, m: MarketState) => {
 };
 
 show('at MHP (resOrange>0 → N long)', ms(30476));
-show('at lower DD band (DD>0.5 → N)', ms(30440));
-const ddBear = ms(30440); ddBear.confluence.ddRatio = 0.40;
-show('at lower DD band (DD<0.5 → M, still long)', ddBear);
 show('at BZB (DD>0.5 → N long)', ms(30560));
 show('at BrZT from below (hold-through long)', ms(30339));
 show('no level nearby', ms(30505));

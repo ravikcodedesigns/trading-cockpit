@@ -3,9 +3,10 @@
 // allows; confluence only SIZES it (N/M/S, never 0). Emits candidate Setups for
 // shadow-logging — no orders. Pure & testable.
 //
-// Entry pivots (all "strong pivots"): MHP, lower DD band, bull-zone bottom (BZB),
-// bear-zone top (BrZT). LP/IP are characterizations of the BZB/BrZT trade by where
-// the target sits (LP = BrZT→BZB slow; IP = BZB→BrZT fast), noted not double-emitted.
+// Entry pivots (all "strong pivots"): MHP, bull-zone bottom (BZB), bear-zone top
+// (BrZT). LP/IP are characterizations of the BZB/BrZT trade by where the target sits
+// (LP = BrZT→BZB slow; IP = BZB→BrZT fast), noted not double-emitted. DD bands have
+// their own engine (dd-engine.ts, Phase 5).
 import type { MarketState, Setup, SizeTier, Dir, BounceVsBreak } from './engine-types.js';
 
 const STRIKE: Record<'NQ' | 'ES', number> = { NQ: 40, ES: 10 };
@@ -76,13 +77,9 @@ export function evaluateEst(ms: MarketState, opts: EstOpts = {}): Setup[] {
       'bounce', `MHP bounce · resOrange ${resO >= 0 ? '+' : ''}${resO} · DD ${dd}`);
   }
 
-  // 2) Lower DD band — long reclaim (N if DD>0.5 else M). 92% close-above. Full exit at band.
-  if (ms.levels.ddLower != null && near(ms.levels.ddLower)) {
-    emit('DD-lower', ms.levels.ddLower, 'long', ddBull ? 'N' : 'M', 0.92,
-      'reclaim', `lower DD-band reclaim · DD ${dd} · full-exit-at-band (no runner)`);
-  }
+  // (DD bands moved to dd-engine.ts, Phase 5.)
 
-  // 3) BZB — long bounce (N if DD>0.5 else M). Label IP when the next interrupt up is a BrZT (fast).
+  // 2) BZB — long bounce (N if DD>0.5 else M). Label IP when the next interrupt up is a BrZT (fast).
   for (const bzb of ms.levels.bzb) {
     if (!near(bzb)) continue;
     const firstAbove = allLevels.find(l => l > bzb + 1);
@@ -91,7 +88,7 @@ export function evaluateEst(ms: MarketState, opts: EstOpts = {}): Setup[] {
       `bull-zone bottom${isIp ? ' · IP→BrZT (fast)' : ''} · DD ${dd}`);
   }
 
-  // 4) BrZT — from below = hold-through long (LP, N/M by DD); from above = short only if DD<0.5 & GM bear.
+  // 3) BrZT — from below = hold-through long (LP, N/M by DD); from above = short only if DD<0.5 & GM bear.
   for (const brzt of ms.levels.brzt) {
     if (!near(brzt)) continue;
     if (price <= brzt) {
