@@ -100,13 +100,24 @@ SCHEMAS = {"trades": TRADES_SCHEMA, "depth": DEPTH_SCHEMA, "mbo": MBO_SCHEMA}
 # ────────────────────────────────────────────────────────────────────────────
 
 def symbol_from_alias(alias: str) -> Optional[str]:
-    """MNQM6.CME@BMD / F_US_MNQM26@CQG → 'NQ'. Same for ES."""
+    """Map an alias to its instrument partition. Micros and full-size are kept
+    SEPARATE (different instruments — micro has the retail order-flow firehose,
+    full-size has the deep institutional book):
+        MNQM6.CME@BMD / F_US_MNQM26@CQG → 'MNQ'   (micro NQ)
+        MESU6.CME@BMD                   → 'MES'   (micro ES)
+        NQU6.CME@BMD  / F.US.ENQU6      → 'NQ'    (full-size NQ)
+        ESU6.CME@BMD                    → 'ES'    (full-size ES)
+    Order matters: 'MNQ' contains 'NQ', so micros MUST be tested first."""
     if not alias:
         return None
     a = alias.upper()
     if "MNQ" in a:
-        return "NQ"
+        return "MNQ"
     if "MES" in a:
+        return "MES"
+    if "NQ" in a:
+        return "NQ"
+    if "ES" in a:
         return "ES"
     return None
 
@@ -124,15 +135,16 @@ def contract_from_alias(alias: str) -> Optional[str]:
 
     Strategy: drop the '@vendor' suffix, then split on '.' and '_' and
     return the first token containing the underlying symbol prefix
-    (MNQ / MES). This is robust to vendor-specific prefix conventions
-    (F.US.X / F_US_X / X.CME) without enumerating them all.
+    (MNQ / MES / NQ / ES). This is robust to vendor-specific prefix
+    conventions (F.US.X / F_US_X / X.CME) without enumerating them all,
+    and keeps the full-size codes (NQU6 / ESU6) distinct from the micros.
     """
     if not alias:
         return None
     before_at = alias.split("@", 1)[0]
     for sep in (".", "_"):
         for tok in before_at.split(sep):
-            if "MNQ" in tok or "MES" in tok:
+            if "MNQ" in tok or "MES" in tok or "NQ" in tok or "ES" in tok:
                 return tok
     return before_at or None
 
