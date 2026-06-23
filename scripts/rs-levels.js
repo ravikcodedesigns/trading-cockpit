@@ -234,23 +234,35 @@ async function readLmMm() {
     } catch (e) { log(`${t.name}: LM/MM read failed — ${e.message}`); }
   }
   if (!DRY && Object.keys(perSym).length) { writeRsContext(perSym); log(`  rs-context updated: ${Object.keys(perSym).join(', ')}`); }
-  return perSym;
+  // mmOk = every symbol produced a non-null Monthly-Map read this pass. A null read
+  // (charts not loaded at the open) must NOT count as success — otherwise the prior
+  // day's stale mmBullish is left in place all session.
+  const mmOk = TARGETS.every(t => perSym[t.name] && perSym[t.name].mmBullish != null);
+  return { perSym, mmOk };
 }
 
 async function main() {
   const zonesFound = await readIntraday();
-  const perSym = await readLmMm();
+  const { perSym, mmOk } = await readLmMm();
   // Re-assert mmBullish after one rs-feed cycle so a concurrent 5s write (which
   // read the file just before our write) can't permanently drop it.
   if (!DRY && Object.keys(perSym).length) { await sleep(7000); writeRsContext(perSym); }
   if (DRY) log('DRY — no files written.');
-  return zonesFound;
+  return { zonesFound, mmOk };
 }
 
 (async () => {
   try {
-    const ok = await main();
-    // 09:32 runs ~2 min after the open; if zones haven't drawn yet, retry once.
-    if (!ok && !DRY) { log('no zone bands yet — retrying once in 60s'); await sleep(60_000); await main(); }
+    // 09:32 fires ~2 min after the open, when the intraday zone bands and the 1D
+    // charts often haven't rendered yet. Retry until BOTH the zone bands are drawn
+    // AND the Monthly-Map read succeeds for every symbol — a single early failure
+    // must not leave the prior day's stale mmBullish in place.
+    const MAX = 6;
+    for (let attempt = 1; ; attempt++) {
+      const { zonesFound, mmOk } = await main();
+      if (DRY || (zonesFound && mmOk) || attempt >= MAX) break;
+      log(`retry ${attempt}/${MAX - 1}: zones=${zonesFound} mmOk=${mmOk} — again in 60s`);
+      await sleep(60_000);
+    }
   } catch (e) { log('ERROR', e.message); process.exit(1); }
 })();
