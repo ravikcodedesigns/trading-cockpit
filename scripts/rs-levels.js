@@ -15,6 +15,10 @@ const WS = require('/Users/ravikumarbasker/trading-cockpit/node_modules/.pnpm/ws
 
 const PORT = process.env.CDP_PORT || '9333';
 const DRY = process.env.DRY_RUN === '1';
+// MM_ONLY: refresh only the per-symbol LM code + Monthly-Map bias (mmBullish) into
+// rs-context — skip the once-daily zones/DD/HP/MHP read. Used by the 30-min RTH job
+// so MM tracks price moving into/out of zones intraday without rewriting levels.
+const MM_ONLY = process.env.MM_ONLY === '1';
 const log = (...a) => console.error(new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false }) + ' ET', ...a);
 
 // ON HP / ON MHP removed 2026-06-18: the platform does NOT draw these, so they
@@ -249,17 +253,21 @@ const NEED_INTRADAY = ['primaryBull', 'primaryBear', 'ddBands', 'HP', 'MHP'];
 const NEED_LMMM = ['lmCode', 'mmBullish'];
 
 async function main() {
-  const { bySym } = await readIntraday();
+  const bySym = MM_ONLY ? {} : (await readIntraday()).bySym;
   const { perSym } = await readLmMm();
   // Re-assert mmBullish after one rs-feed cycle so a concurrent 5s write (which
   // read the file just before our write) can't permanently drop it.
   if (!DRY && Object.keys(perSym).length) { await sleep(7000); writeRsContext(perSym); }
   if (DRY) log('DRY — no files written.');
-  // Completeness: every symbol must have every derived value non-null.
+  // Completeness: every value the run derives must be non-null (MM_ONLY checks just
+  // LM+MM). Any null → retry, so a partial read at the open self-heals.
   const nulls = [];
   for (const t of TARGETS) {
     const iv = bySym[t.name] || {}, lv = perSym[t.name] || {};
-    const miss = [...NEED_INTRADAY.filter(k => iv[k] == null), ...NEED_LMMM.filter(k => lv[k] == null)];
+    const miss = [
+      ...(MM_ONLY ? [] : NEED_INTRADAY.filter(k => iv[k] == null)),
+      ...NEED_LMMM.filter(k => lv[k] == null),
+    ];
     if (miss.length) nulls.push(`${t.name}:${miss.join(',')}`);
   }
   if (nulls.length) log(`  null derived values: ${nulls.join(' | ')}`);
