@@ -194,18 +194,20 @@ async function readIntraday() {
   const d = JSON.parse(await evalExpr(SCRAPE));
   if (d.err) throw new Error(d.err);
   let zonesFound = false;
+  const bySym = {};   // per-symbol derived values, for the completeness/retry check
   for (const t of TARGETS) {
     const chart = d.charts.find(c => t.re.test(c.symbol || ''));
-    if (!chart) { log(`${t.name}: no matching chart`); continue; }
+    if (!chart) { log(`${t.name}: no matching chart`); bySym[t.name] = {}; continue; }
     const mapped = mapChart(chart.shapes, d[t.hpNow], d[t.mhpNow]);
     if (mapped.zones.bull.length + mapped.zones.bear.length > 0) zonesFound = true;
     log(`── ${t.name} (${chart.symbol}, ${chart.shapes.length} shapes) ──`);
     log(`  ${mapped.zones.bull.length} bull + ${mapped.zones.bear.length} bear zone bands`);
     const out = { primaryBull: mapped.bullZone, primaryBear: mapped.bearZone, ddBands: mapped.ddBands, HP: mapped.hedgePressure, MHP: mapped.mhp, additional: mapped.rsAdditionalLevels.map(a => `${a.label}@${a.price}`) };
     console.error('  →', JSON.stringify(out));
+    bySym[t.name] = { primaryBull: mapped.bullZone, primaryBear: mapped.bearZone, ddBands: mapped.ddBands, HP: mapped.hedgePressure, MHP: mapped.mhp };
     if (!DRY) { const kept = writeFile(t, mapped); log(`  wrote ${t.file.split('/').pop()} [${etDate()}] (${kept} price-derived preserved)`); }
   }
-  return zonesFound;
+  return { zonesFound, bySym };
 }
 
 // Phase 2 — per-symbol LM code + Monthly-Map bias. Flips each chart to 1D briefly
@@ -241,14 +243,27 @@ async function readLmMm() {
   return { perSym, mmOk };
 }
 
+// Every value the job derives, per symbol. A null in ANY of these means the read
+// was incomplete (charts not rendered yet) → the run should retry.
+const NEED_INTRADAY = ['primaryBull', 'primaryBear', 'ddBands', 'HP', 'MHP'];
+const NEED_LMMM = ['lmCode', 'mmBullish'];
+
 async function main() {
-  const zonesFound = await readIntraday();
-  const { perSym, mmOk } = await readLmMm();
+  const { bySym } = await readIntraday();
+  const { perSym } = await readLmMm();
   // Re-assert mmBullish after one rs-feed cycle so a concurrent 5s write (which
   // read the file just before our write) can't permanently drop it.
   if (!DRY && Object.keys(perSym).length) { await sleep(7000); writeRsContext(perSym); }
   if (DRY) log('DRY — no files written.');
-  return { zonesFound, mmOk };
+  // Completeness: every symbol must have every derived value non-null.
+  const nulls = [];
+  for (const t of TARGETS) {
+    const iv = bySym[t.name] || {}, lv = perSym[t.name] || {};
+    const miss = [...NEED_INTRADAY.filter(k => iv[k] == null), ...NEED_LMMM.filter(k => lv[k] == null)];
+    if (miss.length) nulls.push(`${t.name}:${miss.join(',')}`);
+  }
+  if (nulls.length) log(`  null derived values: ${nulls.join(' | ')}`);
+  return { allOk: nulls.length === 0 };
 }
 
 (async () => {
@@ -259,9 +274,9 @@ async function main() {
     // must not leave the prior day's stale mmBullish in place.
     const MAX = 6;
     for (let attempt = 1; ; attempt++) {
-      const { zonesFound, mmOk } = await main();
-      if (DRY || (zonesFound && mmOk) || attempt >= MAX) break;
-      log(`retry ${attempt}/${MAX - 1}: zones=${zonesFound} mmOk=${mmOk} — again in 60s`);
+      const { allOk } = await main();
+      if (DRY || allOk || attempt >= MAX) break;
+      log(`retry ${attempt}/${MAX - 1}: incomplete read (null value) — again in 60s`);
       await sleep(60_000);
     }
   } catch (e) { log('ERROR', e.message); process.exit(1); }
