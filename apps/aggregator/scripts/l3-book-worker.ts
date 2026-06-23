@@ -66,14 +66,14 @@ function loadLevels(symbol: string): RsLevel[] {
   push('MHP', entry.mhp);
   push('HP', entry.hedgePressure);
   if (entry.ddBands) { push('DDupper', entry.ddBands.upper); push('DDlower', entry.ddBands.lower); }
-  if (entry.bullZone) {
-    push('BZB', entry.bullZone.high);
-    if (entry.bullZone.low !== entry.bullZone.high) push('BZB_lo', entry.bullZone.low);
-  }
-  if (entry.bearZone) {
-    push('BrZT', entry.bearZone.low);
-    if (entry.bearZone.high !== entry.bearZone.low) push('BrZT_hi', entry.bearZone.high);
-  }
+  // Watch EVERY bull/bear zone, not just the single "primary" (which rs-levels
+  // picks by DD-mid proximity — wrong on a gap day when price is far from the DD
+  // band). Only the zones near live price ever fire snapshots (±NEAR_TICKS gate),
+  // so pushing all of them is safe and ensures the near-price BZB/BrZT are tracked.
+  const bullZones = Array.isArray(entry.zones?.bull) ? entry.zones.bull : (entry.bullZone ? [entry.bullZone] : []);
+  for (const z of bullZones) { push('BZB', z.low); if (z.high !== z.low) push('BZB_hi', z.high); }
+  const bearZones = Array.isArray(entry.zones?.bear) ? entry.zones.bear : (entry.bearZone ? [entry.bearZone] : []);
+  for (const z of bearZones) { push('BrZT', z.high); if (z.high !== z.low) push('BrZT_lo', z.low); }
   for (const a of entry.additionalLevels ?? []) push(a.label ?? 'lvl', a.price, 'struct');
   return out;
 }
@@ -155,8 +155,11 @@ function snapshot(st: SymState): void {
     const lvInt = intFromPrice(lv.price);
     const distTicks = midInt - lvInt; // + = price above the level
     if (Math.abs(distTicks) > NEAR_TICKS) continue;
-    if (now - (st.lastSnap.get(lv.label) ?? 0) < SNAP_THROTTLE_MS) continue;
-    st.lastSnap.set(lv.label, now);
+    // throttle per (label, price) — multiple BZB/BrZT zones share a label, so a
+    // label-only key would let one zone starve the others.
+    const tkey = `${lv.label}:${lv.price}`;
+    if (now - (st.lastSnap.get(tkey) ?? 0) < SNAP_THROTTLE_MS) continue;
+    st.lastSnap.set(tkey, now);
     // price above level → level acts as support (bids defend); below → resistance (asks defend)
     const side: 'bid' | 'ask' = distTicks >= 0 ? 'bid' : 'ask';
     const wall = st.book.depthNear(lvInt, WALL_TICKS, side);
