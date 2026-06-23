@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.cockpit.reminder-l3-scorecard</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/launchd/reminder.sh</string>
+    <string>com.cockpit.reminder-l3-scorecard</string>
+    <string>2026</string>
+    <string>L3 decision engine — 1-week shadow done</string>
+    <string>Review the l3_decisions scorecard with Claude and tune the weights before wiring to the trader.</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Month</key><integer>6</integer><key>Day</key><integer>30</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>45</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.log</string>
+  <key>StandardErrorPath</key><string>/Users/ravikumarbasker/Library/Logs/cockpit-reminders.log</string>
+</dict>
+</plist>
