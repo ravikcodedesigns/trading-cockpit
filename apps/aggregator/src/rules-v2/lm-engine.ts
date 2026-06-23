@@ -195,7 +195,7 @@ export function evaluateLmSetups(ms: MarketState, opts: { proximityPts?: number;
     let tier: SizeTier = ms.gate.sizeDown ? lmDown(leg.size) : leg.size;
     if (ms.gate.mode === 'strong-pivots-small') tier = lmCap(tier, 'S');
     out.push({
-      family: 'LM', pivot: `${ms.lmCode}#${leg.id}`, level, direction: leg.dir, sizeTier: tier,
+      family: 'LM', pivot: `${ms.lmCode}#${leg.id}@${leg.at}`, level, direction: leg.dir, sizeTier: tier,
       entry: price,
       stop: leg.dir === 'long' ? +(level - strike).toFixed(2) : +(level + strike).toFixed(2),
       targets: leg.dir === 'long' ? all.filter(l => l > level + 1).slice(0, maxT) : all.filter(l => l < level - 1).reverse().slice(0, maxT),
