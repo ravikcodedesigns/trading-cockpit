@@ -120,19 +120,21 @@ db.exec(`CREATE TABLE IF NOT EXISTS l3_decisions (
   symbol TEXT, level_label TEXT, level_kind TEXT, level_price REAL,
   price REAL, approach TEXT, defend_side TEXT,
   action TEXT, setup TEXT, size TEXT, score REAL,
-  wall INTEGER, l3_size INTEGER, implied_gap INTEGER, cvd INTEGER, cvd60 INTEGER,
+  wall INTEGER, l3_size INTEGER, implied_gap INTEGER, icebergs INTEGER, cvd INTEGER, cvd60 INTEGER,
   aggr_buy INTEGER, aggr_sell INTEGER,
   gm TEXT, mm INTEGER, mhp_res REAL, hp_res REAL, redist_res REAL, dd_ratio REAL,
   lm_code TEXT, is_rational INTEGER, vx REAL, vvix REAL, vx_vol_state TEXT,
   reasons TEXT, vetoes TEXT,
   outcome TEXT, exit_price REAL, exit_ts_ms INTEGER, pnl_pts REAL, resolved_at INTEGER
 )`);
+// idempotent migration for tables created before the icebergs column existed
+try { db.exec('ALTER TABLE l3_decisions ADD COLUMN icebergs INTEGER'); } catch { /* exists */ }
 const insDecision = db.prepare(`INSERT INTO l3_decisions
   (ts_ms,ts_et,trading_day,symbol,level_label,level_kind,level_price,price,approach,defend_side,
-   action,setup,size,score,wall,l3_size,implied_gap,cvd,cvd60,aggr_buy,aggr_sell,
+   action,setup,size,score,wall,l3_size,implied_gap,icebergs,cvd,cvd60,aggr_buy,aggr_sell,
    gm,mm,mhp_res,hp_res,redist_res,dd_ratio,lm_code,is_rational,vx,vvix,vx_vol_state,reasons,vetoes)
   VALUES (@ts_ms,@ts_et,@trading_day,@symbol,@level_label,@level_kind,@level_price,@price,@approach,@defend_side,
-   @action,@setup,@size,@score,@wall,@l3_size,@implied_gap,@cvd,@cvd60,@aggr_buy,@aggr_sell,
+   @action,@setup,@size,@score,@wall,@l3_size,@implied_gap,@icebergs,@cvd,@cvd60,@aggr_buy,@aggr_sell,
    @gm,@mm,@mhp_res,@hp_res,@redist_res,@dd_ratio,@lm_code,@is_rational,@vx,@vvix,@vx_vol_state,@reasons,@vetoes)`);
 
 // ── per-symbol state ─────────────────────────────────────────────────────────
@@ -194,11 +196,12 @@ function fireDecision(st: SymState, lv: RsLevel, distTicks: number, side: 'bid' 
                       mid: number, wall: number, l3size: number, aggrBuy: number, aggrSell: number,
                       slope: number, now: number): void {
   const ctx = loadCtx(st.sym);
+  const ice = st.book.icebergsNear(intFromPrice(lv.price), WALL_TICKS, side);
   const approach: 'above' | 'below' = distTicks >= 0 ? 'above' : 'below';
   const input: DecisionInput = {
     symbol: st.sym, level: { label: lv.label, price: lv.price, kind: lv.kind },
     approach, price: +mid.toFixed(2), defendSide: side,
-    wall, l3Size: l3size, impliedGap: Math.max(0, wall - l3size), icebergs: 0,
+    wall, l3Size: l3size, impliedGap: Math.max(0, wall - l3size), icebergs: ice.count,
     cvd: st.book.cvd, cvd60: slope, aggrBuy, aggrSell,
     gm: ctx.gm ?? ctx.greaterMarket ?? 'neutral',
     mmBullish: ctx.mmBullish ?? null,
@@ -217,7 +220,7 @@ function fireDecision(st: SymState, lv: RsLevel, distTicks: number, side: 'bid' 
     symbol: st.sym, level_label: lv.label, level_kind: lv.kind, level_price: lv.price,
     price: input.price, approach, defend_side: side,
     action: d.action, setup: d.setup, size: d.size, score: d.score,
-    wall, l3_size: l3size, implied_gap: input.impliedGap, cvd: st.book.cvd, cvd60: Math.round(slope),
+    wall, l3_size: l3size, implied_gap: input.impliedGap, icebergs: ice.count, cvd: st.book.cvd, cvd60: Math.round(slope),
     aggr_buy: aggrBuy, aggr_sell: aggrSell,
     gm: input.gm, mm: input.mmBullish == null ? null : (input.mmBullish ? 1 : 0),
     mhp_res: input.mhpResilience, hp_res: input.hpResilience, redist_res: input.redistResilience, dd_ratio: input.ddRatio,

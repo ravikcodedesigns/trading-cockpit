@@ -64,7 +64,8 @@ const W = {
   tapeMin: 25, tape: 1,              // aggressor-at-level imbalance
   resStrong: 30, resWeak: -50,      // summed-resilience thresholds
   res: 1,
-  wallStrong: 60,   // a wall this big WITH absorption supports a fade (rare; 06-18 showed big walls often trap, so weighted low)
+  iceberg: 2,       // refilling iceberg on the defending side = strongest "level holds" read
+  wallStrong: 60,   // a big STATIC wall alone is weak (06-18 showed they trap); only counts with hidden liquidity
   takeScore: 3,     // |score| needed to act
 };
 
@@ -101,11 +102,16 @@ export function decide(i: DecisionInput): Decision {
   if (resSum >= W.resStrong) { score += (fadeDir === 'long' ? W.res : -W.res); reasons.push(`strong resilience ${resSum.toFixed(0)} → favor fade`); }
   else if (resSum <= W.resWeak) { score += (breakDir === 'long' ? W.res : -W.res); reasons.push(`weak resilience ${resSum.toFixed(0)} → favor break`); }
 
-  // 6) L3 absorption (weighted low — big static walls trap, per 06-18). A wall
-  //    that is BOTH big and being refilled (iceberg / hidden gap) supports a fade.
-  if (i.wall >= W.wallStrong && (i.icebergs > 0 || i.impliedGap > i.wall * 0.3)) {
+  // 6) Icebergs at the level — a resting order refilling beyond its display
+  //    (cf>display or replace-up) is the strongest "level holds" read the L3 book
+  //    gives us: real, hidden, replenishing defense → weight the FADE meaningfully.
+  if (i.icebergs > 0) {
+    score += (fadeDir === 'long' ? W.iceberg : -W.iceberg);
+    reasons.push(`${i.icebergs} iceberg(s) refilling on ${i.defendSide} → strong fade (${fadeDir === 'long' ? '+' : '−'}${W.iceberg})`);
+  } else if (i.wall >= W.wallStrong && i.impliedGap > i.wall * 0.3) {
+    // softer: a big wall with lots of hidden (L2−L3) liquidity behind it.
     score += (fadeDir === 'long' ? 1 : -1);
-    reasons.push(`absorbing wall ${i.wall} (ice ${i.icebergs}, gap ${i.impliedGap}) → fade`);
+    reasons.push(`hidden liquidity (gap ${i.impliedGap}/${i.wall}) → fade`);
   }
 
   // ── VETOES (hard gates) ──

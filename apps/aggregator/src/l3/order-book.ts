@@ -39,7 +39,9 @@ export interface CrossCheck {
   sizeDeltaAbs: number; // sum |depthSize - l3Size| across levels
 }
 
-type Order = { p: number; s: number; bid: boolean };
+// md = max displayed size ever, cf = cumulative size filled against it,
+// ru = displayed size was bumped up via replace. cf>md or ru ⇒ refilling iceberg.
+type Order = { p: number; s: number; bid: boolean; md: number; cf: number; ru: boolean };
 
 export class OrderBook {
   readonly symbol: string;
@@ -93,7 +95,7 @@ export class OrderBook {
     this.mboEvents++;
     const prev = this.orders.get(d.order_id);
     if (prev) { this.bumpCount(prev.bid, prev.p, -1); this.bumpSize(prev.bid, prev.p, -prev.s); }
-    this.orders.set(d.order_id, { p: d.price_int, s: d.size, bid: d.is_bid });
+    this.orders.set(d.order_id, { p: d.price_int, s: d.size, bid: d.is_bid, md: d.size, cf: 0, ru: false });
     this.bumpCount(d.is_bid, d.price_int, +1);
     this.bumpSize(d.is_bid, d.price_int, +d.size);
   }
@@ -104,6 +106,8 @@ export class OrderBook {
     if (!prev) return; // order placed before we started tailing — can't resolve side
     // move the order from its old level to the new one (handles size and/or price change)
     this.bumpCount(prev.bid, prev.p, -1); this.bumpSize(prev.bid, prev.p, -prev.s);
+    if (d.size > prev.s) prev.ru = true;          // displayed size bumped up = refill
+    if (d.size > prev.md) prev.md = d.size;
     prev.p = d.price_int; prev.s = d.size;
     this.bumpCount(prev.bid, prev.p, +1); this.bumpSize(prev.bid, prev.p, +prev.s);
   }
@@ -130,6 +134,7 @@ export class OrderBook {
     if (d.passive_order_id) {
       const p = this.orders.get(d.passive_order_id);
       if (p) {
+        p.cf += d.size;   // cumulative filled against this resting order (iceberg signal)
         if (p.s <= d.size) { // fully filled
           this.bumpCount(p.bid, p.p, -1);
           this.bumpSize(p.bid, p.p, -p.s);
@@ -180,6 +185,19 @@ export class OrderBook {
     let size = 0;
     for (const [pi, s] of sz) if (Math.abs(pi - priceInt) <= ticks) size += s;
     return size;
+  }
+
+  /** Active iceberg orders within ±ticks on the given side: a resting order filled
+   *  for MORE than it ever displayed (cf>md) or whose displayed size was bumped up
+   *  (replace-up) — i.e. it's refilling = real, holding absorption at the level. */
+  icebergsNear(priceInt: number, ticks: number, side: 'bid' | 'ask'): { count: number; cumFilled: number } {
+    const want = side === 'bid';
+    let count = 0, cumFilled = 0;
+    for (const o of this.orders.values()) {
+      if (o.bid !== want || Math.abs(o.p - priceInt) > ticks) continue;
+      if (o.cf > o.md || o.ru) { count++; cumFilled += o.cf; }
+    }
+    return { count, cumFilled };
   }
 
   /** Recent tape prints near a price (within ±ticks) since a timestamp. */
