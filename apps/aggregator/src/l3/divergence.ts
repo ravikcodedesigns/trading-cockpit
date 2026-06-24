@@ -217,3 +217,26 @@ export function median(v: number[]): number {
   const s = [...v].sort((a, b) => a - b); const m = s.length >> 1;
   return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
 }
+/** Median absolute deviation — robust spread (resistant to jumps/outlier prints). */
+export function mad(v: number[]): number {
+  if (!v.length) return 0;
+  const m = median(v);
+  return median(v.map(x => Math.abs(x - m)));
+}
+
+// ── diffusion-scaled band volatility ──────────────────────────────────────────
+// The RIGHT band scale: realized volatility on RETURNS, not on price range. Over horizon T price
+// moves ≈ drift·T + σ·√T; a max−min range tracks BOTH (so a trend inflates it — the halfRange bug),
+// but the variance of high-frequency returns isolates the diffusive σ (the drift is O(dt²) per step,
+// negligible) → drift-free BY CONSTRUCTION. Returns are normalized by √dt for irregular sampling, and
+// the scale is a robust 1.4826·MAD so a single sweep/jump doesn't blow it up. Units: price per √sec.
+// A band is then BAND_K · diffusionScale · √τ  (the 1σ diffusive excursion over a touch-timescale τ).
+export function diffusionScale(mids: number[], tsMs: number[]): number {
+  const norm: number[] = [];
+  for (let i = 1; i < mids.length; i++) {
+    const dt = (tsMs[i]! - tsMs[i - 1]!) / 1000;          // seconds between samples
+    if (dt > 0) norm.push((mids[i]! - mids[i - 1]!) / Math.sqrt(dt));
+  }
+  if (norm.length < 4) return 0;
+  return 1.4826 * mad(norm);                              // robust σ of √dt-normalized returns
+}

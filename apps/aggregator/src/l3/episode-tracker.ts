@@ -8,12 +8,12 @@
 //
 // Reads the OrderBook read-only (never mutates it). The caller (offline replay or the live book
 // worker's throttled loop) drives observe(); OFI fidelity = the call rate (full per-event in the
-// offline proof, throttled live — a documented v1 tradeoff). Parameters below are v1 tunables to
-// sensitivity-test (per the plan's "episode definition has knobs" gap).
+// offline proof, throttled live — a documented v1 tradeoff). Band/episode knobs are sensitivity-
+// swept (scripts/sweep_band_tau.ts), not hand-fit. Construct with a cfg override to sweep them.
 import type { OrderBook } from './order-book.js';
 import {
   type Quote, type RetestFeatures, type EpisodeState, type EpisodeVerdict,
-  kyleLambda, ofiSeries, classifyEpisode,
+  kyleLambda, ofiSeries, classifyEpisode, diffusionScale,
 } from './divergence.js';
 
 export interface LevelRef { price: number; label: string; kind: string; }
@@ -24,30 +24,40 @@ export interface EpisodeSetup {
 }
 
 const CFG = {
-  QUOTE_BUF: 200,      // rolling best-quote window for the BASELINE λ (prevailing impact)
-  MID_BUF: 120,        // rolling mid window for the volatility-scaled band
-  WALL_TICKS: 4,       // depth summed within ±N ticks for the "wall"
-  NEAR_TICKS: 16,      // tape window for absorbed volume
-  K_RETESTS: 3,        // min retests before classifying (need a sequence)
-  BAND_FRAC: 0.33,     // band = BAND_FRAC × half the recent mid range  (volatility-scaled)
-                       // KNOWN LIMITATION (06-24 replay): halfRange-of-mids conflates TREND with
-                       // volatility — after a big directional move the buffer still holds the drift,
-                       // so the band balloons and ENGULFS a subsequent retest zone (it missed the
-                       // 06-24 accumulation bottom for this reason). P1 band-sensitivity work: a
-                       // detrended / returns-based vol, weighing engulfing vs correlated-retest churn.
-  MIN_BAND_TICKS: 2,   // band floor in ticks (quiet markets)
+  QUOTE_BUF: 200,        // rolling best-quote window for the BASELINE λ (prevailing impact)
+  RV_WINDOW: 120,        // samples for the robust return-vol estimate (returns are drift-free, so a
+                         // long window is safe even in a trend — unlike the old halfRange-of-mids)
+  RV_SAMPLE_MS: 1000,    // sparse-sample the mid for the RV estimate. The 200ms observe grid is
+                         // microstructure-noise-dominated (the mid is unchanged in most 200ms intervals
+                         // → MAD of returns degenerates to 0); ~1s is the noise-robust sampling grid.
+  WALL_TICKS: 4,         // depth summed within ±N ticks for the "wall"
+  NEAR_TICKS: 16,        // tape window for absorbed volume
+  K_RETESTS: 3,          // min retests before classifying (need a sequence)
+  // band = BAND_K · σ · √τ, where σ = diffusionScale (robust realized return-vol, drift-free) and τ is
+  // the touch timescale in seconds — "price within ~τ-sec of normal diffusion of the level is AT it".
+  // This replaces the halfRange band that conflated trend with vol and engulfed retest zones in moves.
+  BAND_K: 1.0,           // scale ×σ (1.0 = the 1σ diffusive excursion over τ)
+  TAU_SEC: 45,           // touch timescale (s) — the main knob. Center of the STABLE plateau in the
+                         // 06-24 sweep (scripts/sweep_band_tau.ts: retest counts stable τ≈30-90s,
+                         // band ~6-10pt for NQ; degrades <10s churn / >240s level-merge). Chosen on
+                         // structural stability, NOT signal count. Re-confirm per-instrument + forward.
+  MIN_BAND_TICKS: 2,     // spread/quantization floor (band never below this)
   STALE_MS: 20 * 60_000, // END the episode if the level isn't retested for this long (NOT a distance —
-                       // a distance reset fights the band: a normal intra-range pullback would kill the sequence)
-  MIN_QUOTES: 8,       // min quotes in a retest to trust its λ (else fall back to baseline)
-  CONF_MIN: 0.4,       // emit a setup only above this confidence
+                         // a distance reset fights the band: a normal intra-range pullback kills the seq)
+  MIN_QUOTES: 8,         // min quotes in a retest to trust its λ (else fall back to baseline)
+  CONF_MIN: 0.4,         // emit a setup only above this confidence
 };
+export type EpisodeCfg = typeof CFG;
 
 interface ActiveRetest { startTs: number; quotes: Quote[]; extreme: number; }
 interface Episode { side: 'resistance' | 'support'; retests: RetestFeatures[]; active: ActiveRetest | null; emitted: EpisodeState | null; lastTouchTs: number; }
-interface SymState { quoteBuf: Quote[]; midBuf: number[]; baseLambda: number; levels: Map<string, Episode>; }
+interface SymState { quoteBuf: Quote[]; mids: number[]; midTs: number[]; lastRvTs: number; baseLambda: number; lastBand: number; levels: Map<string, Episode>; }
 
 export class EpisodeTracker {
   private sym = new Map<string, SymState>();
+  private cfg: EpisodeCfg;
+
+  constructor(cfg?: Partial<EpisodeCfg>) { this.cfg = { ...CFG, ...cfg }; }
 
   /** Drive on each (throttled) book update. Returns any setups emitted this call. */
   observe(symbol: string, book: OrderBook, levels: LevelRef[], now: number): EpisodeSetup[] {
@@ -61,15 +71,20 @@ export class EpisodeTracker {
     const tick = book.priceFromInt(1);
 
     const st = this.getSym(symbol);
-    push(st.quoteBuf, q, CFG.QUOTE_BUF);
-    push(st.midBuf, mid, CFG.MID_BUF);
+    push(st.quoteBuf, q, this.cfg.QUOTE_BUF);
+    if (now - st.lastRvTs >= this.cfg.RV_SAMPLE_MS) {   // sparse RV grid (noise-robust), not every observe
+      push(st.mids, mid, this.cfg.RV_WINDOW);
+      push(st.midTs, now, this.cfg.RV_WINDOW);
+      st.lastRvTs = now;
+    }
     // rolling baseline λ = prevailing price-impact over the recent quote stream
     const base = kyleLambda(st.quoteBuf);
-    if (base && base.n >= CFG.MIN_QUOTES) st.baseLambda = Math.abs(base.lambda);
+    if (base && base.n >= this.cfg.MIN_QUOTES) st.baseLambda = Math.abs(base.lambda);
 
-    // volatility-scaled band
-    const lo = Math.min(...st.midBuf), hi = Math.max(...st.midBuf);
-    const band = Math.max(CFG.MIN_BAND_TICKS * tick, CFG.BAND_FRAC * (hi - lo) / 2);
+    // diffusion-scaled band: BAND_K · σ(returns, drift-free) · √τ, floored at the spread/quantization
+    const sigma = diffusionScale(st.mids, st.midTs);
+    const band = Math.max(this.cfg.MIN_BAND_TICKS * tick, this.cfg.BAND_K * sigma * Math.sqrt(this.cfg.TAU_SEC));
+    st.lastBand = band;
 
     const out: EpisodeSetup[] = [];
     for (const lv of levels) {
@@ -103,19 +118,19 @@ export class EpisodeTracker {
       const lvInt = book.intFromPrice(lv.price);
       const defend: 'bid' | 'ask' = ep.side === 'resistance' ? 'ask' : 'bid';
       const lam = kyleLambda(a.quotes);
-      const lambda = lam && lam.n >= CFG.MIN_QUOTES ? Math.abs(lam.lambda) : st.baseLambda;  // too few quotes → neutral baseline
+      const lambda = lam && lam.n >= this.cfg.MIN_QUOTES ? Math.abs(lam.lambda) : st.baseLambda;  // too few quotes → neutral baseline
       const ofiNet = ofiSeries(a.quotes).reduce((s, v) => s + v, 0);
-      let absorbed = 0; for (const p of book.tapeNear(lvInt, CFG.NEAR_TICKS, a.startTs)) absorbed += p.size;
+      let absorbed = 0; for (const p of book.tapeNear(lvInt, this.cfg.NEAR_TICKS, a.startTs)) absorbed += p.size;
       ep.retests.push({
         lambda, ofiNet, priceExtreme: a.extreme,
-        wall: book.depthNear(lvInt, CFG.WALL_TICKS, defend).size, absorbedVol: absorbed,
+        wall: book.depthNear(lvInt, this.cfg.WALL_TICKS, defend).size, absorbedVol: absorbed,
         reclaim: Math.sign(dist),   // exit side: dist=mid-level, out of band → +1 above (reclaim) / -1 below
       });
 
-      if (ep.retests.length >= CFG.K_RETESTS) {
+      if (ep.retests.length >= this.cfg.K_RETESTS) {
         const v = classifyEpisode(ep.retests, { side: ep.side, baselineLambda: st.baseLambda || 1 });
         const decisive = v.state === 'DISTRIBUTION' || v.state === 'ACCUMULATION' || v.state === 'BREAKING';
-        if (decisive && v.confidence >= CFG.CONF_MIN && v.state !== ep.emitted) {
+        if (decisive && v.confidence >= this.cfg.CONF_MIN && v.state !== ep.emitted) {
           ep.emitted = v.state;
           return {
             ts: now, symbol, label: lv.label, levelPrice: lv.price, side: ep.side, state: v.state,
@@ -126,7 +141,7 @@ export class EpisodeTracker {
       }
     }
     // level not retested for a while → END the episode (a fresh one starts on the next return)
-    if (now - ep.lastTouchTs > CFG.STALE_MS) st.levels.delete(key);
+    if (now - ep.lastTouchTs > this.cfg.STALE_MS) st.levels.delete(key);
     return null;
   }
 
@@ -136,14 +151,17 @@ export class EpisodeTracker {
     if (!st) return [];
     return [...st.levels.entries()].map(([key, ep]) => ({
       key, side: ep.side, retests: ep.retests, baseLambda: st.baseLambda,
-      verdict: ep.retests.length >= CFG.K_RETESTS
+      verdict: ep.retests.length >= this.cfg.K_RETESTS
         ? classifyEpisode(ep.retests, { side: ep.side, baselineLambda: st.baseLambda || 1 }) : null,
     }));
   }
 
+  /** Most recently computed band width (price units) — for the sensitivity sweep / audit. */
+  lastBand(symbol: string): number { return this.sym.get(symbol)?.lastBand ?? 0; }
+
   private getSym(symbol: string): SymState {
     let s = this.sym.get(symbol);
-    if (!s) { s = { quoteBuf: [], midBuf: [], baseLambda: 0, levels: new Map() }; this.sym.set(symbol, s); }
+    if (!s) { s = { quoteBuf: [], mids: [], midTs: [], lastRvTs: 0, baseLambda: 0, lastBand: 0, levels: new Map() }; this.sym.set(symbol, s); }
     return s;
   }
 }

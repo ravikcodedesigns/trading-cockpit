@@ -10,7 +10,9 @@ const ok = (c: boolean, m: string) => { if (c) { pass++; console.log(`  ✅ ${m}
 
 const TICK = 0.25;
 const book = new OrderBook('NQ', TICK);
-const tracker = new EpisodeTracker();
+// Fixed 8pt band (BAND_K:0 → band = MIN_BAND_TICKS·tick) so this test exercises the STATE MACHINE +
+// classification deterministically. The diffusion band estimator (σ·√τ) is unit-tested separately.
+const tracker = new EpisodeTracker({ BAND_K: 0, MIN_BAND_TICKS: 32 });
 const L = 10000, levels = [{ price: L, label: 'TEST-RES', kind: 'structural' }];
 const Lint = book.intFromPrice(L);            // 40000
 
@@ -32,7 +34,7 @@ function quoteI(bidI: number, bidSz: number, askI: number, askSz: number): Episo
 // the dwell's OFI stays buy-dominated (the passive seller absorbs; no aggressive sell leg sampled).
 const setups: EpisodeSetup[] = [];
 const QbySize = [3, 9, 19, 39, 39];           // bid size grows each retest → λ = 0.25/(Q+1) collapses
-const bottomI = book.intFromPrice(9985);      // drop target (out of band; 15pt swing → stable wide band)
+const bottomI = book.intFromPrice(9985);      // drop target (out of band; 15pt swing > 8pt band)
 for (let r = 0; r < QbySize.length; r++) {
   const Q = QbySize[r]!;
   for (let bI = bottomI; bI <= Lint; bI++) setups.push(...quoteI(bI, Q, bI + 1, 1));   // rise to the cap, buying

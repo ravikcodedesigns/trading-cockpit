@@ -1,7 +1,7 @@
 // Unit tests for divergence.ts — proves the microstructure math on synthetic data BEFORE any
 // live/historical data. Run: pnpm --filter @trading/aggregator exec tsx scripts/test_divergence.ts
 import {
-  ofiStep, regress, kyleLambda, mannKendall, theilSen, cusum, classifyEpisode,
+  ofiStep, regress, kyleLambda, mannKendall, theilSen, cusum, classifyEpisode, mad, diffusionScale,
   type Quote, type RetestFeatures,
 } from '../src/l3/divergence.js';
 
@@ -44,6 +44,25 @@ console.log('CUSUM change-point:');
 ok(cusum([0.2, -0.3, 0.1, 0.2, -0.1, 2, 2.5, 2, 3, 2.5], 0, 1).fired === true, 'detects an upward level shift');
 ok(cusum([0.2, -0.3, 0.1, 0.2, -0.1, 0.0, 0.1], 0, 1).fired === false, 'no shift → no fire');
 ok(cusum([0.1, -0.1, 0.2, -0.2, -2, -2.5, -2, -3], 0, 1).dir === -1, 'downward shift → dir -1');
+
+console.log('mad (robust spread):');
+ok(near(mad([1, 2, 3, 4, 5]), 1), 'mad([1..5]) = 1');
+ok(near(mad([1, 2, 3, 4, 100]), 1), 'mad ignores an outlier (=1, not skewed by 100)');
+
+console.log('diffusionScale (detrended band vol — the halfRange fix):');
+{
+  // A: strong DRIFT + small noise (huge range, small diffusion). ts 1s apart.
+  const aM: number[] = [], aT: number[] = [];
+  for (let i = 0; i < 24; i++) { aM.push(i * 10 + 2 * Math.sin(i * 1.3)); aT.push(i * 1000); }
+  // B: NO drift + large oscillation (small range, large diffusion).
+  const bM: number[] = [], bT: number[] = [];
+  for (let i = 0; i < 24; i++) { bM.push(20 * Math.sin(i * 1.3)); bT.push(i * 1000); }
+  const sA = diffusionScale(aM, aT), sB = diffusionScale(bM, bT);
+  const rangeA = Math.max(...aM) - Math.min(...aM), rangeB = Math.max(...bM) - Math.min(...bM);
+  ok(rangeA > rangeB, `range: trend ${rangeA} > chop ${rangeB} (a halfRange band would size the trend WIDER)`);
+  ok(sA < sB, `diffusionScale: trend ${sA.toFixed(2)} < chop ${sB.toFixed(2)} (drift-free → sizes the CHOP wider, correctly)`);
+  ok(diffusionScale([1, 2], [0, 1000]) === 0, 'too few samples → 0');
+}
 
 console.log('classifyEpisode (the state classifier):');
 {
