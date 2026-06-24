@@ -1545,8 +1545,62 @@ absorption-that-trades, and treat big sitting walls with suspicion.
   `project_rs_gm_lm_method`, `project_level_autotrader`, `project_l3_live_tape`,
   `project_rs_marketstate_vs_dom`, `project_trap_signals`, `project_vol_regime`, `project_vwap_reversal`.
 
+### 23.11 Reference — current CODE state (verified against the tree, not just commits)
+
+**Specs / manuals (read these to understand the framework + engines):**
+- `rs-framework/RS_FRAMEWORK_RULES.md` — the RS framework operating manual (GM, levels,
+  resilience, EST/LP/IP/sandwich, sit-outs, exits, risk interval).
+- `apps/aggregator/src/rules-v2/RS_ENGINE_SPEC.md` — the engine spec (§1 stack, §3 schemas).
+
+**Engine API (what the worker will call in §23.5 step 2):** all take a `MarketState`, return `Setup[]`.
+- `evaluateEst(ms)` · `evaluateLmSetups(ms)` + `annotateWithLm(ms,setups)` + `lmRead(ms)` ·
+  `evaluateSandwich(ms)` · `evaluateDdBands(ms)` · `evaluateRdz(ms)` · `evaluateBullBearZone(ms)`.
+- `deriveMarketState({symbol, rs, levels, price, open})` builds the `MarketState`.
+
+**`MarketState`** (`rules-v2/engine-types.ts`): `{symbol, tsET, price, open, prevClose, halfGap,
+levels:{bzb[], brzt[], hp, mhp, dynHp, dynMhp, onHp, onMhp, ddUpper, ddLower}, lmCode,
+confluence:{gm, ddRatio, resWhite(=redist/half-gap), resBlue(=weekly-HP), resOrange(=MHP),
+mmBullish, vx, bbb, vvix, vxAboveBBB, vvixElevated, isRational}, gate}`.
+- `Gate`: `{mode:'normal'|'strong-pivots-small'|'sit-out', longOnly, sizeDown, ddBandBreak,
+  mhpBreak, unusual}` — the Layer-0 sit-out/size-down gate derived from the irrational panel + vol.
+- `Setup`: `{family:'EST'|'LM'|'ZONE'|'DDBAND'|'RDZ'|'BZ', pivot, level, direction, sizeTier:
+  'N'|'M'|'S'|'0', entry, stop, targets[], bounceVsBreak:'bounce'|'break'|'reclaim'|'hold-through',
+  baseProb (⚠ framework-stated, verify-live), confluenceNote}`.
+
+**`rs-context.json` / `RSContext`** (`rs-context.ts`): `greaterMarket, ddRatio, lmCode,
+mhpResilience/hpResilience/redistResilience/resilience, bySymbol{NQ,ES}, irrational[], spy/qqq/
+spyMhp/qqqMhp/spyPrev/qqqPrev/qqqSpyRs, uvxy/vxGammaHp/vxGammaMhp/vxVolState, vx/bbb/vvix,
+vxAboveBBB/vvixElevated/vvixGolden/isRational, vxn/expectedRangePts/em{Mid,1Low,1High,2Low,2High},
+setAt, tradingDay`. `getContext(symbol)` overlays `bySymbol[symbol]` (resiliences, gm, lmCode,
+mmBullish, dynHpEtf/dynMhpEtf/dynCloseEtf) on the flat defaults.
+
+**`daily_levels{,_es}.json`** per-symbol entry keys: `symbol, mhp, hedgePressure, ddBands{upper,
+lower}, bullZone{low,high}, bearZone{high,low}` (single PRIMARY — often wrong, §23.1), `zones{bull[],
+bear[]}` (the FULL 8-zone arrays — use these), `additionalLevels[{label,price,color,style,width}]`
+(structural + ON HP/MHP + EM bands + QQQ/SPY Open/Close, colors from `@trading/contracts` LEVEL_STYLES).
+
+**DB schemas:**
+- `rs-shadow.db.shadow_setups`: `id, trading_day, ts_ms, ts_et, symbol, family, pivot, direction,
+  size_tier, level, entry, stop, targets, bounce_vs_break, base_prob, gate_mode, gate_reasons,
+  lm_code, dd_ratio, res_white, res_blue, res_orange, gm, vx, bbb, vvix, price, state_json,
+  outcome, exit_price, exit_ts_ms, pnl_pts, resolved_at, lm_bias, lm_prob, lm_agrees`.
+- `l3-shadow.db.l3_level_snapshots`: `ts_ms, ts_et, trading_day, symbol, level_label, level_kind,
+  level_price, price, dist_ticks, defend_side, l2_size, l2_orders, l3_size, implied_gap, best_bid,
+  best_ask, spread, cvd, aggr_buy, aggr_sell, tape_prints`.
+- `l3-shadow.db.l3_decisions`: `…, approach, defend_side, action, setup, size, score, wall, l3_size,
+  implied_gap, icebergs, cvd, cvd60, aggr_buy, aggr_sell, gm, mm, mhp_res, hp_res, redist_res,
+  dd_ratio, lm_code, is_rational, vx, vvix, vx_vol_state, reasons, vetoes, outcome, exit_price,
+  exit_ts_ms, pnl_pts, resolved_at`.
+
+**Aggregator endpoints (RS/shadow-relevant):** `GET /context/rs?symbol=` · `POST /context/vx` ·
+`GET /pipeline/state` · `GET /signals/marks` · `POST /test/signal` · `GET /history/post-entry-markers`.
+
+**OrderBook accessors (`src/l3/order-book.ts`):** `bestBid/bestAsk`, `ladder(n)`, `depthNear`,
+`l3Near`, `icebergsNear` (native), `syntheticRefillsNear`, `pullNear`, `addsNear`, `sweepNear`,
+`aggressorClusterNear`, `tapeNear`, `crossCheck`. (The §23.5 confirmation layer reads these.)
+
 ---
 
-**End of section 23.** Project state as of 2026-06-24 (Wednesday), last commit `0a687d2`. The
-active task is the decision-engine rebuild (§23.5) — engines decide, L3 confirms. Nothing in this
-initiative is wired to the live trader yet.
+**End of section 23.** Project state as of 2026-06-24 (Wednesday), last commit `0a687d2` (HANDOFF
+update itself follows). The active task is the decision-engine rebuild (§23.5) — engines decide,
+L3 confirms. Nothing in this initiative is wired to the live trader yet.
