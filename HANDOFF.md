@@ -1476,10 +1476,21 @@ defense; a wall that sits and gets cancelled = spoof.
    bounce is killed by a clean opposite break. Log-only (NOT auto-traded).
 5. ✅ **Resolver** — `l3-trade-resolve.ts`: engine-alone vs engine+L3 scorecard (skips: losers saved
    vs winners missed).
-6. ✅ **Event-driven trigger** (`c752ab2`) — the decision fires on the trade that crosses a level
-   (`onTradeTouch`), not the 1 Hz snapshot loop. **Measured touch→decision 122–312 ms** (was ~1.2 s),
-   compute 1–5 ms; remaining latency is upstream `.log` flush + the 200 ms tailer poll. The snapshot
-   loop is now only the 5 s `l3_level_snapshots` time-series + the CVD-slope ring.
+6. ✅ **Event-driven trigger** (`c752ab2`) — the decision fires on the trade that crosses a level,
+   not the 1 Hz loop. **Measured touch→decision 122–312 ms** (was ~1.2 s), compute 1–5 ms.
+7. ✅ **TWO-PROCESS SPLIT** (`27b91d7`) — the book and the decision logic are now separate processes
+   so restarting the decision logic NEVER rebuilds the book:
+   - **`l3-book-worker` (BUILDER, `com.cockpit.l3-book-worker`)** — tails `.log`, maintains the book,
+     detects touches, computes the **direction-agnostic** L3 read (both sides + cvd/sweep/cluster) →
+     `l3_touch_events`, and PUSHES a nudge over a UDS (`/tmp/cockpit-l3-touch.sock`). **Rarely restart
+     — only for new L3 primitives.** No engines/confirm here.
+   - **`l3-decision-worker` (DECIDER, `com.cockpit.l3-decision-worker`, `scripts/l3-decision-worker.ts`)**
+     — on each nudge drains unprocessed `l3_touch_events` → `deriveMarketState` → `buildThesis` →
+     `confirm` → `l3_trade_decisions`. **Restart this freely** to iterate on engines/confirm. Durable
+     `processed` flag = a restart resumes + catches up. Push-driven (no poll; 10s tick is a safety net).
+   - Why: a builder restart loses the in-memory book → ~30–60 min for the L3 cross-check to reconverge,
+     during which **icebergs + implied-gap** are degraded (CVD-slope/sweep/pull/wall recover in ~1 min).
+     The split removes that pain from daily decision-logic iteration. `l3_trade_decisions` gained `touch_ms`.
 
 **NEXT: shadow the week → 2026-06-30 review → tune the `C` weights (decision-engine.ts) → arm.**
 
