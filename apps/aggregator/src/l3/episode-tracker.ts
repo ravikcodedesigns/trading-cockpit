@@ -109,6 +109,7 @@ export class EpisodeTracker {
       ep.retests.push({
         lambda, ofiNet, priceExtreme: a.extreme,
         wall: book.depthNear(lvInt, CFG.WALL_TICKS, defend).size, absorbedVol: absorbed,
+        reclaim: Math.sign(dist),   // exit side: dist=mid-level, out of band → +1 above (reclaim) / -1 below
       });
 
       if (ep.retests.length >= CFG.K_RETESTS) {

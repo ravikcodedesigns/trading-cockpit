@@ -47,49 +47,69 @@ ok(cusum([0.1, -0.1, 0.2, -0.2, -2, -2.5, -2, -3], 0, 1).dir === -1, 'downward s
 
 console.log('classifyEpisode (the state classifier):');
 {
-  // DISTRIBUTION: resistance, buyers aggressing, no higher highs, λ collapsing, wall depleting
+  // DISTRIBUTION (holding-top): resistance, buyers aggressing, flat highs, λ collapsing, REJECTED down
   const dist: RetestFeatures[] = [
-    { lambda: 1.0, ofiNet: 200, priceExtreme: 29770, wall: 50, absorbedVol: 300 },
-    { lambda: 0.5, ofiNet: 250, priceExtreme: 29769, wall: 40, absorbedVol: 350 },
-    { lambda: 0.3, ofiNet: 300, priceExtreme: 29768, wall: 25, absorbedVol: 400 },
-    { lambda: 0.15, ofiNet: 280, priceExtreme: 29768, wall: 15, absorbedVol: 380 },
+    { lambda: 1.0, ofiNet: 200, priceExtreme: 29770, wall: 50, absorbedVol: 300, reclaim: -1 },
+    { lambda: 0.5, ofiNet: 250, priceExtreme: 29769, wall: 40, absorbedVol: 350, reclaim: -1 },
+    { lambda: 0.3, ofiNet: 300, priceExtreme: 29768, wall: 25, absorbedVol: 400, reclaim: -1 },
+    { lambda: 0.15, ofiNet: 280, priceExtreme: 29768, wall: 15, absorbedVol: 380, reclaim: -1 },
   ];
   const dv = classifyEpisode(dist, { side: 'resistance', baselineLambda: 1.0 });
   ok(dv.state === 'DISTRIBUTION', `distribution scenario → ${dv.state} (conf ${dv.confidence.toFixed(2)})`);
 
-  // ACCUMULATION: support, sellers aggressing, no lower lows, λ collapsing
+  // ACCUMULATION (holding-floor): support, sellers aggressing, flat lows, λ collapsing, RECLAIMED up
   const acc: RetestFeatures[] = [
-    { lambda: 1.0, ofiNet: -200, priceExtreme: 29400, wall: 40, absorbedVol: 300 },
-    { lambda: 0.5, ofiNet: -250, priceExtreme: 29401, wall: 45, absorbedVol: 350 },
-    { lambda: 0.3, ofiNet: -300, priceExtreme: 29402, wall: 50, absorbedVol: 400 },
-    { lambda: 0.15, ofiNet: -280, priceExtreme: 29402, wall: 55, absorbedVol: 380 },
+    { lambda: 1.0, ofiNet: -200, priceExtreme: 29400, wall: 40, absorbedVol: 300, reclaim: 1 },
+    { lambda: 0.5, ofiNet: -250, priceExtreme: 29401, wall: 45, absorbedVol: 350, reclaim: 1 },
+    { lambda: 0.3, ofiNet: -300, priceExtreme: 29402, wall: 50, absorbedVol: 400, reclaim: 1 },
+    { lambda: 0.15, ofiNet: -280, priceExtreme: 29402, wall: 55, absorbedVol: 380, reclaim: 1 },
   ];
   ok(classifyEpisode(acc, { side: 'support', baselineLambda: 1.0 }).state === 'ACCUMULATION', 'accumulation scenario → ACCUMULATION');
 
-  // BREAKING: higher highs, λ healthy (price responds to flow)
+  // SPRING → ACCUMULATION: support makes LOWER LOWS (old "no lower lows" gate would reject) but each
+  // poke RECLAIMS back up, selling absorbed → the generalization must still call ACCUMULATION.
+  const spring: RetestFeatures[] = [
+    { lambda: 1.0, ofiNet: -200, priceExtreme: 29400, wall: 40, absorbedVol: 300, reclaim: 1 },
+    { lambda: 0.5, ofiNet: -250, priceExtreme: 29395, wall: 45, absorbedVol: 350, reclaim: 1 },
+    { lambda: 0.3, ofiNet: -300, priceExtreme: 29390, wall: 50, absorbedVol: 400, reclaim: 1 },
+    { lambda: 0.15, ofiNet: -280, priceExtreme: 29385, wall: 55, absorbedVol: 380, reclaim: 1 },
+  ];
+  const sv = classifyEpisode(spring, { side: 'support', baselineLambda: 1.0 });
+  ok(sv.state === 'ACCUMULATION', `SPRING (lower lows that reclaim) → ${sv.state} (the 06-24/MHP shape)`);
+
+  // UPTHRUST → DISTRIBUTION (symmetric): resistance makes HIGHER HIGHS but each pokes then REJECTS down.
+  const upthrust: RetestFeatures[] = [
+    { lambda: 1.0, ofiNet: 200, priceExtreme: 29800, wall: 50, absorbedVol: 300, reclaim: -1 },
+    { lambda: 0.5, ofiNet: 250, priceExtreme: 29805, wall: 40, absorbedVol: 350, reclaim: -1 },
+    { lambda: 0.3, ofiNet: 300, priceExtreme: 29810, wall: 25, absorbedVol: 400, reclaim: -1 },
+    { lambda: 0.15, ofiNet: 280, priceExtreme: 29815, wall: 15, absorbedVol: 380, reclaim: -1 },
+  ];
+  ok(classifyEpisode(upthrust, { side: 'resistance', baselineLambda: 1.0 }).state === 'DISTRIBUTION', 'UPTHRUST (higher highs that reject) → DISTRIBUTION');
+
+  // BREAKING: resistance, λ healthy, price exits UP through consistently
   const brk: RetestFeatures[] = [
-    { lambda: 1.0, ofiNet: 200, priceExtreme: 29770, wall: 50, absorbedVol: 200 },
-    { lambda: 1.1, ofiNet: 200, priceExtreme: 29790, wall: 50, absorbedVol: 200 },
-    { lambda: 0.9, ofiNet: 200, priceExtreme: 29810, wall: 50, absorbedVol: 200 },
-    { lambda: 1.0, ofiNet: 200, priceExtreme: 29830, wall: 50, absorbedVol: 200 },
+    { lambda: 1.0, ofiNet: 200, priceExtreme: 29770, wall: 50, absorbedVol: 200, reclaim: 1 },
+    { lambda: 1.1, ofiNet: 200, priceExtreme: 29790, wall: 50, absorbedVol: 200, reclaim: 1 },
+    { lambda: 0.9, ofiNet: 200, priceExtreme: 29810, wall: 50, absorbedVol: 200, reclaim: 1 },
+    { lambda: 1.0, ofiNet: 200, priceExtreme: 29830, wall: 50, absorbedVol: 200, reclaim: 1 },
   ];
   ok(classifyEpisode(brk, { side: 'resistance', baselineLambda: 1.0 }).state === 'BREAKING', 'breakout scenario → BREAKING');
 
-  // HOLDING: λ healthy, flat extreme (defended, normal impact)
+  // HOLDING: λ healthy, rejected down at resistance (defended, normal impact, no absorption)
   const hold: RetestFeatures[] = [
-    { lambda: 1.0, ofiNet: 50, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 1.0, ofiNet: -50, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 1.0, ofiNet: 30, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 1.0, ofiNet: -20, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
+    { lambda: 1.0, ofiNet: 50, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
+    { lambda: 1.0, ofiNet: -50, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
+    { lambda: 1.0, ofiNet: 30, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
+    { lambda: 1.0, ofiNet: -20, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
   ];
   ok(classifyEpisode(hold, { side: 'resistance', baselineLambda: 1.0 }).state === 'HOLDING', 'defended scenario → HOLDING');
 
-  // NEUTRAL: absorbing λ but no net flow direction → no decisive signature
+  // NEUTRAL: absorbing λ but mixed exits + no net flow → no decisive signature
   const neut: RetestFeatures[] = [
-    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
-    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100 },
+    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: 1 },
+    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
+    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: 1 },
+    { lambda: 0.3, ofiNet: 0, priceExtreme: 29770, wall: 50, absorbedVol: 100, reclaim: -1 },
   ];
   ok(classifyEpisode(neut, { side: 'resistance', baselineLambda: 1.0 }).state === 'NEUTRAL', 'indecisive scenario → NEUTRAL');
   ok(classifyEpisode(dist.slice(0, 2), { side: 'resistance', baselineLambda: 1.0 }).state === 'NEUTRAL', '<3 retests → NEUTRAL');

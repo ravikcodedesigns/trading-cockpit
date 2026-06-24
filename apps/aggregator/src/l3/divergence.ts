@@ -123,6 +123,9 @@ export interface RetestFeatures {
   priceExtreme: number;  // the retest's penetration extreme (high for a resistance test, low for support)
   wall: number;          // defending-side resting size at the level
   absorbedVol: number;   // volume traded into the level
+  reclaim: number;       // exit direction: +1 = exited back ABOVE the level (reclaim), -1 = exited below.
+                         // This — not "no lower lows" — is the rejection signal: a spring/upthrust
+                         // pokes through the level (a new extreme) yet exits back the other way.
 }
 
 export type EpisodeState = 'DISTRIBUTION' | 'ACCUMULATION' | 'HOLDING' | 'BREAKING' | 'NEUTRAL';
@@ -147,51 +150,57 @@ export function classifyEpisode(retests: RetestFeatures[], ctx: ClassifyCtx): Ep
   if (k < 3) return { state: 'NEUTRAL', confidence: 0, evidence: { retests: k }, note: 'too few retests' };
 
   const lambdas = retests.map(r => r.lambda);
-  const extremes = retests.map(r => r.priceExtreme);
   const walls = retests.map(r => r.wall);
   const ofiNet = retests.reduce((s, r) => s + r.ofiNet, 0);
   const medLambda = median(lambdas);
   const lambdaRatio = ctx.baselineLambda > 0 ? medLambda / ctx.baselineLambda : 1;  // <1 = absorbing
 
   const mkLambda = mannKendall(lambdas);     // λ declining across retests?
-  const mkExtreme = mannKendall(extremes);   // higher highs / lower lows forming?
   const mkWall = mannKendall(walls);         // wall depleting?
 
   const absorbing = lambdaRatio < collapseRatio || (mkLambda.dir < 0 && Math.abs(mkLambda.z) > zSig);
   const depleting = mkWall.dir < 0 && Math.abs(mkWall.z) > zSig;
+  // netReclaim = mean exit direction across retests. +1 = price keeps reclaiming back ABOVE the level
+  // (downside rejected), -1 = price keeps getting rejected back BELOW it (upside rejected). THIS is the
+  // generic rejection signal — it admits springs (lower-low wick that reclaims) and upthrusts (higher-
+  // high wick that rejects), which the old "no lower/higher highs" extreme-trend gate threw away.
+  const netReclaim = mean(retests.map(r => r.reclaim));
+  const reclaimStrength = Math.abs(netReclaim);                                          // 0..1 consistency
   const conf = (raw: number) => Math.max(0, Math.min(1, raw));
-  // Confidence LEADS with the λ-collapse trend significance (self-referential — no baseline needed,
-  // since the rolling baseline λ is contaminated by at-level absorption quotes). The baseline ratio
-  // is a secondary confirmation; declining (not just flat) highs add a bonus. Flat highs = neutral.
+  // Confidence LEADS with λ-collapse trend significance (self-referential — the rolling baseline λ is
+  // contaminated by at-level quotes), gated by how consistently price rejected/reclaimed: need BOTH.
   const trendStrength = conf(Math.abs(mkLambda.z) / 2);                                  // |z|≈2 (95%) → full
   const ratioStrength = ctx.baselineLambda > 0 ? conf((collapseRatio - lambdaRatio) / collapseRatio) : 0;
-  let strength = Math.max(trendStrength, ratioStrength);
-  if (mkExtreme.dir < 0) strength = conf(strength + Math.abs(mkExtreme.z) / 4 * 0.2);    // fading highs = extra
+  const absorptionStrength = Math.max(trendStrength, ratioStrength);
+  const strength = conf(absorptionStrength * (0.5 + 0.5 * reclaimStrength));
   const ev = { retests: k, lambdaRatio: +lambdaRatio.toFixed(3), zLambda: +mkLambda.z.toFixed(2),
-    zExtreme: +mkExtreme.z.toFixed(2), zWall: +mkWall.z.toFixed(2), ofiNet: Math.round(ofiNet) };
-
-  // DISTRIBUTION: at resistance, buyers aggressing (OFI>0) but no higher highs (extreme not rising)
-  // AND price under-responds to the flow (λ absorbing). Buying eaten → fail down.
+    netReclaim: +netReclaim.toFixed(2), zWall: +mkWall.z.toFixed(2), ofiNet: Math.round(ofiNet) };
   const absNote = lambdaRatio < collapseRatio ? `λ ${(lambdaRatio * 100).toFixed(0)}% of baseline` : `λ collapsing (z${mkLambda.z.toFixed(1)})`;
-  if (ctx.side === 'resistance' && ofiNet > 0 && mkExtreme.dir <= 0 && absorbing) {
+
+  // DISTRIBUTION: buyers aggress into resistance (OFI>0) but price is REJECTED back down (exits below,
+  // netReclaim<0 — covers flat-high holds AND upthrust pokes) and the buying is absorbed (low λ).
+  if (ctx.side === 'resistance' && ofiNet > 0 && netReclaim < 0 && absorbing) {
     return { state: 'DISTRIBUTION', confidence: strength, evidence: ev,
-      note: `buyers absorbed at resistance: OFI+${Math.round(ofiNet)}, no higher highs, ${absNote}${depleting ? ', wall depleting' : ''}` };
+      note: `buyers absorbed + rejected at resistance: OFI+${Math.round(ofiNet)}, ${(-netReclaim * 100).toFixed(0)}% exits down, ${absNote}${depleting ? ', wall depleting' : ''}` };
   }
-  // ACCUMULATION: at support, sellers aggressing (OFI<0) but no lower lows AND λ absorbing → fail up.
-  if (ctx.side === 'support' && ofiNet < 0 && mkExtreme.dir >= 0 && absorbing) {
+  // ACCUMULATION: sellers aggress into support (OFI<0) but price RECLAIMS (exits above, netReclaim>0 —
+  // covers flat-low holds AND spring pokes) and the selling is absorbed.
+  if (ctx.side === 'support' && ofiNet < 0 && netReclaim > 0 && absorbing) {
     return { state: 'ACCUMULATION', confidence: strength, evidence: ev,
-      note: `sellers absorbed at support: OFI${Math.round(ofiNet)}, no lower lows, ${absNote}` };
+      note: `sellers absorbed + reclaimed at support: OFI${Math.round(ofiNet)}, ${(netReclaim * 100).toFixed(0)}% exits up, ${absNote}` };
   }
-  // BREAKING: price impact is HEALTHY (λ near/above baseline) and the extreme is trending through
-  // the level (higher highs at resistance / lower lows at support) → genuine break.
-  const breakingThrough = (ctx.side === 'resistance' && mkExtreme.dir > 0 && Math.abs(mkExtreme.z) > zSig)
-    || (ctx.side === 'support' && mkExtreme.dir < 0 && Math.abs(mkExtreme.z) > zSig);
-  if (breakingThrough && lambdaRatio >= collapseRatio) {
-    return { state: 'BREAKING', confidence: conf(Math.abs(mkExtreme.z) / 4), evidence: ev,
-      note: `decisive follow-through, λ healthy (${(lambdaRatio * 100).toFixed(0)}% of baseline)` };
+  // BREAKING: price exits THROUGH the level (resistance→up / support→down) consistently, with HEALTHY
+  // impact (λ not collapsed) — a genuine break, not absorption.
+  const through = (ctx.side === 'resistance' && netReclaim > 0) || (ctx.side === 'support' && netReclaim < 0);
+  if (through && lambdaRatio >= collapseRatio && reclaimStrength >= 0.5) {
+    return { state: 'BREAKING', confidence: conf(reclaimStrength), evidence: ev,
+      note: `decisive follow-through ${ctx.side === 'resistance' ? 'up' : 'down'} (${(reclaimStrength * 100).toFixed(0)}% exits through), λ healthy` };
   }
-  // HOLDING: λ healthy + the extreme reversing away from the level (no progress through, but flow moves price).
-  if (lambdaRatio >= collapseRatio && mkExtreme.dir === 0) {
+  // HOLDING: price is rejected/bounced back (resistance→down / support→up) with HEALTHY impact and no
+  // special absorption — the level defends normally (distinct from DISTRIBUTION/ACCUMULATION, which add
+  // absorbed aggressive flow on top of the rejection).
+  const defended = (ctx.side === 'resistance' && netReclaim < 0) || (ctx.side === 'support' && netReclaim > 0);
+  if (defended && lambdaRatio >= collapseRatio) {
     return { state: 'HOLDING', confidence: 0.3, evidence: ev, note: 'level defended, normal impact' };
   }
   return { state: 'NEUTRAL', confidence: 0, evidence: ev, note: 'no decisive signature' };
