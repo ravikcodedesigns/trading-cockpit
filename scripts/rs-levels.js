@@ -32,6 +32,15 @@ const TARGETS = [
   // chart-widget's DESCRIPTIVE legend ("Micro E-mini Nasdaq-100") for the LM click.
   { name: 'NQ', re: /MNQ|F\.US\.ENQ/, paneRe: /nasdaq/i, file: path.resolve(__dirname, '../daily_levels.json'),    hpNow: 'NQHPNOW', mhpNow: 'NQMHPNOW' },
   { name: 'ES', re: /MES|F\.US\.EP|F\.US\.ES/, paneRe: /s&amp;p|s&p/i, file: path.resolve(__dirname, '../daily_levels_es.json'), hpNow: 'SPHPNOW', mhpNow: 'SPMHPNOW' },
+  // Commodities (full-size CQG futures): F.US.CLEN26 = Crude Light, F.US.GCEN26 = Gold —
+  // the root (CLE/GCE) is stable across the monthly roll. The platform plots DD bands on
+  // both (and HP/MHP/zones on gold). No per-symbol HP/MHP "now" globals exist for these,
+  // so HP/MHP come from the plotted shapes. These panes run on 15m (not 1m), so readLmMm
+  // restores each chart's ORIGINAL resolution after the 1D Monthly-Map flip. Completeness
+  // is relaxed to ddBands only (needIntraday) with no LM/MM gating (needLmMm): zones/LM/MM
+  // may be absent — esp. crude — and must not stall the retry loop.
+  { name: 'CL', re: /F\.US\.CLE/, paneRe: /crude/i, file: path.resolve(__dirname, '../daily_levels_cl.json'), hpNow: 'CLHPNOW', mhpNow: 'CLMHPNOW', needIntraday: ['ddBands'], needLmMm: [] },
+  { name: 'GC', re: /F\.US\.GCE/, paneRe: /gold/i,  file: path.resolve(__dirname, '../daily_levels_gc.json'), hpNow: 'GCHPNOW', mhpNow: 'GCMHPNOW', needIntraday: ['ddBands'], needLmMm: [] },
 ];
 
 // Return every chart's shapes + the per-index HP/MHP "now" globals + DD.
@@ -224,6 +233,9 @@ async function readLmMm() {
     try {
       const idx = await evalExpr(findIdxExpr(t.re.toString()));
       if (idx == null || idx < 0) { log(`${t.name}: no chart for LM/MM`); continue; }
+      // capture the chart's current resolution so we restore it (CL/GC run on 15m, not 1m)
+      let origRes = '1';
+      try { origRes = ('' + (await evalExpr(`''+window.tvWidget.chart(${idx}).resolution()`))) || '1'; } catch (e) {}
       await evalExpr(`window.tvWidget.chart(${idx}).setResolution("1D");"ok"`);
       let lm = null;
       try { const c = await evalExpr(paneCenterExpr(t.paneRe.toString())); if (c) { const p = JSON.parse(c); await clickAt(p.x, p.y); } } catch (e) {}
@@ -231,7 +243,7 @@ async function readLmMm() {
       try { lm = await evalExpr(lmExpr); } catch (e) {}
       let mm = null;
       try { mm = computeMM(JSON.parse(await evalExpr(mmScrape(idx)))); } catch (e) {}
-      await evalExpr(`window.tvWidget.chart(${idx}).setResolution("1");"ok"`);
+      await evalExpr(`window.tvWidget.chart(${idx}).setResolution(${JSON.stringify(origRes)});"ok"`);
       const v = {};
       if (lm) v.lmCode = ('' + lm).trim();
       if (mm != null) v.mmBullish = mm;
@@ -243,7 +255,10 @@ async function readLmMm() {
   // mmOk = every symbol produced a non-null Monthly-Map read this pass. A null read
   // (charts not loaded at the open) must NOT count as success — otherwise the prior
   // day's stale mmBullish is left in place all session.
-  const mmOk = TARGETS.every(t => perSym[t.name] && perSym[t.name].mmBullish != null);
+  const mmOk = TARGETS.every(t => {
+    const need = t.needLmMm || NEED_LMMM;
+    return !need.includes('mmBullish') || (perSym[t.name] && perSym[t.name].mmBullish != null);
+  });
   return { perSym, mmOk };
 }
 
@@ -264,9 +279,11 @@ async function main() {
   const nulls = [];
   for (const t of TARGETS) {
     const iv = bySym[t.name] || {}, lv = perSym[t.name] || {};
+    const needI = t.needIntraday || NEED_INTRADAY;   // CL/GC: just ddBands
+    const needL = t.needLmMm || NEED_LMMM;           // CL/GC: none (LM/MM optional)
     const miss = [
-      ...(MM_ONLY ? [] : NEED_INTRADAY.filter(k => iv[k] == null)),
-      ...NEED_LMMM.filter(k => lv[k] == null),
+      ...(MM_ONLY ? [] : needI.filter(k => iv[k] == null)),
+      ...needL.filter(k => lv[k] == null),
     ];
     if (miss.length) nulls.push(`${t.name}:${miss.join(',')}`);
   }

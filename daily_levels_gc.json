@@ -1,0 +1,16 @@
+{
+  "days": {
+    "2026-06-24": {
+      "levels": [
+        {
+          "symbol": "GC",
+          "ddBands": {
+            "upper": 4140.64,
+            "lower": 4082.56
+          },
+          "additionalLevels": []
+        }
+      ]
+    }
+  }
+}

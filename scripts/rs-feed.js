@@ -45,8 +45,10 @@ const SCRAPE = `(function(){
     qqqMhp: n('nq-MHP'),  // NQ100 MHP price (vs QQQ for NQ greater-market)
     // VX gamma HP/MHP (UVXY-scale) — vs live UVXY for the vol-inflection read.
     vxg: (function(){ var v=(window.DYN_HP||{}).VX; return v?{hp:v.hp,mhp:v.mhp}:null; })(),
-    // Dynamic/overnight HP/MHP estimate (window.DYN_HP), ETF scale (QQQ for NQ, SPY for ES).
-    dyn: (function(){ var d=window.DYN_HP||{}; var p=function(o){return o?{hp:o.hp,mhp:o.mhp,close:o.close}:null;}; return {nq:p(d.NQ), es:p(d.ES)}; })(),
+    // Dynamic/overnight HP/MHP estimate (window.DYN_HP), all on ETF scale: NQ→QQQ,
+    // ES→SPY, GCE→GLD (≈ gold × 0.093, e.g. 377 for gold ~4080). Crude has no DYN_HP
+    // entry — its levels come only from the chart via rs-levels.
+    dyn: (function(){ var d=window.DYN_HP||{}; var p=function(o){return o?{hp:o.hp,mhp:o.mhp,close:o.close}:null;}; return {nq:p(d.NQ), es:p(d.ES), gc:p(d.GCE)}; })(),
     // Irrational/Unusual Rules panel: per-row {section,name,state,dir}. state from the
     // .rule-item status class (red=active / yellow=caution / green=none); dir from the
     // .direction svg path (up='M4 10…' / down='M4 6…'). The engine derives the sit-out gate.
@@ -102,6 +104,10 @@ function buildUpdate(v) {
   if (v.irr) upd.irrational = v.irr;  // Irrational/Unusual panel states → engine sit-out gate
   if (v.dyn && v.dyn.nq) Object.assign(upd.bySymbol.NQ, { dynHpEtf: v.dyn.nq.hp, dynMhpEtf: v.dyn.nq.mhp, dynCloseEtf: v.dyn.nq.close });
   if (v.dyn && v.dyn.es) Object.assign(upd.bySymbol.ES, { dynHpEtf: v.dyn.es.hp, dynMhpEtf: v.dyn.es.mhp, dynCloseEtf: v.dyn.es.close });
+  // Gold dyn HP/MHP on GLD ETF scale (same convention as NQ/ES dynHpEtf). GC has no
+  // resilience element, so this is its only rs-feed contribution; the DD bands / HP / MHP
+  // price lines come from rs-levels (chart shapes, gold-futures scale).
+  if (v.dyn && v.dyn.gc) upd.bySymbol.GC = { dynHpEtf: v.dyn.gc.hp, dynMhpEtf: v.dyn.gc.mhp, dynCloseEtf: v.dyn.gc.close };
   Object.assign(upd, map(v.nq)); // global defaults mirror NQ (the symbol we trade)
   return upd;
 }
@@ -117,11 +123,12 @@ async function tick() {
       (v.irr ? `  IRR[${reds.length}]${reds.length ? ' ' + reds.join(',') : ''}` : ''));
   const cur = fs.existsSync(CTX) ? JSON.parse(fs.readFileSync(CTX, 'utf8')) : {};
   // Deep-merge per-symbol so we preserve lmCode/mmBullish (written once-daily by
-  // rs-levels) while refreshing the resiliences every 5s.
-  upd.bySymbol = {
-    NQ: { ...(cur.bySymbol && cur.bySymbol.NQ), ...upd.bySymbol.NQ },
-    ES: { ...(cur.bySymbol && cur.bySymbol.ES), ...upd.bySymbol.ES },
-  };
+  // rs-levels) while refreshing the resiliences every 5s. Start from ALL existing
+  // symbols so the ones rs-feed doesn't touch (CL, and GC's chart-derived levels) are
+  // carried through instead of being dropped by this 5s write.
+  const mergedBySym = { ...(cur.bySymbol || {}) };
+  for (const s of Object.keys(upd.bySymbol)) mergedBySym[s] = { ...(cur.bySymbol && cur.bySymbol[s]), ...upd.bySymbol[s] };
+  upd.bySymbol = mergedBySym;
   if (DRY) { log('WOULD MERGE:'); console.error(JSON.stringify(upd, null, 2));
     log(`preserve: greaterMarket=${cur.greaterMarket} lmCode=${cur.lmCode} vx=${cur.vx} bbb=${cur.bbb} vvix=${cur.vvix}`); return; }
   fs.writeFileSync(CTX, JSON.stringify({ ...cur, ...upd, setAt: new Date().toISOString() }, null, 2));
