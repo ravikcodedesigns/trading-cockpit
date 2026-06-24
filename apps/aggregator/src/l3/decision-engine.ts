@@ -1,144 +1,143 @@
-// L3 level-touch DECISION ENGINE — v1 (shadow only; NOT wired to the trader).
-//
-// At a touch of an RS level, fuse EVERYTHING we have — the live L3 book read +
-// the full RS context (greater-market, the 3 resiliences, DD ratio, LM/MM, VX/
-// BBB/VVIX, VX-gamma state, EM/DD bands, ETF-vs-MHP) — into one transparent
-// long/short/skip call with a written rationale, so we can shadow it for a week
-// and tune the rules before risking capital.
-//
-// Design principle (per project_level_autotrader): encode KNOWN framework rules +
-// the validated observation that CVD CONTEXT (level + slope) — not the static wall
-// size — separated winners from losers across 06-18/06-23. Every weight is a named
-// constant so it's tunable from the shadow results. No fitted parameters.
+// decision-engine — the L3 CONFIRMATION layer. The framework engines already chose
+// the trade (engine-thesis.ts); this only asks: does the live order-flow back it?
+// It never picks direction — it confirms, vetoes, or trims, and writes a detailed
+// diagnostic. Core principle: what matters is whether hidden size is actually
+// TRADING-and-replenishing here vs SITTING-and-being-pulled (spoof).
+import type { Thesis } from './engine-thesis.js';
+import type { SizeTier } from '../rules-v2/engine-types.js';
 
-export interface DecisionInput {
-  symbol: string;
-  level: { label: string; price: number; kind: string };
-  approach: 'above' | 'below';   // price approached the level from above / below
+export interface L3Read {
+  defendSide: 'bid' | 'ask';     // the side the thesis is betting holds (bid=support, ask=resistance)
+  wall: number; l3Size: number; impliedGap: number;
+  nativeIce: number;             // same-id refilling icebergs at the level
+  synthRefills: number;          // new-id refill-chain links (synthetic iceberg)
+  executedNear: number;          // volume actually TRADED at the level in the window
+  cvd: number; cvd60: number;    // session CVD + 60s slope
+  aggrBuy: number; aggrSell: number;
+  pull: number;                  // displayed size cancelled on the defend side (spoof tell)
+  adds: number;                  // displayed size added on the defend side (stacking)
+  sweepWith: boolean;            // a single aggressor swept ≥3 levels WITH the thesis
+  sweepAgainst: boolean;         // …AGAINST the thesis (clearing the defended side)
+  clusterDominance: number;      // top aggressor's share of volume (0–1)
+}
+
+export interface CtxRead {
+  isRational: boolean;
+  vxVolState: 'pinned' | 'above-hp' | 'above-mhp' | null;
+  gateMode: 'normal' | 'strong-pivots-small' | 'sit-out';
+  gateLongOnly: boolean;
+  gateSizeDown: boolean;
   price: number;
-  // ── live L3 book read at the touch ──
-  defendSide: 'bid' | 'ask';
-  wall: number;          // L2 depth within ±WALL of the level on the defending side
-  l3Size: number;        // MBO-reconstructed size there
-  impliedGap: number;    // wall − l3Size (hidden/iceberg liquidity)
-  icebergs: number;      // # refilling orders at the level
-  cvd: number;           // session cumulative CVD
-  cvd60: number;         // CVD slope (last ~60s) — the key discriminator
-  aggrBuy: number;       // aggressor buy vol into the level (last ~30s)
-  aggrSell: number;
-  // ── full RS context (rs-context.json, per symbol where available) ──
-  gm: 'bull' | 'bear' | 'neutral';
-  mmBullish: boolean | null;
-  mhpResilience: number;
-  hpResilience: number;
-  redistResilience: number;
-  ddRatio: number;
-  lmCode: string | null;
-  isRational: boolean;          // VX<BBB and VVIX not elevated
-  vxAboveBBB: boolean;
-  vvixElevated: boolean;
-  vxVolState: 'pinned' | 'above-hp' | 'above-mhp' | null;  // VX vs its gamma walls
-  ddUpper: number | null;
-  ddLower: number | null;
-  em1Low: number | null;
-  em1High: number | null;
-  em2Low: number | null;
-  em2High: number | null;
+  ddUpper?: number | null;
+  ddLower?: number | null;
 }
 
-export interface Decision {
-  action: 'long' | 'short' | 'skip';
-  setup: 'bounce' | 'break' | null;   // direction relative to the level
-  size: 'S' | 'M' | 'L' | null;
-  score: number;                       // signed conviction (+long / −short)
-  reasons: string[];                   // every contribution, for audit
-  vetoes: string[];                    // hard blocks applied
+export interface ConfirmResult {
+  verdict: 'take' | 'skip';
+  size: SizeTier | null;
+  confirmationScore: number;
+  confirms: string[];
+  invalidations: string[];
+  breakForming: { dir: 'long' | 'short'; trigger: number; note: string } | null;
+  diagnostic: string;            // the rich narrative
 }
 
-// ── tunable weights (calibrate from the shadow week) ─────────────────────────
-const W = {
-  gm: 2,            // greater-market directional bias
-  cvd60Strong: 200, cvd60Weak: 60,   // CVD-slope thresholds
-  cvd60: 2,         // weight when CVD slope is decisive
-  mm: 1,            // monthly-map bias
-  tapeMin: 25, tape: 1,              // aggressor-at-level imbalance
-  resStrong: 30, resWeak: -50,      // summed-resilience thresholds
-  res: 1,
-  iceberg: 2,       // refilling iceberg on the defending side = strongest "level holds" read
-  wallStrong: 60,   // a big STATIC wall alone is weak (06-18 showed they trap); only counts with hidden liquidity
-  takeScore: 3,     // |score| needed to act
+const C = {
+  cvdWith: 2, cvdAgainst: -3, cvdThresh: 150,
+  refill: 3, absorb: 2,          // real, executing, replenishing defense
+  pullSpoof: -3,                 // wall yanked, didn't trade
+  sweepAgainst: -4, sweepWith: 2,
+  stacking: 1, cluster: 1, confluence: 1, lm: 1,
+  takeScore: 4,
 };
 
-export function decide(i: DecisionInput): Decision {
-  const reasons: string[] = [];
-  const vetoes: string[] = [];
-  // fade = trade away from the level (bounce); break = continue through it
-  const fadeDir: 'long' | 'short' = i.approach === 'above' ? 'long' : 'short';
-  const breakDir: 'long' | 'short' = i.approach === 'above' ? 'short' : 'long';
+export function confirm(t: Thesis, l3: L3Read, ctx: CtxRead): ConfirmResult {
+  const confirms: string[] = [];
+  const invalidations: string[] = [];
+  let score = 0;
+  const isBounce = t.bounceVsBreak === 'bounce' || t.bounceVsBreak === 'hold-through';
+  const dirSign = t.direction === 'long' ? 1 : -1;
 
-  let score = 0; // + = long lean, − = short lean
+  // ── hard gates (the framework's own sit-out + vol + irrational territory) ──
+  if (ctx.gateMode === 'sit-out') invalidations.push('GATE sit-out (irrational + VVIX/VX)');
+  if (ctx.vxVolState === 'above-mhp') invalidations.push('VX above gamma-MHP — vol inflection, sit out');
+  if (ctx.gateLongOnly && t.direction === 'short') invalidations.push('GATE long-only (irrational DD-break) — short blocked');
+  if (t.direction === 'short' && ctx.ddLower != null && ctx.price < ctx.ddLower) invalidations.push('price < DD-lower — no shorts (irrational)');
+  if (t.direction === 'long' && ctx.ddUpper != null && ctx.price > ctx.ddUpper) invalidations.push('price > DD-upper — no longs (irrational)');
 
-  // 1) Greater market (framework §2): bull → long bias; bear → symmetric.
-  if (i.gm === 'bull') { score += W.gm; reasons.push(`GM bull (+${W.gm} long)`); }
-  else if (i.gm === 'bear') { score -= W.gm; reasons.push(`GM bear (−${W.gm} short)`); }
-  else reasons.push('GM neutral');
+  // ── CVD slope with/against the thesis (validated discriminator) ──
+  const cvdWith = dirSign * l3.cvd60;
+  if (cvdWith >= C.cvdThresh) { score += C.cvdWith; confirms.push(`CVD60 ${l3.cvd60} WITH thesis (+${C.cvdWith})`); }
+  else if (cvdWith <= -C.cvdThresh) { score += C.cvdAgainst; invalidations.push(`CVD60 ${l3.cvd60} AGAINST thesis (${C.cvdAgainst})`); }
+  else confirms.push(`CVD60 ${l3.cvd60} neutral`);
 
-  // 2) CVD slope — the validated discriminator (06-18/06-23). Trend in the flow.
-  if (i.cvd60 >= W.cvd60Strong) { score += W.cvd60; reasons.push(`CVD60 +${i.cvd60} buyers (+${W.cvd60})`); }
-  else if (i.cvd60 <= -W.cvd60Strong) { score -= W.cvd60; reasons.push(`CVD60 ${i.cvd60} sellers (−${W.cvd60})`); }
-  else if (Math.abs(i.cvd60) < W.cvd60Weak) reasons.push(`CVD60 ${i.cvd60} flat (chop risk)`);
-
-  // 3) Monthly map.
-  if (i.mmBullish === true) { score += W.mm; reasons.push(`MM bull (+${W.mm})`); }
-  else if (i.mmBullish === false) { score -= W.mm; reasons.push(`MM bear (−${W.mm})`); }
-
-  // 4) Aggressor at the level (last 30s).
-  if (i.aggrBuy > 2 * Math.max(1, i.aggrSell) && i.aggrBuy > W.tapeMin) { score += W.tape; reasons.push(`buyers into level (+${W.tape})`); }
-  else if (i.aggrSell > 2 * Math.max(1, i.aggrBuy) && i.aggrSell > W.tapeMin) { score -= W.tape; reasons.push(`sellers into level (−${W.tape})`); }
-
-  // 5) Resilience (level strength). Strong → the level holds → favor the FADE;
-  //    weak → it breaks → favor the BREAK. Adds to score in the relevant dir.
-  const resSum = i.mhpResilience + i.hpResilience + i.redistResilience;
-  if (resSum >= W.resStrong) { score += (fadeDir === 'long' ? W.res : -W.res); reasons.push(`strong resilience ${resSum.toFixed(0)} → favor fade`); }
-  else if (resSum <= W.resWeak) { score += (breakDir === 'long' ? W.res : -W.res); reasons.push(`weak resilience ${resSum.toFixed(0)} → favor break`); }
-
-  // 6) Icebergs at the level — a resting order refilling beyond its display
-  //    (cf>display or replace-up) is the strongest "level holds" read the L3 book
-  //    gives us: real, hidden, replenishing defense → weight the FADE meaningfully.
-  if (i.icebergs > 0) {
-    score += (fadeDir === 'long' ? W.iceberg : -W.iceberg);
-    reasons.push(`${i.icebergs} iceberg(s) refilling on ${i.defendSide} → strong fade (${fadeDir === 'long' ? '+' : '−'}${W.iceberg})`);
-  } else if (i.wall >= W.wallStrong && i.impliedGap > i.wall * 0.3) {
-    // softer: a big wall with lots of hidden (L2−L3) liquidity behind it.
-    score += (fadeDir === 'long' ? 1 : -1);
-    reasons.push(`hidden liquidity (gap ${i.impliedGap}/${i.wall}) → fade`);
+  if (isBounce) {
+    // BOUNCE — is the defended side actually HOLDING (trading-and-replenishing)?
+    const aggrInto = l3.defendSide === 'bid' ? l3.aggrSell : l3.aggrBuy; // sells hit bids / buys hit asks
+    if (l3.executedNear > 0 && aggrInto > 0 && (l3.nativeIce > 0 || l3.synthRefills > 0)) {
+      score += C.refill;
+      confirms.push(`ABSORBING + REFILLING — ${aggrInto} hit the ${l3.defendSide}, ice ${l3.nativeIce}/refills ${l3.synthRefills}, ${l3.executedNear} traded → real defense (+${C.refill})`);
+    } else if (l3.executedNear > 0 && aggrInto > l3.wall) {
+      score += C.absorb;
+      confirms.push(`absorption — ${aggrInto} hit and held (+${C.absorb})`);
+    }
+    // SPOOF — wall pulled and barely traded
+    if (l3.pull > Math.max(10, l3.wall) && l3.executedNear < l3.pull * 0.3) {
+      score += C.pullSpoof;
+      invalidations.push(`wall PULLED (${l3.pull} cancelled vs ${l3.executedNear} traded) → spoof, not defense (${C.pullSpoof})`);
+    }
+    if (l3.sweepAgainst) { score += C.sweepAgainst; invalidations.push(`SWEEP cleared the defended ${l3.defendSide} → bounce failing (${C.sweepAgainst})`); }
+    if (l3.adds > l3.wall) { score += C.stacking; confirms.push(`stacking on ${l3.defendSide} (adds ${l3.adds} > wall ${l3.wall}) (+${C.stacking})`); }
+  } else {
+    // BREAK / RECLAIM — is the break actually happening in the thesis direction?
+    if (l3.sweepWith) { score += C.sweepWith; confirms.push(`SWEEP with the break (+${C.sweepWith})`); }
+    if (l3.sweepAgainst) { score += C.sweepAgainst; invalidations.push(`sweep AGAINST the break (${C.sweepAgainst})`); }
+    if (cvdWith >= C.cvdThresh && l3.executedNear > 0) { /* already scored via CVD */ }
   }
 
-  // ── VETOES (hard gates) ──
-  let sizeCap: 'S' | 'M' | 'L' | null = null;
-  if (!i.isRational) { sizeCap = 'M'; reasons.push('not rational (VX>BBB / VVIX) → cap size'); }
-  if (i.vxVolState === 'above-mhp') { vetoes.push('VX above gamma-MHP — vol inflection, sit out'); }
-  // irrational territory (rs-level-scorer rule): no shorts below DD-lower, no longs above DD-upper
-  const belowDD = i.ddLower != null && i.price < i.ddLower;
-  const aboveDD = i.ddUpper != null && i.price > i.ddUpper;
-  if (belowDD) vetoes.push('price < DD-lower — no shorts (irrational)');
-  if (aboveDD) vetoes.push('price > DD-upper — no longs (irrational)');
+  if (l3.clusterDominance >= 0.5) { score += C.cluster; confirms.push(`one aggressor dominant (${Math.round(l3.clusterDominance * 100)}% of volume) (+${C.cluster})`); }
+  if (t.confluence >= 3) { score += C.confluence; confirms.push(`${t.confluence}-engine confluence (${t.engines.join('+')})`); }
+  if (t.conflict.length) confirms.push(`note: ${t.conflict.join('+')} fired opposite here`);
+  if (t.lmAgrees === true) { score += C.lm; confirms.push('LM agrees (+1)'); }
+  else if (t.lmAgrees === false) { score -= C.lm; invalidations.push('LM disagrees (−1)'); }
 
-  // ── resolve ──
-  let action: 'long' | 'short' | 'skip' = 'skip';
-  if (score >= W.takeScore) action = 'long';
-  else if (score <= -W.takeScore) action = 'short';
+  // ── verdict ──
+  const hardVeto = invalidations.some(v => /sit out|long-only|irrational/.test(v));
+  const verdict: 'take' | 'skip' = (!hardVeto && score >= C.takeScore) ? 'take' : 'skip';
 
-  if (action === 'short' && belowDD) { action = 'skip'; vetoes.push('short vetoed (below DD-lower)'); }
-  if (action === 'long' && aboveDD) { action = 'skip'; vetoes.push('long vetoed (above DD-upper)'); }
-  if (vetoes.some(v => v.includes('sit out'))) action = 'skip';
-
-  const setup = action === 'skip' ? null : (action === fadeDir ? 'bounce' : 'break');
-  let size: 'S' | 'M' | 'L' | null = null;
-  if (action !== 'skip') {
-    const a = Math.abs(score);
-    size = a >= 6 ? 'L' : a >= 4 ? 'M' : 'S';
-    if (sizeCap && size === 'L') size = sizeCap;   // cap on stress
+  // ── size: framework base, trimmed by confirmation strength + stress ──
+  let size: SizeTier | null = null;
+  if (verdict === 'take') {
+    size = t.sizeBase;
+    if (ctx.gateSizeDown && size === 'N') size = 'M';
+    if (score < C.takeScore + 2 && size === 'N') size = 'M';   // marginal confirm → trim full size
   }
-  return { action, setup, size, score, reasons, vetoes };
+
+  // ── break forming: a bounce thesis killed by a clean opposite break ──
+  let breakForming: ConfirmResult['breakForming'] = null;
+  if (isBounce && verdict === 'skip' && (l3.sweepAgainst || cvdWith <= -C.cvdThresh)) {
+    const bd: 'long' | 'short' = t.direction === 'long' ? 'short' : 'long';
+    breakForming = {
+      dir: bd, trigger: t.level,
+      note: `${t.direction}-bounce invalidated → ${bd} BREAK forming (sweep ${l3.sweepAgainst}, CVD60 ${l3.cvd60}, pull ${l3.pull})`,
+    };
+  }
+
+  return { verdict, size, confirmationScore: score, confirms, invalidations, breakForming, diagnostic: narrate(t, l3, ctx, verdict, size, score, confirms, invalidations, breakForming) };
+}
+
+// Detailed human-readable diagnostic (Ravi wants these rich — engine thesis, the
+// confluence, the exact L3 evidence, the verdict, and what's forming instead).
+function narrate(t: Thesis, l3: L3Read, ctx: CtxRead, verdict: string, size: SizeTier | null,
+                 score: number, confirms: string[], invalidations: string[],
+                 bf: ConfirmResult['breakForming']): string {
+  const head = `${t.engines.join('+')||'?'} fired ${t.direction.toUpperCase()}-${t.bounceVsBreak} at ${t.level}`
+    + ` (conf ${t.confluence}, base_prob ${t.baseProb}, LM ${t.lmAgrees === null ? '—' : t.lmAgrees ? 'agrees' : 'disagrees'}, size ${t.sizeBase}).`;
+  const book = `L3: wall ${l3.wall}/${l3.defendSide}, gap ${l3.impliedGap}, ice ${l3.nativeIce}+${l3.synthRefills}, traded ${l3.executedNear},`
+    + ` pull ${l3.pull}, adds ${l3.adds}, CVD60 ${l3.cvd60}, aggr ${l3.aggrBuy}/${l3.aggrSell},`
+    + ` sweep ${l3.sweepWith ? 'with' : l3.sweepAgainst ? 'against' : 'none'}, cluster ${Math.round(l3.clusterDominance * 100)}%.`;
+  const ver = `→ ${verdict.toUpperCase()}${size ? ' ' + size : ''} (score ${score}/${C.takeScore}). `
+    + `confirms[${confirms.join(' | ')}] vetoes[${invalidations.join(' | ')}].`;
+  const brk = bf ? ` ⚠ ${bf.note}` : '';
+  return head + ' ' + book + ' ' + ver + brk;
 }
