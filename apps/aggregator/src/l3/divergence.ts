@@ -160,20 +160,27 @@ export function classifyEpisode(retests: RetestFeatures[], ctx: ClassifyCtx): Ep
   const absorbing = lambdaRatio < collapseRatio || (mkLambda.dir < 0 && Math.abs(mkLambda.z) > zSig);
   const depleting = mkWall.dir < 0 && Math.abs(mkWall.z) > zSig;
   const conf = (raw: number) => Math.max(0, Math.min(1, raw));
-  const strength = conf((Math.abs(mkLambda.z) + Math.abs(mkExtreme.z)) / 6 + Math.max(0, collapseRatio - lambdaRatio));
+  // Confidence LEADS with the λ-collapse trend significance (self-referential — no baseline needed,
+  // since the rolling baseline λ is contaminated by at-level absorption quotes). The baseline ratio
+  // is a secondary confirmation; declining (not just flat) highs add a bonus. Flat highs = neutral.
+  const trendStrength = conf(Math.abs(mkLambda.z) / 2);                                  // |z|≈2 (95%) → full
+  const ratioStrength = ctx.baselineLambda > 0 ? conf((collapseRatio - lambdaRatio) / collapseRatio) : 0;
+  let strength = Math.max(trendStrength, ratioStrength);
+  if (mkExtreme.dir < 0) strength = conf(strength + Math.abs(mkExtreme.z) / 4 * 0.2);    // fading highs = extra
   const ev = { retests: k, lambdaRatio: +lambdaRatio.toFixed(3), zLambda: +mkLambda.z.toFixed(2),
     zExtreme: +mkExtreme.z.toFixed(2), zWall: +mkWall.z.toFixed(2), ofiNet: Math.round(ofiNet) };
 
   // DISTRIBUTION: at resistance, buyers aggressing (OFI>0) but no higher highs (extreme not rising)
   // AND price under-responds to the flow (λ absorbing). Buying eaten → fail down.
+  const absNote = lambdaRatio < collapseRatio ? `λ ${(lambdaRatio * 100).toFixed(0)}% of baseline` : `λ collapsing (z${mkLambda.z.toFixed(1)})`;
   if (ctx.side === 'resistance' && ofiNet > 0 && mkExtreme.dir <= 0 && absorbing) {
     return { state: 'DISTRIBUTION', confidence: strength, evidence: ev,
-      note: `buyers absorbed at resistance: OFI+${Math.round(ofiNet)}, no higher highs (z${mkExtreme.z.toFixed(1)}), λ ${(lambdaRatio * 100).toFixed(0)}% of baseline${depleting ? ', wall depleting' : ''}` };
+      note: `buyers absorbed at resistance: OFI+${Math.round(ofiNet)}, no higher highs, ${absNote}${depleting ? ', wall depleting' : ''}` };
   }
   // ACCUMULATION: at support, sellers aggressing (OFI<0) but no lower lows AND λ absorbing → fail up.
   if (ctx.side === 'support' && ofiNet < 0 && mkExtreme.dir >= 0 && absorbing) {
     return { state: 'ACCUMULATION', confidence: strength, evidence: ev,
-      note: `sellers absorbed at support: OFI${Math.round(ofiNet)}, no lower lows (z${mkExtreme.z.toFixed(1)}), λ ${(lambdaRatio * 100).toFixed(0)}% of baseline` };
+      note: `sellers absorbed at support: OFI${Math.round(ofiNet)}, no lower lows, ${absNote}` };
   }
   // BREAKING: price impact is HEALTHY (λ near/above baseline) and the extreme is trending through
   // the level (higher highs at resistance / lower lows at support) → genuine break.
