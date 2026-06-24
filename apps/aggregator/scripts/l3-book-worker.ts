@@ -22,31 +22,20 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { OrderBook, priceFromInt } from '../src/l3/order-book.js';
 import { tailLog, type LogEvent, type TailHandle } from '../src/l3/log-tailer.js';
-import { confirm, type L3Read, type CtxRead } from '../src/l3/decision-engine.js';
-import { buildThesis } from '../src/l3/engine-thesis.js';
-import { deriveMarketState } from '../src/rules-v2/derive-market-state.js';
-import { loadContext, getContext } from '../src/rs-context.js';
-import type { DailyLevels } from '@trading/contracts';
+import net from 'node:net';
+// NOTE: the framework engines + confirmation live in the SEPARATE l3-decision-worker
+// process so this builder (the in-memory book) is never restarted for decision-logic
+// changes. This process only maintains the book + emits touch events.
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../../..');
 const CAPTURE_DIR = path.join(os.homedir(), 'cockpit-mbo-capture');
 const SHADOW_DB = path.join(ROOT, 'data', 'l3-shadow.db');
+const SOCK_PATH = process.env.L3_TOUCH_SOCK || '/tmp/cockpit-l3-touch.sock';   // builder→decider push
 const LEVEL_FILES: Record<string, string> = {
   NQ: path.join(ROOT, 'daily_levels.json'),
   ES: path.join(ROOT, 'daily_levels_es.json'),
 };
-
-// Raw DailyLevels entry for the engines (deriveMarketState needs the structured entry
-// incl. zones[]/ddBands — same loader rs-shadow uses, so the MarketState doesn't drift).
-function readDailyLevels(symbol: string): DailyLevels | undefined {
-  try {
-    const doc = JSON.parse(fs.readFileSync(LEVEL_FILES[symbol], 'utf8'));
-    const lv = doc.days?.[etDate()]?.levels?.find((x: { symbol: string }) => x.symbol === symbol);
-    if (!lv) return undefined;
-    return { ts: 0, source: 'levels', type: 'daily', tradingDay: etDate(), ...lv } as DailyLevels;
-  } catch { return undefined; }
-}
 
 const TICK = 0.25;
 const intFromPrice = (p: number) => Math.round(p / TICK);
@@ -115,36 +104,33 @@ const insSnap = db.prepare(`INSERT INTO l3_level_snapshots
    @price,@dist_ticks,@defend_side,@l2_size,@l2_orders,@l3_size,@implied_gap,
    @best_bid,@best_ask,@spread,@cvd,@aggr_buy,@aggr_sell,@tape_prints)`);
 
-// One TRADE DECISION per RS-level touch episode: the framework ENGINES' thesis +
-// the live L3 CONFIRMATION. Shadow only (NOT wired to trader). Fires only when an
-// engine produces a setup at the level (→ RS levels only; structural = snapshot-only).
-// Outcome cols filled by the resolver (engine-alone vs engine+L3-confirmed).
-db.exec(`CREATE TABLE IF NOT EXISTS l3_trade_decisions (
+// TOUCH-EVENT QUEUE — one row per RS-level touch episode with the direction-agnostic
+// live L3 read (both sides + cvd/sweep/cluster) computed from the in-memory book. The
+// decision-worker consumes these (processed=0 → 1), runs the engines + confirmation,
+// and writes l3_trade_decisions. Durable so a decision-worker restart loses nothing.
+db.exec(`CREATE TABLE IF NOT EXISTS l3_touch_events (
   id INTEGER PRIMARY KEY,
   ts_ms INTEGER, ts_et TEXT, trading_day TEXT,
-  symbol TEXT, level_label TEXT, level_price REAL, price REAL, approach TEXT,
-  direction TEXT, bounce_break TEXT, engines TEXT, confluence INTEGER, conflict TEXT,
-  size_base TEXT, base_prob REAL, lm_agrees INTEGER, entry REAL, stop REAL, targets TEXT,
-  defend_side TEXT, wall INTEGER, l3_size INTEGER, implied_gap INTEGER,
-  native_ice INTEGER, synth_refills INTEGER, executed_near INTEGER, cvd INTEGER, cvd60 INTEGER,
-  aggr_buy INTEGER, aggr_sell INTEGER, pull INTEGER, adds INTEGER,
-  sweep_with INTEGER, sweep_against INTEGER, cluster_dom REAL,
-  gm TEXT, gate_mode TEXT, is_rational INTEGER, vx_vol_state TEXT,
-  verdict TEXT, size TEXT, confirm_score REAL, confirms TEXT, vetoes TEXT,
-  break_forming TEXT, diagnostic TEXT,
-  engine_outcome TEXT, decision_outcome TEXT, engine_pnl_pts REAL, exit_ts_ms INTEGER, resolved_at INTEGER
+  symbol TEXT, level_label TEXT, level_kind TEXT, level_price REAL,
+  mid REAL, dist_ticks REAL, l3_json TEXT,
+  processed INTEGER DEFAULT 0
 )`);
-const insTrade = db.prepare(`INSERT INTO l3_trade_decisions
-  (ts_ms,ts_et,trading_day,symbol,level_label,level_price,price,approach,
-   direction,bounce_break,engines,confluence,conflict,size_base,base_prob,lm_agrees,entry,stop,targets,
-   defend_side,wall,l3_size,implied_gap,native_ice,synth_refills,executed_near,cvd,cvd60,
-   aggr_buy,aggr_sell,pull,adds,sweep_with,sweep_against,cluster_dom,
-   gm,gate_mode,is_rational,vx_vol_state,verdict,size,confirm_score,confirms,vetoes,break_forming,diagnostic)
-  VALUES (@ts_ms,@ts_et,@trading_day,@symbol,@level_label,@level_price,@price,@approach,
-   @direction,@bounce_break,@engines,@confluence,@conflict,@size_base,@base_prob,@lm_agrees,@entry,@stop,@targets,
-   @defend_side,@wall,@l3_size,@implied_gap,@native_ice,@synth_refills,@executed_near,@cvd,@cvd60,
-   @aggr_buy,@aggr_sell,@pull,@adds,@sweep_with,@sweep_against,@cluster_dom,
-   @gm,@gate_mode,@is_rational,@vx_vol_state,@verdict,@size,@confirm_score,@confirms,@vetoes,@break_forming,@diagnostic)`);
+db.exec('CREATE INDEX IF NOT EXISTS idx_touch_unprocessed ON l3_touch_events(processed, id)');
+const insTouch = db.prepare(`INSERT INTO l3_touch_events
+  (ts_ms,ts_et,trading_day,symbol,level_label,level_kind,level_price,mid,dist_ticks,l3_json)
+  VALUES (@ts_ms,@ts_et,@trading_day,@symbol,@level_label,@level_kind,@level_price,@mid,@dist_ticks,@l3_json)`);
+
+// ── builder→decider PUSH: a UDS the decision-worker connects to; on each touch we
+//    nudge it (1 byte) so it processes the new row instantly — no polling window. ──
+const clients = new Set<net.Socket>();
+try { fs.unlinkSync(SOCK_PATH); } catch { /* none */ }
+const pushServer = net.createServer((sock) => {
+  clients.add(sock);
+  sock.on('close', () => clients.delete(sock));
+  sock.on('error', () => clients.delete(sock));
+});
+pushServer.listen(SOCK_PATH, () => console.log(`touch-event push socket → ${SOCK_PATH}`));
+const nudge = () => { for (const c of clients) { try { c.write('1'); } catch { /* dead */ } } };
 
 // ── per-symbol state ─────────────────────────────────────────────────────────
 interface SymState {
@@ -200,66 +186,41 @@ function cvdSlope(st: SymState, now: number): number {
   return then ? st.book.cvd - then[1] : 0;
 }
 
-// Fire ONE decision per touch episode: fuse the L3 read + full RS context, log it.
-function fireDecision(st: SymState, lv: RsLevel, distTicks: number, mid: number, slope: number, now: number): void {
-  loadContext();                                  // refresh rs-context from disk
-  const rs = getContext(st.sym);
-  const levels = readDailyLevels(st.sym);
-  const ms = deriveMarketState({ symbol: st.sym as 'NQ' | 'ES', rs, levels, price: mid });
-  // The ENGINES decide. No setup at this level ⇒ not an RS-framework level ⇒ snapshot-only.
-  const thesis = buildThesis(ms, lv.price);
-  if (!thesis) return;
-
-  // defended side from the THESIS: long bounces off support (bids), short off resistance (asks)
-  const defendSide: 'bid' | 'ask' = thesis.direction === 'long' ? 'bid' : 'ask';
+// Emit ONE touch event per episode: compute the DIRECTION-AGNOSTIC live L3 read from
+// the in-memory book (both sides + cvd/sweep/cluster), queue it, and nudge the decision-
+// worker. The engines + confirmation run in that SEPARATE process — so restarting the
+// decision logic never touches this book.
+function emitTouch(st: SymState, lv: RsLevel, distTicks: number, mid: number, slope: number, now: number): void {
   const lvInt = intFromPrice(lv.price);
   const since = now - TAPE_WINDOW_MS;
-  const wallO = st.book.depthNear(lvInt, WALL_TICKS, defendSide);
-  const l3size = st.book.l3Near(lvInt, WALL_TICKS, defendSide);
+  const sideRead = (side: 'bid' | 'ask') => {
+    const w = st.book.depthNear(lvInt, WALL_TICKS, side);
+    const l3 = st.book.l3Near(lvInt, WALL_TICKS, side);
+    return {
+      wall: w.size, l3, gap: Math.max(0, w.size - l3),
+      ice: st.book.icebergsNear(lvInt, WALL_TICKS, side).count,
+      synth: st.book.syntheticRefillsNear(lvInt, WALL_TICKS, since),
+      pull: st.book.pullNear(lvInt, WALL_TICKS, side, since),
+      adds: st.book.addsNear(lvInt, WALL_TICKS, side, since),
+    };
+  };
   let aggrBuy = 0, aggrSell = 0, executedNear = 0;
   for (const p of st.book.tapeNear(lvInt, NEAR_TICKS, since)) { executedNear += p.size; if (p.buy) aggrBuy += p.size; else aggrSell += p.size; }
   const sweep = st.book.sweepNear(lvInt, NEAR_TICKS, since);
   const cluster = st.book.aggressorClusterNear(lvInt, NEAR_TICKS, since);
-  const sweepWith = sweep.swept && sweep.dir != null && ((thesis.direction === 'long') === (sweep.dir === 'buy'));
-  const sweepAgainst = sweep.swept && sweep.dir != null && !sweepWith;
-
-  const l3: L3Read = {
-    defendSide, wall: wallO.size, l3Size: l3size, impliedGap: Math.max(0, wallO.size - l3size),
-    nativeIce: st.book.icebergsNear(lvInt, WALL_TICKS, defendSide).count,
-    synthRefills: st.book.syntheticRefillsNear(lvInt, WALL_TICKS, since),
-    executedNear, cvd: st.book.cvd, cvd60: Math.round(slope),
-    aggrBuy, aggrSell,
-    pull: st.book.pullNear(lvInt, WALL_TICKS, defendSide, since),
-    adds: st.book.addsNear(lvInt, WALL_TICKS, defendSide, since),
-    sweepWith, sweepAgainst, clusterDominance: cluster.dominance,
+  const l3 = {
+    bid: sideRead('bid'), ask: sideRead('ask'),
+    cvd: st.book.cvd, cvd60: Math.round(slope), aggrBuy, aggrSell, executedNear,
+    sweep: { swept: sweep.swept, dir: sweep.dir, levels: sweep.levels, size: sweep.size },
+    cluster: { dominance: +cluster.dominance.toFixed(3) },
   };
-  const cx: CtxRead = {
-    isRational: ms.confluence.isRational, vxVolState: rs.vxVolState ?? null,
-    gateMode: ms.gate.mode, gateLongOnly: ms.gate.longOnly, gateSizeDown: ms.gate.sizeDown,
-    price: +mid.toFixed(2), ddUpper: ms.levels.ddUpper ?? null, ddLower: ms.levels.ddLower ?? null,
-  };
-  const r = confirm(thesis, l3, cx);
-
-  insTrade.run({
+  insTouch.run({
     ts_ms: now, ts_et: etTime(now), trading_day: etDate(now),
-    symbol: st.sym, level_label: lv.label, level_price: lv.price, price: +mid.toFixed(2),
-    approach: distTicks >= 0 ? 'above' : 'below',
-    direction: thesis.direction, bounce_break: thesis.bounceVsBreak, engines: thesis.engines.join('+'),
-    confluence: thesis.confluence, conflict: thesis.conflict.join('+') || null, size_base: thesis.sizeBase,
-    base_prob: thesis.baseProb, lm_agrees: thesis.lmAgrees == null ? null : (thesis.lmAgrees ? 1 : 0),
-    entry: thesis.entry, stop: thesis.stop, targets: JSON.stringify(thesis.targets),
-    defend_side: defendSide, wall: l3.wall, l3_size: l3.l3Size, implied_gap: l3.impliedGap,
-    native_ice: l3.nativeIce, synth_refills: l3.synthRefills, executed_near: l3.executedNear,
-    cvd: l3.cvd, cvd60: l3.cvd60, aggr_buy: aggrBuy, aggr_sell: aggrSell, pull: l3.pull, adds: l3.adds,
-    sweep_with: sweepWith ? 1 : 0, sweep_against: sweepAgainst ? 1 : 0, cluster_dom: +cluster.dominance.toFixed(2),
-    gm: ms.confluence.gm, gate_mode: ms.gate.mode, is_rational: ms.confluence.isRational ? 1 : 0,
-    vx_vol_state: rs.vxVolState ?? null,
-    verdict: r.verdict, size: r.size, confirm_score: r.confirmationScore,
-    confirms: JSON.stringify(r.confirms), vetoes: JSON.stringify(r.invalidations),
-    break_forming: r.breakForming ? JSON.stringify(r.breakForming) : null, diagnostic: r.diagnostic,
+    symbol: st.sym, level_label: lv.label, level_kind: lv.kind, level_price: lv.price,
+    mid: +mid.toFixed(2), dist_ticks: distTicks, l3_json: JSON.stringify(l3),
   });
   st.decisions++;
-  console.log(`[${st.sym}] ${r.verdict.toUpperCase()} ${r.diagnostic}`);
+  nudge();
 }
 
 // EVENT-DRIVEN touch detection — called on every trade event the instant it lands,
@@ -279,12 +240,11 @@ function onTradeTouch(st: SymState, e: LogEvent): void {
     if (Math.abs(distTicks) <= NEAR_TICKS) {
       if (!st.inZone.get(tkey)) {
         st.inZone.set(tkey, true);
-        const t0 = Date.now();
         try {
-          fireDecision(st, lv, distTicks, mid, cvdSlope(st, now), now);
-          // touch→decision latency: trade event-time → decision (upstream flush + tailer + compute)
-          console.log(`[${st.sym}] ↳ touch→decision ${Date.now() - e.ts_ms}ms (compute ${Date.now() - t0}ms)`);
-        } catch (err) { console.error(`[${st.sym}] decision error @ ${lv.label}:`, (err as Error).message); }
+          emitTouch(st, lv, distTicks, mid, cvdSlope(st, now), now);
+          // touch→emit latency (upstream flush + tailer + book read). The decider adds its own.
+          console.log(`[${st.sym}] ↳ touch@${lv.label} ${lv.price} emit ${Date.now() - e.ts_ms}ms`);
+        } catch (err) { console.error(`[${st.sym}] emit error @ ${lv.label}:`, (err as Error).message); }
       }
     } else if (Math.abs(distTicks) >= DECISION_REARM_TICKS) {
       st.inZone.set(tkey, false);
@@ -371,6 +331,8 @@ const timers = [
 function shutdown(): void {
   timers.forEach(clearInterval);
   states.forEach((s) => s.tail?.stop());
+  try { pushServer.close(); } catch { /* ignore */ }
+  try { fs.unlinkSync(SOCK_PATH); } catch { /* ignore */ }
   try { db.close(); } catch { /* ignore */ }
   console.log(`l3-book-worker stopped ${etTime()} ET`);
   process.exit(0);

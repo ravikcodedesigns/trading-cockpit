@@ -31,6 +31,7 @@
     "shadow": "tsx scripts/rs-shadow.ts",
     "shadow:resolve": "tsx scripts/rs-shadow-resolve.ts",
     "l3:worker": "tsx scripts/l3-book-worker.ts",
+    "l3:decider": "tsx scripts/l3-decision-worker.ts",
     "l3:smoke": "tsx scripts/l3-book-smoke.ts"
   },
   "dependencies": {
