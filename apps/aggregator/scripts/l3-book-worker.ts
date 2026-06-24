@@ -360,9 +360,12 @@ let lastSignalId: number = (() => {
   if (a?.m != null) return a.m;
   try { const b = tdb?.prepare('SELECT MAX(signal_id) m FROM tradable_signals').get() as { m: number | null }; return b?.m ?? 0; } catch { return 0; }
 })();
-const selNewSignals = tdb?.prepare(`SELECT signal_id, signal_ts, symbol, pattern, direction, entry, qualified, action
+// FLIP rules store pattern='FLIP' (clean-impulse=NQ, es-flip=ES); the CONT family
+// (cont-reentry=NQ) stores pattern=NULL, so it must be matched by rule_id. Excludes the
+// high-frequency wall-broken-fade (WBF). Add new FLIP/CONT rule_ids here as they appear.
+const selNewSignals = tdb?.prepare(`SELECT signal_id, signal_ts, symbol, pattern, direction, entry, qualified, action, rule_id
   FROM tradable_signals
-  WHERE signal_id > ? AND pattern IN ('FLIP','CONT') AND (qualified=1 OR action='OPEN')
+  WHERE signal_id > ? AND (pattern='FLIP' OR rule_id='cont-reentry') AND (qualified=1 OR action='OPEN')
     AND symbol IN ('NQ','ES') AND entry IS NOT NULL
   ORDER BY signal_id LIMIT 200`);
 
@@ -379,16 +382,18 @@ function pollSignals(): void {
     const bbI = st?.book.bestBid(), baI = st?.book.bestAsk();
     if (!st || bbI == null || baI == null) continue;   // book not ready for this symbol
     try {
+      // CONT family (cont-reentry) has no pattern column → label it CONT; FLIP rules carry pattern='FLIP'
+      const pat = r.rule_id === 'cont-reentry' ? 'CONT' : (r.pattern || 'FLIP');
       const lvInt = st.book.intFromPrice(r.entry);
       const l3 = computeRead(st, lvInt, cvdSlope(st, now), now);
       const midInt = (bbI + baI) / 2;
       insSignalTouch.run({
         ts_ms: now, ts_et: etTime(now), trading_day: etDate(now),
-        symbol: r.symbol, level_label: `${r.pattern} ${r.direction}`, level_kind: 'signal', level_price: r.entry,
+        symbol: r.symbol, level_label: `${pat} ${r.direction}`, level_kind: 'signal', level_price: r.entry,
         mid: +st.book.priceFromInt(midInt).toFixed(2), dist_ticks: midInt - lvInt, l3_json: JSON.stringify(l3),
-        sig_json: JSON.stringify({ signal_id: r.signal_id, direction: r.direction, pattern: r.pattern, action: r.action, qualified: r.qualified, entry: r.entry }),
+        sig_json: JSON.stringify({ signal_id: r.signal_id, direction: r.direction, pattern: pat, rule_id: r.rule_id, action: r.action, qualified: r.qualified, entry: r.entry }),
       });
-      console.log(`[${r.symbol}] ↳ signal#${r.signal_id} ${r.pattern} ${r.direction} @${r.entry} (${r.action}/q${r.qualified}) → decider`);
+      console.log(`[${r.symbol}] ↳ signal#${r.signal_id} ${pat} ${r.direction} @${r.entry} (${r.action}/q${r.qualified}) → decider`);
       st.decisions++; emitted++;
     } catch (err) { console.error(`signal#${r.signal_id} emit error:`, (err as Error).message); }
   }
