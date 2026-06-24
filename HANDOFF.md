@@ -1475,7 +1475,13 @@ defense; a wall that sits and gets cancelled = spoof.
 4. ✅ **Rich diagnostics + break-forming** — full narrative per decision; `breakForming` flagged when a
    bounce is killed by a clean opposite break. Log-only (NOT auto-traded).
 5. ✅ **Resolver** — `l3-trade-resolve.ts`: engine-alone vs engine+L3 scorecard (skips: losers saved
-   vs winners missed). **NEXT: shadow the week → 2026-06-30 review → tune the `C` weights → arm.**
+   vs winners missed).
+6. ✅ **Event-driven trigger** (`c752ab2`) — the decision fires on the trade that crosses a level
+   (`onTradeTouch`), not the 1 Hz snapshot loop. **Measured touch→decision 122–312 ms** (was ~1.2 s),
+   compute 1–5 ms; remaining latency is upstream `.log` flush + the 200 ms tailer poll. The snapshot
+   loop is now only the 5 s `l3_level_snapshots` time-series + the CVD-slope ring.
+
+**NEXT: shadow the week → 2026-06-30 review → tune the `C` weights (decision-engine.ts) → arm.**
 
 **Current shadow plumbing (running now):**
 - `data/l3-shadow.db` table **`l3_decisions`** — one decision per touch episode (action/setup/size/
