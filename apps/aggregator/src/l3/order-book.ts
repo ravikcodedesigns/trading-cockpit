@@ -29,7 +29,8 @@ export interface TapePrint {
   ts: number;
   price: number;
   size: number;
-  buy: boolean; // is_bid_aggressor — true = buyer lifted the offer
+  buy: boolean;   // is_bid_aggressor — true = buyer lifted the offer
+  aggId?: string | null;   // aggressor order_id — for sweep + aggressor-clustering
 }
 
 export interface CrossCheck {
@@ -59,7 +60,17 @@ export class OrderBook {
 
   // tape
   private tape: TapePrint[] = [];
-  private tapeCap = 4000;
+  private tapeCap = 8000;
+
+  // ── order-flow DYNAMICS rings (the power of MBO over time). Capped for memory;
+  //    accessors filter by ts window. Track liquidity being ADDED / PULLED, and
+  //    the fill→quick-resend refill chain that = synthetic-iceberg replenishment.
+  private cancels: Array<{ ts: number; p: number; s: number; bid: boolean }> = [];
+  private adds: Array<{ ts: number; p: number; s: number; bid: boolean }> = [];
+  private eventCap = 20000;
+  private recentFill = new Map<number, number>();          // price_int → ts of last FULL passive fill there
+  private refills: Array<{ ts: number; p: number }> = [];  // a new order posted at a just-fully-filled price = refill link
+  private refillMs = 1500;
 
   cvd = 0;
   lastTs = 0;
@@ -98,6 +109,14 @@ export class OrderBook {
     this.orders.set(d.order_id, { p: d.price_int, s: d.size, bid: d.is_bid, md: d.size, cf: 0, ru: false });
     this.bumpCount(d.is_bid, d.price_int, +1);
     this.bumpSize(d.is_bid, d.price_int, +d.size);
+    // stacking ring + synthetic-iceberg refill detection (new order at a just-filled price)
+    this.adds.push({ ts: this.lastTs, p: d.price_int, s: d.size, bid: d.is_bid });
+    if (this.adds.length > this.eventCap) this.adds.shift();
+    const ft = this.recentFill.get(d.price_int);
+    if (ft != null && this.lastTs - ft <= this.refillMs) {
+      this.refills.push({ ts: this.lastTs, p: d.price_int });
+      if (this.refills.length > this.eventCap) this.refills.shift();
+    }
   }
 
   applyReplace(d: { order_id: string; price_int: number; size: number }): void {
@@ -118,16 +137,19 @@ export class OrderBook {
     if (!prev) return;
     this.bumpCount(prev.bid, prev.p, -1);
     this.bumpSize(prev.bid, prev.p, -prev.s);
+    // pull ring — displayed size yanked (spoof / fade as price approaches)
+    this.cancels.push({ ts: this.lastTs, p: prev.p, s: prev.s, bid: prev.bid });
+    if (this.cancels.length > this.eventCap) this.cancels.shift();
     this.orders.delete(d.order_id);
   }
 
   // ── tape from trade ──────────────────────────────────────────────────────
   applyTrade(d: {
     price_int: number; price: number; size: number;
-    is_bid_aggressor: boolean; passive_order_id?: string | null;
+    is_bid_aggressor: boolean; passive_order_id?: string | null; aggressor_order_id?: string | null;
   }): void {
     this.tradeEvents++;
-    this.tape.push({ ts: this.lastTs, price: d.price, size: d.size, buy: d.is_bid_aggressor });
+    this.tape.push({ ts: this.lastTs, price: d.price, size: d.size, buy: d.is_bid_aggressor, aggId: d.aggressor_order_id });
     if (this.tape.length > this.tapeCap) this.tape.shift();
     this.cvd += d.is_bid_aggressor ? d.size : -d.size;
     // decrement the resting (passive) order the aggressor hit
@@ -139,6 +161,7 @@ export class OrderBook {
           this.bumpCount(p.bid, p.p, -1);
           this.bumpSize(p.bid, p.p, -p.s);
           this.orders.delete(d.passive_order_id);
+          this.recentFill.set(p.p, this.lastTs);   // arm synthetic-iceberg refill detection at this price
         } else {
           p.s -= d.size;
           this.bumpSize(p.bid, p.p, -d.size); // size shrinks, order remains
@@ -198,6 +221,62 @@ export class OrderBook {
       if (o.cf > o.md || o.ru) { count++; cumFilled += o.cf; }
     }
     return { count, cumFilled };
+  }
+
+  /** Displayed size CANCELLED near a price on a side since a timestamp. High vs the
+   *  resting wall (and vs executed volume) = liquidity being PULLED — spoof / fade. */
+  pullNear(priceInt: number, ticks: number, side: 'bid' | 'ask', sinceMs = 0): number {
+    const want = side === 'bid';
+    let s = 0;
+    for (const c of this.cancels) if (c.bid === want && c.ts >= sinceMs && Math.abs(c.p - priceInt) <= ticks) s += c.s;
+    return s;
+  }
+
+  /** Displayed size ADDED near a price on a side since a timestamp = stacking/conviction. */
+  addsNear(priceInt: number, ticks: number, side: 'bid' | 'ask', sinceMs = 0): number {
+    const want = side === 'bid';
+    let s = 0;
+    for (const a of this.adds) if (a.bid === want && a.ts >= sinceMs && Math.abs(a.p - priceInt) <= ticks) s += a.s;
+    return s;
+  }
+
+  /** Count of fill→quick-resend refill links near a price = synthetic-iceberg / algo
+   *  replenishment (new order_ids cycling at the level). Pairs with the native
+   *  icebergsNear (same-id) — together = "hidden size repeatedly absorbing here". */
+  syntheticRefillsNear(priceInt: number, ticks: number, sinceMs = 0): number {
+    let n = 0;
+    for (const r of this.refills) if (r.ts >= sinceMs && Math.abs(r.p - priceInt) <= ticks) n++;
+    return n;
+  }
+
+  /** SWEEP: a single aggressor order_id clearing ≥3 distinct price levels near here in
+   *  the window → urgency / a break in motion. Returns the biggest single-aggressor span. */
+  sweepNear(priceInt: number, ticks: number, sinceMs = 0): { swept: boolean; dir: 'buy' | 'sell' | null; size: number; levels: number } {
+    const byAgg = new Map<string, { sz: number; prices: Set<number>; buy: boolean }>();
+    for (const t of this.tape) {
+      if (!t.aggId || t.ts < sinceMs || Math.abs(Math.round(t.price / TICK) - priceInt) > ticks) continue;
+      let e = byAgg.get(t.aggId);
+      if (!e) { e = { sz: 0, prices: new Set(), buy: t.buy }; byAgg.set(t.aggId, e); }
+      e.sz += t.size; e.prices.add(Math.round(t.price / TICK));
+    }
+    let best = { swept: false, dir: null as 'buy' | 'sell' | null, size: 0, levels: 0 };
+    for (const e of byAgg.values())
+      if (e.prices.size >= 3 && e.prices.size > best.levels) best = { swept: true, dir: e.buy ? 'buy' : 'sell', size: e.sz, levels: e.prices.size };
+    return best;
+  }
+
+  /** Aggressor CLUSTERING near here: the single most-active aggressor's volume vs the
+   *  total → one committed player (high dominance) vs diffuse retail noise. */
+  aggressorClusterNear(priceInt: number, ticks: number, sinceMs = 0): { topSize: number; total: number; dominance: number } {
+    const byAgg = new Map<string, number>();
+    let total = 0;
+    for (const t of this.tape) {
+      if (!t.aggId || t.ts < sinceMs || Math.abs(Math.round(t.price / TICK) - priceInt) > ticks) continue;
+      byAgg.set(t.aggId, (byAgg.get(t.aggId) ?? 0) + t.size); total += t.size;
+    }
+    let top = 0;
+    for (const v of byAgg.values()) if (v > top) top = v;
+    return { topSize: top, total, dominance: total ? top / total : 0 };
   }
 
   /** Recent tape prints near a price (within ±ticks) since a timestamp. */
