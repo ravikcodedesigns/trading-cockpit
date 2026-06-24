@@ -430,7 +430,13 @@ P1 tasks (NONE wired to the trader; FORWARD shadow is the gate — in-sample gui
    diffusionScale (robust MAD realized-vol on RETURNS, drift-free; sparse 1s sampling for micro-
    structure noise). τ = touch timescale (s), one knob; band auto-scales per-instrument/regime.
    Sweep harness `scripts/sweep_band_tau.ts`: stable plateau τ≈30-90s (band ~6-10pt NQ), default
-   τ=45s on structural stability. REMAINING: confirm τ per-instrument (ES/CL/GC σ differ) + forward.
+   τ=45s on structural stability. REMAINING (sequenced):
+   (a) **NQ FIRST** — backtest/screen the detector across NQ L3 history (full-size 06-16→24 +
+       micros 06-02→24): measure DIST/ACC setup edge (fixed-bracket WIN/LOSS vs a random-level-
+       touch NULL, stratified by day/regime) AND confirm τ=45 holds for NQ on the sweep.
+   (b) **THEN extend to ES / GC / CL** — re-run the τ sweep per instrument (σ differs: ES tighter,
+       CL/GC different scale/tick) and confirm τ / band behavior before enabling each.
+   Forward shadow stays the gate; the backtest is a SCREEN (short history), not validation.
 2. **Baseline λ measured AWAY from levels.** Current rolling baseline is contaminated by at-level
    absorption quotes (06-24 note showed "λ 332% of baseline" while clearly absorbing — the MK
    z-trend path saved it). Compute the prevailing λ from quotes outside any level band.
