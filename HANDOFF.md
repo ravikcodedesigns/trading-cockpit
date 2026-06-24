@@ -1,7 +1,7 @@
 # Trading Cockpit — Handoff Document
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-06-16 (Tuesday) — see **§22** for everything since 2026-06-08
+> **Last updated**: 2026-06-24 (Wednesday) — see **§23** (the project pivoted into the RS-framework / Lightspeed L3 initiative; a level-touch decision engine is mid-build). §22 covers 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
@@ -1332,3 +1332,221 @@ the §22.9 duplication, but did not retroactively dedup the already-polluted sto
 **End of section 22.** Project state as of 2026-06-16 (Tuesday). Last commit
 `e18465a`. Branch `feat/2026-06-16-regime-research-cockpit-levels` with the §22.8
 cockpit-styling batch uncommitted in the working tree.
+
+---
+
+## 23. Changes since 2026-06-16 (→ 2026-06-24) — the RS-framework / Lightspeed L3 initiative
+
+> This supersedes a lot of §1–22. The project's center of gravity moved from the
+> old signal pipeline (FLIP/CONT) to **trading the RS (Rocket Scooter) framework's
+> levels with live L3 order-flow confirmation**. Two shadow systems run live; a
+> **decision engine fusing them is mid-build** (read §23.5 first — it's where an
+> incoming session continues). Branch is still `feat/2026-06-16-regime-research-cockpit-levels`.
+
+### 23.0 TL;DR — the new architecture in one picture
+
+```
+price touches an RS level
+  → the framework ENGINES (EST/LM/ZONE/DD/RDZ/BZ) decide the trade
+      (direction, entry, stop, size, base_prob, bounce-vs-break)   ← rs-engine, §23.2
+  → the live L3 BOOK + context CONFIRM or VETO it                  ← l3 worker, §23.4
+      (icebergs trading-&-refilling = hold; sitting-&-pulled = spoof)
+  → take / skip + size  → shadow-logged, scored nightly            ← decision engine, §23.5
+```
+
+The old FLIP/CONT trader (`§8`, `§22.6`) still runs live on MNQ untouched — this is a
+*separate, parallel* initiative aimed at replacing it once validated.
+
+### 23.1 ⚠️ Read-first — current build state & live gotchas
+
+1. **Decision engine is MID-BUILD and being re-architected (§23.5).** A naïve v1
+   (`771ae29`, standalone scorer that *invents* direction) is committed and running in
+   shadow — **it is WRONG and being replaced**; don't trust its calls. The correct design
+   (engines decide, L3 confirms) is being built: order-flow primitives are DONE; wiring
+   the engines into the worker + the confirmation layer are the next steps.
+2. **`l3-book-worker` reseeds its in-memory book ONLY on process restart** (deploy/crash) —
+   not a bug, no self-reseed. After a restart the L3 cross-check climbs back to ~100% over
+   30–60 min; L2/CVD/tape are accurate immediately, only the L3 implied-gap is rebuilding.
+3. **`daily_levels` single `bullZone`/`bearZone` is often the WRONG zone on gap days** —
+   `rs-levels` picks the "primary" as nearest-to-DD-mid, and DD-mid sits ~1000pt from a
+   gapped price. The **full zone set lives in `entry.zones.bull/bear`** (8 each); the
+   engines use those via `deriveMarketState`, and the l3-worker now watches all of them
+   (`545a236`). Don't trust the single primary zone.
+4. **RANGE chip / `expectedRangePts` is NQ-only for both symbols** (per-symbol EM-band bug)
+   — see BACKLOG. Display-only, harmless.
+
+### 23.2 RS framework ENGINES (`rs-engine`, in `rules-v2/`) — the framework as code
+
+The Rocket Scooter "RS Framework" (manual: `rs-framework/RS_FRAMEWORK_RULES.md`, synthesized
+from transcripts) is encoded as six pure engines, each owning level/zone types with
+multi-criteria entries, position sizing (S/M/L tiers, strong-pivots-small, lmDown), bounce/
+break classification, base probabilities, and LM-agreement:
+
+| Engine | File | Owns |
+|--------|------|------|
+| EST | `rules-v2/est-engine.ts` | MHP/HP/DD/liquidity-pocket touches (EST-agreement; mostly longs) |
+| LM | `rules-v2/lm-engine.ts` | LM-code playbook legs (Light_1), per-code odds |
+| ZONE | `rules-v2/zone-engine.ts` | sandwich / zone-combination setups |
+| DD | `rules-v2/dd-engine.ts` | DD-band setups (lower-long / upper-short) |
+| RDZ | `rules-v2/rdz-engine.ts` | half-gap / redistribution zone (Mode I + II gap-hold/fade) |
+| BZ | `rules-v2/bz-engine.ts` | bull/bear-zone × DD-ratio matrix (open-zone × DD) |
+
+- `rules-v2/derive-market-state.ts` builds the `MarketState` (price + full levels + rs-context)
+  the engines consume.
+- **Shadow harness** `scripts/rs-shadow.ts` runs all six every ~15s during RTH →
+  `data/rs-shadow.db` table `shadow_setups` (family, pivot, direction, size_tier, level,
+  entry, stop, targets, bounce_vs_break, base_prob, gate_mode, the 3 resiliences, gm, lm,
+  lm_agrees, …). `scripts/rs-shadow-resolve.ts` resolves outcomes post-close.
+- Per-engine test scripts: `scripts/test_{est,lm,zone,dd,rdz,bz}.ts`.
+- launchd: `com.cockpit.rs-shadow`.
+
+### 23.3 RS platform feed (Rocket Scooter, PASSIVE read of debug Chrome :9333)
+
+The platform (rocket.place/pro-plus) is read **passively** via Chrome DevTools Protocol —
+NEVER call their API (hard boundary).
+
+- `com.cockpit.rs-chrome` (`scripts/launchd/rs-chrome-guard.sh`) keeps a debug Chrome up on
+  **:9333** with a persistent profile (`~/.rs-chrome-profile`), RTH-gated. **To start it
+  off-hours: `nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  --remote-debugging-port=9333 --user-data-dir="$HOME/.rs-chrome-profile" … &`.**
+- `com.cockpit.rs-feed` (`scripts/rs-feed.js`) — every 5s RTH, CDP reads resiliences + DD +
+  ETF/MHP + VX/VVIX → `data/rs-context.json`.
+- `com.cockpit.rs-levels` (`scripts/rs-levels.js`) — once at **09:32** + the new MM job:
+  scrapes the TV-widget shapes (zones/levels) + LM code (`.liq-map-image-text`) + Monthly-Map
+  (1D chart rectangles) → `daily_levels{,_es}.json` + `mmBullish`/`lmCode` into rs-context.
+  Hardened this session (`34e9c00`,`65d2156`): **retries until every derived value is non-null**
+  (the 09:32 open-time read used to return null and leave the prior day's stale value).
+- `com.cockpit.rs-mm` (`scripts/launchd/rs-mm.sh`, `MM_ONLY=1`) — **every 30 min RTH**,
+  re-reads only LM+MM so the Monthly-Map tracks price moving into/out of gamma zones intraday
+  (`11e1a1f`).
+- **Auto Greater-Market**: `gm = bull` if ANY of (DD>0.5, index-ETF>its MHP, MM-bull); only
+  all-three-bearish ⇒ bear (the framework's long-bias). Computed in `rs-context.ts:getContext`.
+- **KEY data-source finding (memory `project_rs_marketstate_vs_dom`):** the live RS data is in
+  **`RS_SOCK.scanner.MASTER_TABLE.data`** (per-ticker; `.QQQ`→NQ, `.SPY`→ES): `CPbook`=LM code,
+  `man_MHP`=the GM MHP threshold, `monthly_map`=8 expiry columns of gamma walls. `RS_SOCK.resil.
+  marketState` is a **null transient getter — dead end**. Probe scripts: `scripts/rs_probe.js`,
+  `scripts/rs_marketstate_compare.js`. Switching LM/MHP/MM reads onto MASTER_TABLE (no DOM/chart-
+  flip) is **BACKLOG #8** (parked — works fine via DOM at ~1ms).
+
+### 23.4 L3 live tape + book worker (Lightspeed) — `src/l3/`
+
+- `src/l3/log-tailer.ts` — tails the live Bookmap MBO `.log` (200ms poll, sub-second; not the
+  20–60s parquet flush).
+- `src/l3/order-book.ts` — per-symbol L2 (depth) + L3 (MBO order-by-order) reconstruction.
+  Now also: **per-order iceberg** (`icebergsNear`: cf>displayed or replace-up = native refill)
+  and **order-flow primitives** (`pullNear`, `addsNear`, `syntheticRefillsNear`, `sweepNear`,
+  `aggressorClusterNear`) — see §23.5. `crossCheck()` = how well L3 matches the L2 ladder.
+- `scripts/l3-book-worker.ts` (`com.cockpit.l3-book-worker`) — continuous, KeepAlive. Tails
+  **full-size NQU6 + ESU6**, maintains the live book, loads the RS levels, and on each touch
+  writes a confluence snapshot → `data/l3-shadow.db` table `l3_level_snapshots`. Now also runs
+  the decision engine (§23.5). Strategy: **analyze full-size NQ/ES, execute micros** (memory
+  `project_l3_live_tape`). Watches ALL zones now (`545a236`).
+
+### 23.5 ⭐ Decision engine — the live-trading core (MID-BUILD, read this to continue)
+
+**The vision (agreed with Ravi):** the **engines own the trade** (direction/setup/size from the
+framework); **L3 + context are a confirm/veto/size layer only — they never pick direction.** At a
+touch, the engine for that level produces the thesis, then the live order-flow decides whether to
+*take it now* or *skip* (and the orderflow is the powerhouse — it's the final arbiter).
+
+**Scoping:** RS levels ONLY (MHP/HP/BZB/BrZT/DD/zones). Structural levels (onPOC/VAH/VAL/PDH/…)
+are snapshot-only. The gate is natural: **the decision fires only where an engine produces a
+setup** — structural touches yield no thesis.
+
+**The confirmation principle (the core idea):** what matters is **"is hidden size actually
+TRADING-and-replenishing here, or is displayed size being PULLED before it trades?"** — not the
+iceberg *type*. Detect **both** native (same-id refill) and synthetic (new-id refill chain)
+icebergs; gate reliability by execution + the spoof filter (cancel-on-approach, cancel/trade
+ratio). A level absorbing heavy aggression while refilling and holding = real institutional
+defense; a wall that sits and gets cancelled = spoof.
+
+**Build sequence & where we are:**
+1. ✅ **Order-flow primitives** in `order-book.ts` (`0a687d2`): pull/spoof, stacking, synthetic-
+   iceberg refill-chain, sweep (one aggressor clearing ≥3 levels), aggressor-clustering — plus
+   the existing native iceberg / implied-gap / CVD-slope / wall / absorption. Smoke-tested.
+2. ⏭️ **NEXT: wire the six engines into the worker** — at a touch, build `MarketState` (use the
+   same `rs-context.ts` + a raw `DailyLevels` loader rs-shadow uses, to avoid drift), run all six
+   engines, collect setups AT the touched level = the thesis; measure **confluence** (multiple
+   engines agreeing + stacked levels = strength). Log the thesis before adding confirmation.
+3. **Confirmation engine** — REWRITE `src/l3/decision-engine.ts` (currently the naïve v1 scorer)
+   into `confirm(thesis, l3Read, context) → {verdict, size, invalidation, breakForming, diagnostic}`.
+4. **Rich diagnostics + "break forming"** — when a bounce thesis is invalidated by a clean break,
+   log a detailed narrative ("EST+ZONE+BZ fired long-bounce at BZB; orderflow INVALIDATED: CVD −180,
+   wall pulled 40%, sell-sweep through; break-down forming, trigger/target …"). Ravi wants these
+   as detailed as possible. v1 = log-only, do NOT auto-trade the break.
+5. **Resolver upgrade** — score engine-alone vs engine+L3-confirmed to measure what the L3 adds.
+
+**Current shadow plumbing (running now):**
+- `data/l3-shadow.db` table **`l3_decisions`** — one decision per touch episode (action/setup/size/
+  score + the L3 read incl. `icebergs` + full rs-context + `reasons`/`vetoes` JSON + outcome cols).
+  Fired by the worker's touch-episode tracker (one per visit, re-arm on leave; 90s CVD-slope ring).
+- `scripts/l3-decision-resolve.ts` + `com.cockpit.l3-resolve` (16:35 ET Mon–Fri) — walks each
+  long/short decision forward to a fixed bracket (NQ 40/40, ES 10/10) → WIN/LOSS/OPEN, `pnl_pts`.
+- Reminder `com.cockpit.reminder-l3-scorecard` fires **2026-06-30 16:45 ET** to review the week's
+  scorecard and tune weights before wiring to the trader. **Nothing is wired to the trader.**
+- Experiment scripts (touch-by-touch L3 replays, no-lookahead walk-forward): `scripts/
+  exp_l3_touches_0618.py`, `exp_l3_rs_touches.py`, `exp_l3_0623_touches.py`, `exp_l2_bmd_vs_cqg.py`.
+
+**Validated findings from the week's replays (06-18, 06-23):** the *static* L3 wall/iceberg snapshot
+did NOT separate winners from losers; **CVD context (level + slope) did**, and big static walls
+*trapped* (06-23 ES DD-lower: 650-lot wall → lost). So the confirmation must weight CVD-context +
+absorption-that-trades, and treat big sitting walls with suspicion.
+
+### 23.6 Cockpit + levels
+
+- Regime header: `RSContextBar.tsx` (GM/LM/VX/BBB/VVIX/DD/ETF chips + the RANGE/EM chip),
+  `DayRegime.tsx` (the **DAY badge** next to the kill-switch: `BULLISH/BEARISH·CALM/STRESSED`,
+  polls `/context/rs` every 30s). RS zone bands shaded; EM ±1σ/2σ lines.
+- Levels: RS levels decoupled from the structural cron; **ON HP/ON MHP transcribed manually**
+  (cyan=ON HP, orange=ON MHP, from `LEVEL_STYLES`); EM bands via `scripts/compute_expected_move.js`.
+  Both files carry a single `bullZone`/`bearZone` (often the wrong primary — §23.1) AND the full
+  `zones.bull/bear` arrays.
+
+### 23.7 Pipeline / trader (the OLD live system — still running, MNQ)
+
+- `39fc52a` trap→flip-long veto (skip flip-longs after a same-dir trap; `FLIP_TRAP_VETO=off` reverts).
+- `800db58` cvdLongFloor tightened −3000 → **−1000**.
+- `53119fa` roll-aware front-month resolver. Contract rolled M6→U6 (and a Sep roll reminder exists).
+- Trader unchanged: live MNQ, clean-impulse + cont-reentry, −$1000 cap. See §8 / §22.6.
+
+### 23.8 Data / infra
+
+- **MBO + ticks → Parquet/DuckDB**: SQLite mbo-ingest retired (`934961a`); ticks→parquet nightly
+  (`0c933d3`); store deduped + converter hardened (`27b40dc`, `0c5005e` — see §22.9).
+- **Two data providers** (memory worth knowing): **BMD** (BookmapData) streams full-size NQ/ES +
+  micros → the `.log` capture (L2+L3, all four). **CQG** streams the micros' L2 → `ticks.db` via
+  `cockpit_addon.py` (provider-stripped, MNQ→`NQ`/MES→`ES`). ticks.db = CQG micro L2; `.log`/parquet
+  = BMD. BMD vs CQG L2 agree within 1 tick ~81–97% (`exp_l2_bmd_vs_cqg.py`).
+- **Aggregator wedge incident (06-23):** the aggregator event-loop deadlocked at the open (all HTTP
+  hung, port still listening). Recovery: hot-reload via `touch apps/aggregator/src/index.ts` (it runs
+  under `tsx watch`). Root cause unknown — output isn't logged (runs under interactive `pnpm dev`);
+  adding a file log would make it diagnosable.
+
+### 23.9 Immediate next-steps for an incoming session
+
+1. **Continue the decision-engine build at §23.5 step 2** — wire the six engines into the worker, then
+   the confirmation layer, then rich diagnostics. This is the active task.
+2. **2026-06-30:** review the `l3_decisions` scorecard (`SELECT action,outcome,COUNT(*),SUM(pnl_pts)
+   FROM l3_decisions GROUP BY action,outcome`) and tune the engine confirmation weights.
+3. Verify the live infra each session: `launchctl list | grep cockpit`; rs-context fresh
+   (`data/rs-context.json` mtime <10s during RTH); Rocket Scooter open in Chrome :9333; trader
+   Tradovate WS connected.
+4. **Don't** trust the v1 decision-engine calls or the single `bullZone`/`bearZone` (§23.1).
+
+### 23.10 New launchd jobs / DBs / memories since §22
+
+- **launchd (new):** `rs-shadow`, `rs-feed`, `rs-chrome`, `rs-levels`, `rs-mm`, `l3-book-worker`,
+  `l3-resolve`, `parquet-compaction`, `structural-levels-evening`, `reminder-l3-scorecard`,
+  `reminder-contract-roll`. (Full list: `launchctl list | grep cockpit`.)
+- **DBs (new):** `data/rs-shadow.db` (`shadow_setups`), `data/l3-shadow.db` (`l3_level_snapshots`,
+  `l3_decisions`), `data/regime_shadow.db` (regime gate research). `shadow_trades` table added to
+  `trading.db` (structural-level shadow-trader, §22.5).
+- **Key new memories:** `project_rs_framework_manual`, `project_rs_platform_feed`,
+  `project_rs_gm_lm_method`, `project_level_autotrader`, `project_l3_live_tape`,
+  `project_rs_marketstate_vs_dom`, `project_trap_signals`, `project_vol_regime`, `project_vwap_reversal`.
+
+---
+
+**End of section 23.** Project state as of 2026-06-24 (Wednesday), last commit `0a687d2`. The
+active task is the decision-engine rebuild (§23.5) — engines decide, L3 confirms. Nothing in this
+initiative is wired to the live trader yet.
