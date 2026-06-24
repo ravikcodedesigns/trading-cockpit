@@ -417,16 +417,20 @@ tests) + `episode-tracker.ts` (8 integration tests) + 06-24 offline replay proof
 `~/.claude/plans/cheerful-watching-muffin.md` and the `project_dda_detector` memory.
 
 06-24 replay: **DISTRIBUTION-short PROVEN** (29800 @11:44 + 29775 @12:00 ET, conf 1.0, caught
-the top ~1h before the 400pt slide). **Accumulation MISSED** at the ~29380 bottom — root-caused.
+the top ~1h before the 400pt slide).
+
+Since-P0 (committed): **reclaim/rejection gate** (71257b6) — accum/dist now keyed on retest EXIT
+direction not extreme trend, so SPRINGS (lower-low reclaim) + UPTHRUSTS (higher-high reject) are
+caught (the 06-24/MHP shape was a spring the old gate couldn't see); symmetric, synthetic-tested.
+**Diffusion band** (977bf87) — see item 1.
 
 P1 tasks (NONE wired to the trader; FORWARD shadow is the gate — in-sample guilty until proven):
-1. **Band-sensitivity / detrended vol (the proven flaw).** `band = 0.33×halfRange(120 mids)`
-   conflates trend with volatility: after the 400pt decline the buffer still held the drift, so
-   the band ballooned ~50-66pt and ENGULFED the bottoming range → 0 retests counted at the bottom
-   (which had ~5 real floor touches). Fix = detrended / returns-based / short-window vol, BUT it
-   has a real tradeoff (too wide = engulf; too narrow = every wiggle is a retest = the correlated-
-   sample inflation returns). Sweep it, re-validate the 06-24 bottom flags ACCUMULATION WITHOUT
-   over-firing elsewhere. Do NOT tune to the one known bottom (backfit — cf. VWAP/CVD kills).
+1. **Band estimator — FORM FIXED (977bf87), forward-validation remains.** Old `0.33×halfRange`
+   conflated trend with vol → engulfed retest zones in moves. Now `band = BAND_K·σ·√τ`, σ =
+   diffusionScale (robust MAD realized-vol on RETURNS, drift-free; sparse 1s sampling for micro-
+   structure noise). τ = touch timescale (s), one knob; band auto-scales per-instrument/regime.
+   Sweep harness `scripts/sweep_band_tau.ts`: stable plateau τ≈30-90s (band ~6-10pt NQ), default
+   τ=45s on structural stability. REMAINING: confirm τ per-instrument (ES/CL/GC σ differ) + forward.
 2. **Baseline λ measured AWAY from levels.** Current rolling baseline is contaminated by at-level
    absorption quotes (06-24 note showed "λ 332% of baseline" while clearly absorbing — the MK
    z-trend path saved it). Compute the prevailing λ from quotes outside any level band.
