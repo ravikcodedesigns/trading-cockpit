@@ -1359,11 +1359,14 @@ The old FLIP/CONT trader (`§8`, `§22.6`) still runs live on MNQ untouched — 
 
 ### 23.1 ⚠️ Read-first — current build state & live gotchas
 
-1. **Decision engine is MID-BUILD and being re-architected (§23.5).** A naïve v1
-   (`771ae29`, standalone scorer that *invents* direction) is committed and running in
-   shadow — **it is WRONG and being replaced**; don't trust its calls. The correct design
-   (engines decide, L3 confirms) is being built: order-flow primitives are DONE; wiring
-   the engines into the worker + the confirmation layer are the next steps.
+1. **Decision engine — engines-decide / L3-confirms architecture is BUILT & shadow-running
+   (`cc8e376`, §23.5).** At each RS-level touch the framework engines produce the thesis
+   (`engine-thesis.ts:buildThesis`) and the L3 layer confirms/vetoes it (`decision-engine.ts:
+   confirm`), logging to `l3_trade_decisions` with a rich diagnostic + "break forming" flag.
+   The old naïve v1 scorer (`771ae29`) is **replaced** (its `l3_decisions` table is dead).
+   Validated end-to-end; **shadow only, NOT wired to the trader.** The nightly resolver
+   (`l3-trade-resolve.ts`, `com.cockpit.l3-resolve` 16:35) scores engine-alone vs engine+L3;
+   review **2026-06-30** and tune `decision-engine.ts` weights (the `C` constants) before arming.
 2. **`l3-book-worker` reseeds its in-memory book ONLY on process restart** (deploy/crash) —
    not a bug, no self-reseed. After a restart the L3 cross-check climbs back to ~100% over
    30–60 min; L2/CVD/tape are accurate immediately, only the L3 implied-gap is rebuilding.
@@ -1460,21 +1463,19 @@ icebergs; gate reliability by execution + the spoof filter (cancel-on-approach, 
 ratio). A level absorbing heavy aggression while refilling and holding = real institutional
 defense; a wall that sits and gets cancelled = spoof.
 
-**Build sequence & where we are:**
-1. ✅ **Order-flow primitives** in `order-book.ts` (`0a687d2`): pull/spoof, stacking, synthetic-
-   iceberg refill-chain, sweep (one aggressor clearing ≥3 levels), aggressor-clustering — plus
-   the existing native iceberg / implied-gap / CVD-slope / wall / absorption. Smoke-tested.
-2. ⏭️ **NEXT: wire the six engines into the worker** — at a touch, build `MarketState` (use the
-   same `rs-context.ts` + a raw `DailyLevels` loader rs-shadow uses, to avoid drift), run all six
-   engines, collect setups AT the touched level = the thesis; measure **confluence** (multiple
-   engines agreeing + stacked levels = strength). Log the thesis before adding confirmation.
-3. **Confirmation engine** — REWRITE `src/l3/decision-engine.ts` (currently the naïve v1 scorer)
-   into `confirm(thesis, l3Read, context) → {verdict, size, invalidation, breakForming, diagnostic}`.
-4. **Rich diagnostics + "break forming"** — when a bounce thesis is invalidated by a clean break,
-   log a detailed narrative ("EST+ZONE+BZ fired long-bounce at BZB; orderflow INVALIDATED: CVD −180,
-   wall pulled 40%, sell-sweep through; break-down forming, trigger/target …"). Ravi wants these
-   as detailed as possible. v1 = log-only, do NOT auto-trade the break.
-5. **Resolver upgrade** — score engine-alone vs engine+L3-confirmed to measure what the L3 adds.
+**Build sequence — ALL DONE (`cc8e376`, `0a687d2`):**
+1. ✅ **Order-flow primitives** (`order-book.ts`): pull/spoof, stacking, synthetic-iceberg refill-
+   chain, sweep, aggressor-clustering + native iceberg / implied-gap / CVD-slope / wall / absorption.
+2. ✅ **Engines into the worker** — `engine-thesis.ts:buildThesis(ms, level)` runs all six engines at
+   a touch, combines the setups AT the level into a thesis (direction/bounce-break/size/base_prob/
+   LM-agree + confluence/conflict). Worker builds `MarketState` via the same `rs-context.ts` +
+   `readDailyLevels` rs-shadow uses. Fires ONLY when an engine produces a setup (RS-levels gate).
+3. ✅ **Confirmation engine** — `decision-engine.ts:confirm(thesis, l3, ctx)` → `{verdict, size,
+   confirmationScore, confirms, invalidations, breakForming, diagnostic}`. Respects the framework Gate.
+4. ✅ **Rich diagnostics + break-forming** — full narrative per decision; `breakForming` flagged when a
+   bounce is killed by a clean opposite break. Log-only (NOT auto-traded).
+5. ✅ **Resolver** — `l3-trade-resolve.ts`: engine-alone vs engine+L3 scorecard (skips: losers saved
+   vs winners missed). **NEXT: shadow the week → 2026-06-30 review → tune the `C` weights → arm.**
 
 **Current shadow plumbing (running now):**
 - `data/l3-shadow.db` table **`l3_decisions`** — one decision per touch episode (action/setup/size/
