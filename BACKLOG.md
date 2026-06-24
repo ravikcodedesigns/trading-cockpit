@@ -336,6 +336,32 @@ CVD (last 15–30m), CVD position within day's CVD hi/lo, VXN/expected-range-sca
    bear-GM days). Quantify before changing anything live; keep shadow.
 
 **OUTCOME (2026-06-18) — backtested, nothing beat the floor; LEAVING −1000/+3000 UNCHANGED.**
+
+---
+
+## 8. RS feed: source LM / MHP (and MM) from MASTER_TABLE, not the DOM/chart (enhancement)
+
+**Status:** PARKED 2026-06-23 — low value right now; do when adding enhancements.
+
+**Why:** rs-feed/rs-levels read the LM code from the DOM (`.liq-map-image-text`) and the
+Monthly-Map by flipping the 1D chart and scraping rendered rectangles — both fragile (the
+09:32 open-time chart read returns null; patched with retries + a 30-min MM job). The same
+data sits in a stable in-page JS object.
+
+**Found (2026-06-23, live, passive CDP :9333):** `RS_SOCK.scanner.MASTER_TABLE.data` —
+per-ticker, retained; `.QQQ` → NQ, `.SPY` → ES. Holds it directly: `CPbook` = LM code
+(matches rs-context `lmCode`), `man_MHP` = the GM MHP threshold (= `qqqMhp`/`spyMhp`),
+`monthly_map` = 8 expiry columns of raw gamma walls. `RS_SOCK.resil.marketState` is a null
+transient getter — dead end. See [[project_rs_marketstate_vs_dom]].
+
+**What's involved:** (a) read LM from `CPbook` and MHP from `man_MHP` — drops the DOM scrape
+AND the 1D chart flip for LM (eliminates the flaky open-time failure). Mechanical: both
+already match live. (b) MM: derive from `monthly_map` (candidate rule: price below the
+call-wall floor = bearish; fits 06-23) — but VALIDATE against computeMM's rendered-rectangle
+read over several sessions incl. a bullish day before switching MM off the chart.
+
+**Gate:** LM/MHP — confirm `CPbook`/`man_MHP` track live for a few days, then swap. MM —
+`monthly_map` formula must match computeMM ≥ N sessions. No speed urgency (DOM read ≈ 1 ms).
 First-pass on 171 resolved NQ FLIP/CONT signals (cvd backfilled from tape; scripts:
 `cvd_ratio_backtest.cjs`, `cvd_ratio_traintest.cjs`, `feature_scan.cjs`, `alignment_validate.cjs`):
 - **Relative CVD ratio** — clean *in-sample* monotonic (long WR 39→75% by quintile) but **failed
@@ -348,3 +374,68 @@ First-pass on 171 resolved NQ FLIP/CONT signals (cvd backfilled from tape; scrip
 ship a relative/alignment gate on this sample. Revisit only with a much larger FORWARD sample and
 regime-conditioning. The level auto-trader should rely on **level + regime structure**, not bar
 features, and be validated forward — not backfit. See [[project_level_autotrader]].
+
+---
+
+## 9. Cockpit: Opening Bias as a collapsible button before REGIME (UI — needs proper fix)
+
+**Want:** a clickable **OPEN BIAS** button in the chart control bar, placed **before the REGIME
+button**, that expands a small table (09:29 Gap · 09:31 Bar1 % · 09:33 CVD3 · BIAS) and collapses
+on a second click. No extra label on top, each row on a single line.
+
+**Status 2026-06-24:** ATTEMPTED, REVERTED. The cockpit is back to the original **always-on**
+`<OpeningBias>` overlay (`Chart.tsx`, rendered right after the control-button IIFE, inside the
+top-left column overlay at `~3001`). The `whiteSpace:'nowrap'` fix on the OpeningBias panel root
+was kept (harmless). REGIME's toggle pattern is the model to mirror (`activePanel` state at
+`Chart.tsx:544`; button + dropdown at the `// ── REGIME ──` block; `ctrlBtn(color, active)` style
+helper defined in the IIFE).
+
+**What went wrong (the actual bug to fix):** moving `<OpeningBias>` into a button-toggled dropdown
+broke it. When mounted *fresh on click* (`{activePanel==='bias' && <OpeningBias/>}`) it rendered
+`null` — i.e. `computeBias` returned `gapPts===null && bar1Pos===null` in the browser, even though
+the CLI proves the data is there (`/history/bars?symbol=NQ&minutes=600&interval=1` → 600 bars,
+todayBars=3, bar1Pos=0.57). Switching to **always-mounted + `display` toggle** made it render
+intermittently, but the user still saw "not working" / blank on repeated tries. So the root cause
+is NOT the data — it's `OpeningBias`'s mount/timing behavior in the dropdown context
+(barHistoryRef population? the `[symbol, barsVersion]` effect not firing/ resolving on a fresh mount
+in a `display:none` parent? an HMR-stale render?). **Diagnose live in the browser** (console + React
+devtools): when mounted in the dropdown, log `dbg = bars/today/histSize` and `result` to see which
+is null and why, vs the always-on instance which computes fine.
+
+**Cleanest likely fix:** keep `<OpeningBias>` exactly where it works (always-mounted, computes on
+load) and only **toggle its visibility** via `activePanel` — but verify in-browser that the toggled
+instance is the *same* mounted instance, not a remount. The button lives in the control bar; the
+panel can render in place (top-left column) gated by `display`. Avoid conditional `&&` mount.
+
+**Gate:** clicking OPEN BIAS reliably shows/hides the identical table the always-on overlay shows,
+no label, one line per row — verified across a hard refresh and symbol switches (NQ/ES).
+
+## 10. DDA detector — P1 band-sensitivity + shadow wiring (after P0, 2026-06-24)
+
+P0 done+committed (0a45294/d5d0a7a/84fdcf3): `divergence.ts` (Kyle λ/OFI/MK/CUSUM, 21 unit
+tests) + `episode-tracker.ts` (8 integration tests) + 06-24 offline replay proof. See
+`~/.claude/plans/cheerful-watching-muffin.md` and the `project_dda_detector` memory.
+
+06-24 replay: **DISTRIBUTION-short PROVEN** (29800 @11:44 + 29775 @12:00 ET, conf 1.0, caught
+the top ~1h before the 400pt slide). **Accumulation MISSED** at the ~29380 bottom — root-caused.
+
+P1 tasks (NONE wired to the trader; FORWARD shadow is the gate — in-sample guilty until proven):
+1. **Band-sensitivity / detrended vol (the proven flaw).** `band = 0.33×halfRange(120 mids)`
+   conflates trend with volatility: after the 400pt decline the buffer still held the drift, so
+   the band ballooned ~50-66pt and ENGULFED the bottoming range → 0 retests counted at the bottom
+   (which had ~5 real floor touches). Fix = detrended / returns-based / short-window vol, BUT it
+   has a real tradeoff (too wide = engulf; too narrow = every wiggle is a retest = the correlated-
+   sample inflation returns). Sweep it, re-validate the 06-24 bottom flags ACCUMULATION WITHOUT
+   over-firing elsewhere. Do NOT tune to the one known bottom (backfit — cf. VWAP/CVD kills).
+2. **Baseline λ measured AWAY from levels.** Current rolling baseline is contaminated by at-level
+   absorption quotes (06-24 note showed "λ 332% of baseline" while clearly absorbing — the MK
+   z-trend path saved it). Compute the prevailing λ from quotes outside any level band.
+3. **Wire as a shadow emitter** into `l3-book-worker.ts` (source='episode', off the hot path) +
+   `l3-decision-worker.ts` (new branch, returns early; confirm/veto at RS, primary at structural,
+   NO override) → `l3_episode_*` tables + walk-forward (reuse the FLIP/CONT shadow shape). Regression
+   check: RS touches still log to l3_trade_decisions, FLIP/CONT to l3_signal_validations, unchanged.
+4. **Complementary single-event path** for sharp V-reversals / no-retest run-away breakouts (the
+   episode machinery is multi-retest by design and does NOT cover these — often the biggest moves).
+
+P2: decisiveness-gated override at non-sacred levels, ONLY after the distribution precision is
+forward-proven. DD-lower never inverts (sacred — veto only).
