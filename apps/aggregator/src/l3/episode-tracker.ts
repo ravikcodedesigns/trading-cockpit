@@ -30,6 +30,11 @@ const CFG = {
   NEAR_TICKS: 16,      // tape window for absorbed volume
   K_RETESTS: 3,        // min retests before classifying (need a sequence)
   BAND_FRAC: 0.33,     // band = BAND_FRAC × half the recent mid range  (volatility-scaled)
+                       // KNOWN LIMITATION (06-24 replay): halfRange-of-mids conflates TREND with
+                       // volatility — after a big directional move the buffer still holds the drift,
+                       // so the band balloons and ENGULFS a subsequent retest zone (it missed the
+                       // 06-24 accumulation bottom for this reason). P1 band-sensitivity work: a
+                       // detrended / returns-based vol, weighing engulfing vs correlated-retest churn.
   MIN_BAND_TICKS: 2,   // band floor in ticks (quiet markets)
   STALE_MS: 20 * 60_000, // END the episode if the level isn't retested for this long (NOT a distance —
                        // a distance reset fights the band: a normal intra-range pullback would kill the sequence)
