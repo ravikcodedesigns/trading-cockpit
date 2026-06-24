@@ -118,12 +118,21 @@ db.exec(`CREATE TABLE IF NOT EXISTS l3_touch_events (
   ts_ms INTEGER, ts_et TEXT, trading_day TEXT,
   symbol TEXT, level_label TEXT, level_kind TEXT, level_price REAL,
   mid REAL, dist_ticks REAL, l3_json TEXT,
-  processed INTEGER DEFAULT 0
+  processed INTEGER DEFAULT 0,
+  source TEXT DEFAULT 'rs',   -- 'rs' = RS-level touch (existing path) | 'signal' = FLIP/CONT tradable
+  sig_json TEXT               -- signal metadata for source='signal' (direction/pattern/action/qualified)
 )`);
+// the table may pre-date the source/sig_json columns (CREATE IF NOT EXISTS won't add them)
+for (const col of ["source TEXT DEFAULT 'rs'", 'sig_json TEXT'])
+  try { db.exec(`ALTER TABLE l3_touch_events ADD COLUMN ${col}`); } catch { /* exists */ }
 db.exec('CREATE INDEX IF NOT EXISTS idx_touch_unprocessed ON l3_touch_events(processed, id)');
 const insTouch = db.prepare(`INSERT INTO l3_touch_events
   (ts_ms,ts_et,trading_day,symbol,level_label,level_kind,level_price,mid,dist_ticks,l3_json)
   VALUES (@ts_ms,@ts_et,@trading_day,@symbol,@level_label,@level_kind,@level_price,@mid,@dist_ticks,@l3_json)`);
+// signal touches carry source='signal' + sig_json; RS touches use insTouch above (source defaults 'rs')
+const insSignalTouch = db.prepare(`INSERT INTO l3_touch_events
+  (ts_ms,ts_et,trading_day,symbol,level_label,level_kind,level_price,mid,dist_ticks,l3_json,source,sig_json)
+  VALUES (@ts_ms,@ts_et,@trading_day,@symbol,@level_label,@level_kind,@level_price,@mid,@dist_ticks,@l3_json,'signal',@sig_json)`);
 
 // ── builder→decider PUSH: a UDS the decision-worker connects to; on each touch we
 //    nudge it (1 byte) so it processes the new row instantly — no polling window. ──
@@ -195,8 +204,10 @@ function cvdSlope(st: SymState, now: number): number {
 // the in-memory book (both sides + cvd/sweep/cluster), queue it, and nudge the decision-
 // worker. The engines + confirmation run in that SEPARATE process — so restarting the
 // decision logic never touches this book.
-function emitTouch(st: SymState, lv: RsLevel, distTicks: number, mid: number, slope: number, now: number): void {
-  const lvInt = st.book.intFromPrice(lv.price);
+// The direction-agnostic L3 read at a price (both sides + cvd/sweep/cluster). Shared by
+// the RS touch path (emitTouch) and the FLIP/CONT signal path (pollSignals) so both read
+// the book IDENTICALLY — the signal path adds no new microstructure, it reuses this.
+function computeRead(st: SymState, lvInt: number, slope: number, now: number) {
   const since = now - TAPE_WINDOW_MS;
   const sideRead = (side: 'bid' | 'ask') => {
     const w = st.book.depthNear(lvInt, WALL_TICKS, side);
@@ -213,12 +224,16 @@ function emitTouch(st: SymState, lv: RsLevel, distTicks: number, mid: number, sl
   for (const p of st.book.tapeNear(lvInt, NEAR_TICKS, since)) { executedNear += p.size; if (p.buy) aggrBuy += p.size; else aggrSell += p.size; }
   const sweep = st.book.sweepNear(lvInt, NEAR_TICKS, since);
   const cluster = st.book.aggressorClusterNear(lvInt, NEAR_TICKS, since);
-  const l3 = {
+  return {
     bid: sideRead('bid'), ask: sideRead('ask'),
     cvd: st.book.cvd, cvd60: Math.round(slope), aggrBuy, aggrSell, executedNear,
     sweep: { swept: sweep.swept, dir: sweep.dir, levels: sweep.levels, size: sweep.size },
     cluster: { dominance: +cluster.dominance.toFixed(3) },
   };
+}
+
+function emitTouch(st: SymState, lv: RsLevel, distTicks: number, mid: number, slope: number, now: number): void {
+  const l3 = computeRead(st, st.book.intFromPrice(lv.price), slope, now);
   insTouch.run({
     ts_ms: now, ts_et: etTime(now), trading_day: etDate(now),
     symbol: st.sym, level_label: lv.label, level_kind: lv.kind, level_price: lv.price,
@@ -330,6 +345,56 @@ function reloadLevels(): void {
   }
 }
 
+// ── SIGNAL VALIDATION FEED — observe FLIP/CONT tradables (incl. qualified-but-skipped) and
+//    emit a signal touch so the decider tags them VALID/INVALID. PURE OBSERVER: read-only on
+//    trading.db, writes only to l3_touch_events (source='signal'). Never touches the trader,
+//    the signal pipeline, or the RS-level path. ──
+const TRADING_DB = path.join(ROOT, 'data', 'trading.db');
+let tdb: import('better-sqlite3').Database | null = null;
+try { tdb = new Database(TRADING_DB, { readonly: true, fileMustExist: true }); } catch { tdb = null; }
+// resume from the last signal we enqueued; first ever run starts at the current head (no
+// backfill). L3_SIGNAL_FROM=<id> forces re-processing from a given signal_id (test/backfill).
+let lastSignalId: number = (() => {
+  if (process.env.L3_SIGNAL_FROM) return Number(process.env.L3_SIGNAL_FROM);
+  const a = db.prepare("SELECT MAX(CAST(json_extract(sig_json,'$.signal_id') AS INTEGER)) m FROM l3_touch_events WHERE source='signal'").get() as { m: number | null };
+  if (a?.m != null) return a.m;
+  try { const b = tdb?.prepare('SELECT MAX(signal_id) m FROM tradable_signals').get() as { m: number | null }; return b?.m ?? 0; } catch { return 0; }
+})();
+const selNewSignals = tdb?.prepare(`SELECT signal_id, signal_ts, symbol, pattern, direction, entry, qualified, action
+  FROM tradable_signals
+  WHERE signal_id > ? AND pattern IN ('FLIP','CONT') AND (qualified=1 OR action='OPEN')
+    AND symbol IN ('NQ','ES') AND entry IS NOT NULL
+  ORDER BY signal_id LIMIT 200`);
+
+function pollSignals(): void {
+  if (!tdb || !selNewSignals) return;
+  let rows: any[];
+  try { rows = selNewSignals.all(lastSignalId) as any[]; } catch { return; }
+  if (!rows.length) return;
+  const now = Date.now();
+  let emitted = 0;
+  for (const r of rows) {
+    lastSignalId = Math.max(lastSignalId, r.signal_id);
+    const st = states.find((s) => s.sym === r.symbol);
+    const bbI = st?.book.bestBid(), baI = st?.book.bestAsk();
+    if (!st || bbI == null || baI == null) continue;   // book not ready for this symbol
+    try {
+      const lvInt = st.book.intFromPrice(r.entry);
+      const l3 = computeRead(st, lvInt, cvdSlope(st, now), now);
+      const midInt = (bbI + baI) / 2;
+      insSignalTouch.run({
+        ts_ms: now, ts_et: etTime(now), trading_day: etDate(now),
+        symbol: r.symbol, level_label: `${r.pattern} ${r.direction}`, level_kind: 'signal', level_price: r.entry,
+        mid: +st.book.priceFromInt(midInt).toFixed(2), dist_ticks: midInt - lvInt, l3_json: JSON.stringify(l3),
+        sig_json: JSON.stringify({ signal_id: r.signal_id, direction: r.direction, pattern: r.pattern, action: r.action, qualified: r.qualified, entry: r.entry }),
+      });
+      console.log(`[${r.symbol}] ↳ signal#${r.signal_id} ${r.pattern} ${r.direction} @${r.entry} (${r.action}/q${r.qualified}) → decider`);
+      st.decisions++; emitted++;
+    } catch (err) { console.error(`signal#${r.signal_id} emit error:`, (err as Error).message); }
+  }
+  if (emitted) nudge();
+}
+
 console.log(`l3-book-worker starting ${etTime()} ET — tailing full-size NQ+ES+CL+GC, snapshots → ${SHADOW_DB}`);
 states.forEach(ensureTail);
 reloadLevels();
@@ -339,6 +404,7 @@ const timers = [
   setInterval(() => states.forEach(health), HEALTH_MS),
   setInterval(() => states.forEach(ensureTail), ROLL_CHECK_MS),
   setInterval(reloadLevels, LEVELS_RELOAD_MS),
+  setInterval(pollSignals, 1500),   // FLIP/CONT tradable → signal touch → decider (shadow)
 ];
 
 function shutdown(): void {
@@ -346,6 +412,7 @@ function shutdown(): void {
   states.forEach((s) => s.tail?.stop());
   try { pushServer.close(); } catch { /* ignore */ }
   try { fs.unlinkSync(SOCK_PATH); } catch { /* ignore */ }
+  try { tdb?.close(); } catch { /* ignore */ }
   try { db.close(); } catch { /* ignore */ }
   console.log(`l3-book-worker stopped ${etTime()} ET`);
   process.exit(0);
