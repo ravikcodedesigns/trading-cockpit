@@ -191,7 +191,7 @@ function ensureTail(st: SymState): void {
   // accumulates over the hours to RTH. On roll: read the new file from start so
   // we don't miss the head of the new day (book state carries over either way).
   st.logPath = latest;
-  st.tail = tailLog(latest, (e) => dispatch(st.book, e), { fromStart: !firstAttach });
+  st.tail = tailLog(latest, (e) => { dispatch(st.book, e); onTradeTouch(st, e); }, { fromStart: !firstAttach });
 }
 
 // CVD slope = book.cvd now minus its value ~60s ago (from the sampling ring).
@@ -262,6 +262,36 @@ function fireDecision(st: SymState, lv: RsLevel, distTicks: number, mid: number,
   console.log(`[${st.sym}] ${r.verdict.toUpperCase()} ${r.diagnostic}`);
 }
 
+// EVENT-DRIVEN touch detection — called on every trade event the instant it lands,
+// so a decision fires on the trade that crosses a level (≈ tailer poll + compute),
+// not after the 1 Hz snapshot loop. Re-arm per (label,price) once price leaves.
+function onTradeTouch(st: SymState, e: LogEvent): void {
+  if (e.kind !== 'trade' || !st.levels.length) return;
+  if (Date.now() - e.ts_ms > 3000) return;   // skip replayed events (log roll) — fire on LIVE only
+  const bbI = st.book.bestBid(), baI = st.book.bestAsk();
+  if (bbI == null || baI == null) return;
+  const midInt = (bbI + baI) / 2;
+  const mid = priceFromInt(midInt);
+  const now = Date.now();
+  for (const lv of st.levels) {
+    const distTicks = midInt - intFromPrice(lv.price);
+    const tkey = `${lv.label}:${lv.price}`;
+    if (Math.abs(distTicks) <= NEAR_TICKS) {
+      if (!st.inZone.get(tkey)) {
+        st.inZone.set(tkey, true);
+        const t0 = Date.now();
+        try {
+          fireDecision(st, lv, distTicks, mid, cvdSlope(st, now), now);
+          // touch→decision latency: trade event-time → decision (upstream flush + tailer + compute)
+          console.log(`[${st.sym}] ↳ touch→decision ${Date.now() - e.ts_ms}ms (compute ${Date.now() - t0}ms)`);
+        } catch (err) { console.error(`[${st.sym}] decision error @ ${lv.label}:`, (err as Error).message); }
+      }
+    } else if (Math.abs(distTicks) >= DECISION_REARM_TICKS) {
+      st.inZone.set(tkey, false);
+    }
+  }
+}
+
 function snapshot(st: SymState): void {
   if (!st.levels.length) return;
   const bbI = st.book.bestBid(), baI = st.book.bestAsk();
@@ -277,11 +307,11 @@ function snapshot(st: SymState): void {
   for (const lv of st.levels) {
     const lvInt = intFromPrice(lv.price);
     const distTicks = midInt - lvInt; // + = price above the level
+    if (Math.abs(distTicks) > NEAR_TICKS) continue;
     const tkey = `${lv.label}:${lv.price}`;
-    if (Math.abs(distTicks) > NEAR_TICKS) {
-      if (Math.abs(distTicks) >= DECISION_REARM_TICKS) st.inZone.set(tkey, false); // re-arm once price leaves
-      continue;
-    }
+    // snapshot time-series (throttled). Touch DECISIONS are now EVENT-DRIVEN — see onTradeTouch.
+    if (now - (st.lastSnap.get(tkey) ?? 0) < SNAP_THROTTLE_MS) continue;
+    st.lastSnap.set(tkey, now);
     // price above level → level acts as support (bids defend); below → resistance (asks defend)
     const side: 'bid' | 'ask' = distTicks >= 0 ? 'bid' : 'ask';
     const wall = st.book.depthNear(lvInt, WALL_TICKS, side);
@@ -289,17 +319,6 @@ function snapshot(st: SymState): void {
     const prints = st.book.tapeNear(lvInt, NEAR_TICKS, now - TAPE_WINDOW_MS);
     let aggrBuy = 0, aggrSell = 0;
     for (const p of prints) { if (p.buy) aggrBuy += p.size; else aggrSell += p.size; }
-
-    // ── DECISION: once per touch episode (first entry into the ±NEAR band) ──
-    if (!st.inZone.get(tkey)) {
-      st.inZone.set(tkey, true);
-      try { fireDecision(st, lv, distTicks, mid, cvdSlope(st, now), now); }
-      catch (e) { console.error(`[${st.sym}] decision error @ ${lv.label}:`, (e as Error).message); }
-    }
-
-    // ── snapshot time-series (throttled per (label,price)) ──
-    if (now - (st.lastSnap.get(tkey) ?? 0) < SNAP_THROTTLE_MS) continue;
-    st.lastSnap.set(tkey, now);
     insSnap.run({
       ts_ms: now, ts_et: etTime(now), trading_day: etDate(now),
       symbol: st.sym, level_label: lv.label, level_kind: lv.kind, level_price: lv.price,
