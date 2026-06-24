@@ -12,11 +12,16 @@
 //     pull detection (Phase B). Forward-looking: incomplete until the book churns,
 //     then converges to the depth ladder — which crossCheck() measures.
 //
-// price_int is the price in ticks (NQ & ES tick = 0.25): price = price_int * 0.25.
-// We key every level map on price_int (integer) to avoid float-key issues.
+// price_int is Bookmap's native integer price grid (it ships price_int in every
+// event). The tick differs per instrument — NQ/ES 0.25, CL 0.01, GC 0.10 — so
+// price = price_int * tick. We key every level map on price_int (integer) to avoid
+// float-key issues; all the book internals are tick-agnostic (pure int math). Only
+// the price<->int conversion needs the tick, so it lives on the instance.
+// The module-level helper keeps the 0.25 default for NQ/ES callers; multi-instrument
+// callers should use book.priceFromInt / book.intFromPrice (tick-correct per symbol).
 
-const TICK = 0.25;
-export const priceFromInt = (pi: number) => pi * TICK;
+const DEFAULT_TICK = 0.25;
+export const priceFromInt = (pi: number) => pi * DEFAULT_TICK;
 
 export interface Level {
   priceInt: number;
@@ -78,9 +83,16 @@ export class OrderBook {
   mboEvents = 0;
   tradeEvents = 0;
 
-  constructor(symbol: string) {
+  readonly tick: number;
+
+  constructor(symbol: string, tick = DEFAULT_TICK) {
     this.symbol = symbol;
+    this.tick = tick;
   }
+
+  /** Tick-correct price<->int conversion for THIS instrument. */
+  priceFromInt(pi: number): number { return pi * this.tick; }
+  intFromPrice(p: number): number { return Math.round(p / this.tick); }
 
   // ── L2 from depth ────────────────────────────────────────────────────────
   applyDepth(d: { is_bid: boolean; size: number; price_int: number }): void {
@@ -188,7 +200,7 @@ export class OrderBook {
       [...m.entries()]
         .sort((a, b) => (desc ? b[0] - a[0] : a[0] - b[0]))
         .slice(0, n)
-        .map(([priceInt, size]) => ({ priceInt, price: priceFromInt(priceInt), size, orders: ords.get(priceInt) ?? 0 }));
+        .map(([priceInt, size]) => ({ priceInt, price: this.priceFromInt(priceInt), size, orders: ords.get(priceInt) ?? 0 }));
     return { bids: mk(this.bidSize, this.bidOrders, true), asks: mk(this.askSize, this.askOrders, false) };
   }
 
@@ -254,10 +266,10 @@ export class OrderBook {
   sweepNear(priceInt: number, ticks: number, sinceMs = 0): { swept: boolean; dir: 'buy' | 'sell' | null; size: number; levels: number } {
     const byAgg = new Map<string, { sz: number; prices: Set<number>; buy: boolean }>();
     for (const t of this.tape) {
-      if (!t.aggId || t.ts < sinceMs || Math.abs(Math.round(t.price / TICK) - priceInt) > ticks) continue;
+      if (!t.aggId || t.ts < sinceMs || Math.abs(this.intFromPrice(t.price) - priceInt) > ticks) continue;
       let e = byAgg.get(t.aggId);
       if (!e) { e = { sz: 0, prices: new Set(), buy: t.buy }; byAgg.set(t.aggId, e); }
-      e.sz += t.size; e.prices.add(Math.round(t.price / TICK));
+      e.sz += t.size; e.prices.add(this.intFromPrice(t.price));
     }
     let best = { swept: false, dir: null as 'buy' | 'sell' | null, size: 0, levels: 0 };
     for (const e of byAgg.values())
@@ -271,7 +283,7 @@ export class OrderBook {
     const byAgg = new Map<string, number>();
     let total = 0;
     for (const t of this.tape) {
-      if (!t.aggId || t.ts < sinceMs || Math.abs(Math.round(t.price / TICK) - priceInt) > ticks) continue;
+      if (!t.aggId || t.ts < sinceMs || Math.abs(this.intFromPrice(t.price) - priceInt) > ticks) continue;
       byAgg.set(t.aggId, (byAgg.get(t.aggId) ?? 0) + t.size); total += t.size;
     }
     let top = 0;

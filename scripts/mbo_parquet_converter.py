@@ -9,7 +9,7 @@ Why this exists:
   query in-place. The .log files stay intact as the safety net.
 
 Output layout (under --out, default data/mbo-parquet/):
-  {trades|depth|mbo}/symbol={NQ|ES}/date=YYYY-MM-DD/<file>.parquet
+  {trades|depth|mbo}/symbol={NQ|ES|CL|GC|MNQ|MES|MCL|MGC}/date=YYYY-MM-DD/<file>.parquet
   .checkpoints/<logfile-basename>.ckpt   (JSON: {"offset": <bytes>})
 
 Two modes:
@@ -105,9 +105,14 @@ def symbol_from_alias(alias: str) -> Optional[str]:
     full-size has the deep institutional book):
         MNQM6.CME@BMD / F_US_MNQM26@CQG → 'MNQ'   (micro NQ)
         MESU6.CME@BMD                   → 'MES'   (micro ES)
+        MCLQ6.NYMEX@BMD                 → 'MCL'   (micro crude)
+        MGCQ6.COMEX@BMD                 → 'MGC'   (micro gold)
         NQU6.CME@BMD  / F.US.ENQU6      → 'NQ'    (full-size NQ)
         ESU6.CME@BMD                    → 'ES'    (full-size ES)
-    Order matters: 'MNQ' contains 'NQ', so micros MUST be tested first."""
+        CLQ6.NYMEX@BMD                  → 'CL'    (full-size crude)
+        GCQ6.COMEX@BMD                  → 'GC'    (full-size gold)
+    Order matters: 'MNQ' contains 'NQ' / 'MCL' contains 'CL' / 'MGC' contains 'GC',
+    so micros MUST be tested first."""
     if not alias:
         return None
     a = alias.upper()
@@ -115,10 +120,18 @@ def symbol_from_alias(alias: str) -> Optional[str]:
         return "MNQ"
     if "MES" in a:
         return "MES"
+    if "MCL" in a:
+        return "MCL"
+    if "MGC" in a:
+        return "MGC"
     if "NQ" in a:
         return "NQ"
     if "ES" in a:
         return "ES"
+    if "CL" in a:
+        return "CL"
+    if "GC" in a:
+        return "GC"
     return None
 
 
@@ -135,16 +148,17 @@ def contract_from_alias(alias: str) -> Optional[str]:
 
     Strategy: drop the '@vendor' suffix, then split on '.' and '_' and
     return the first token containing the underlying symbol prefix
-    (MNQ / MES / NQ / ES). This is robust to vendor-specific prefix
-    conventions (F.US.X / F_US_X / X.CME) without enumerating them all,
-    and keeps the full-size codes (NQU6 / ESU6) distinct from the micros.
+    (MNQ / MES / NQ / ES / CL / GC). This is robust to vendor-specific prefix
+    conventions (F.US.X / F_US_X / X.CME / X.NYMEX / X.COMEX) without enumerating
+    them all, and keeps full-size codes (NQU6 / CLQ6) distinct from micros (MCL…).
     """
     if not alias:
         return None
     before_at = alias.split("@", 1)[0]
     for sep in (".", "_"):
         for tok in before_at.split(sep):
-            if "MNQ" in tok or "MES" in tok or "NQ" in tok or "ES" in tok:
+            # MCL/MGC contain CL/GC, MNQ/MES contain NQ/ES — substring test covers micros too
+            if any(s in tok for s in ("NQ", "ES", "CL", "GC")):
                 return tok
     return before_at or None
 

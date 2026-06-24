@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OrderBook, priceFromInt } from '../src/l3/order-book.js';
+import { OrderBook } from '../src/l3/order-book.js';
 import { tailLog, type LogEvent, type TailHandle } from '../src/l3/log-tailer.js';
 import net from 'node:net';
 // NOTE: the framework engines + confirmation live in the SEPARATE l3-decision-worker
@@ -37,9 +37,14 @@ const LEVEL_FILES: Record<string, string> = {
   ES: path.join(ROOT, 'daily_levels_es.json'),
 };
 
-const TICK = 0.25;
-const intFromPrice = (p: number) => Math.round(p / TICK);
-
+// Per-instrument tick (Bookmap price_int grid): NQ/ES 0.25, CL 0.01, GC 0.10 — passed
+// to each OrderBook below. price<->int conversion is delegated to the book
+// (st.book.intFromPrice / priceFromInt) so a level price maps onto the SAME integer
+// grid the book keys on.
+//
+// NEAR_TICKS et al. are in price_int units (per-instrument ticks), so the same N
+// means a different price band per symbol: NQ ±16 = ±4.0 pts, CL ±16 = ±0.16,
+// GC ±16 = ±1.60. Fine for NQ/ES; revisit per-symbol bands when CL/GC get RS levels.
 const NEAR_TICKS = Number(process.env.NEAR_TICKS ?? 16);   // snapshot/touch when price within ±N ticks of a level
 const DECISION_REARM_TICKS = Number(process.env.DECISION_REARM_TICKS ?? 24); // price must leave ±N ticks to re-arm a level's decision
 const WALL_TICKS = Number(process.env.WALL_TICKS ?? 4);    // sum depth within ±N ticks for the "wall"
@@ -191,7 +196,7 @@ function cvdSlope(st: SymState, now: number): number {
 // worker. The engines + confirmation run in that SEPARATE process — so restarting the
 // decision logic never touches this book.
 function emitTouch(st: SymState, lv: RsLevel, distTicks: number, mid: number, slope: number, now: number): void {
-  const lvInt = intFromPrice(lv.price);
+  const lvInt = st.book.intFromPrice(lv.price);
   const since = now - TAPE_WINDOW_MS;
   const sideRead = (side: 'bid' | 'ask') => {
     const w = st.book.depthNear(lvInt, WALL_TICKS, side);
@@ -232,10 +237,10 @@ function onTradeTouch(st: SymState, e: LogEvent): void {
   const bbI = st.book.bestBid(), baI = st.book.bestAsk();
   if (bbI == null || baI == null) return;
   const midInt = (bbI + baI) / 2;
-  const mid = priceFromInt(midInt);
+  const mid = st.book.priceFromInt(midInt);
   const now = Date.now();
   for (const lv of st.levels) {
-    const distTicks = midInt - intFromPrice(lv.price);
+    const distTicks = midInt - st.book.intFromPrice(lv.price);
     const tkey = `${lv.label}:${lv.price}`;
     if (Math.abs(distTicks) <= NEAR_TICKS) {
       if (!st.inZone.get(tkey)) {
@@ -256,7 +261,7 @@ function snapshot(st: SymState): void {
   if (!st.levels.length) return;
   const bbI = st.book.bestBid(), baI = st.book.bestAsk();
   if (bbI == null || baI == null) return;
-  const bb = priceFromInt(bbI), ba = priceFromInt(baI);
+  const bb = st.book.priceFromInt(bbI), ba = st.book.priceFromInt(baI);
   const midInt = (bbI + baI) / 2;
   const mid = (bb + ba) / 2;
   const now = Date.now();
@@ -265,7 +270,7 @@ function snapshot(st: SymState): void {
   while (st.cvdHist.length && st.cvdHist[0][0] < now - 90000) st.cvdHist.shift();
 
   for (const lv of st.levels) {
-    const lvInt = intFromPrice(lv.price);
+    const lvInt = st.book.intFromPrice(lv.price);
     const distTicks = midInt - lvInt; // + = price above the level
     if (Math.abs(distTicks) > NEAR_TICKS) continue;
     const tkey = `${lv.label}:${lv.price}`;
@@ -295,7 +300,7 @@ function snapshot(st: SymState): void {
 function health(st: SymState): void {
   const cc = st.book.crossCheck();
   const bbI = st.book.bestBid(), baI = st.book.bestAsk();
-  const px = bbI != null && baI != null ? `${priceFromInt(bbI).toFixed(2)}/${priceFromInt(baI).toFixed(2)}` : '—';
+  const px = bbI != null && baI != null ? `${st.book.priceFromInt(bbI).toFixed(2)}/${st.book.priceFromInt(baI).toFixed(2)}` : '—';
   console.log(
     `[${st.sym}] ${etTime()} ET px ${px} ev d=${st.book.depthEvents} m=${st.book.mboEvents} t=${st.book.tradeEvents}` +
     ` cc ${cc.levels ? Math.round((100 * cc.matched) / cc.levels) : 0}% levels=${st.levels.length || 'pending'}` +
@@ -304,9 +309,17 @@ function health(st: SymState): void {
 }
 
 // ── main ─────────────────────────────────────────────────────────────────────
+// suffix = the BMD contract code in the .log filename (e.g. 2026-06-24-CLQ6_NYMEX_BMD.log).
+// CL/GC have no RS levels yet → loadLevels returns [] → the book just builds (health +
+// crosscheck), no snapshots/touches, until daily_levels_cl/gc.json land. Roll note: these
+// are hardcoded front months (CLQ6/GCQ6) like NQU6/ESU6 — bump on contract roll.
+const mkState = (sym: string, suffix: string, tick: number): SymState =>
+  ({ sym, suffix, book: new OrderBook(sym, tick), tail: null, logPath: null, levels: [], lastSnap: new Map(), snaps: 0, inZone: new Map(), cvdHist: [], decisions: 0 });
 const states: SymState[] = [
-  { sym: 'NQ', suffix: 'NQU6', book: new OrderBook('NQ'), tail: null, logPath: null, levels: [], lastSnap: new Map(), snaps: 0, inZone: new Map(), cvdHist: [], decisions: 0 },
-  { sym: 'ES', suffix: 'ESU6', book: new OrderBook('ES'), tail: null, logPath: null, levels: [], lastSnap: new Map(), snaps: 0, inZone: new Map(), cvdHist: [], decisions: 0 },
+  mkState('NQ', 'NQU6', 0.25),
+  mkState('ES', 'ESU6', 0.25),
+  mkState('CL', 'CLQ6', 0.01),
+  mkState('GC', 'GCQ6', 0.10),
 ];
 
 function reloadLevels(): void {
@@ -317,7 +330,7 @@ function reloadLevels(): void {
   }
 }
 
-console.log(`l3-book-worker starting ${etTime()} ET — tailing full-size NQ+ES, snapshots → ${SHADOW_DB}`);
+console.log(`l3-book-worker starting ${etTime()} ET — tailing full-size NQ+ES+CL+GC, snapshots → ${SHADOW_DB}`);
 states.forEach(ensureTail);
 reloadLevels();
 
