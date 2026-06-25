@@ -2,6 +2,7 @@ import { useStore } from '../lib/ws';
 import type { ConnectionStatus, SourceName } from '@trading/contracts';
 import { RSContextBar } from './RSContextBar';
 import { KillSwitch } from './KillSwitch';
+import { SizeDown } from './SizeDown';
 import { DayRegime } from './DayRegime';
 import { PipelineModeBadge } from './PipelineModeBadge';
 import { TraderStatus } from './TraderStatus';
@@ -133,8 +134,9 @@ export function StatusBar() {
             whether the new signal-pipeline or legacy V3 is authoritative. */}
         <PipelineModeBadge />
 
-        {/* Trader kill-switch */}
+        {/* Trader kill-switch + size-down toggle */}
         <KillSwitch />
+        <SizeDown />
 
         {/* Day regime — how's the day (greater-market dir + vol environment) */}
         <DayRegime symbol={selectedSymbol} />

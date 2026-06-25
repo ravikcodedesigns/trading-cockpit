@@ -321,6 +321,33 @@ export async function startServer(): Promise<FastifyInstance> {
     }
   });
 
+  // ── Size-down: control the trader's /tmp/trader.sizedown flag ────────────────
+  // Presence drops every signal to base 1× (trader's signalQty checks it per signal),
+  // independent of the halt switch. Lets the cockpit force-flatten sizing without a restart.
+  const TRADER_SIZEDOWN_FILE = '/tmp/trader.sizedown';
+
+  app.get('/trader/sizedown', async () => ({ sizedown: fs.existsSync(TRADER_SIZEDOWN_FILE) }));
+
+  app.post('/trader/sizedown', async (_req, reply) => {
+    try {
+      fs.writeFileSync(TRADER_SIZEDOWN_FILE, `${new Date().toISOString()} — cockpit size-down\n`);
+      logger.warn('SIZE-DOWN armed — all signals forced to base 1×');
+      return { ok: true, sizedown: true };
+    } catch (err: any) {
+      return reply.code(500).send({ error: err?.message ?? 'failed' });
+    }
+  });
+
+  app.delete('/trader/sizedown', async (_req, reply) => {
+    try {
+      if (fs.existsSync(TRADER_SIZEDOWN_FILE)) fs.unlinkSync(TRADER_SIZEDOWN_FILE);
+      logger.warn('SIZE-DOWN cleared — differential 2× sizing restored');
+      return { ok: true, sizedown: false };
+    } catch (err: any) {
+      return reply.code(500).send({ error: err?.message ?? 'failed' });
+    }
+  });
+
   // ── Pipeline state — who's driving the live path? ─────────────────────────
   // Used by the cockpit's PipelineModeBadge to show 'SHADOW' vs 'LIVE' so the
   // user always knows whether the new signal-pipeline or the legacy V3 cascade
