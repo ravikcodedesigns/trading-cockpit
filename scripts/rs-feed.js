@@ -26,6 +26,16 @@ const CTX = path.resolve(__dirname, '../data/rs-context.json');
 const log = (...a) => console.error(
   new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false }) + ' ET', ...a);
 
+// Current trading day as YYYY-MM-DD in ET (matches context_set.ts todayNY()). rs-feed is
+// RTH-gated, so "today in ET" is always the live session. Stamped on every write because the
+// once-daily writers (context_set CLI / rs-levels) don't refresh it — without this, tradingDay
+// freezes at whatever last ran while setAt keeps ticking (froze at 2026-06-18 until 06-25).
+function etDate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+}
+
 // RTH gate: Mon–Fri 09:30–16:00 ET (DST-correct via America/New_York).
 function inRTH() {
   const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
@@ -131,7 +141,7 @@ async function tick() {
   upd.bySymbol = mergedBySym;
   if (DRY) { log('WOULD MERGE:'); console.error(JSON.stringify(upd, null, 2));
     log(`preserve: greaterMarket=${cur.greaterMarket} lmCode=${cur.lmCode} vx=${cur.vx} bbb=${cur.bbb} vvix=${cur.vvix}`); return; }
-  fs.writeFileSync(CTX, JSON.stringify({ ...cur, ...upd, setAt: new Date().toISOString() }, null, 2));
+  fs.writeFileSync(CTX, JSON.stringify({ ...cur, ...upd, tradingDay: etDate(), setAt: new Date().toISOString() }, null, 2));
 }
 
 (async () => {

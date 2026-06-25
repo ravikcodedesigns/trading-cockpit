@@ -25,6 +25,7 @@ import { discord } from './discord.js';
 import { db } from './db.js';
 import { config } from './config.js';
 import { loadContext, watchContext } from './rs-context.js';
+import { startContextHistoryLogger } from './rs-context-history.js';
 import { loadCalendar, getTodayEvents } from './economic-calendar.js';
 import { fireOvernightBriefing } from './morning-brief.js';
 import type { Symbol, DailyLevels, FlashAlphaSnapshot } from '@trading/contracts';
@@ -132,6 +133,7 @@ async function main() {
   // Load RS morning context (set via: pnpm context:set)
   const rsCtx = loadContext();
   watchContext(); // pick up CLI writes without restarting aggregator
+  startContextHistoryLogger(); // append per-symbol context trace each feed update (backtest/replay)
   logger.info({
     greaterMarket: rsCtx.greaterMarket,
     ddRatio: rsCtx.ddRatio,
