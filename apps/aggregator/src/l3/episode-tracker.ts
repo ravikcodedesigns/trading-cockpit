@@ -46,6 +46,7 @@ const CFG = {
                          // a distance reset fights the band: a normal intra-range pullback kills the seq)
   MIN_QUOTES: 8,         // min quotes in a retest to trust its λ (else fall back to baseline)
   CONF_MIN: 0.4,         // emit a setup only above this confidence
+  EARLY_ENTRY: false,    // experiment: emit on the FIRST reversal-favorable retest exit, not after K-classification
 };
 export type EpisodeCfg = typeof CFG;
 
@@ -127,7 +128,21 @@ export class EpisodeTracker {
         reclaim: Math.sign(dist),   // exit side: dist=mid-level, out of band → +1 above (reclaim) / -1 below
       });
 
-      if (ep.retests.length >= this.cfg.K_RETESTS) {
+      if (this.cfg.EARLY_ENTRY) {
+        // EXPERIMENT: enter on the FIRST reversal-favorable retest exit (reclaim at support /
+        // rejection at resistance), bypassing the K-classification — tests if an earlier entry has edge.
+        if (ep.emitted == null) {
+          const rc = Math.sign(dist);
+          const st2: EpisodeState | null = (ep.side === 'resistance' && rc < 0) ? 'DISTRIBUTION'
+            : (ep.side === 'support' && rc > 0) ? 'ACCUMULATION' : null;
+          if (st2) {
+            ep.emitted = st2;
+            return { ts: now, symbol, label: lv.label, levelPrice: lv.price, side: ep.side, state: st2,
+              direction: directionFor(st2, ep.side), confidence: 0, entry: lv.price, retests: ep.retests.length,
+              note: `early ${st2 === 'DISTRIBUTION' ? 'rejection' : 'reclaim'} (retest ${ep.retests.length})`, evidence: {} };
+          }
+        }
+      } else if (ep.retests.length >= this.cfg.K_RETESTS) {
         const v = classifyEpisode(ep.retests, { side: ep.side, baselineLambda: st.baseLambda || 1 });
         const decisive = v.state === 'DISTRIBUTION' || v.state === 'ACCUMULATION' || v.state === 'BREAKING';
         if (decisive && v.confidence >= this.cfg.CONF_MIN && v.state !== ep.emitted) {
