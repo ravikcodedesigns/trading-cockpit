@@ -41,5 +41,15 @@ phase2-*.json
 # Local backups (e.g., from daily_levels.json patches)
 *.bak-*
 
+# Live daily RS/structural levels — regenerated each session by rs-levels.js (09:32 scrape)
+# + compute_structural_levels.ts + compute_expected_move.js. These accumulate a per-day `days`
+# map ON DISK (read live by the aggregator + backtests). They were tracked-but-edited-uncommitted,
+# so a `git reset --hard`/`restore` silently wiped the day's levels (lost 06-24 + 06-25 on 06-25
+# 11:29). Untracked = a reset can never touch them. Git history up to 4c3afa3 (06-23) is preserved.
+daily_levels.json
+daily_levels_es.json
+daily_levels_cl.json
+daily_levels_gc.json
+
 # Regenerable research shadow DB (regime_gate scorer output)
 data/regime_shadow.db
