@@ -13,7 +13,7 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
-import { tradingDayFor, lookupLevelStyle } from '@trading/contracts';
+import { tradingDayFor, lookupLevelStyle, isStructuralLevel } from '@trading/contracts';
 import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
 import { ZoneBandsPrimitive } from './zoneBands';
 import { SignalChartCard } from './SignalFeed';
@@ -1677,6 +1677,7 @@ export function Chart() {
 
       if (dayLevels.additionalLevels) {
         for (const al of dayLevels.additionalLevels) {
+          if (isStructuralLevel(al.label)) continue;   // hidden — structural levels (RS-focus declutter)
           addLevelLine(
             al.price,
             al.color ?? '#5a9bff',

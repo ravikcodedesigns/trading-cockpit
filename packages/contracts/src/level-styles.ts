@@ -94,6 +94,26 @@ export const LEVEL_STYLES: Record<string, LevelStyle> = {
   'nPOC':       { color: '#BC8F8F', style: 'dotted', width: 2 },   // naked POC (rosy brown)
 };
 
+// Labels that are STRUCTURAL market-structure references — prior-day / overnight OHLC, volume
+// profile, floor pivots, VWAP, initial balance, volume nodes, weekly — as distinct from the RS
+// framework (MHP/HP/DD/Bull-Bear zones) and the index opens/closes used as RS context. Lets the
+// chart hide the structural clutter when focusing on RS / levels-based trading.
+export const STRUCTURAL_LABELS: ReadonlySet<string> = new Set([
+  'PDH', 'PDL', 'PDC', 'NQ Close', 'ES Close',
+  'ONH', 'ONL', 'ONO', 'onVAH', 'onVAL', 'onPOC',
+  'VAH', 'VAL', 'POC', 'nPOC',
+  'PMH', 'PML', 'gnVWAP', 'VWAP',
+  'Pivot', 'R1', 'R2', 'R3', 'S1', 'S2', 'S3',
+  'Halfback', 'IBH', 'IBL',
+  'HVN1', 'HVN2', 'HVN3', 'LVN↑', 'LVN↓',
+  'WkH', 'WkL', 'WkC',
+]);
+
+/** True if the label is a structural market-structure level (NOT an RS-framework / RS-context level). */
+export function isStructuralLevel(label: string): boolean {
+  return STRUCTURAL_LABELS.has(label);
+}
+
 /** Lookup the canonical style for a level label. Returns undefined if unknown. */
 export function lookupLevelStyle(label: string): LevelStyle | undefined {
   return LEVEL_STYLES[label];
