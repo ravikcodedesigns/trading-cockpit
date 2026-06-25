@@ -412,6 +412,15 @@ no label, one line per row — verified across a hard refresh and symbol switche
 
 ## 10. DDA detector — P1 band-sensitivity + shadow wiring (after P0, 2026-06-24)
 
+**STATUS 2026-06-24: SCREEN FAILED — NO EDGE on NQ (committed a3ae93b).** Reactive swing-zone
+source built (fixed the sparse-levels problem). Backtest on NQ ticks-parquet (32 days, no-lookahead,
+train/test, 5pt slip, TP/SL sweep): absorption-on-retest reversal = random-walk baseline at every
+bracket, confirmation AND early entry; only positive PnL is a long-drift artifact (longs +6540 /
+shorts -3360 → shorts fail = not a reversal signal). Does NOT advance to forward shadow. Math/infra
+(divergence/episode-tracker/swing-levels/harness, 60+ tests) retained. Items below were the pre-screen
+plan — moot unless a materially different sample/regime or a different USE of the signal is pursued.
+P1 band fix (item 1) already landed (977bf87). See [[project_dda_detector]] memory.
+
 P0 done+committed (0a45294/d5d0a7a/84fdcf3): `divergence.ts` (Kyle λ/OFI/MK/CUSUM, 21 unit
 tests) + `episode-tracker.ts` (8 integration tests) + 06-24 offline replay proof. See
 `~/.claude/plans/cheerful-watching-muffin.md` and the `project_dda_detector` memory.
