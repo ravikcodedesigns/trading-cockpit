@@ -135,6 +135,7 @@ async function main() {
       account:       broker.account.name,
       enabledRules:  config.enabledRules,
       qty:           config.qty,
+      sizeUp:        process.env.TRADER_SIZEUP === 'off' ? 'off' : '2× FLIP-short + CONT-long (NQ only)',
       maxDailyLoss:  config.risk.maxDailyLoss,
       todayPnl,
     },

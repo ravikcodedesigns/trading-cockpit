@@ -1,4 +1,4 @@
-import { config, signalParams } from './config.js';
+import { config, signalParams, signalQty } from './config.js';
 import { posDb } from './db.js';
 import { createHaltFile } from './risk-guard.js';
 import { logger } from './logger.js';
@@ -68,17 +68,18 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
   }
 
   const pointValue = POINT_VALUE[contractRoot] ?? 2;
+  const qty = signalQty(ruleId, direction, symbol);   // 2× FLIP-short / CONT-long on NQ, else base qty
   const posId = posDb.createPosition({
     signal_ts: signalTs,
     symbol,
     rule_id: ruleId,
     direction,
-    qty: config.qty,
+    qty,
     sl_pts: params.sl,
     tp_pts: params.tp,
   });
 
-  logger.info({ posId, ruleId, direction, symbol, sl: params.sl, tp: params.tp }, 'position created');
+  logger.info({ posId, ruleId, direction, symbol, qty, sl: params.sl, tp: params.tp }, 'position created');
 
   // Track entry-fill state locally so the catch block can detect an
   // unprotected position even if we never got to setFill.
@@ -91,7 +92,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
 
     // ── 2. Place market entry ──────────────────────────────────────────────
     const entryAction = direction === 'long' ? 'Buy' : 'Sell';
-    const entryOrderId = await broker.placeMarketOrder({ contractName, action: entryAction, qty: config.qty });
+    const entryOrderId = await broker.placeMarketOrder({ contractName, action: entryAction, qty });
     posDb.setEntryOrder(posId, String(entryOrderId));
     logger.info({ posId, entryOrderId }, 'entry order placed, waiting for fill');
 
@@ -113,12 +114,12 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
     // ── 5. Place SL (stop) ─────────────────────────────────────────────────
     const closeAction = direction === 'long' ? 'Sell' : 'Buy';
     const slOrderId = await broker.placeStopOrder({
-      contractName, action: closeAction, qty: config.qty, stopPrice: slPrice,
+      contractName, action: closeAction, qty, stopPrice: slPrice,
     });
 
     // ── 6. Place TP (limit) ────────────────────────────────────────────────
     const tpOrderId = await broker.placeLimitOrder({
-      contractName, action: closeAction, qty: config.qty, limitPrice: tpPrice,
+      contractName, action: closeAction, qty, limitPrice: tpPrice,
     });
 
     posDb.setFill(posId, fillPrice, slPrice, tpPrice, String(slOrderId), String(tpOrderId));
@@ -128,7 +129,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
     notify.open({
       ruleId, direction, symbol: contractRoot,
       entry: fillPrice, tp: tpPrice, sl: slPrice,
-      pointValue, qty: config.qty,
+      pointValue, qty,
     });
 
     // ── 7. Monitor for close ───────────────────────────────────────────────
@@ -190,7 +191,7 @@ function monitorBracket(
     } catch { /* use stored price */ }
 
     const pnlPts = isSL ? -params.sl : params.tp;
-    const pnlUsd = pnlPts * pointValue * config.qty;
+    const pnlUsd = pnlPts * pointValue * pos.qty;
     const status_ = isSL ? 'closed_sl' : 'closed_tp';
     const reason  = isSL ? 'SL hit' : 'TP hit';
 
@@ -231,7 +232,7 @@ function monitorBracket(
       if (!slStatus || slStatus.status === 'Cancelled' || slStatus.status === 'Rejected') {
         logger.error({ posId, slOrderId }, 'SL order gone — replacing');
         const newSl = await broker.placeStopOrder({
-          contractName, action: closeAction, qty: config.qty, stopPrice: pos.sl_price!,
+          contractName, action: closeAction, qty: pos.qty, stopPrice: pos.sl_price!,
         });
         posDb.setFill(posId, fillPrice, pos.sl_price!, pos.tp_price!, String(newSl), String(tpOrderId));
         logger.warn({ posId, newSl }, 'SL order replaced');
@@ -240,7 +241,7 @@ function monitorBracket(
       if (!tpStatus || tpStatus.status === 'Cancelled' || tpStatus.status === 'Rejected') {
         logger.error({ posId, tpOrderId }, 'TP order gone — replacing');
         const newTp = await broker.placeLimitOrder({
-          contractName, action: closeAction, qty: config.qty, limitPrice: pos.tp_price!,
+          contractName, action: closeAction, qty: pos.qty, limitPrice: pos.tp_price!,
         });
         posDb.setFill(posId, fillPrice, pos.sl_price!, pos.tp_price!, String(slOrderId), String(newTp));
         logger.warn({ posId, newTp }, 'TP order replaced');

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { existsSync } from 'node:fs';
 
 function required(key: string): string {
   const v = process.env[key];
@@ -63,4 +64,22 @@ export const SIGNAL_PARAMS: Record<string, { sl: number; tp: number }> = {
 
 export function signalParams(ruleId: string, direction: string) {
   return SIGNAL_PARAMS[`${ruleId}:${direction}`] ?? null;
+}
+
+// Per-signal position SIZING (multiplier × base config.qty). 2026-06-25 live analysis (145 OPEN NQ
+// trades, +2,641 pts, max DD 304pt): size up ONLY the two strongest cohorts — FLIP-short (75% WR) and
+// CONT-long (77% WR). FLIP-long (55%) and CONT-short (60%) stay at base. NQ(→MNQ) ONLY; ES untouched.
+// Kill-switch: TRADER_SIZEUP=off reverts every signal to the flat base qty.
+export const SIGNAL_QTY_MULT: Record<string, number> = {
+  'clean-impulse:short': 2,   // FLIP short
+  'cont-reentry:long':   2,   // CONT long
+};
+
+// LIVE size-down lever (mirrors the /tmp/trader.halt kill switch): `touch /tmp/trader.sizedown`
+// drops every signal back to base 1× instantly — checked per signal, NO restart. `rm` it to restore 2×.
+export const SIZEDOWN_FILE = '/tmp/trader.sizedown';
+
+export function signalQty(ruleId: string, direction: string, symbol: string): number {
+  if (process.env.TRADER_SIZEUP === 'off' || existsSync(SIZEDOWN_FILE) || symbol !== 'NQ') return config.qty;
+  return config.qty * (SIGNAL_QTY_MULT[`${ruleId}:${direction}`] ?? 1);
 }
