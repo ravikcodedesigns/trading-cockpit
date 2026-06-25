@@ -449,3 +449,21 @@ P1 tasks (NONE wired to the trader; FORWARD shadow is the gate — in-sample gui
 
 P2: decisiveness-gated override at non-sacred levels, ONLY after the distribution precision is
 forward-proven. DD-lower never inverts (sacred — veto only).
+
+## 11. Revamp confirm() microstructure detection — principled math (de-hardcode)
+
+The L3 confirmation decider `apps/aggregator/src/l3/decision-engine.ts` (`confirm()`) is built on
+exactly what the DDA work replaced: hardcoded weights (`C = {cvdWith:2, cvdAgainst:-3, refill:3,
+sweepAgainst:-4, takeScore:4 ...}`), a magic CVD threshold (`cvdThresh:150`), and CVD-**slope**
+heuristics. It also empirically over-rejects — on 2026-06-24 it called nearly every FLIP/CONT and
+the live longs invalid (score 0 / skip).
+
+Revamp with the same rigor as the DDA layer (`divergence.ts`):
+- Replace CVD-slope thresholds with a principled flow measure (OFI / Kyle-λ absorption, like the DDA)
+  + robust/non-parametric significance (no fixed magnitude cutoffs).
+- Re-derive absorption (refill/iceberg vs pull/spoof) mechanically — measure realized price-impact,
+  not displayed-size heuristics (displayed size is spoofable; realized λ is not).
+- Change-point (CUSUM) for the "break forming" timing instead of the fixed cvdThresh trip.
+- Re-fit / drop the magic weights; validate the verdict against outcomes (it's currently unproven).
+Until then: do NOT bolt confirm() onto the DDA (would re-import the un-principled thresholds). The
+DDA runs standalone on its own principled absorption signal.
