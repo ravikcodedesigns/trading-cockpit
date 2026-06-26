@@ -525,6 +525,10 @@ class State {
       symbol, signalId, ruleId: signal.ruleId, pattern, direction,
       entry, openTs: signal.ts,
     });
+    // Mark the broadcast as a live tradable OPEN so the cockpit renders the
+    // TRADABLE marker instantly off this WS push (vs waiting for the 60s
+    // /signals/marks poll). The poll still reconciles/backfills from the DB.
+    signal.tradable = true;
     this.bus.emit('signal', signal);
     discord.signal(signal);
     logger.info({ ruleId: signal.ruleId, score: signal.score, reason },

@@ -1381,6 +1381,14 @@ export function Chart() {
       series.setData(data);
       lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : 0;
     } else {
+      // Only auto-follow live appends when the user is PINNED to the live edge.
+      // scrollPosition() ≈ rightOffset (5) when truly at realtime; any scroll-back
+      // to analyze drops it below that. If they've scrolled back at all, snapshot
+      // their exact visible range and restore it after the update — so a new bar
+      // (or the setData fallback) can NEVER drag the chart while they're analyzing.
+      const ts = chartRef.current?.timeScale();
+      const pinnedToLive = ts ? (ts.scrollPosition() ?? 5) >= 4.5 : true; // 5 = chart rightOffset
+      const keepRange = pinnedToLive ? null : ts!.getVisibleLogicalRange();
       try {
         let curMax = prevMax;
         for (const bar of data) {
@@ -1394,6 +1402,7 @@ export function Chart() {
         series.setData(data);               // defensive: out-of-order bar → full redraw
         lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : prevMax;
       }
+      if (keepRange && ts) { try { ts.setVisibleLogicalRange(keepRange); } catch { /* disposed */ } }
     }
 
     // 2026-06-04 fix: when a new minute bucket appears, bump barsVersion so
@@ -1827,6 +1836,11 @@ export function Chart() {
     for (const sig of recentSignals) {
       if (sig.symbol !== selectedSymbol) continue;
       const b = bucketSecs(sig.ts);
+      // Live tradable OPEN (tagged on the WS broadcast) → register its bucket in
+      // tradableTsRef NOW so the TRADABLE marker renders instantly off the push,
+      // instead of waiting for the next 60s /signals/marks poll. Idempotent — the
+      // poll later re-adds the same bucket harmlessly (reconcile/backfill).
+      if ((sig as { tradable?: boolean }).tradable) tradableTsRef.current.add(b);
       if (seenBuckets.has(b)) continue;
       seenBuckets.add(b);
       sourceSignals.push(sig);

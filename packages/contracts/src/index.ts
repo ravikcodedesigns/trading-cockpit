@@ -196,6 +196,10 @@ export interface ConfluenceSignal extends BaseEvent {
     mhpRes:    number;  // MHP resilience (orange) — tiebreaker at MHP level
     isRational: boolean; // false = irrational rules apply, resilience is not reliable
   };
+  // Set true on the LIVE broadcast when the pipeline decided OPEN (action='OPEN'),
+  // so the cockpit can render the TRADABLE marker instantly off the WS push instead
+  // of waiting for the /signals/marks poll. The poll stays the reconcile/backfill.
+  tradable?: boolean;
 }
 
 // --- Union of everything that flows through the aggregator ---
