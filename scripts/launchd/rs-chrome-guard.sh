@@ -18,8 +18,15 @@ curl -s --max-time 3 "http://localhost:$PORT/json/version" >/dev/null 2>&1 && UP
 
 if $INRTH; then
   if $UP; then sleep 60; exit 0; fi          # already up — recheck in ~1 min
+  # Anti-throttle flags: keep the RS renderer at full CPU + timer speed even when the
+  # window is occluded / behind other apps / minimized all day. Without these, Chrome
+  # backgrounds the renderer and rs-feed's CDP Runtime.evaluate times out ("STALE while
+  # Chrome is up"). This is a dedicated scraping window, so never-sleep is the goal.
   exec "$CHROME" --remote-debugging-port=$PORT --user-data-dir="$PROFILE" \
-    --no-first-run --no-default-browser-check --restore-last-session
+    --no-first-run --no-default-browser-check --restore-last-session \
+    --disable-renderer-backgrounding \
+    --disable-backgrounding-occluded-windows \
+    --disable-background-timer-throttling
 else
   # Outside RTH: don't force Chrome up, and don't kill it (no surprise closes).
   # rs-feed is idle off-hours anyway, so it doesn't need Chrome then. Just idle.
