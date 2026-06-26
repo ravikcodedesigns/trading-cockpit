@@ -25,11 +25,11 @@ CONV_LOG = Path.home() / "Library" / "Logs" / "cockpit-mbo-parquet.log"
 
 DUP_PCT_MAX = 0.10        # >0.1% dup on a compacted day is suspicious
 GAP_MIN_MAX = 90          # minutes; >90 = real outage (excludes 60min maint halt)
-DISTINCT_COLS = {
-    "trades": "ts_ms, contract, price_int, size, aggressor_order_id",
-    "depth":  "ts_ms, contract, price_int, size, is_bid",
-    "mbo":    "ts_ms, contract, action, order_id, price_int, size",
-}
+MIN_ROWS = 1_000          # below this = stray/stub partition (mis-aliased MCL/MGC) — ignore
+# A "duplicate" is an identical FULL row — exactly what compaction's `SELECT DISTINCT *`
+# removes. Do NOT use a partial key: trades legitimately repeat (ts,price,aggressor)
+# across a sweep that hits many passives (distinct passive_order_id) — a partial key
+# false-flags those real prints as dups.
 con = duckdb.connect()
 flags = []
 
@@ -51,17 +51,25 @@ def check_mbo(days):
                 if not files:
                     continue  # symbol/instrument simply not captured that day
                 nf = len(files)
-                if nf > 1:
-                    flags.append(f"COMPACTION_BEHIND {sym} {table} {date}: {nf} files")
-                # dup check only worth it on micro-row partitions; cheap on 1 compacted file
                 g = str(MBO_PQ / table / f"symbol={sym}" / f"date={date}" / "*.parquet")
                 tot = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}')").fetchone()[0]
+                if 0 < tot < MIN_ROWS:
+                    continue  # stray/stub partition (mis-aliased MCL/MGC, 1-2 rows)
+                if nf > 1:
+                    flags.append(f"COMPACTION_BEHIND {sym} {table} {date}: {nf} files")
                 if tot == 0:
                     flags.append(f"EMPTY {sym} {table} {date}")
                     continue
-                dis = con.execute(
-                    f"SELECT COUNT(*) FROM (SELECT DISTINCT {DISTINCT_COLS[table]} FROM read_parquet('{g}'))").fetchone()[0]
-                duppct = (tot - dis) / tot * 100
+                # A compacted single file is DISTINCT by construction, so skip the
+                # expensive full-row scan there (keeps the daily check in seconds);
+                # only un-compacted partitions (>1 file) can carry dups. The weekly
+                # deep recon (Stage B) does the exhaustive DISTINCT-* pass.
+                if nf > 1:
+                    dis = con.execute(
+                        f"SELECT COUNT(*) FROM (SELECT DISTINCT * FROM read_parquet('{g}'))").fetchone()[0]
+                    duppct = (tot - dis) / tot * 100
+                else:
+                    duppct = 0.0
                 tag = ""
                 if duppct > DUP_PCT_MAX:
                     flags.append(f"DUPLICATES {sym} {table} {date}: {tot-dis:,} ({duppct:.2f}%)")
@@ -77,6 +85,16 @@ def check_mbo(days):
                         tag += f"  <-- GAP {gap:.0f}min"
                 print(f"   {sym:<4} {table:<6} {date}  files={nf:<4} rows={tot:>12,} dup={duppct:4.2f}%{tag}")
 
+def et_day_bounds_ms(date):
+    """[start, end) epoch-ms for an ET calendar day — matches ticks_to_parquet's
+    ZoneInfo('America/New_York') partitioning. Range form lets SQLite use the
+    (symbol, ts) index instead of scanning every row with date()."""
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    d = dt.date.fromisoformat(date)
+    start = dt.datetime(d.year, d.month, d.day, tzinfo=et)
+    return int(start.timestamp() * 1000), int((start + dt.timedelta(days=1)).timestamp() * 1000)
+
 def check_cqg(days):
     print(f"\n## CQG ticks.db ↔ ticks-parquet  last {len(days)} days")
     import sqlite3
@@ -84,9 +102,10 @@ def check_cqg(days):
     for sym in ("NQ", "ES"):
         for table in ("trades", "depth"):
             for date in days:
+                lo, hi = et_day_bounds_ms(date)
                 a = sq.execute(
-                    f"SELECT COUNT(*) FROM {table} WHERE symbol=? "
-                    f"AND date(ts/1000,'unixepoch','localtime')=?", (sym, date)).fetchone()[0]
+                    f"SELECT COUNT(*) FROM {table} WHERE symbol=? AND ts>=? AND ts<?",
+                    (sym, lo, hi)).fetchone()[0]
                 g = str(TICK_PQ / table / f"symbol={sym}" / f"date={date}" / "*.parquet")
                 try:
                     b = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}')").fetchone()[0]
@@ -102,12 +121,15 @@ def check_converter(days):
     if not CONV_LOG.exists():
         return
     txt = CONV_LOG.read_text(errors="ignore")
-    n = txt.count("Traceback (most recent call last)")
-    # only the tail matters for "recent"; cheap heuristic: count tracebacks after the last day's marker
-    recent = txt.rsplit(days[0], 1)[-1].count("Traceback (most recent call last)") if days[0] in txt else 0
-    print(f"\n## converter log: {n} total tracebacks (lifetime), {recent} since {days[0]}")
-    if recent:
-        flags.append(f"CONVERTER_CRASH: {recent} tracebacks since {days[0]}")
+    total = txt.count("Traceback (most recent call last)")
+    # Health = crashes AFTER the most recent restart. Crashes before the last (re)start
+    # are already recovered and must not flag daily; only an actively crash-looping
+    # converter (tracebacks since its last start) is a problem.
+    marker = "parquet-converter starting tail"
+    since = txt.rsplit(marker, 1)[-1].count("Traceback (most recent call last)") if marker in txt else total
+    print(f"\n## converter log: {total} lifetime tracebacks; {since} since last restart")
+    if since:
+        flags.append(f"CONVERTER_CRASH: {since} tracebacks since last restart (crash-looping)")
 
 def main():
     ap = argparse.ArgumentParser()
