@@ -817,8 +817,8 @@ export function Chart() {
         fontSize: 13,  // bumped 11 → 13 for marker readability
       },
       grid: {
-        vertLines: { color: '#17171c' },
-        horzLines: { color: '#17171c' },
+        vertLines: { visible: false },
+        horzLines: { visible: false },
       },
       timeScale: {
         borderColor: '#28282f',
