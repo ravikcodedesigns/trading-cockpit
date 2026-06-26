@@ -476,3 +476,25 @@ Revamp with the same rigor as the DDA layer (`divergence.ts`):
 - Re-fit / drop the magic weights; validate the verdict against outcomes (it's currently unproven).
 Until then: do NOT bolt confirm() onto the DDA (would re-import the un-principled thresholds). The
 DDA runs standalone on its own principled absorption signal.
+
+## 12. CONDITIONAL irrational / DD-band-break gate for CONT/FLIP (not a blanket veto)
+
+Trigger: 2026-06-26 10:35 CONT-long, 2× MNQ, full SL = **−$280**. The signal logged every
+disqualifier — `isRational=false`, dual `/ENQ`+`/EP` DD-Band-Break **yellow/down**, `qqqSpyRs=−0.46`
+(NQ the weakest index) — and fired anyway (no gate). Framework says irrational ⇒ sit-out/size-down.
+
+BUT a **blanket** isRational/DD-break veto is too blunt: it would also kill the same day's WINNERS
+(10:41, 11:16, 12:23). The rule is directionally right, not literal. Be clever about *when* to skip.
+
+Hypotheses to shadow-test (find the gate that drops the 10:35 loser but keeps the 10:41/11:16/12:23 wins):
+- Veto only when irrational AND the **DD-break direction OPPOSES** the trade (long into DD-break-DOWN
+  = skip; long with break-up = fine). Direction-aware, not state-aware.
+- Veto only when irrational AND **index RS is against** the trade (long while `qqqSpyRs<0` / NQ laggard).
+- Require BOTH (irrational + directional opposition) — irrational alone is insufficient.
+- **Size-down ½** instead of full skip when irrational (keeps participation, cuts the tail).
+Validate on the CONT/FLIP cohort as a shadow gate: confusion matrix vs outcomes (losers dropped vs
+winners kept), permutation p, June-OOS. Do NOT wire live until it clears the 10:41/11:16/12:23 keep-test.
+
+Related (same post-mortem): the trader uses a **fixed 70pt stop decoupled from the signal's structural
+`stopLevel`** (10:35 thesis invalidated at the 25pt HG break → held to 70pt → $280 vs ~$100). Quantify
+how often the fixed stop runs past the structural stop on the CONT cohort; consider honoring stopLevel.
