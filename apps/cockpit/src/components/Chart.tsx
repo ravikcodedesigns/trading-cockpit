@@ -1495,8 +1495,6 @@ export function Chart() {
     // matching the RS platform (bull #4a4f61, bear #c5b1ab). Attach the
     // primitive once to the candle series, then just refresh its bands.
     {
-      const todayTD = tradingDayFor(Date.now());
-      const z = levelsByDay[todayTD]?.[selectedSymbol]?.zones;
       const s = seriesRef.current;
       if (s) {
         // Re-attach if the candle series was recreated (symbol switch / HMR),
@@ -1505,7 +1503,28 @@ export function Chart() {
           zoneBandsRef.current = new ZoneBandsPrimitive();
           try { (s as unknown as { attachPrimitive: (p: unknown) => void }).attachPrimitive(zoneBandsRef.current); } catch { /* older LWC */ }
         }
-        zoneBandsRef.current.setBands(z?.bull ?? [], z?.bear ?? []);
+        // Shade EVERY loaded day's zones, each confined to that day's RTH window
+        // (09:30→16:00 ET) — so today's bands persist after the close and prior
+        // days stay shaded in their own session as you scroll back. DST-aware ET:
+        // anchor at UTC = etHour+4 (EDT) then correct if NY came back in EST.
+        const hourFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', hour12: false });
+        const etMs = (y: number, m: number, d: number, h: number) => {
+          const naive = new Date(Date.UTC(y, m - 1, d, h + 4, 0, 0));
+          return naive.getTime() + (h - parseInt(hourFmt.format(naive), 10)) * 3600_000;
+        };
+        const bull: { low: number; high: number; from: number; to: number }[] = [];
+        const bear: typeof bull = [];
+        for (const day of Object.keys(levelsByDay)) {
+          const z = levelsByDay[day]?.[selectedSymbol]?.zones;
+          if (!z) continue;
+          const p = day.split('-').map(Number);
+          if (p.length !== 3 || p.some(Number.isNaN)) continue;
+          const from = Math.floor((etMs(p[0]!, p[1]!, p[2]!, 9) + 30 * 60_000) / 1000); // 09:30 ET
+          const to   = Math.floor(etMs(p[0]!, p[1]!, p[2]!, 16) / 1000);                 // 16:00 ET
+          for (const b of (z.bull ?? [])) bull.push({ low: b.low, high: b.high, from, to });
+          for (const b of (z.bear ?? [])) bear.push({ low: b.low, high: b.high, from, to });
+        }
+        zoneBandsRef.current.setBands(bull, bear);
       }
     }
 
