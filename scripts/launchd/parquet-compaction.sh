@@ -38,6 +38,19 @@ echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction starting" >> "$LOG
 PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
 echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction done (exit $?)" >> "$LOG"
 
+# Prune .trash to a ~2-day rollback window so it can't silently balloon. Compaction
+# moves every pre-compaction original here; un-pruned it hit 81GB by 2026-06-25 (4.7x
+# the live data). Trashed files keep their original flush mtime, so -mtime +2 = data
+# older than ~2 days; then drop the emptied dirs. The live compact-*.parquet files and
+# the .log source both cover these, so pruning loses nothing.
+TRASH="$REPO/data/mbo-parquet/.trash"
+if [[ -d "$TRASH" ]]; then
+  echo "==[ $(date '+%F %T') ]== pruning .trash (>2 days)" >> "$LOG"
+  find "$TRASH" -type f -mtime +2 -delete 2>/dev/null
+  find "$TRASH" -type d -empty -delete 2>/dev/null
+  echo "  .trash now $(du -sh "$TRASH" 2>/dev/null | cut -f1 || echo gone)" >> "$LOG"
+fi
+
 # ticks-parquet refresh: re-convert the last 2 ET days (finalize just-closed
 # day + refresh the live current-day snapshot). BSD date (macOS) for -2d.
 REDO_FROM=$(date -v-2d +%Y-%m-%d)
