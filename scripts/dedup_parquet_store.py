@@ -40,7 +40,12 @@ import duckdb
 
 DEFAULT_OUT = Path.home() / "trading-cockpit" / "data" / "mbo-parquet"
 TABLES = ("trades", "depth", "mbo")
-SYMBOLS = ("NQ", "ES")
+# Every captured instrument MUST be here or its partitions never compact — they
+# accumulate ~2000 tail-flush files/day plus at-least-once duplicate rows forever.
+# Bug (fixed 2026-06-25): this was ("NQ","ES") only, so MNQ/MES/CL/GC went
+# un-compacted from 06-19 on (1,800+ files/partition, 1-6% dup rows). The micros
+# are the BIGGEST partitions (80M+ rows) — the incremental path below handles them.
+SYMBOLS = ("NQ", "ES", "MNQ", "MES", "CL", "GC")
 
 
 def partition_dirs(out: Path):

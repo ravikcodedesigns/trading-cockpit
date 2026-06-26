@@ -113,7 +113,7 @@ def symbol_from_alias(alias: str) -> Optional[str]:
         GCQ6.COMEX@BMD                  → 'GC'    (full-size gold)
     Order matters: 'MNQ' contains 'NQ' / 'MCL' contains 'CL' / 'MGC' contains 'GC',
     so micros MUST be tested first."""
-    if not alias:
+    if not isinstance(alias, str) or not alias:
         return None
     a = alias.upper()
     if "MNQ" in a:
@@ -461,6 +461,7 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
     ckpt_dir.mkdir(exist_ok=True)
 
     buffers = TailBuffers(out_dir)
+    bad_lines = [0]  # corrupt lines skipped (boxed so the inner loop can mutate it)
 
     # file read positions (in-memory) and the checkpoint path for each log file.
     offsets: Dict[Path, int] = {}
@@ -534,7 +535,12 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
                     continue
                 try:
                     parsed = parse_event(raw.decode("utf-8"))
-                except UnicodeDecodeError:
+                except Exception:
+                    # A single corrupt line (bad utf-8, non-string alias, malformed
+                    # field) must NEVER crash the tail — that re-reads from the last
+                    # checkpoint and re-hits the same line forever (286 such crashes
+                    # on 2026-06-25 before this guard). Skip it, count it, move on.
+                    bad_lines[0] += 1
                     continue
                 if parsed is None:
                     continue
@@ -559,7 +565,8 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
             n = buffers.flush()
             if n:
                 _persist_checkpoints()
-                print(f"[flush] {n:,} rows", flush=True)
+                bad = f"  (skipped {bad_lines[0]:,} corrupt lines)" if bad_lines[0] else ""
+                print(f"[flush] {n:,} rows{bad}", flush=True)
 
         time.sleep(TAIL_POLL_SECONDS)
 
