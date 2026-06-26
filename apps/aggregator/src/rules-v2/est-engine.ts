@@ -71,8 +71,10 @@ export function evaluateEst(ms: MarketState, opts: EstOpts = {}): Setup[] {
     });
   };
 
-  // 1) MHP — long bounce (N if resOrange>0 else S). 90% full confluence / 73% base.
-  if (ms.levels.mhp != null && near(ms.levels.mhp)) {
+  // 1) MHP — long bounce. VETO when MHP resilience is negative: a negative resOrange means the
+  //    level is failing/distributing, so the bounce isn't tradable — don't emit (don't log) it.
+  //    Only emit when resOrange >= 0 (N if >0, S if exactly 0). 90% full confluence / 73% base.
+  if (ms.levels.mhp != null && near(ms.levels.mhp) && resO >= 0) {
     emit('MHP', ms.levels.mhp, 'long', resO > 0 ? 'N' : 'S', resO > 0 ? 0.90 : 0.73,
       'bounce', `MHP bounce · resOrange ${resO >= 0 ? '+' : ''}${resO} · DD ${dd}`);
   }
