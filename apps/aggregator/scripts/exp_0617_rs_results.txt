@@ -1,0 +1,9 @@
+2026-06-17 — RS levels {'MHP': 29890.6, 'HP': 29993.3} — 105 raw touches -> 6 visits
+
+     time(ms)  lvl   appr        px | wall   l3 gap ice    cvd   c60 tBuy tSel |  CALL |   gain   loss    net | reason
+ 15:39:17.764   HP  above  29993.50 |    2    2   0   0  -5120  -583    1    3 |  LONG |   95.5  -70.5   52.0 | fade (support holds)
+ 15:45:12.216   HP  below  29993.00 |   17   10   7   0  -4671   193   12    0 | SHORT |   70.0  -96.0 -29.75 | fade (resistance holds)
+ 15:50:00.242   HP  above  29993.00 |    2    1   1   0  -4571  -116    0    1 |  LONG |   99.5  -70.0  95.75 | fade (support holds)
+ 15:55:00.797   HP  below  29993.00 |    9    8   1   0  -4749   121    1    0 | SHORT |   18.0 -139.5 -115.75 | fade (resistance holds)
+ 15:57:12.053   HP  above  29993.50 |    8    6   2   0  -4782    41    0    4 |  LONG |  139.0  -18.5  132.5 | fade (support holds)
+ 15:59:12.127   HP  below  29993.00 |   14   11   3   0  -4898  -176   53   87 | SHORT |   12.5 -140.25 -131.25 | fade (resistance holds)
