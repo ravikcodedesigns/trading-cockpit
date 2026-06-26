@@ -39,6 +39,13 @@ export const config = {
   enabledRules: (process.env.TRADER_ENABLED_RULES ?? 'clean-impulse')
     .split(',').map(r => r.trim()).filter(Boolean),
 
+  // Pull FLIP-long (clean-impulse long) from LIVE trading — shadow only (aggregator
+  // still logs/broadcasts it; the trader just won't place the order). Decided
+  // 2026-06-26: the per-type regime split showed FLIP-long broken in EVERY regime
+  // cell (gm=bull −$9 EV, rational −$6, irrational −$2). Reversible: set =false to
+  // re-arm. FLIP-short / CONT-long / CONT-short are unaffected.
+  dropFlipLongs: (process.env.TRADER_DROP_FLIP_LONGS ?? 'false') === 'true',
+
   // Discord webhook for trade notifications. Empty string = disabled.
   discordWebhook: process.env.DISCORD_WEBHOOK ?? '',
 

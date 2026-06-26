@@ -89,6 +89,15 @@ export function startSignalGate(onSignal: SignalHandler, onTradeClose?: TradeClo
       // For clean-impulse: only FLIP pattern (not CONT)
       if (ruleId === 'clean-impulse' && (signal as any).pattern !== 'FLIP') return;
 
+      // FLIP-long pulled from LIVE (regime test 2026-06-26: broken in every regime
+      // cell). Shadow only — the aggregator still logs/broadcasts it (chart marker
+      // shows); the trader just won't place the order. Reversible: TRADER_DROP_FLIP_LONGS=false.
+      if (config.dropFlipLongs && ruleId === 'clean-impulse' && signal.direction === 'long') {
+        logger.info({ ts: signal.ts, ruleId, direction: signal.direction },
+          'FLIP-long blocked (dropFlipLongs) — shadow only, not traded');
+        return;
+      }
+
       // Only gold-tier (aggregator already filters, but be explicit)
       // Signals from /ws/cockpit are always gold — silenced ones never reach here.
 

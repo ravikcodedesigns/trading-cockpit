@@ -486,14 +486,25 @@ disqualifier — `isRational=false`, dual `/ENQ`+`/EP` DD-Band-Break **yellow/do
 BUT a **blanket** isRational/DD-break veto is too blunt: it would also kill the same day's WINNERS
 (10:41, 11:16, 12:23). The rule is directionally right, not literal. Be clever about *when* to skip.
 
-Hypotheses to shadow-test (find the gate that drops the 10:35 loser but keeps the 10:41/11:16/12:23 wins):
-- Veto only when irrational AND the **DD-break direction OPPOSES** the trade (long into DD-break-DOWN
-  = skip; long with break-up = fine). Direction-aware, not state-aware.
-- Veto only when irrational AND **index RS is against** the trade (long while `qqqSpyRs<0` / NQ laggard).
-- Require BOTH (irrational + directional opposition) — irrational alone is insufficient.
-- **Size-down ½** instead of full skip when irrational (keeps participation, cuts the tail).
-Validate on the CONT/FLIP cohort as a shadow gate: confusion matrix vs outcomes (losers dropped vs
-winners kept), permutation p, June-OOS. Do NOT wire live until it clears the 10:41/11:16/12:23 keep-test.
+**VALIDATED 2026-06-26 — `isRational` is the WRONG trigger.** Per-type regime split (sim outcomes ×
+signal `_rsContext`): CONT-long performs BETTER irrational (+$74 EV vs +$46 rational) and FLIP-short
+BETTER irrational (+$52 vs +$12). A blanket isRational veto would HURT the two best cohorts. The 10:35
+loss was **directional opposition** (long into dual /ENQ+/EP DD-Band-Break-DOWN + `qqqSpyRs=−0.46`),
+not the irrational state. So the gate must trigger on DIRECTION-against-trade, not on the state flag.
+(Also note: the "winners" framing was off — 10:41 was itself an SL; only 11:16/12:23 were TPs.)
+
+Hypotheses to shadow-test (drop the 10:35 loser, keep 11:16/12:23):
+- **Primary:** veto a trade only when the index **DD-Band-Break OPPOSES** it (long into break-DOWN,
+  short into break-UP), regardless of isRational. Direction-aware.
+- Secondary: veto when **index RS is against** the trade (long while `qqqSpyRs<0` / NQ the laggard).
+- Size-down ½ rather than a full skip.
+- **DROP the `isRational` trigger** — it inverts on the best cohorts.
+Validate as a shadow gate: confusion matrix vs outcomes, permutation p, June-OOS.
+
+**FLIP-LONG decision (2026-06-26, related):** the per-type regime split also showed FLIP-long is broken
+in EVERY regime cell (gm=bull −$9 EV, rational −$6, irrational −$2) — a regime gate can't save it.
+Action taken: pull FLIP-long from the LIVE trader (shadow-log only) via `dropFlipLongs`; re-arm when its
+shadow EV turns clearly positive. FLIP-short, CONT-long, CONT-short stay live (all positive in-regime).
 
 Related (same post-mortem): the trader uses a **fixed 70pt stop decoupled from the signal's structural
 `stopLevel`** (10:35 thesis invalidated at the 25pt HG break → held to 70pt → $280 vs ~$100). Quantify
