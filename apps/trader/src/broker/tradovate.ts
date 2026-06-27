@@ -105,6 +105,12 @@ export class TradovateClient {
   private ws: WebSocket | null = null;
   private wsReady = false;
   private fillListeners: Array<(fill: FillEvent) => void> = [];
+  // Buffer of fills seen on the WS, keyed by orderId. Lets waitForFill — registered
+  // AFTER placeMarketOrder's ~200ms round-trip — catch a fill whose WS push arrived
+  // BEFORE the listener was attached (fills land in ~ms, so they race the listener).
+  // Without this, missed pushes fell through to the 1s REST poll, delaying SL/TP
+  // bracket placement ~1s (position live with no stop in that window).
+  private recentFills = new Map<number, { price: number; ts: number }>();
   private orderUpdateListeners: Array<(orderId: number, status: string) => void> = [];
   private positionListeners: Array<(pos: { id: number; contractId: number; netPos: number; netPrice: number | null; accountId: number; timestamp?: string }) => void> = [];
   private wsHeartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -359,6 +365,13 @@ export class TradovateClient {
               // Fill events
               if (ev.e === 'props' && ev.d?.entityType === 'fill') {
                 const fill = ev.d.entity as FillEvent;
+                // Buffer first so a waitForFill that registers AFTER this push
+                // (the near-instant fill races the listener) still resolves on the WS.
+                this.recentFills.set(fill.orderId, { price: fill.price, ts: Date.now() });
+                if (this.recentFills.size > 200) {
+                  const cutoff = Date.now() - 60_000;
+                  for (const [k, v] of this.recentFills) if (v.ts < cutoff) this.recentFills.delete(k);
+                }
                 this.fillListeners.forEach(fn => fn(fill));
               }
 
@@ -470,6 +483,20 @@ export class TradovateClient {
           }
         } catch { /* network hiccup, continue polling */ }
       }, 1_000);
+
+      // Race fix: the fill's WS push may have landed BEFORE this listener attached
+      // (fills are ~ms; waitForFill runs after placeMarketOrder's ~200ms round-trip).
+      // Such fills sit in recentFills — resolve from there now so the SL/TP bracket
+      // goes on in ms instead of waiting out the 1s poll. (Executor runs synchronously,
+      // so no WS message interleaves between the listener attach above and this check.)
+      const buffered = this.recentFills.get(orderId);
+      if (buffered) {
+        this.recentFills.delete(orderId);
+        clearTimeout(timer);
+        clearInterval(poll);
+        unsub();
+        resolve(buffered.price);
+      }
     });
   }
 
