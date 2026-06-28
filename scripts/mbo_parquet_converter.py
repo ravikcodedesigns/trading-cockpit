@@ -59,8 +59,12 @@ COMPRESSION_LEVEL = 3
 # Schemas
 # ────────────────────────────────────────────────────────────────────────────
 
+# ts_ms = EXCHANGE time (addon v1.2+; was capture-arrival time in v1.1 — see backlog #13).
+# ts_recv = capture-arrival time, present only from v1.2 logs (null for older .log lines);
+#   feed lag = ts_recv - ts_ms. Partitioning + all timing use ts_ms.
 TRADES_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
+    ("ts_recv", pa.int64()),
     ("contract", pa.string()),       # MNQM6 / MNQU6 / MESM6 / MESU6 / MNQM26 (CQG-style) ...
     ("price_int", pa.int32()),
     ("price", pa.float64()),
@@ -75,6 +79,7 @@ TRADES_SCHEMA = pa.schema([
 
 DEPTH_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
+    ("ts_recv", pa.int64()),
     ("contract", pa.string()),
     ("price_int", pa.int32()),
     ("price", pa.float64()),
@@ -84,6 +89,7 @@ DEPTH_SCHEMA = pa.schema([
 
 MBO_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
+    ("ts_recv", pa.int64()),
     ("contract", pa.string()),
     ("action", pa.string()),  # send / cancel / replace
     ("order_id", pa.string()),
@@ -199,6 +205,7 @@ def parse_event(line: str) -> Optional[Tuple[str, str, dict]]:
     contract = contract_from_alias(alias)
 
     ts = obj.get("ts_ms")
+    recv = obj.get("ts_recv")   # addon v1.2+; None for older logs (nullable column)
     d = obj.get("data") or {}
     if ts is None:
         return None
@@ -206,6 +213,7 @@ def parse_event(line: str) -> Optional[Tuple[str, str, dict]]:
     if kind == "trade":
         row = {
             "ts_ms": ts,
+            "ts_recv": recv,
             "contract": contract,
             "price_int": d.get("price_int"),
             "price": d.get("price"),
@@ -222,6 +230,7 @@ def parse_event(line: str) -> Optional[Tuple[str, str, dict]]:
     if kind == "depth":
         row = {
             "ts_ms": ts,
+            "ts_recv": recv,
             "contract": contract,
             "price_int": d.get("price_int"),
             "price": d.get("price"),
@@ -234,6 +243,7 @@ def parse_event(line: str) -> Optional[Tuple[str, str, dict]]:
         action = kind.split("_", 1)[1]  # send / cancel / replace
         row = {
             "ts_ms": ts,
+            "ts_recv": recv,
             "contract": contract,
             "action": action,
             "order_id": str(d["order_id"]) if d.get("order_id") is not None else None,

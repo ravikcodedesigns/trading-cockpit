@@ -52,7 +52,7 @@ def check_mbo(days):
                     continue  # symbol/instrument simply not captured that day
                 nf = len(files)
                 g = str(MBO_PQ / table / f"symbol={sym}" / f"date={date}" / "*.parquet")
-                tot = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}')").fetchone()[0]
+                tot = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}', union_by_name=true)").fetchone()[0]
                 if 0 < tot < MIN_ROWS:
                     continue  # stray/stub partition (mis-aliased MCL/MGC, 1-2 rows)
                 if nf > 1:
@@ -66,7 +66,7 @@ def check_mbo(days):
                 # deep recon (Stage B) does the exhaustive DISTINCT-* pass.
                 if nf > 1:
                     dis = con.execute(
-                        f"SELECT COUNT(*) FROM (SELECT DISTINCT * FROM read_parquet('{g}'))").fetchone()[0]
+                        f"SELECT COUNT(*) FROM (SELECT DISTINCT * FROM read_parquet('{g}', union_by_name=true))").fetchone()[0]
                     duppct = (tot - dis) / tot * 100
                 else:
                     duppct = 0.0
@@ -78,7 +78,7 @@ def check_mbo(days):
                     gap = con.execute(f"""
                         SELECT COALESCE(MAX(gap_min),0) FROM (
                           SELECT (ts_ms - LAG(ts_ms) OVER (ORDER BY ts_ms))/60000.0 gap_min
-                          FROM read_parquet('{g}'))
+                          FROM read_parquet('{g}', union_by_name=true))
                         WHERE gap_min > {GAP_MIN_MAX}""").fetchone()[0]
                     if gap and gap > GAP_MIN_MAX:
                         flags.append(f"CAPTURE_GAP {sym} trades {date}: {gap:.0f}min gap")
@@ -108,7 +108,7 @@ def check_cqg(days):
                     (sym, lo, hi)).fetchone()[0]
                 g = str(TICK_PQ / table / f"symbol={sym}" / f"date={date}" / "*.parquet")
                 try:
-                    b = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}')").fetchone()[0]
+                    b = con.execute(f"SELECT COUNT(*) FROM read_parquet('{g}', union_by_name=true)").fetchone()[0]
                 except Exception:
                     b = 0
                 if a != b:

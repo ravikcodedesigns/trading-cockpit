@@ -81,7 +81,7 @@ def dedup_incremental(con, files, stage_file) -> int:
     rows are found via EXCEPT and appended."""
     con.execute("DROP TABLE IF EXISTS acc")
     b = INCREMENTAL_BATCH_FILES
-    con.execute(f"CREATE TABLE acc AS SELECT DISTINCT * FROM read_parquet({_sql_list(files[:b])})")
+    con.execute(f"CREATE TABLE acc AS SELECT DISTINCT * FROM read_parquet({_sql_list(files[:b])}, union_by_name=true)")
     for i in range(b, len(files), b):
         grp = files[i:i + b]
         con.execute("DROP TABLE IF EXISTS newrows")
@@ -89,7 +89,7 @@ def dedup_incremental(con, files, stage_file) -> int:
         # set-distinct, so batch-internal dups collapse too).
         con.execute(
             f"CREATE TEMP TABLE newrows AS "
-            f"SELECT * FROM read_parquet({_sql_list(grp)}) EXCEPT SELECT * FROM acc"
+            f"SELECT * FROM read_parquet({_sql_list(grp)}, union_by_name=true) EXCEPT SELECT * FROM acc"
         )
         con.execute("INSERT INTO acc SELECT * FROM newrows")
         con.execute("DROP TABLE newrows")
@@ -139,12 +139,12 @@ def main() -> int:
             continue
 
         glob = str(d / "*.parquet")
-        total = con.execute(f"SELECT count(*) FROM read_parquet('{glob}')").fetchone()[0]
+        total = con.execute(f"SELECT count(*) FROM read_parquet('{glob}', union_by_name=true)").fetchone()[0]
         size = sum(p.stat().st_size for p in files)
 
         if not args.execute:
             # Dry-run: report the distinct count (one heavy pass, read-only).
-            distinct = con.execute(f"SELECT count(*) FROM (SELECT DISTINCT * FROM read_parquet('{glob}'))").fetchone()[0]
+            distinct = con.execute(f"SELECT count(*) FROM (SELECT DISTINCT * FROM read_parquet('{glob}', union_by_name=true))").fetchone()[0]
             dup_pct = 100 * (total - distinct) / total if total else 0
             tot_before += total
             tot_after += distinct
@@ -165,14 +165,14 @@ def main() -> int:
             dedup_incremental(con, files, stage_file)
         else:
             con.execute(
-                f"COPY (SELECT DISTINCT * FROM read_parquet('{glob}')) "
+                f"COPY (SELECT DISTINCT * FROM read_parquet('{glob}', union_by_name=true)) "
                 f"TO '{stage_file}' (FORMAT PARQUET, COMPRESSION zstd, COMPRESSION_LEVEL 3)"
             )
         # Verify on the small deduped output: non-empty, not larger than input,
         # and internally dup-free (cheap — staging is the collapsed set).
         sg = str(stage_file)
-        staged = con.execute(f"SELECT count(*) FROM read_parquet('{sg}')").fetchone()[0]
-        staged_distinct = con.execute(f"SELECT count(*) FROM (SELECT DISTINCT * FROM read_parquet('{sg}'))").fetchone()[0]
+        staged = con.execute(f"SELECT count(*) FROM read_parquet('{sg}', union_by_name=true)").fetchone()[0]
+        staged_distinct = con.execute(f"SELECT count(*) FROM (SELECT DISTINCT * FROM read_parquet('{sg}', union_by_name=true))").fetchone()[0]
         if staged == 0 or staged > total or staged != staged_distinct:
             print(f"   !! ABORT {table}/{sym}/{date}: staged={staged:,} total={total:,} "
                   f"staged_distinct={staged_distinct:,}; leaving partition untouched")

@@ -44,6 +44,7 @@ import velox.api.layer1.simplified.CustomModule;
 import velox.api.layer1.simplified.DepthDataListener;
 import velox.api.layer1.simplified.InitialState;
 import velox.api.layer1.simplified.MarketByOrderDepthDataListener;
+import velox.api.layer1.simplified.TimeListener;
 import velox.api.layer1.simplified.TradeDataListener;
 
 import java.io.BufferedWriter;
@@ -65,7 +66,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Layer1ApiVersion(Layer1ApiVersionValue.VERSION2)
 @UnrestrictedData  // Required for addons that consume MBO/raw orderflow on restricted feeds (BookmapData, dxFeed)
 public class CaptureAddon
-        implements CustomModule, TradeDataListener, DepthDataListener, MarketByOrderDepthDataListener {
+        implements CustomModule, TradeDataListener, DepthDataListener, MarketByOrderDepthDataListener, TimeListener {
 
     private static final Gson GSON = new Gson();
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -79,7 +80,33 @@ public class CaptureAddon
     private long eventCount = 0;
     private long lastSummaryTs = 0;
 
+    // Latest EXCHANGE time (epoch ms) delivered by Bookmap's TimeListener. The data
+    // callbacks (onTrade/onDepth/send/replace/cancel) carry NO timestamp, so v1.1 fell
+    // back to System.currentTimeMillis() (capture ARRIVAL time) — which, when the feed
+    // lags at the open, mis-timestamps events by minutes. v1.2 stamps ts_ms from this
+    // exchange clock instead, and records ts_recv (arrival) alongside so lag is visible
+    // (lag = ts_recv - ts_ms). Volatile: written on the data thread, read under writeLock.
+    private volatile long lastExchMs = 0;
+
     private final Map<String, Long> kindCounts = new HashMap<>();
+
+    // ── Exchange clock (TimeListener) ─────────────────────────────────────
+    // Bookmap pushes the current feed/exchange time on a separate channel, interleaved
+    // in time order with the data events. We cache the latest value and stamp it onto
+    // each record. Units vary by API/adapter (ns / µs / ms) — normalize to ms so the
+    // value is correct regardless.
+    @Override
+    public void onTimestamp(long t) {
+        lastExchMs = normalizeToMs(t);
+    }
+
+    /** Normalize an epoch timestamp of unknown unit (ns/µs/ms) to milliseconds. */
+    private static long normalizeToMs(long t) {
+        if (t <= 0) return 0;
+        if (t > 100_000_000_000_000_000L) return t / 1_000_000L; // nanoseconds  → ms
+        if (t > 100_000_000_000_000L)      return t / 1_000L;     // microseconds → ms
+        return t;                                                  // already milliseconds
+    }
 
     // ── CustomModule lifecycle ────────────────────────────────────────────
 
@@ -144,7 +171,9 @@ public class CaptureAddon
         // Write a marker into the NEW file so downstream ingesters can see the
         // boundary explicitly (also helps debug rotation timing).
         Map<String, Object> rec = new HashMap<>();
-        rec.put("ts_ms", System.currentTimeMillis());
+        long rotRecv = System.currentTimeMillis();
+        rec.put("ts_ms", lastExchMs > 0 ? lastExchMs : rotRecv);
+        rec.put("ts_recv", rotRecv);
         rec.put("alias", alias);
         rec.put("kind", "rotate");
         rec.put("data", Map.of(
@@ -232,8 +261,14 @@ public class CaptureAddon
         eventCount++;
         kindCounts.merge(kind, 1L, Long::sum);
         if (logWriter == null) return;
+        long recvMs = System.currentTimeMillis();
+        long exchMs = lastExchMs;   // exchange time from TimeListener; 0 until first tick
         Map<String, Object> record = new HashMap<>();
-        record.put("ts_ms", System.currentTimeMillis());
+        // ts_ms = EXCHANGE time (the fix). Fall back to arrival time only before the
+        // first TimeListener tick arrives. ts_recv = arrival time, always, so feed lag
+        // is measurable downstream (lag = ts_recv - ts_ms).
+        record.put("ts_ms", exchMs > 0 ? exchMs : recvMs);
+        record.put("ts_recv", recvMs);
         record.put("alias", alias);
         record.put("kind", kind);
         record.put("data", data);

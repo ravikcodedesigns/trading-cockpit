@@ -9,9 +9,10 @@ plugins {
 }
 
 group = 'com.cockpit.bookmap'
-version = '1.1'    // 2026-06-09: calendar-day file rotation. v1.0 wrote
-                   // every event to the file it opened at attach time, so a
-                   // long-running session appended days into yesterday's file.
+version = '1.2'    // 2026-06-28: ts_ms now = EXCHANGE time via TimeListener (was
+                   // System.currentTimeMillis() arrival time, which mis-stamped
+                   // events by minutes when the feed lagged at the open). Adds
+                   // ts_recv (arrival) for lag measurement. v1.1: calendar-day rotation.
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -38,7 +39,7 @@ dependencies {
 }
 
 jar {
-    archiveFileName = 'ravikbasker_bookmapdata_addon_v1.1.jar'
+    archiveFileName = 'ravikbasker_bookmapdata_addon_v1.2.jar'
     manifest {
         attributes(
             'Implementation-Title':   'Cockpit Bookmap MBO Capture',
