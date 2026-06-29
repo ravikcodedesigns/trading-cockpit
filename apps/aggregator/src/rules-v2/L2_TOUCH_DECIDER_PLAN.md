@@ -151,9 +151,7 @@ true aggressor-clustering, true CVD.
 3. CQG-micro now vs wait for v1.2 BMD full-size.
 4. Which levels in scope first (BrZT/LP/IP only, or all RS levels).
 5. Regime-classifier definition (camp/trend/flush thresholds — relative).
-6. **Approach anchor**: when does the "leg into the level" start — price within N pts of the level,
-   or the start of the directional move toward it? (defines CVD/OFI/velocity-since-approach.)
-7. **Rolling-baseline window** for the relative z-scores (e.g. last 10/20 min vs session-so-far).
+(all settled 2026-06-28 — see below)
 
 ### Settled (2026-06-28)
 - Data source: **CQG micro now**, re-run on BMD full-size after v1.2 validated.
@@ -161,3 +159,9 @@ true aggressor-clustering, true CVD.
 - Bracket: **pocket-scaled** (TP = opposite edge, SL ≈ 0.3·H).
 - Touch evaluation: **arm at touch + track to the flow-flip confirming tick** (contested if price
   leaves the band first).
+- **Regime classifier**: camp = both pocket edges tagged ≥2× in last N min within a contained
+  range (act); trend/grind = directional drift + persistent same-sign CVD, edges not held (stand
+  aside); flush = fast one-sided velocity into the level (wait for absorption). All RELATIVE/causal.
+- **Approach anchor**: start of the directional leg into the level = the **last local pivot before
+  the touch**; causal fallback = first entry within ~1 zone-width while still moving toward it.
+- **Rolling-baseline window**: **20 min**, recomputed continuously (not session-so-far).
