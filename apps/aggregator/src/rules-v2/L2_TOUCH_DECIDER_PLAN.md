@@ -92,7 +92,12 @@ true aggressor-clustering, true CVD.
 - Lift OFI/Kyle-λ from `src/l3/divergence.ts` as reusable L2 primitives (pure functions already).
 
 ### Stage 1 — RTH L2 trace + per-touch capture (LOG ONLY, label outcomes)
-- **1s RTH trace** of the L2 factors → time-series table (context/baselines for the relative z-scores).
+- **1s RTH trace, CONTINUOUS FROM RTH OPEN (09:30)** of the L2 factors → time-series table. Two
+  jobs: (a) the rolling intraday **baseline/distribution** every relative feature normalizes against
+  (z-scores need history before a touch); (b) the **approach record** — so when a touch fires we
+  already have the full pre-touch leg (e.g. the ~40s sell-leg into BrZT @09:32:56) to compute
+  CVD/OFI/velocity-since-approach. The before-touch data is a first-class PREDICTIVE input (conviction
+  driving into the level), not just context.
 - **Per-touch:** detect first-touch (RS_TOUCH_SPEC §1), join engine thesis + regime, capture the
   A/B/C feature vector, ARM the reaction window, record the confirming tick (if any).
 - **Outcome labeling:** forward-walk CQG trades to the bracket → WIN/LOSS, pnl_pts, with a slippage
@@ -146,3 +151,13 @@ true aggressor-clustering, true CVD.
 3. CQG-micro now vs wait for v1.2 BMD full-size.
 4. Which levels in scope first (BrZT/LP/IP only, or all RS levels).
 5. Regime-classifier definition (camp/trend/flush thresholds — relative).
+6. **Approach anchor**: when does the "leg into the level" start — price within N pts of the level,
+   or the start of the directional move toward it? (defines CVD/OFI/velocity-since-approach.)
+7. **Rolling-baseline window** for the relative z-scores (e.g. last 10/20 min vs session-so-far).
+
+### Settled (2026-06-28)
+- Data source: **CQG micro now**, re-run on BMD full-size after v1.2 validated.
+- Level scope: **BrZT / LP / IP only** first.
+- Bracket: **pocket-scaled** (TP = opposite edge, SL ≈ 0.3·H).
+- Touch evaluation: **arm at touch + track to the flow-flip confirming tick** (contested if price
+  leaves the band first).
