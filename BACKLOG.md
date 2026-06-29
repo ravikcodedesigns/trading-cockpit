@@ -509,3 +509,49 @@ shadow EV turns clearly positive. FLIP-short, CONT-long, CONT-short stay live (a
 Related (same post-mortem): the trader uses a **fixed 70pt stop decoupled from the signal's structural
 `stopLevel`** (10:35 thesis invalidated at the 25pt HG break → held to 70pt → $280 vs ~$100). Quantify
 how often the fixed stop runs past the structural stop on the CONT cohort; consider honoring stopLevel.
+
+## 13. Fix Bookmap MBO-capture timestamp → exchange time (SUNDAY PM) — data integrity
+
+Trigger: 2026-06-26 — the BMD mbo-parquet price series was ~6–15 min MISALIGNED vs the live
+CQG/cockpit chart at the open (same prices, wrong times). Root cause: `CaptureAddon.java:147,236`
+stamps `ts_ms = System.currentTimeMillis()` (capture ARRIVAL/processing wall-clock), NOT exchange
+time. When the BMD feed/capture lags (open-volume backlog), embedded ts reflects late arrival, so:
+- replays keyed on ts_ms are time-wrong (invalidated the 06-26 L3 touch micro-analysis);
+- the live l3-book-worker's 3s freshness gate (`Date.now()-ts_ms>3000`) CANNOT detect feed delay
+  (arrival-stamp ≈ now), so it would process stale book as fresh. (Live TRADING is safe — it runs
+  off CQG/tick-store, not the L3 shadow worker — but the L3 shadow validation data is polluted.)
+
+API finding (bytecode-verified): the simplified depth/trade/MBO callbacks carry NO timestamp, which
+is why currentTimeMillis was used. Time is available via a SEPARATE channel —
+`velox.api.layer1.simplified.TimeListener.onTimestamp(long)` — NOT a full-API rewrite.
+
+Fix (Sunday PM):
+1. Implement `TimeListener` in CaptureAddon; cache latest `t`; stamp records with **`ts_exch = t`**
+   AND keep **`ts_recv = System.currentTimeMillis()`** as a 2nd column (lag = ts_recv − ts_exch).
+2. Rebuild jar → redeploy to Bookmap (NQ + ES addons).
+3. VALIDATE: capture a session, confirm `ts_exch` aligns with CQG (the open flush lands at its real
+   minute, not minutes late). UNVERIFIED until tested — confirm onTimestamp is exchange, not wall.
+4. Converter: write both ts_exch/ts_recv to parquet; partition/replay on ts_exch.
+5. Build a standing **BMD↔CQG lag detector** (provider-agnostic) — flag when BMD price diverges from
+   tick-store best price > ~1 tick for > N sec; catches what the 3s gate can't, regardless of (1).
+Until fixed: use CQG/ticks.db for any time-accurate price/touch work; treat BMD L3 timing as suspect.
+
+## 14. rs-context-history logger — add expectedRangePts / EM bands / vxn (from 2026-06-29)
+
+The logger (`apps/aggregator/src/rs-context-history.ts`) captures the per-symbol header
+overlay but MISSES the flat top-level fields: `expectedRangePts` (the RANGE chip), the EM
+bands (`emMid, em1Low, em1High, em2Low, em2High`), and `vxn`. Reason: `raw_json` stores only
+`bySymbol[sym]`; these live at the flat context root, so they weren't columnized or in raw_json.
+Add them as columns (nullable) + capture in snapshot(). Start: **2026-06-29 trading day**
+(don't backfill — not available historically). Needed so the L2 touch decider's regime
+context (item #15) is complete — RANGE/EM is a key vol-scaled bracket/target input.
+
+## 15. L2 Touch Decider — level-touch scalping system (PLAN written)
+
+Full implementation plan: `apps/aggregator/src/rules-v2/L2_TOUCH_DECIDER_PLAN.md` (+ touch defs
+in `RS_TOUCH_SPEC.md`). Approach: at an RS-level first-touch the levels engine gates + emits a
+direction (BrZT/LP/IP = bullish prior); a new **L2-only** order-flow evaluator confirms/vetoes it;
+trade fires on confirmation; 20–40pt scalp bracket. Core L2 signals: Kyle's-λ absorption (reuse
+divergence.ts), approach-vs-touch CVD/OFI, Δsize-vs-trade-volume reconciliation, relative sweep.
+L3 reads commented out until BMD v1.2 timing validated (#13). Build stages 0→4, shadow-only,
+must beat the engine-prior baseline OOS before arming. See plan for the 6 open decisions.
