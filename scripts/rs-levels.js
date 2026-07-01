@@ -20,6 +20,8 @@ const DRY = process.env.DRY_RUN === '1';
 // so MM tracks price moving into/out of zones intraday without rewriting levels.
 const MM_ONLY = process.env.MM_ONLY === '1';
 const log = (...a) => console.error(new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false }) + ' ET', ...a);
+// Atomic write (temp + rename so a reader never sees a partial file).
+function writeAtomic(file, str) { const tmp = `${file}.tmp.${process.pid}`; fs.writeFileSync(tmp, str); fs.renameSync(tmp, file); }
 
 // ON HP / ON MHP removed 2026-06-18: the platform does NOT draw these, so they
 // are entered manually in daily_levels{,_es}.json. Keeping them out of RS_OWNED
@@ -98,6 +100,16 @@ async function clickAt(x, y) {
   await cdp('Input.dispatchMouseEvent', { type:'mouseReleased', x, y, button:'left', buttons:0, clickCount:1 });
 }
 
+// Reload the rocket.place tab. Left open unattended overnight, the platform does NOT
+// auto-refresh its liquidity maps / level shapes in the morning, so re-reading the same
+// page returns stale/null data indefinitely — a hard reload makes it re-fetch + re-render.
+// Page.reload via CDP (≡ user pressing refresh; passive, no platform API call); falls back
+// to location.reload() if the Page domain is unavailable.
+function reloadTab() {
+  return cdp('Page.reload', { ignoreCache: true })
+    .catch(() => evalExpr(`location.reload();0`).catch(() => {}));
+}
+
 // chart index whose symbol matches a regex (by symbol, robust to extra ETF charts).
 const findIdxExpr = reSrc => `(function(){var w=window.tvWidget,n=w.chartsCount();for(var i=0;i<n;i++){if(${reSrc}.test(w.chart(i).symbol()))return i;}return -1;})()`;
 // pane center (viewport coords) for the chart matching re — the click target that refreshes the LM text.
@@ -119,14 +131,14 @@ function computeMM(d) {
 }
 
 // Merge per-symbol lmCode/mmBullish into rs-context.json (preserve resiliences + everything else).
+// Write per-symbol Monthly-Map bias to the DEDICATED rs-context-mm.json (disjoint from rs-feed's
+// rs-context.json → no write race, no re-assert needed; the aggregator is the sole merger). Atomic.
 function writeRsContext(perSym) {
-  const CTX = path.resolve(__dirname, '../data/rs-context.json');
-  let cur = {}; try { cur = JSON.parse(fs.readFileSync(CTX, 'utf8')); } catch (e) {}
+  const MM = path.resolve(__dirname, '../data/rs-context-mm.json');
+  let cur = {}; try { cur = JSON.parse(fs.readFileSync(MM, 'utf8')); } catch (e) {}
   const by = { ...(cur.bySymbol || {}) };
   for (const [sym, vals] of Object.entries(perSym)) by[sym] = { ...(by[sym] || {}), ...vals };
-  cur.bySymbol = by;
-  if (perSym.NQ && perSym.NQ.lmCode) cur.lmCode = perSym.NQ.lmCode; // global default mirrors NQ
-  fs.writeFileSync(CTX, JSON.stringify(cur, null, 2));
+  writeAtomic(MM, JSON.stringify({ bySymbol: by, setAt: new Date().toISOString() }, null, 2));
 }
 
 function parseLabel(text) {
@@ -197,7 +209,7 @@ function writeFile(target, mapped) {
   if (mapped.mhp) lv.mhp = mapped.mhp;
   const others = (lv.additionalLevels || []).filter(a => !RS_OWNED.some(r => a.label.toLowerCase() === r.toLowerCase()));
   lv.additionalLevels = [...others, ...mapped.rsAdditionalLevels];
-  fs.writeFileSync(target.file, JSON.stringify(doc, null, 2));
+  writeAtomic(target.file, JSON.stringify(doc, null, 2));
   return others.length;
 }
 
@@ -207,10 +219,12 @@ async function readIntraday() {
   const d = JSON.parse(await evalExpr(SCRAPE));
   if (d.err) throw new Error(d.err);
   let zonesFound = false;
-  const bySym = {};   // per-symbol derived values, for the completeness/retry check
+  const bySym = {};            // per-symbol derived values, for the completeness/retry check
+  const chartsFound = new Set(); // targets whose chart IS loaded (vs "no matching chart") — gates the reload
   for (const t of TARGETS) {
     const chart = d.charts.find(c => t.re.test(c.symbol || ''));
     if (!chart) { log(`${t.name}: no matching chart`); bySym[t.name] = {}; continue; }
+    chartsFound.add(t.name);
     const mapped = mapChart(chart.shapes, d[t.hpNow], d[t.mhpNow]);
     if (mapped.zones.bull.length + mapped.zones.bear.length > 0) zonesFound = true;
     log(`── ${t.name} (${chart.symbol}, ${chart.shapes.length} shapes) ──`);
@@ -220,45 +234,34 @@ async function readIntraday() {
     bySym[t.name] = { primaryBull: mapped.bullZone, primaryBear: mapped.bearZone, ddBands: mapped.ddBands, HP: mapped.hedgePressure, MHP: mapped.mhp };
     if (!DRY) { const kept = writeFile(t, mapped); log(`  wrote ${t.file.split('/').pop()} [${etDate()}] (${kept} price-derived preserved)`); }
   }
-  return { zonesFound, bySym };
+  return { zonesFound, bySym, chartsFound };
 }
 
-// Phase 2 — per-symbol LM code + Monthly-Map bias. Flips each chart to 1D briefly
-// (restores to 1m after), clicks the pane so the LM text refreshes (setResolution
-// activates the chart but leaves the LM stale), reads next-day-column zones, then
-// writes lmCode + mmBullish into rs-context. Failures are isolated per symbol.
-async function readLmMm() {
+// rs-mm job (MM_ONLY) — per-symbol Monthly-Map bias (mmBullish) for NQ + ES only.
+// Flips each chart to 1D briefly (restores after), reads the next-day-column rectangles,
+// computes the bias. LM is NO LONGER read here — rs-feed owns LM (MASTER_TABLE.CPbook,
+// every 5s). No pane click either (that was LM-only). MM still needs the 1D flip: the
+// monthly-map rectangles only exist on the daily chart and aren't in MASTER_TABLE.
+async function readMm() {
   const perSym = {};
   for (const t of TARGETS) {
+    if (t.name !== 'NQ' && t.name !== 'ES') continue;   // MM job = NQ + ES only
     try {
       const idx = await evalExpr(findIdxExpr(t.re.toString()));
-      if (idx == null || idx < 0) { log(`${t.name}: no chart for LM/MM`); continue; }
-      // capture the chart's current resolution so we restore it (CL/GC run on 15m, not 1m)
+      if (idx == null || idx < 0) { log(`${t.name}: no chart for MM`); continue; }
       let origRes = '1';
       try { origRes = ('' + (await evalExpr(`''+window.tvWidget.chart(${idx}).resolution()`))) || '1'; } catch (e) {}
       await evalExpr(`window.tvWidget.chart(${idx}).setResolution("1D");"ok"`);
-      let lm = null;
-      try { const c = await evalExpr(paneCenterExpr(t.paneRe.toString())); if (c) { const p = JSON.parse(c); await clickAt(p.x, p.y); } } catch (e) {}
-      await sleep(3500); // let LM refresh + daily bars/zone rectangles render
-      try { lm = await evalExpr(lmExpr); } catch (e) {}
+      await sleep(3500); // let the 1D daily bars + monthly-map rectangles render
       let mm = null;
       try { mm = computeMM(JSON.parse(await evalExpr(mmScrape(idx)))); } catch (e) {}
       await evalExpr(`window.tvWidget.chart(${idx}).setResolution(${JSON.stringify(origRes)});"ok"`);
-      const v = {};
-      if (lm) v.lmCode = ('' + lm).trim();
-      if (mm != null) v.mmBullish = mm;
-      if (Object.keys(v).length) perSym[t.name] = v;
-      log(`  ${t.name}: LM=${lm ? ('' + lm).trim() : '?'}  MM=${mm == null ? '?' : (mm ? 'bullish' : 'bearish')}`);
-    } catch (e) { log(`${t.name}: LM/MM read failed — ${e.message}`); }
+      if (mm != null) perSym[t.name] = { mmBullish: mm };
+      log(`  ${t.name}: MM=${mm == null ? '?' : (mm ? 'bullish' : 'bearish')}`);
+    } catch (e) { log(`${t.name}: MM read failed — ${e.message}`); }
   }
-  if (!DRY && Object.keys(perSym).length) { writeRsContext(perSym); log(`  rs-context updated: ${Object.keys(perSym).join(', ')}`); }
-  // mmOk = every symbol produced a non-null Monthly-Map read this pass. A null read
-  // (charts not loaded at the open) must NOT count as success — otherwise the prior
-  // day's stale mmBullish is left in place all session.
-  const mmOk = TARGETS.every(t => {
-    const need = t.needLmMm || NEED_LMMM;
-    return !need.includes('mmBullish') || (perSym[t.name] && perSym[t.name].mmBullish != null);
-  });
+  if (!DRY && Object.keys(perSym).length) { writeRsContext(perSym); log(`  rs-context MM updated: ${Object.keys(perSym).join(', ')}`); }
+  const mmOk = ['NQ', 'ES'].every(n => perSym[n] && perSym[n].mmBullish != null);
   return { perSym, mmOk };
 }
 
@@ -268,41 +271,50 @@ const NEED_INTRADAY = ['primaryBull', 'primaryBear', 'ddBands', 'HP', 'MHP'];
 const NEED_LMMM = ['lmCode', 'mmBullish'];
 
 async function main() {
-  const bySym = MM_ONLY ? {} : (await readIntraday()).bySym;
-  const { perSym } = await readLmMm();
-  // Re-assert mmBullish after one rs-feed cycle so a concurrent 5s write (which
-  // read the file just before our write) can't permanently drop it.
-  if (!DRY && Object.keys(perSym).length) { await sleep(7000); writeRsContext(perSym); }
+  // rs-mm (MM_ONLY): just the Monthly-Map bias for NQ+ES. No reload (rs-feed owns page health).
+  if (MM_ONLY) { const { mmOk } = await readMm(); return { allOk: mmOk, staleNull: false }; }
+
+  // Full 09:32 run: LEVELS ONLY (zones/DD-bands/HP/MHP). LM→rs-feed, MM→rs-mm.
+  const { bySym, chartsFound } = await readIntraday();
   if (DRY) log('DRY — no files written.');
-  // Completeness: every value the run derives must be non-null (MM_ONLY checks just
-  // LM+MM). Any null → retry, so a partial read at the open self-heals.
   const nulls = [];
+  let staleNull = false;   // CHART LOADED but values null = stale → a reload can re-render it.
+                           // (vs "no matching chart" = chart not in layout → a reload can't add it.)
   for (const t of TARGETS) {
-    const iv = bySym[t.name] || {}, lv = perSym[t.name] || {};
+    const iv = bySym[t.name] || {};
     const needI = t.needIntraday || NEED_INTRADAY;   // CL/GC: just ddBands
-    const needL = t.needLmMm || NEED_LMMM;           // CL/GC: none (LM/MM optional)
-    const miss = [
-      ...(MM_ONLY ? [] : needI.filter(k => iv[k] == null)),
-      ...needL.filter(k => lv[k] == null),
-    ];
-    if (miss.length) nulls.push(`${t.name}:${miss.join(',')}`);
+    const miss = needI.filter(k => iv[k] == null);
+    if (miss.length) { nulls.push(`${t.name}:${miss.join(',')}`); if (chartsFound.has(t.name)) staleNull = true; }
   }
-  if (nulls.length) log(`  null derived values: ${nulls.join(' | ')}`);
-  return { allOk: nulls.length === 0 };
+  if (nulls.length) log(`  null derived values: ${nulls.join(' | ')}${staleNull ? '' : ' (charts not loaded — skipping reload)'}`);
+  return { allOk: nulls.length === 0, staleNull };
 }
 
 (async () => {
   try {
-    // 09:32 fires ~2 min after the open, when the intraday zone bands and the 1D
-    // charts often haven't rendered yet. Retry until BOTH the zone bands are drawn
-    // AND the Monthly-Map read succeeds for every symbol — a single early failure
-    // must not leave the prior day's stale mmBullish in place.
-    const MAX = 6;
+    const MAX = MM_ONLY ? 3 : 7;
+    let reloaded = false, finalOk = false;
     for (let attempt = 1; ; attempt++) {
-      const { allOk } = await main();
+      const { allOk, staleNull } = await main();
+      finalOk = allOk;
       if (DRY || allOk || attempt >= MAX) break;
-      log(`retry ${attempt}/${MAX - 1}: incomplete read (null value) — again in 60s`);
+      // Reload = LAST RESORT (full levels run only): only after ≥2 failed tries, and once.
+      // rs-feed already reloads at the open, so this just covers a chart-shape render lag —
+      // not the primary recovery. ("no matching chart" never reloads — a reload can't add it.)
+      if (!reloaded && !MM_ONLY && staleNull && attempt >= 3) {
+        reloaded = true;
+        log(`incomplete (stale) after ${attempt} tries — last-resort tab reload, waiting 80s for re-render`);
+        try { await reloadTab(); } catch (e) { log(`  tab reload failed: ${e.message}`); }
+        await sleep(80_000);
+        continue;
+      }
+      log(`retry ${attempt}/${MAX - 1}: incomplete read — again in 60s`);
       await sleep(60_000);
+    }
+    // FATAL alarm: no complete levels = the engine has NO levels today (catastrophic, unlike MM).
+    if (!DRY && !MM_ONLY && !finalOk) {
+      log(`** FATAL: rs-levels could NOT read complete levels after ${MAX} tries — NO LEVELS for today, the engine is blind. MANUAL CHECK NOW (Chrome :9333 up + logged in? charts loaded?). **`);
+      process.exit(2);   // non-zero so launchd surfaces it
     }
   } catch (e) { log('ERROR', e.message); process.exit(1); }
 })();

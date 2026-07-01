@@ -4,6 +4,7 @@ import { posDb } from './db.js';
 import { logger } from './logger.js';
 
 const HALT_FILE = '/tmp/trader.halt';
+const STALE_FILE = '/tmp/trader.context-stale';   // written by the feed-health monitor when RS context goes stale/dead
 
 function isRTH(tsMs: number): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -17,6 +18,7 @@ function isRTH(tsMs: number): boolean {
 
 export type BlockReason =
   | 'halt_file'
+  | 'context_stale'
   | 'outside_rth'
   | 'daily_loss_limit'
   | 'max_positions'
@@ -100,6 +102,12 @@ export function checkCanTrade(signalTs: number, direction: 'long' | 'short'): Bl
   if (fs.existsSync(HALT_FILE)) {
     logger.warn('HALT FILE present — all trading blocked');
     return 'halt_file';
+  }
+  // Stale/dead RS context — written by the feed-health monitor (rs-context.json setAt too old, or dead-zero).
+  // Don't act on a regime read that may be frozen/garbage (the 06-29 failure class). Self-clears on recovery.
+  if (fs.existsSync(STALE_FILE)) {
+    logger.warn('RS context STALE — blocking new orders until the feed recovers');
+    return 'context_stale';
   }
 
   // RTH only — bypass with TRADER_BYPASS_RTH=1 for after-hours demo testing

@@ -80,6 +80,9 @@ function snapshot(): void {
   const tsMs = Date.now();
   const b01 = (v: boolean | undefined) => (v == null ? null : v ? 1 : 0);
 
+  // Global (non-per-symbol) fields — irrational[], spyMhp/qqqMhp, spyPrev/qqqPrev, uvxy, vxGammaHp/Mhp,
+  // etc. — folded into raw_json below so NO data point is missed (columns hold only the derived outputs).
+  const { bySymbol: _omitBySymbol, ...globalFields } = base;
   const tx = _db!.transaction(() => {
     for (const sym of symbols) {
       const c = sym === '_all_' ? base : getContext(sym);  // per-symbol overlaid context the engines see
@@ -110,7 +113,7 @@ function snapshot(): void {
         dyn_hp_etf: sc?.dynHpEtf ?? null,
         dyn_mhp_etf: sc?.dynMhpEtf ?? null,
         dyn_close_etf: sc?.dynCloseEtf ?? null,
-        raw_json: JSON.stringify(sc ?? base),
+        raw_json: JSON.stringify(sc ? { ...globalFields, ...sc } : base),  // globals + per-symbol = everything
       });
     }
   });

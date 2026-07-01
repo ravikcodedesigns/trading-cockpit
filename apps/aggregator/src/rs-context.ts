@@ -13,6 +13,34 @@ import { logger } from './logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONTEXT_PATH = path.resolve(__dirname, '../../../data/rs-context.json');
+// rs-mm writes the Monthly-Map bias to its OWN file (disjoint from rs-feed's rs-context.json → no write
+// race). The aggregator is the sole merger: it overlays mmBullish from here onto the base context.
+const MM_PATH = path.resolve(__dirname, '../../../data/rs-context-mm.json');
+
+// Tolerant JSON read — returns null on a missing OR mid-write (torn) file so the caller keeps last-good.
+function readJsonSafe(p: string): any | null {
+  try { if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf-8')); } catch { /* partial/torn — keep last-good */ }
+  return null;
+}
+
+// Atomic write (temp + rename) so a concurrent reader (rs-feed / the merge poll) never sees a partial file.
+function writeAtomic(p: string, str: string): void {
+  const tmp = `${p}.tmp.${process.pid}`;
+  fs.writeFileSync(tmp, str);
+  fs.renameSync(tmp, p);
+}
+
+// Overlay per-symbol + global mmBullish from rs-context-mm.json onto a base context. No-op if the file
+// is absent (backward-compatible: until rs-mm writes it, the context behaves exactly as before).
+function mergeMm(base: any): any {
+  const mm = readJsonSafe(MM_PATH);
+  if (!mm || !mm.bySymbol) return base;
+  const bySymbol = { ...(base.bySymbol || {}) };
+  for (const sym of Object.keys(mm.bySymbol)) {
+    if (mm.bySymbol[sym]?.mmBullish != null) bySymbol[sym] = { ...(bySymbol[sym] || {}), mmBullish: mm.bySymbol[sym].mmBullish };
+  }
+  return { ...base, bySymbol };   // per-symbol mmBullish is what compute() reads (sc.mmBullish) — no global field
+}
 
 export type GreaterMarket = 'bull' | 'bear' | 'neutral';
 export type Resilience = number; // actual float from RS platform (e.g. -11.3, +55.7). Sign is all that matters for direction.
@@ -83,8 +111,14 @@ export interface RSContext extends ResilienceSet {
   vvixElevated: boolean;            // true = VIX sensitive to events (>100)
   vvixGolden: boolean;              // true = golden environment (<90), news shrugs off
   isRational: boolean;              // false = irrational rules apply
+  // Freshness — computed by getContext() on each read (NOT stored). For upstream staleness gates:
+  // if the feed is dead/frozen these say so, so a strategy can sit out before emitting a signal.
+  contextAgeSec?: number;           // seconds since setAt (Infinity if never set)
+  contextStale?: boolean;           // true = older than CONTEXT_STALE_SEC (rs-feed not writing)
   // Metadata
-  setAt: string;                    // ISO timestamp when context was last set
+  setAt: string;                    // ISO timestamp of the LAST write (rs-feed OR vx-poller/extension)
+  feedSetAt?: string;               // ISO timestamp of rs-feed's OWN last write — the true feed-liveness signal
+                                    // (setAt can be bumped by vx-poller while rs-feed is dead; feedSetAt can't)
   tradingDay: string;               // YYYY-MM-DD
 }
 
@@ -156,9 +190,9 @@ let _context: RSContext = DEFAULT_CONTEXT;
 
 export function loadContext(): RSContext {
   try {
-    if (fs.existsSync(CONTEXT_PATH)) {
-      const raw = JSON.parse(fs.readFileSync(CONTEXT_PATH, 'utf-8'));
-      _context = compute(raw);
+    const raw = readJsonSafe(CONTEXT_PATH);
+    if (raw) {
+      _context = compute(mergeMm(raw));   // base (rs-feed + vx) ⊕ mmBullish (rs-mm) → canonical context
       logger.info({
         greaterMarket: _context.greaterMarket,
         ddRatio: _context.ddRatio,
@@ -182,7 +216,7 @@ export function saveContext(updates: Partial<Omit<RSContext, 'vxAboveBBB' | 'vvi
   const raw = { ..._context, ...updates, setAt: new Date().toISOString() };
   _context = compute(raw);
   fs.mkdirSync(path.dirname(CONTEXT_PATH), { recursive: true });
-  fs.writeFileSync(CONTEXT_PATH, JSON.stringify(_context, null, 2));
+  writeAtomic(CONTEXT_PATH, JSON.stringify(_context, null, 2));
   return _context;
 }
 
@@ -192,11 +226,16 @@ export function saveContext(updates: Partial<Omit<RSContext, 'vxAboveBBB' | 'vvi
  * Otherwise (no symbol, or symbol not in bySymbol), the flat-field defaults are
  * returned — matching pre-bySymbol behavior, so existing callers don't break.
  */
+const CONTEXT_STALE_SEC = 30;   // rs-feed writes every 5s → context older than this = feed dead/frozen
+
 export function getContext(symbol?: string): RSContext {
-  if (!symbol) return _context;
-  const overlay = _context.bySymbol?.[symbol];
-  if (!overlay) return _context;
-  return {
+  // Freshness stamped on every read (time-dependent, so computed, never stored). Use feedSetAt (rs-feed's
+  // own write) not setAt — so a vx-poller write can't mask a dead rs-feed. Falls back to setAt if absent.
+  const freshTs = _context.feedSetAt ?? _context.setAt;
+  const contextAgeSec = freshTs ? Math.round((Date.now() - Date.parse(freshTs)) / 1000) : Number.POSITIVE_INFINITY;
+  const contextStale = contextAgeSec > CONTEXT_STALE_SEC;
+  const overlay = symbol ? _context.bySymbol?.[symbol] : undefined;
+  const base: RSContext = overlay ? {
     ..._context,
     mhpResilience:    overlay.mhpResilience,
     hpResilience:     overlay.hpResilience,
@@ -205,30 +244,34 @@ export function getContext(symbol?: string): RSContext {
     // Per-symbol RS reads + computed greater-market (fall back to global if absent).
     lmCode:           overlay.lmCode ?? _context.lmCode,
     greaterMarket:    overlay.gm ?? _context.greaterMarket,
-  };
+  } : _context;
+  return { ...base, contextAgeSec, contextStale };
 }
 
 // Watch the context file for external changes (CLI writes) and reload.
 // Debounced via mtime so rapid saves don't trigger multiple reloads.
-let _lastMtime = 0;
+let _lastMtime = 0, _lastMmMtime = 0;
 export function watchContext(): void {
   const reload = () => {
     try {
-      if (!fs.existsSync(CONTEXT_PATH)) return;
-      const mtime = fs.statSync(CONTEXT_PATH).mtimeMs;
-      if (mtime === _lastMtime) return;
-      _lastMtime = mtime;
-      loadContext();
-      logger.info({ greaterMarket: _context.greaterMarket, vx: _context.vx, mhpResilience: _context.mhpResilience }, 'RS context reloaded from file');
+      const ctxM = fs.existsSync(CONTEXT_PATH) ? fs.statSync(CONTEXT_PATH).mtimeMs : 0;
+      const mmM = fs.existsSync(MM_PATH) ? fs.statSync(MM_PATH).mtimeMs : 0;
+      if (ctxM === _lastMtime && mmM === _lastMmMtime) return;   // neither file changed
+      _lastMtime = ctxM; _lastMmMtime = mmM;
+      loadContext();   // re-reads rs-context.json + overlays rs-context-mm.json
+      logger.info({ greaterMarket: _context.greaterMarket, vx: _context.vx, mhpResilience: _context.mhpResilience, nqMmBullish: _context.bySymbol?.NQ?.mmBullish }, 'RS context reloaded (merged)');
     } catch { /* ignore */ }
   };
 
-  try {
-    fs.watch(CONTEXT_PATH, { persistent: false }, () => setTimeout(reload, 50));
-  } catch { /* file may not exist yet at watch time */ }
+  // Watch both files (instant trigger). If a file doesn't exist yet (e.g. rs-context-mm.json before
+  // rs-mm's first write), the watch setup throws → the 2s poll picks it up once it appears.
+  for (const p of [CONTEXT_PATH, MM_PATH]) {
+    try { fs.watch(p, { persistent: false }, () => setTimeout(reload, 50)); } catch { /* not present yet */ }
+  }
 
-  // Poll every 5s as fallback (atomic-rename editors, cross-process writes)
-  setInterval(reload, 5_000);
+  // Poll every 2s as the reliable fallback (fs.watch misses/dupes events; atomic-rename writes; a
+  // missed event self-heals within one interval). This poll — not fs.watch — is the live-path safety net.
+  setInterval(reload, 2_000);
 }
 
 // Update a specific resilience in real-time without full context reset.

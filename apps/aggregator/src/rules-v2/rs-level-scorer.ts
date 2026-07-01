@@ -468,6 +468,10 @@ export function scoreRSLevels(
 
   if (!levels) return empty;
 
+  // Upstream staleness gate (belt-and-suspenders with the trader's risk-guard): if the RS feed is
+  // dead/frozen, hard-filter — don't score/emit a tradable signal off a stale regime read.
+  if (ctx.contextStale) return { ...empty, hardFiltered: true, filterReason: `context-stale (${ctx.contextAgeSec}s)` };
+
   // Hard filters first — these block regardless of score
   const { filtered, reason } = checkHardFilters(direction, currentPrice, levels);
   const allLevels = extractAllLevels(levels);

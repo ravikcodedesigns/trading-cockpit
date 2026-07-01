@@ -1,6 +1,12 @@
 import WebSocket from 'ws';
+import fs from 'node:fs';
 import { config, type TraderMode } from '../config.js';
 import { logger } from '../logger.js';
+
+// Broker-WS liveness — touched on every received Tradovate frame (server heartbeats arrive ~every 2.5s).
+// The feed-health monitor checks this file's mtime during RTH to detect a dead/dropped broker WS. Throttled ~5s.
+const WS_BEAT_FILE = '/tmp/trader.tradovate-ws';
+let lastWsBeatMs = 0;
 
 // ── Base URLs ──────────────────────────────────────────────────────────────────
 function restBase(mode: TraderMode) {
@@ -330,6 +336,9 @@ export class TradovateClient {
       });
 
       ws.on('message', async (raw: Buffer) => {
+        // Liveness: any inbound frame proves the socket is alive. Touch the beat file (throttled ~5s).
+        const beatNow = Date.now();
+        if (beatNow - lastWsBeatMs > 5_000) { lastWsBeatMs = beatNow; try { fs.writeFileSync(WS_BEAT_FILE, new Date().toISOString()); } catch { /* ignore */ } }
         const msg = raw.toString();
 
         // "o" = socket open confirmation

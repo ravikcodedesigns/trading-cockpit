@@ -1,4 +1,4 @@
-// VX / VVIX fallback poller — Yahoo Finance, every 5 minutes, RTH only.
+// VX / VVIX fallback poller — Yahoo Finance, every 1 minute (RTH only), with 429 backoff.
 // Runs inside the aggregator process so it works even when Claude Code
 // is closed. The Claude Code MCP cron bridge takes precedence when running
 // (it pushes via POST /context/vx); this poller fills the gap otherwise.
@@ -9,7 +9,7 @@
 import { saveContext } from '../rs-context.js';
 import { logger } from '../logger.js';
 
-const POLL_MS   = 5 * 60_000; // 5 minutes
+const POLL_MS   = 60_000;     // 1 minute (fresher sit-out/sizing flag; 429 backoff guards Yahoo)
 const VIX_URL   = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=1d';
 const VVIX_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVVIX?interval=1d&range=1d';
 // SPY/QQQ ETF prices for the greater-market "index > MHP" leg (Ravi: there's no live
@@ -41,6 +41,7 @@ async function fetchQuote(url: string): Promise<{ price?: number; prev?: number 
     headers: { 'User-Agent': 'Mozilla/5.0' },
     signal: AbortSignal.timeout(10_000),
   });
+  if (res.status === 429) throw new Error('429');   // Yahoo rate-limit → signal the loop to back off
   if (!res.ok) return {};
   const data = await res.json() as {
     chart?: { result?: { meta?: { regularMarketPrice?: number; chartPreviousClose?: number; previousClose?: number } }[] };
@@ -82,14 +83,27 @@ async function pollOnce(): Promise<void> {
 }
 
 export function startVXPoller(): void {
-  logger.info({ pollMs: POLL_MS }, 'vx-poller started (Yahoo Finance ^VIX/^VVIX, RTH only)');
+  logger.info({ pollMs: POLL_MS }, 'vx-poller started (Yahoo ^VIX/^VVIX, RTH only, 1m + 429 backoff)');
 
-  // Delay first poll 15s so aggregator finishes booting before we write context.
-  setTimeout(() => {
-    void pollOnce().catch(err => logger.warn({ err }, 'vx-poller: initial poll failed'));
-    setInterval(
-      () => void pollOnce().catch(err => logger.warn({ err }, 'vx-poller: poll failed')),
-      POLL_MS,
-    );
-  }, 15_000);
+  // Self-rescheduling loop: 1-min cadence normally; on a Yahoo 429, exponential backoff
+  // (2m, 4m, 8m… capped 15m) so we don't hammer a throttling endpoint, recovering to 1m on
+  // the next clean poll. Non-429 errors (timeout/network) just log and keep the 1-min cadence.
+  let consecutive429 = 0;
+  const loop = async () => {
+    let delay = POLL_MS;
+    try {
+      await pollOnce();
+      consecutive429 = 0;
+    } catch (err) {
+      if (err instanceof Error && err.message === '429') {
+        consecutive429++;
+        delay = Math.min(POLL_MS * 2 ** consecutive429, 15 * 60_000);
+        logger.warn({ consecutive429, nextPollMs: delay }, 'vx-poller: Yahoo 429 — backing off');
+      } else {
+        logger.warn({ err }, 'vx-poller: poll failed');
+      }
+    }
+    setTimeout(loop, delay);
+  };
+  setTimeout(loop, 15_000);   // first poll 15s after boot
 }

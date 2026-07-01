@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.cockpit.feed-health</string>
+
+  <!-- Feed-health monitor: every 20s, RTH-gated in-script. If rs-context.json is stale (rs-feed
+       not writing >30s) or dead-zero, write /tmp/trader.context-stale (risk-guard.ts blocks new
+       orders) and alert (macOS + Discord). Self-clears + "recovered" alert when the feed returns.
+       Closes the 06-29 unnoticed-stale-feed gap. Set DISCORD_WEBHOOK below for remote alerts. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/ravikumarbasker/trading-cockpit/scripts/feed_health_monitor.js</string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>20</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>DISCORD_WEBHOOK</key>
+    <string></string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-feed-health.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ravikumarbasker/Library/Logs/cockpit-feed-health.log</string>
+</dict>
+</plist>

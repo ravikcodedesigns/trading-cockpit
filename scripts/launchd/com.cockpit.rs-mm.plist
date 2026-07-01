@@ -5,9 +5,9 @@
   <key>Label</key>
   <string>com.cockpit.rs-mm</string>
 
-  <!-- MM-only refresh every ~30 min. The wrapper RTH-gates (Mon-Fri 09:30-16:00 ET)
-       and no-ops outside it. Re-reads mmBullish + LM into rs-context so the auto
-       greater-market tracks intraday price moving into/out of zones. The once-daily
+  <!-- MM-only refresh every 60s (NQ+ES). The wrapper RTH-gates (Mon-Fri 09:30-16:00 ET),
+       skips 09:30-09:35 to avoid colliding with the 09:32 levels read, and no-ops otherwise.
+       Re-reads mmBullish into rs-context-mm.json (LM now comes from rs-feed). The once-daily
        zones/DD/HP/MHP read stays in com.cockpit.rs-levels (09:32). -->
   <key>ProgramArguments</key>
   <array>
@@ -16,7 +16,7 @@
   </array>
 
   <key>StartInterval</key>
-  <integer>1800</integer>
+  <integer>60</integer>
 
   <key>RunAtLoad</key>
   <true/>
