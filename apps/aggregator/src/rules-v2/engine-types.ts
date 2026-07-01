@@ -1,5 +1,6 @@
 // RS level auto-trader — engine types. See RS_ENGINE_SPEC.md (§1 stack, §3 schemas).
 import type { GreaterMarket } from '../rs-context.js';
+import type { PocketResult } from './zone-pockets.js';
 
 export type SizeTier = 'N' | 'M' | 'S' | '0';   // 0 = no-position leg (LM-Summary only; EST never 0)
 export type Dir = 'long' | 'short';
@@ -30,6 +31,7 @@ export interface MarketState {
   tsET: string;
   price?: number;
   open?: number;        // 9:30 ET open (black diamond)
+  barOpen?: number;     // current 1-min candle OPEN — TAD (approach-direction) source for the engines
   prevClose?: number;
   halfGap?: number;
   levels: {
@@ -45,6 +47,7 @@ export interface MarketState {
     ddLower?: number;
   };
   lmCode?: string;
+  lmOpenZone?: 'B' | 'MR' | 'Br';   // LM zone at the 9:30 open (B=bull / MR=mid-range / Br=bear) — Image 8/9 condition
   confluence: {
     gm: GreaterMarket;
     ddRatio: number;       // >0.5 bull
@@ -56,6 +59,10 @@ export interface MarketState {
     vxAboveBBB: boolean; vvixElevated: boolean; isRational: boolean;
   };
   gate: Gate;
+  /** Precomputed LP/IP/Sandwich structure from the zones (zone-pockets.ts), set by
+   *  deriveMarketState. Optional so hand-built MarketStates still typecheck; engines
+   *  default to empty when absent. */
+  pockets?: PocketResult;
 }
 
 /** A candidate setup the engine emits for shadow-logging / (later) execution. */

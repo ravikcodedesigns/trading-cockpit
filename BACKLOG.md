@@ -512,6 +512,15 @@ how often the fixed stop runs past the structural stop on the CONT cohort; consi
 
 ## 13. Fix Bookmap MBO-capture timestamp → exchange time (SUNDAY PM) — data integrity
 
+**STATUS 2026-06-29: v1.2 DEPLOYED & exchange-ts confirmed.** TimeListener implemented (CaptureAddon.java:99,270);
+jar live since Bookmap restart 04:34 ET, exchange-stamping from 04:37. `ts_ms`=exchange (TimeListener), `ts_recv`=arrival.
+Validated across all 6 (NQ/ES/MNQ/MES/CL/GC): lag (ts_recv−ts_ms) median ~2ms, p95 7-12ms → genuine upstream clock.
+Converter writes both, partitions/times on ts_ms. Steps 1/2/4 DONE.
+- ⚠️ 06-29 is MIXED: 00:00–04:37 = old arrival-format (ts_recv NULL, ~98%); 04:37→ = exchange. RTH 09:30+ fully clean;
+  full clean days from 06-30. Filter `ts_recv IS NOT NULL` to isolate validated rows in the overnight segment.
+- TODO step 3 (gold-standard): cross-check ts_ms vs CQG at the 09:30 open (first real open since deploy) — confirm the
+  open flush lands at its true minute, not minutes late. TODO step 5: standing BMD↔CQG lag detector.
+
 Trigger: 2026-06-26 — the BMD mbo-parquet price series was ~6–15 min MISALIGNED vs the live
 CQG/cockpit chart at the open (same prices, wrong times). Root cause: `CaptureAddon.java:147,236`
 stamps `ts_ms = System.currentTimeMillis()` (capture ARRIVAL/processing wall-clock), NOT exchange
@@ -542,7 +551,10 @@ The logger (`apps/aggregator/src/rs-context-history.ts`) captures the per-symbol
 overlay but MISSES the flat top-level fields: `expectedRangePts` (the RANGE chip), the EM
 bands (`emMid, em1Low, em1High, em2Low, em2High`), and `vxn`. Reason: `raw_json` stores only
 `bySymbol[sym]`; these live at the flat context root, so they weren't columnized or in raw_json.
-Add them as columns (nullable) + capture in snapshot(). Start: **2026-06-29 trading day**
+ALSO add **`irrational[]`** (the DD-Band-Break / MHP-Break / Index-Divergence panel) as JSON —
+deriveGate() needs it for the sit-out / long-only / strong-pivots gate; it's currently NOT logged,
+so the engine gate can't be fully reconstructed for historical days (only resilience + VX/VVIX
+gates work without it). Add them as columns (nullable) + capture in snapshot(). Start: **2026-06-29 trading day**
 (don't backfill — not available historically). Needed so the L2 touch decider's regime
 context (item #15) is complete — RANGE/EM is a key vol-scaled bracket/target input.
 

@@ -7,6 +7,7 @@
 import type { RSContext, IrrationalRule } from '../rs-context.js';
 import type { DailyLevels } from '@trading/contracts';
 import type { Gate, MarketState } from './engine-types.js';
+import { classifyPockets } from './zone-pockets.js';
 
 const uniqSort = (xs: number[]): number[] =>
   Array.from(new Set(xs.filter((x): x is number => x != null && Number.isFinite(x)))).sort((a, b) => a - b);
@@ -81,6 +82,8 @@ export interface DeriveInput {
   levels?: DailyLevels;   // today's levels for this symbol
   price?: number;         // live futures price
   open?: number;          // 9:30 ET futures open (else levels.openPrice)
+  barOpen?: number;       // current 1-min candle OPEN — for TAD (approach direction) gating
+  lmOpenZone?: 'B' | 'MR' | 'Br';  // LM zone at the 9:30 open (Image 8/9 condition for DD<0.5 setups)
   tsET?: string;
 }
 
@@ -109,8 +112,15 @@ export function deriveMarketState(input: DeriveInput): MarketState {
     ...(levels?.zones?.bear ?? []).map(z => z.high),
   ]);
 
+  // Precompute LP/IP/Sandwich pockets from the FULL zone rectangles (zone-pockets.ts needs both
+  // edges; bzb/brzt above are only the anchor points). Prefer the zones[] array; fall back to the
+  // single primary bull/bearZone. 50pt inner-gap rule + 150pt wall handling live in classifyPockets.
+  const bullZones = (levels?.zones?.bull?.length ? levels.zones.bull : (levels?.bullZone ? [levels.bullZone] : []));
+  const bearZones = (levels?.zones?.bear?.length ? levels.zones.bear : (levels?.bearZone ? [levels.bearZone] : []));
+  const pockets = classifyPockets(bullZones, bearZones, { symbol });
+
   return {
-    symbol, tsET, price, open,
+    symbol, tsET, price, open, barOpen: input.barOpen, lmOpenZone: input.lmOpenZone,
     prevClose: findLevel(levels, /^(NQ|ES) Close$/i),
     halfGap: findLevel(levels, /^HG$|half.?gap/i),
     levels: {
@@ -136,5 +146,6 @@ export function deriveMarketState(input: DeriveInput): MarketState {
       vxAboveBBB: rs.vxAboveBBB, vvixElevated: rs.vvixElevated, isRational: rs.isRational,
     },
     gate: deriveGate(symbol, rs),
+    pockets,
   };
 }

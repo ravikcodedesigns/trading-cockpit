@@ -113,11 +113,23 @@ true aggressor-clustering, true CVD.
 - **Baseline to beat:** take every engine-approved touch in its prior direction. The L2 layer
   must ADD over that, OOS. Honest possible outcome: nothing separates → stop (valid result).
 
-### Stage 3 — Encode the decider (confirm/veto), shadow forward
+### Stage 3 — Encode the decider (confirm/veto), shadow forward  [BUILT 2026-06-29]
 - Only features that survived Stage 2. `decision-engine.ts` L2-only fork: comment out L3, drive
   confirm/veto from the surviving L2 features (relative).
 - Run forward shadow → `l2_touch_outcome`. Resolver scores engine-alone vs engine+L2 (like the
   existing l3 resolver pattern).
+- **Implemented:** `src/rules-v2/l2-decider.ts` (`l2Decide(features, baseline) → {decision, score, reasons}`).
+  Confirm-unless-flow-objects posture (engine already approved). Factors (all causal): absorption
+  label (principal), defending-size Δ sign, resting-imbalance z, CVD-60s z, unabsorbed-fought-volume
+  penalty, flush-regime penalty. RELATIVE via a 20-min rolling baseline; PRINCIPLE-coded, NOT fit.
+- Wired into `scripts/l2_touch_capture.ts`: verdict RECORDED per engine-approved touch
+  (`l2_decision`/`l2_score` cols); `--decider` flag GATES trades (re-sequences single-position so a
+  VETO frees the slot for a later touch). Summary prints engine-alone vs CONFIRM vs VETO.
+- **06-26 sanity (ONE day, n=26, NOT validation):** engine-alone 14W/12L 54% −27.8pt →
+  CONFIRM-only 12W/7L 63% +124.3pt (decider dropped 5 losers / 2 winners). Right direction;
+  needs multi-day OOS before it means anything.
+- **TODO before Stage 4:** capture N more days → Stage 2 train/test feature-separation +
+  permutation test → keep only surviving factors → forward shadow beats baseline OOS.
 
 ### Stage 4 — Arm (only after forward shadow beats baseline)
 - Wire to the trader behind a flag, micro size, with the risk guards. Review gate first.

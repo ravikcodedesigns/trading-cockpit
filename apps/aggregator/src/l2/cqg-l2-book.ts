@@ -13,6 +13,8 @@ import type { Quote } from '../l3/divergence.js';
 export class CqgL2Book {
   private bid = new Map<number, number>();   // price_int -> resting size
   private ask = new Map<number, number>();
+  private _bb: number | null = null;         // cached best-bid int (incremental, O(1) read)
+  private _ba: number | null = null;         // cached best-ask int
   cvd = 0;
   lastTs = 0;
 
@@ -21,25 +23,28 @@ export class CqgL2Book {
   intFromPrice(p: number): number { return Math.round(p / this.tick); }
   priceFromInt(i: number): number { return i * this.tick; }
 
-  /** Absolute size-per-level update. side: 'bid'|'ask'. size<=0 removes the level. */
+  /** Absolute size-per-level update. size<=0 removes the level. Best bid/ask maintained
+   *  INCREMENTALLY — O(1) except a rescan only when the current best level is removed.
+   *  (Lets us sample the quote on every event for full-resolution λ, no throttle.) */
   applyDepth(side: 'bid' | 'ask', priceInt: number, size: number): void {
-    const m = side === 'bid' ? this.bid : this.ask;
-    if (size <= 0) m.delete(priceInt); else m.set(priceInt, size);
+    if (side === 'bid') {
+      if (size <= 0) { this.bid.delete(priceInt); if (priceInt === this._bb) this._bb = this.rescanBid(); }
+      else { this.bid.set(priceInt, size); if (this._bb === null || priceInt > this._bb) this._bb = priceInt; }
+    } else {
+      if (size <= 0) { this.ask.delete(priceInt); if (priceInt === this._ba) this._ba = this.rescanAsk(); }
+      else { this.ask.set(priceInt, size); if (this._ba === null || priceInt < this._ba) this._ba = priceInt; }
+    }
   }
+  private rescanBid(): number | null { let b = -Infinity; for (const [p, s] of this.bid) if (s > 0 && p > b) b = p; return b === -Infinity ? null : b; }
+  private rescanAsk(): number | null { let a = Infinity; for (const [p, s] of this.ask) if (s > 0 && p < a) a = p; return a === Infinity ? null : a; }
 
   /** Trade tick → CVD (inferred aggressor). */
   applyTrade(size: number, isBuyAggressor: boolean): void {
     this.cvd += isBuyAggressor ? size : -size;
   }
 
-  bestBidInt(): number | null {
-    let b = -Infinity; for (const [p, s] of this.bid) if (s > 0 && p > b) b = p;
-    return b === -Infinity ? null : b;
-  }
-  bestAskInt(): number | null {
-    let a = Infinity; for (const [p, s] of this.ask) if (s > 0 && p < a) a = p;
-    return a === Infinity ? null : a;
-  }
+  bestBidInt(): number | null { return this._bb; }
+  bestAskInt(): number | null { return this._ba; }
 
   /** Best-quote snapshot for the OFI/Kyle-λ math (divergence.ts). null until both sides exist. */
   quote(): Quote | null {

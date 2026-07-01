@@ -14,6 +14,7 @@ import { getTodayEvents, getUpcomingEvents } from './economic-calendar.js';
 import { getTradesInRange } from './rules-v2/tick-client.js';
 import { saveContext, getContext } from './rs-context.js';
 import { scoreRSLevels } from './rules-v2/rs-level-scorer.js';
+import { classifyPockets } from './rules-v2/zone-pockets.js';
 import { discord } from './discord.js';
 import type { CockpitMessage, SourceName, TickTrade } from '@trading/contracts';
 import { tradingDayFor } from '@trading/contracts';
@@ -356,6 +357,20 @@ export async function startServer(): Promise<FastifyInstance> {
     pipelineMode: config.pipeline.activeMode,        // 'shadow' | 'live'
     symbols:      config.pipeline.symbols,           // which symbols are managed
   }));
+
+  // ── RS zone pockets (LP / IP / Sandwich) for the cockpit overlay ──────────
+  // Precomputed from the day's bull/bear zones (zone-pockets.ts): 50pt inner-gap rule + 150pt
+  // wall handling + IP clamping. GET /levels/pockets?symbol=NQ[&day=YYYY-MM-DD] (default: today).
+  app.get('/levels/pockets', async (req) => {
+    const q = req.query as { symbol?: string; day?: string };
+    const symbol = q.symbol === 'ES' ? 'ES' : 'NQ';
+    const day = q.day ?? tradingDayFor(Date.now());
+    const lv = state.levelsForDay(day)?.[symbol];
+    const bull = (lv?.zones?.bull?.length ? lv.zones.bull : (lv?.bullZone ? [lv.bullZone] : []));
+    const bear = (lv?.zones?.bear?.length ? lv.zones.bear : (lv?.bearZone ? [lv.bearZone] : []));
+    const { pockets, sandwiches } = classifyPockets(bull, bear, { symbol });
+    return { symbol, day, pockets, sandwiches };
+  });
 
   // ── Trader state — current position + today's pnl ─────────────────────────
   // Reads positions.db directly (same-host). Used by the cockpit's status bar
