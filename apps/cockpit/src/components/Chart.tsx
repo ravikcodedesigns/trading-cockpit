@@ -51,6 +51,21 @@ function gapsToFetch(ranges: Range[], from: number, to: number): Range[] {
   return gaps;
 }
 
+// Record a fetched window as "loaded", but NEVER claim the live edge (the last
+// ~2 min). Bars there may not have formed yet, and marking them covered would
+// let the dedupe in gapsToFetch suppress a backfill after a feed reconnect — the
+// exact freeze seen 2026-07-01 (feed down mid-session; ranges recorded up to
+// `now` during the outage, so the resumed bars were treated as already-loaded).
+// Historical windows (well in the past) are still recorded in full, so genuinely
+// empty gaps aren't re-fetched on every scroll. The trailing live-tail poll owns
+// the guarded live edge.
+const LIVE_EDGE_GUARD_MS = 2 * 60_000;
+function recordLoadedRange(ranges: Range[], from: number, to: number, nowMs: number): Range[] {
+  const clampedTo = Math.min(to, nowMs - LIVE_EDGE_GUARD_MS);
+  if (clampedTo <= from) return ranges;  // whole window is inside the live-edge guard — record nothing
+  return mergeRange(ranges, from, clampedTo);
+}
+
 // ── Bar-cache persistence (localStorage) ───────────────────────────────────
 // Keeps the last-fetched bar window across page reloads so a refresh, or a
 // cold-boot on /es, doesn't wait on a full /history/bars round-trip before
@@ -784,7 +799,7 @@ export function Chart() {
               });
             }
           }
-          loadedRangesRef.current[rk] = mergeRange(loadedRangesRef.current[rk] ?? [], gFrom, gTo);
+          loadedRangesRef.current[rk] = recordLoadedRange(loadedRangesRef.current[rk] ?? [], gFrom, gTo, Date.now());
         }
 
         // Single setData() after all gaps loaded to avoid mid-scroll flicker.
@@ -1202,10 +1217,11 @@ export function Chart() {
               if (added && !cancelled) {
                 renderFromCache(cache, /* anchorVisible= */ false);
                 const rk = `${selectedSymbol}:${selectedTimeframe}`;
-                loadedRangesRef.current[rk] = mergeRange(
+                loadedRangesRef.current[rk] = recordLoadedRange(
                   loadedRangesRef.current[rk] ?? [],
                   lastMs,
                   nowMs,
+                  Date.now(),
                 );
                 setBarsVersion(v => v + 1);
               }
@@ -1261,10 +1277,11 @@ export function Chart() {
         setHistoryReady((prev) => prev[selectedSymbol] ? prev : { ...prev, [selectedSymbol]: true });
         // Mark this initial window as covered so the dynamic loader skips it.
         const rk = `${selectedSymbol}:${selectedTimeframe}`;
-        loadedRangesRef.current[rk] = mergeRange(
+        loadedRangesRef.current[rk] = recordLoadedRange(
           loadedRangesRef.current[rk] ?? [],
           fetchFromMs,
           fetchToMs,
+          Date.now(),
         );
 
         // Signal that bar history is populated so post-entry markers
