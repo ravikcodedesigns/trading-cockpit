@@ -1,5 +1,11 @@
 # Trading Cockpit — Handoff Document
 
+> ## ▶ START HERE — new session, read this first
+> **Latest state = §24** (2026-06-30/07-01: RS-feed pipeline redesign + feed-health safety + perf). Orient in this order:
+> **1.** §24.1 (read-first — what's LIVE, committed `f31b6e2` [feed-health code] + `6d90342` [this doc], and the **UNCOMMITTED** BZB/L2 thread) → **2.** §24.11 (next-steps) + §24.0 (TL;DR) → **3.** `git log --oneline -8`, `git status`, memory `project_rs_feed_pipeline`.
+> **Open threads:** (a) verify the feed pipeline live at the RTH open; (b) commit + forward-validate the BZB/L2 thread (§24.8); (c) confirm the flip-short stop (§24.9).
+> Sections §1–23 are earlier layers — the top-of-doc stale-warning below still applies to them.
+
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
 > **Last updated**: 2026-07-01 (Wednesday) — see **§24** (RS-feed rewritten into a disjoint-file pipeline + a full feed-health / staleness / Tradovate-WS-auto-restart safety stack, committed `f31b6e2`; a BZB DD-gate / L2-touch-decider thread is mid-build + UNCOMMITTED). **§23** covers the RS-framework / Lightspeed-L3 pivot (→06-24); **§22** covers 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
