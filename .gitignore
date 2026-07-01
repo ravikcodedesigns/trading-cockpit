@@ -7,11 +7,18 @@ data/ticks_corrupted_backup.db
 data/mbo.db*
 data/positions.db*
 data/rs-shadow.db*
+# L2/L3 + RS-context research DBs (regenerable via capture scripts; not source)
+data/l2-touch.db*
+data/l3-shadow.db*
+data/rs-context-history.db*
+# Stray root-level trading.db (the real one lives under data/)
+/trading.db*
 dist/
 .turbo/
 .vite/
 .env
-apps/aggregator/data/trading.db*
+# apps/aggregator/data/ holds only regenerable DB blobs (trading.db, rs-context-history.db, WAL/SHM)
+apps/aggregator/data/
 
 # Compiled Bookmap addon artifacts
 addons/bookmap-java/build/
