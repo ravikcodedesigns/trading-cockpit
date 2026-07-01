@@ -1417,6 +1417,83 @@ export function Chart() {
     // recent bars at a sensible width and the user can scroll/zoom freely.
   }, [recentEvents, selectedSymbol, selectedTimeframe]);
 
+  // ── Self-healing live-tail poll ────────────────────────────────────────────
+  // Live bars normally arrive over the WS (recentEvents → series.update, above).
+  // But if that stream stalls — e.g. the upstream data connection drops for a
+  // stretch and reconnects mid-session — the WS can miss the resumed bars, and
+  // the one-shot gap-backfill in the history effect already ran at mount, so the
+  // chart freezes until a manual page refresh (observed 2026-07-01: feed down
+  // ~21:35→12:25 ET; candles didn't reappear without a reload even though the
+  // backend was serving them).
+  // This poll re-fetches the trailing [lastBar → now] window every 20s straight
+  // from /history/bars, INDEPENDENT of the WS and of loadedRangesRef, so any
+  // reconnect self-heals within one interval. It only touches bars at/after the
+  // live edge (series.update semantics), so it can't disturb pan/zoom or clobber
+  // history the WS/init paths already rendered.
+  useEffect(() => {
+    let cancelled = false;
+    let inFlight = false;
+
+    const pollTail = async () => {
+      if (inFlight || cancelled) return;
+      const series = seriesRef.current;
+      if (!series) return;
+      // Cold start is owned by the initial history effect; only tail once it's loaded.
+      if (!historyLoadedRef.current[selectedSymbol]) return;
+      const prevMax = lastLiveSecRef.current[selectedSymbol];
+      if (prevMax === undefined) return;
+      const fromMs = prevMax * 1000;
+      const nowMs = Date.now();
+      if (nowMs - fromMs < 5_000) return;  // nothing new could have formed yet
+
+      inFlight = true;
+      try {
+        const url = `/history/bars?symbol=${selectedSymbol}&from=${fromMs}&to=${nowMs}&interval=${selectedTimeframe}`;
+        const res = await fetch(url);
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          bars: { ts: number; open: number; high: number; low: number; close: number; buyVolume: number; sellVolume: number }[];
+        };
+        if (cancelled || !data.bars?.length) return;
+
+        const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+        barHistoryRef.current[selectedSymbol] = history;
+        // Preserve the user's view unless they're pinned to the live edge (mirrors
+        // the WS live-update path so a caught-up tail poll can't yank the chart).
+        const tsScale = chartRef.current?.timeScale();
+        const pinnedToLive = tsScale ? (tsScale.scrollPosition() ?? 5) >= 4.5 : true;
+        const keepRange = pinnedToLive ? null : tsScale!.getVisibleLogicalRange();
+
+        let curMax = prevMax;
+        let appended = false;
+        try {
+          for (const bar of data.bars.slice().sort((a, b) => a.ts - b.ts)) {
+            const t = Math.floor(bar.ts / 1000);
+            if (t < curMax) continue;  // older than the live edge — update() needs non-decreasing time
+            history.set(t, {
+              open: bar.open, high: bar.high, low: bar.low, close: bar.close,
+              volume: (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0),
+            });
+            series.update({ time: t as UTCTimestamp, open: bar.open, high: bar.high, low: bar.low, close: bar.close });
+            if (t > curMax) { curMax = t; appended = true; }  // t === prevMax just refreshes the live bar
+          }
+          lastLiveSecRef.current[selectedSymbol] = curMax;
+        } catch {
+          // Out-of-order rejection — leave recovery to the WS/init paths.
+        }
+        if (keepRange && tsScale) { try { tsScale.setVisibleLogicalRange(keepRange); } catch { /* disposed */ } }
+        if (appended && !cancelled) setBarsVersion(v => v + 1);
+      } catch {
+        // Best-effort — the WS path is still the primary live source.
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const id = setInterval(() => { void pollTail(); }, 20_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [selectedSymbol, selectedTimeframe]);
+
   // Compute regime checkpoints from today's bars + levels.
   // Refreshes every 60s during RTH so checkpoints auto-populate as each time arrives.
   useEffect(() => {
