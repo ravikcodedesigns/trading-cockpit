@@ -1,7 +1,7 @@
 # Trading Cockpit — Handoff Document
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-06-24 (Wednesday) — see **§23** (the project pivoted into the RS-framework / Lightspeed L3 initiative; a level-touch decision engine is mid-build). §22 covers 2026-06-08→06-16.
+> **Last updated**: 2026-07-01 (Wednesday) — see **§24** (RS-feed rewritten into a disjoint-file pipeline + a full feed-health / staleness / Tradovate-WS-auto-restart safety stack, committed `f31b6e2`; a BZB DD-gate / L2-touch-decider thread is mid-build + UNCOMMITTED). **§23** covers the RS-framework / Lightspeed-L3 pivot (→06-24); **§22** covers 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
@@ -1622,3 +1622,112 @@ bear[]}` (the FULL 8-zone arrays — use these), `additionalLevels[{label,price,
 **End of section 23.** Project state as of 2026-06-24 (Wednesday), last commit `0a687d2` (HANDOFF
 update itself follows). The active task is the decision-engine rebuild (§23.5) — engines decide,
 L3 confirms. Nothing in this initiative is wired to the live trader yet.
+
+---
+
+## 24. Changes since 2026-06-24 (→ 2026-07-01) — RS-feed pipeline redesign + feed-health safety
+
+### 24.0 TL;DR — what materially changed
+- **The RS-platform feed was rewritten into a disjoint-file pipeline** — each writer owns one file, the aggregator is the sole merger. This kills the write races that existed when rs-feed/rs-mm/rs-levels all wrote `rs-context.json`. Committed as **`f31b6e2`**.
+- **A full feed-health / staleness safety stack** was built. The pipeline now self-heals, and dead/stale regime data can no longer silently reach live orders — this closes the **06-29 failure class** (the platform showed DD + resiliences = 0 all morning and the engine traded on it). It also **auto-restarts the trader** if the Tradovate WS drops (closes the 06-23 zombie-WS gap).
+- **BZB DD-gate + L2 touch-decider guards** (Images 8/9/10) were added — **IN-PROGRESS, UNCOMMITTED** (a separate thread from the feed-health work).
+- **06-29 BMD data was excluded** (~37 GB, delayed feed); **context gaps** are documented (06-25 feed-late, 06-29 dead-zero).
+- **Perf pull (07-01):** FLIP shorts 64.4% WR / +$1,575; CONT L/S 65% WR / +$3,058 (fixed TP/SL, MNQ $2/pt).
+
+### 24.1 ⚠️ Read-first — build state & live gotchas
+- **Committed:** `f31b6e2` (feed-health pipeline, 13 files) on branch `feat/2026-06-16-regime-research-cockpit-levels`.
+- **UNCOMMITTED (the BZB/L2 thread — commit separately):** `est-engine.ts`, `engine-types.ts`, `derive-market-state.ts`, `zone-engine.ts`, `server.ts`, `l2/cqg-l2-book.ts`, `scripts/l2_touch_capture.ts`, `scripts/test_zone.ts`, `L2_TOUCH_DECIDER_PLAN.md`, + untracked `zone-pockets.ts`, `l2-decider.ts`, `RS_TOUCH_SPEC.md`, `scripts/dump_swings.ts`, `scripts/flip_short_perf.ts`.
+- **LIVE now** (all restarted/reloaded, every process is launchd-persistent + RTH-gated): rs-feed, aggregator (auto-reloads on save via `tsx watch`), trader, rs-mm (60s), feed-health monitor.
+- **Verify at the 07-01 open** (could not test after-hours — no live MM/feed data): `readMm` → `rs-context-mm.json` → merge; LM (CPbook) values; keep-alive holds the page; feed-health monitor + WS auto-restart behave; vx 1m/429; run `python3 scripts/verify_rawjson.py` for the live raw_json pass.
+
+### 24.2 RS-feed pipeline — the disjoint-file model
+Each writer owns ONE file; the aggregator merges. No cross-writer race. (Memory: `project_rs_feed_pipeline`.)
+
+| writer | file | owns | cadence | reload | atomic |
+|---|---|---|---|---|---|
+| **rs-feed** (`scripts/rs-feed.js`, daemon) | `data/rs-context.json` | DD · 3 resiliences · **LM** · DYN_HP · irrational panel · GM-legs (spyMhp/qqqMhp) · VX-γ | 5s (RTH) | **yes — owns it** (24.3) | yes |
+| **rs-mm** (`rs-levels.js MM_ONLY`) | `data/rs-context-mm.json` | mmBullish (NQ+ES) | 60s (RTH, skips 09:30–35) | no | yes |
+| **rs-levels** (`scripts/rs-levels.js`) | `daily_levels{,_es,_cl,_gc}.json` | zones · DD-bands · HP · MHP | once 09:32 | last-resort | yes |
+| **vx-poller** (`sources/vx-poller.ts`, in aggregator) | `rs-context.json` via saveContext | vx/vvix/spy/qqq/uvxy | 1m (+429 backoff) | no | yes |
+| **aggregator** (`rs-context.ts`) | merged in-mem `_context` | merges rs-context.json ⊕ rs-context-mm.json | 2s poll + fs.watch both | — | — |
+
+- `loadContext()` = `compute(mergeMm(rs-context.json))` — overlays `mmBullish` from `rs-context-mm.json`. `readJsonSafe` returns null on a torn/missing file → caller keeps last-good. `watchContext` watches both files + polls every **2s** (the poll is the real safety net; fs.watch is an instant-trigger layer). `saveContext` is atomic (temp + rename).
+- **MM cannot be a pure read** — there's no `monthly_map` in `MASTER_TABLE` (that row has CPbook, man_HP/MHP_walls=gamma walls, OPbook, BBrMr). `RSZones`={call,put} gamma walls; `LIQUIDITY_MAP`=a string. So rs-mm keeps the 1D chart-flip; its 09:36 start avoids colliding with the 09:32 levels read.
+
+### 24.3 rs-feed internals — LM, reload state machine, keep-alive, feedSetAt
+- **LM = pure JS read** of `RS_SOCK.scanner.MASTER_TABLE.data[QQQ|SPY].CPbook` (QQQ→NQ, SPY→ES; e.g. "BLU"), NOT the `.liq-map-image-text` overlay (single/active-chart, needs a click). Moved LM off rs-levels/rs-mm → rs-feed (5s).
+- **Reload state machine (the 06-29 fix):** bad tick = null scrape OR **dead-zero** (`DD==0 && nq.redist==0 && nq.mhp==0 && nq.hp==0`). 3 bad ticks → `Page.reload` (CDP) → 90s settle (no scrape/record) → capped backoff 90/180/300s → **ALARM after 4** (stop, log). A bad tick is **never recorded** — the file keeps last-good and `setAt`/`feedSetAt` freeze (= the staleness signal downstream).
+- **Keep-alive:** synthetic mousemove (`Input.dispatchMouseEvent`) every 2 min — defeats the platform's **inactivity-suspend** (the page goes unresponsive after idle → all CDP evals time out; recovers on interaction). rs-feed's reload also wakes a suspended page.
+- **feedSetAt** = rs-feed's OWN write time (separate from `setAt`, which vx-poller/extension also bump). All staleness gates use `feedSetAt ?? setAt`, so a vx write can't mask a dead rs-feed.
+
+### 24.4 Feed-health / staleness safety stack
+Three independent gates between a stale feed and a live order, plus rs-feed self-heals at the source, plus alerting.
+
+| layer | what | threshold / action |
+|---|---|---|
+| `getContext()` (`rs-context.ts`) | stamps `contextAgeSec` / `contextStale` (from feedSetAt) every read | 30s |
+| `rs-level-scorer.ts` | hard-filters (no signal, `filterReason='context-stale'`) when `contextStale` | — |
+| `feed_health_monitor.js` + `com.cockpit.feed-health` (20s cron, RTH-gated) | **FEED** stale (feedSetAt >30s OR dead-zero) → writes `/tmp/trader.context-stale` (trader halts) + macOS/Discord alert; **MM** (>150s) & **LEVELS** (today's NQ set missing after 09:40) → alert-only markers | self-clears + "recovered"; one alert per episode |
+| trader `risk-guard.ts` | `checkCanTrade` → `'context_stale'` (blocks order) when `/tmp/trader.context-stale` exists (separate from the manual `/tmp/trader.halt`) | per-signal |
+
+- Alerts: macOS `osascript` always; Discord if `DISCORD_WEBHOOK` set (currently **empty** in the plist). Marker files: `/tmp/trader.context-stale`, `/tmp/trader.tradovate-ws`, `/tmp/feed-health.{mm,levels,ws}-stale`.
+
+### 24.5 Tradovate WS health + auto-restart
+- `broker/tradovate.ts` touches `/tmp/trader.tradovate-ws` on every received WS frame (Tradovate heartbeats ~2.5s), throttled ~5s.
+- The monitor: WS silent **>30s in RTH → AUTO-RESTARTS the trader** (`launchctl kickstart -k gui/$UID/com.cockpit.trader`), **rate-limited** (90s cooldown between attempts), **gives up after 3** (`WS_MAX_KICKS`) → escalates to a manual-check alert. Marker `/tmp/feed-health.ws-stale` holds JSON `{count,lastKickMs}`. Test bypasses: `FEED_HEALTH_FORCE=1`, `FEED_HEALTH_NO_KICK=1`. Closes the 06-23 zombie-WS gap (WS looked alive but sat dead 11.5h; memory `feedback_trader_ws_check`).
+
+### 24.6 History recorder raw_json completeness + verify
+- `rs-context-history.ts snapshot()` now writes `raw_json = {...globalFields, ...perSymbolOverlay}` so EVERY context field lands in a column OR raw_json. Previously 8 globals were missed: `irrational`, `spyMhp`, `qqqMhp`, `spyPrev`, `qqqPrev`, `uvxy`, `vxGammaHp`, `vxGammaMhp`.
+- It reads the MERGED in-mem context (`getContext`), so `mmBullish` etc. from the split files are captured (dedups on `setAt`, so a fresh mm lands on the next rs-feed tick, ≤5s). **Forward-only** — pre-fix rows keep the old raw_json. Verify: `scripts/verify_rawjson.py` (one-command pass/fail; confirmed all 8 present on a post-fix row 06-30).
+
+### 24.7 Data integrity
+- **06-29 BMD excluded** (~37 GB): NQ/ES/MNQ/MES delayed/mismatched vs CQG. CQG `ticks.db` 06-29 is intact and is the reference. `data/mbo-parquet/EXCLUDED_DAYS.md`. (Memory `data_bmd_0629_excluded`.)
+- **Context gaps** (`data/CONTEXT_GAPS.md`): **06-25** feed-late (rs-context started 11:28 ET; usable 11:28+); **06-29** partial dead-zero (DD + resiliences = 0 from 09:30 until **12:21:39** — the platform didn't reload to populate the scanner fields; usable 12:21+). Same root cause (platform reload); fixed by the reload+repull cron + rs-feed's reload SM.
+- **Contract identities:** CQG = `F.US.MNQU26` (Micro), stored as symbol `NQ` in `ticks.db`; BMD = `NQU26` (full). Same index — verified in-sync 06-30 (ts within 29 ms, price to 1 tick).
+
+### 24.8 BZB DD-gate + L2 touch-decider (IN-PROGRESS, UNCOMMITTED)
+(Memories `project_l2_touch_decider`, `project_rs_zone_pockets`.)
+- **Settled direction rules:** BZB (bull-zone bottom) = FROM_UP support bounce; BrZT (bear-zone top) = FROM_BELOW; floors FROM_UP, ceiling FROM_BELOW.
+- **BZB DD-gate (Image 10):** BZB long fires **N if DD>0.5**; on DD<0.5 only **M and only if the LM opened bullish** (`lmOpenZone==='B'`), else **skip**. `lmOpenZone` threaded engine-types → derive-market-state → est-engine → l2_touch_capture (LM code near 09:30, decoded B/MR/Br).
+- **Bracket:** nearest-engine-target exits TESTED + DROPPED (worse: −541 vs −295) → reverted to **fixed 40/40** (pocket-top for LP).
+- **l2_touch_capture guards:** missing-open guard (`lmOpenZone` undefined unless a real ctx row within ±30 min of 09:30) + skip touches before the first VALID context (dead-zero detector) — handles the 06-25/06-29 contamination.
+- **Clean L2 validation set = 06-26 (only fully clean) + 06-25 (post-11:28)**; 06-29 DROPPED. Result: **engine-only −10 / decider CONFIRM +207** over ~2 days = **NOT validated, DO NOT ARM**. BZB gate is UNVALIDATED — needs a clean MR/Br-open + DD<0.5 day to prove it bites.
+
+### 24.9 Signal performance (07-01) — fixed TP/SL replay, MNQ $2/pt, WIN/LOSS/OPEN only (never MFE/MAE)
+| signal | bracket | n | W | L | WR | net pts | $ |
+|---|---|---|---|---|---|---|---|
+| **FLIP shorts** (clean-impulse short) | TP80 / SL105 * | 59 | 38 | 21 | 64.4% | +788 | +$1,575 |
+| **CONT long** (cont-reentry, deduped) | TP80 / SL70 | 36 | 24 | 12 | 66.7% | +1,015 | +$2,029 |
+| **CONT short** | TP80 / SL70 | 24 | 15 | 9 | 62.5% | +514 | +$1,029 |
+| **CONT both** | | 60 | 39 | 21 | 65.0% | +1,529 | +$3,058 |
+
+- The **score gate carries both** — 90+ is where the edge lives (FLIP-short 90+ = 70% WR/+$1,865, 80-89 flat; CONT 90+ = 71% WR). Scripts: `cont_reentry_perf_deduped.ts`, `flip_short_perf.ts` (new, takes `--tp/--sl/--score`).
+- *FLIP-short SL=105 is the assumed live "CF↓" stop (memory `trading_params`) — CONFIRM it; the WR/PnL shift with the stop.
+
+### 24.10 Deployment state + automatic recovery
+- All processes are **launchd-persistent** (rs-feed/trader daemons; rs-levels/rs-mm/feed-health crons) or always-up (aggregator via `pnpm dev` / `tsx watch`); each **self-gates on RTH** — nothing "starts" with data.
+- **Recovery is automatic:** data returns → rs-feed writes fresh (≤5s) → `getContext.contextStale` flips false (instant → scorer un-filters) → feed-health monitor clears the stale-halt (≤20s) + "recovered" → trader resumes. Total **≤20–30s**. Conservative-by-default: at the open the trader stays blocked until the feed is *confirmed* fresh.
+- **Only manual case:** platform logout / Chrome death (rs-feed reloads exhausted → ALARM; WS auto-restarts exhausted → manual alert) — re-login/restart Chrome, then it auto-resumes. You are alerted (macOS/Discord).
+
+### 24.11 Immediate next-steps for an incoming session
+1. At the 07-01 open, run the verify checklist (24.1) + `python3 scripts/verify_rawjson.py` live-data pass.
+2. **Commit the BZB/L2 thread separately** (24.1 file list); then forward-accumulate clean L2 days to validate the decider + BZB gate.
+3. **Confirm the flip-short live stop** (assumed SL=105); optionally add flip longs + commit `flip_short_perf.ts`.
+4. Optional: set `DISCORD_WEBHOOK` in `com.cockpit.feed-health.plist` for off-Mac alerts.
+
+### 24.12 New launchd jobs / files / memories since §23
+- **launchd:** `com.cockpit.feed-health` (new, 20s); `com.cockpit.rs-mm` bumped `1800`→`60`. Repo copies synced in `scripts/launchd/`.
+- **New files:** `scripts/feed_health_monitor.js`, `scripts/verify_rawjson.py`, `apps/aggregator/scripts/flip_short_perf.ts`, `data/CONTEXT_GAPS.md`, `data/mbo-parquet/EXCLUDED_DAYS.md`, `data/rs-context-mm.json` (rs-mm output).
+- **Memories:** `project_rs_feed_pipeline`, `data_bmd_0629_excluded`, `feedback_conversational_tone` (new); `project_l2_touch_decider` (updated).
+
+### 24.13 Reference — current CODE state (verified this session, file:line where cited)
+- `scripts/rs-feed.js` — reload SM + atomic + keep-alive + LM(CPbook) + feedSetAt (deadZero detector ~line 160; state machine in the run loop).
+- `scripts/rs-levels.js` — `readMm` (MM-only, NQ+ES, no LM/click); `writeRsContext` → `rs-context-mm.json`; retry/reload demoted + FATAL alarm.
+- `scripts/feed_health_monitor.js` — the 4 checks (feed/MM/levels/WS) + auto-restart.
+- `apps/aggregator/src/rs-context.ts` — `MM_PATH`, `readJsonSafe`, `mergeMm`, `loadContext`, `watchContext` (2s poll), atomic `saveContext`, `getContext` (contextStale/feedSetAt).
+- `apps/aggregator/src/rs-context-history.ts` — `snapshot()` raw_json globals fold-in.
+- `apps/aggregator/src/sources/vx-poller.ts` — 1m + 429 backoff loop.
+- `apps/aggregator/src/rules-v2/rs-level-scorer.ts` — contextStale hard-filter.
+- `apps/trader/src/risk-guard.ts` — `STALE_FILE` + `context_stale` block.
+- `apps/trader/src/broker/tradovate.ts` — `WS_BEAT_FILE` heartbeat tap in `ws.on('message')`.
+- `apps/aggregator/scripts/l2_touch_capture.ts` — lmOpenZone, BZB gate wiring, fixed bracket, first-valid-context skip.
