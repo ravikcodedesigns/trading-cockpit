@@ -1,0 +1,387 @@
+{
+ "generated": "2026-07-06",
+ "method": "cracker_p02_clock.ts 50ms-bin volume cross-correlation, sign: positive = Bookmap late vs CQG",
+ "quality_gate": "usable = peakR >= 0.15 AND intraday drift <= 250ms",
+ "symbols": {
+  "MNQ": {
+   "2026-06-01": {
+    "offset_ms": -0.4,
+    "peak_r": 0.162,
+    "am_ms": -3000.0,
+    "pm_ms": -0.0,
+    "drift_ms": 3000.0,
+    "usable": false
+   },
+   "2026-06-02": {
+    "offset_ms": -8.7,
+    "peak_r": 0.313,
+    "am_ms": -12.0,
+    "pm_ms": -6.0,
+    "drift_ms": 6.0,
+    "usable": true
+   },
+   "2026-06-03": {
+    "offset_ms": -7.1,
+    "peak_r": 0.3,
+    "am_ms": -9.0,
+    "pm_ms": -6.0,
+    "drift_ms": 3.0,
+    "usable": true
+   },
+   "2026-06-04": {
+    "offset_ms": 93.2,
+    "peak_r": 0.212,
+    "am_ms": 92.0,
+    "pm_ms": 94.0,
+    "drift_ms": 3.0,
+    "usable": true
+   },
+   "2026-06-05": {
+    "offset_ms": -0.9,
+    "peak_r": 0.156,
+    "am_ms": 5.0,
+    "pm_ms": -3.0,
+    "drift_ms": 9.0,
+    "usable": true
+   },
+   "2026-06-08": {
+    "offset_ms": 91.3,
+    "peak_r": 0.197,
+    "am_ms": 87.0,
+    "pm_ms": 94.0,
+    "drift_ms": 7.0,
+    "usable": true
+   },
+   "2026-06-09": {
+    "offset_ms": 14.7,
+    "peak_r": 0.095,
+    "am_ms": 10.0,
+    "pm_ms": 81.0,
+    "drift_ms": 71.0,
+    "usable": false
+   },
+   "2026-06-10": {
+    "offset_ms": -10.8,
+    "peak_r": 0.223,
+    "am_ms": -20.0,
+    "pm_ms": -7.0,
+    "drift_ms": 13.0,
+    "usable": true
+   },
+   "2026-06-11": {
+    "offset_ms": -9.9,
+    "peak_r": 0.201,
+    "am_ms": -10.0,
+    "pm_ms": -10.0,
+    "drift_ms": 0.0,
+    "usable": true
+   },
+   "2026-06-12": {
+    "offset_ms": -9.8,
+    "peak_r": 0.258,
+    "am_ms": -13.0,
+    "pm_ms": -8.0,
+    "drift_ms": 5.0,
+    "usable": true
+   },
+   "2026-06-15": {
+    "offset_ms": -8.4,
+    "peak_r": 0.316,
+    "am_ms": -10.0,
+    "pm_ms": -7.0,
+    "drift_ms": 2.0,
+    "usable": true
+   },
+   "2026-06-16": {
+    "offset_ms": -6.5,
+    "peak_r": 0.304,
+    "am_ms": -10.0,
+    "pm_ms": -4.0,
+    "drift_ms": 5.0,
+    "usable": true
+   },
+   "2026-06-17": {
+    "offset_ms": -7.4,
+    "peak_r": 0.27,
+    "am_ms": -9.0,
+    "pm_ms": -6.0,
+    "drift_ms": 3.0,
+    "usable": true
+   },
+   "2026-06-18": {
+    "offset_ms": -21.8,
+    "peak_r": 0.199,
+    "am_ms": -38.0,
+    "pm_ms": -12.0,
+    "drift_ms": 26.0,
+    "usable": true
+   },
+   "2026-06-19": {
+    "offset_ms": -1.8,
+    "peak_r": 0.376,
+    "am_ms": -2.0,
+    "pm_ms": -3.0,
+    "drift_ms": 2.0,
+    "usable": true
+   },
+   "2026-06-22": {
+    "offset_ms": -3.1,
+    "peak_r": 0.253,
+    "am_ms": -8.0,
+    "pm_ms": -0.0,
+    "drift_ms": 7.0,
+    "usable": true
+   },
+   "2026-06-23": {
+    "offset_ms": -6.6,
+    "peak_r": 0.233,
+    "am_ms": -11.0,
+    "pm_ms": -4.0,
+    "drift_ms": 6.0,
+    "usable": true
+   },
+   "2026-06-24": {
+    "offset_ms": -539.8,
+    "peak_r": 0.032,
+    "am_ms": -194.0,
+    "pm_ms": 2096.0,
+    "drift_ms": 2291.0,
+    "usable": false
+   },
+   "2026-06-25": {
+    "offset_ms": -238.3,
+    "peak_r": 0.032,
+    "am_ms": -238.0,
+    "pm_ms": -3.0,
+    "drift_ms": 234.0,
+    "usable": false
+   },
+   "2026-06-26": {
+    "offset_ms": -3.2,
+    "peak_r": 0.046,
+    "am_ms": -7.0,
+    "pm_ms": -1.0,
+    "drift_ms": 6.0,
+    "usable": false
+   },
+   "2026-06-30": {
+    "offset_ms": -30.7,
+    "peak_r": 0.197,
+    "am_ms": -4.0,
+    "pm_ms": -46.0,
+    "drift_ms": 43.0,
+    "usable": true
+   },
+   "2026-07-01": {
+    "offset_ms": -26.0,
+    "peak_r": 0.052,
+    "am_ms": -1.0,
+    "pm_ms": -28.0,
+    "drift_ms": 27.0,
+    "usable": false
+   },
+   "2026-07-02": {
+    "offset_ms": -42.7,
+    "peak_r": 0.082,
+    "am_ms": -45.0,
+    "pm_ms": -42.0,
+    "drift_ms": 4.0,
+    "usable": false
+   },
+   "2026-07-03": {
+    "offset_ms": -48.5,
+    "peak_r": 0.368,
+    "am_ms": -48.0,
+    "pm_ms": -56.0,
+    "drift_ms": 8.0,
+    "usable": true
+   }
+  },
+  "MES": {
+   "2026-06-02": {
+    "offset_ms": -4.2,
+    "peak_r": 0.486,
+    "am_ms": -4.0,
+    "pm_ms": -5.0,
+    "drift_ms": 1.0,
+    "usable": true
+   },
+   "2026-06-03": {
+    "offset_ms": -4.5,
+    "peak_r": 0.372,
+    "am_ms": -4.0,
+    "pm_ms": -4.0,
+    "drift_ms": 0.0,
+    "usable": true
+   },
+   "2026-06-04": {
+    "offset_ms": -10.7,
+    "peak_r": 0.351,
+    "am_ms": -16.0,
+    "pm_ms": -4.0,
+    "drift_ms": 12.0,
+    "usable": true
+   },
+   "2026-06-05": {
+    "offset_ms": -35.4,
+    "peak_r": 0.164,
+    "am_ms": -54.0,
+    "pm_ms": -3.0,
+    "drift_ms": 50.0,
+    "usable": true
+   },
+   "2026-06-08": {
+    "offset_ms": -31.1,
+    "peak_r": 0.284,
+    "am_ms": -43.0,
+    "pm_ms": -7.0,
+    "drift_ms": 36.0,
+    "usable": true
+   },
+   "2026-06-09": {
+    "offset_ms": -10.1,
+    "peak_r": 0.292,
+    "am_ms": -12.0,
+    "pm_ms": -6.0,
+    "drift_ms": 6.0,
+    "usable": true
+   },
+   "2026-06-10": {
+    "offset_ms": -6.6,
+    "peak_r": 0.357,
+    "am_ms": -8.0,
+    "pm_ms": -4.0,
+    "drift_ms": 4.0,
+    "usable": true
+   },
+   "2026-06-11": {
+    "offset_ms": -42.1,
+    "peak_r": 0.273,
+    "am_ms": -37.0,
+    "pm_ms": -58.0,
+    "drift_ms": 22.0,
+    "usable": true
+   },
+   "2026-06-12": {
+    "offset_ms": -42.7,
+    "peak_r": 0.271,
+    "am_ms": -51.0,
+    "pm_ms": -5.0,
+    "drift_ms": 46.0,
+    "usable": true
+   },
+   "2026-06-15": {
+    "offset_ms": -23.1,
+    "peak_r": 0.396,
+    "am_ms": -5.0,
+    "pm_ms": -40.0,
+    "drift_ms": 35.0,
+    "usable": true
+   },
+   "2026-06-16": {
+    "offset_ms": -3.9,
+    "peak_r": 0.47,
+    "am_ms": -4.0,
+    "pm_ms": -4.0,
+    "drift_ms": 1.0,
+    "usable": true
+   },
+   "2026-06-17": {
+    "offset_ms": -44.8,
+    "peak_r": 0.252,
+    "am_ms": -49.0,
+    "pm_ms": -3.0,
+    "drift_ms": 46.0,
+    "usable": true
+   },
+   "2026-06-18": {
+    "offset_ms": -60.3,
+    "peak_r": 0.284,
+    "am_ms": -47.0,
+    "pm_ms": -93.0,
+    "drift_ms": 46.0,
+    "usable": true
+   },
+   "2026-06-19": {
+    "offset_ms": -4.3,
+    "peak_r": 0.421,
+    "am_ms": -4.0,
+    "pm_ms": -3.0,
+    "drift_ms": 1.0,
+    "usable": true
+   },
+   "2026-06-22": {
+    "offset_ms": -22.3,
+    "peak_r": 0.243,
+    "am_ms": -40.0,
+    "pm_ms": 2.0,
+    "drift_ms": 42.0,
+    "usable": true
+   },
+   "2026-06-23": {
+    "offset_ms": -6.3,
+    "peak_r": 0.374,
+    "am_ms": -6.0,
+    "pm_ms": -7.0,
+    "drift_ms": 0.0,
+    "usable": true
+   },
+   "2026-06-24": {
+    "offset_ms": -83.9,
+    "peak_r": 0.051,
+    "am_ms": -85.0,
+    "pm_ms": -1048.0,
+    "drift_ms": 963.0,
+    "usable": false
+   },
+   "2026-06-25": {
+    "offset_ms": -58.5,
+    "peak_r": 0.115,
+    "am_ms": -59.0,
+    "pm_ms": -1150.0,
+    "drift_ms": 1091.0,
+    "usable": false
+   },
+   "2026-06-26": {
+    "offset_ms": -4.6,
+    "peak_r": 0.037,
+    "am_ms": -5.0,
+    "pm_ms": -3.0,
+    "drift_ms": 2.0,
+    "usable": false
+   },
+   "2026-06-30": {
+    "offset_ms": -26.9,
+    "peak_r": 0.254,
+    "am_ms": -2.0,
+    "pm_ms": -46.0,
+    "drift_ms": 44.0,
+    "usable": true
+   },
+   "2026-07-01": {
+    "offset_ms": -32.8,
+    "peak_r": 0.197,
+    "am_ms": -8.0,
+    "pm_ms": -33.0,
+    "drift_ms": 25.0,
+    "usable": true
+   },
+   "2026-07-02": {
+    "offset_ms": -41.8,
+    "peak_r": 0.186,
+    "am_ms": -451.0,
+    "pm_ms": -57.0,
+    "drift_ms": 394.0,
+    "usable": false
+   },
+   "2026-07-03": {
+    "offset_ms": -50.4,
+    "peak_r": 0.466,
+    "am_ms": -50.0,
+    "pm_ms": -53.0,
+    "drift_ms": 3.0,
+    "usable": true
+   }
+  }
+ }
+}
