@@ -1,23 +1,25 @@
 # Trading Cockpit — Handoff Document
 
 > ## ▶ START HERE — new session, read this first
-> **Latest state = §25** (2026-07-01: L2 slippage-artifact finding + the STRATEGIC PIVOT to a Quant Data options-regime spine + cockpit chart self-heal). Orient in this order:
-> **1.** §25.1 (read-first — build state, branch, the pivot, the locked approach) → **2.** §25.9 (immediate next-steps) + §25.0 (TL;DR) → **3.** `git log --oneline -8`, `git status`, memories `project_quant_data` (NEW — read first), `project_l2_touch_decider`, `project_rs_feed_pipeline`.
-> **The pivot in one line:** we are onboarding **Quant Data** (quantdata.us, options/GEX/vanna/charm/darkpool/flow, 1-min history back to Jan-2025, backfillable) as the new **backtestable spine**; **RS levels become the scaffold** we grade with options data; goal = profitable trader, data-source-agnostic. This breaks the forward-only "n=2-days" wall that killed every prior study.
-> **Open threads:** (a) lock **Phase 0** (define the exact options signals that grade an RS level) → build client + validation harness (§25.4/§25.9); (b) commit the **UNCOMMITTED L2 slippage fix** (§25.2); (c) fix the **committed root `.env`** security issue (§25.6); (d) §24's feed pipeline is LIVE + verified healthy (§25.7).
-> §24 = RS-feed pipeline redesign + feed-health (still current infra). Sections §1–23 are earlier layers — the top-of-doc stale-warning below still applies to them.
+> **Latest state = §26** (2026-07-02: options-landscape VERDICT + the START of the rigorous ORDERFLOW-SYSTEM rebuild — multi-scale swings + footprint engine + spine/level-memory). Orient in this order:
+> **1.** §26.1 (read-first — build state, what's built) → **2.** §26.8 (next-steps) + §26.0 (TL;DR) → **3.** `git log --oneline -10`, `git status`, memories `project_orderflow_system` (NEW — read first), `project_quant_data_phase0` (the options arc + verdict), `project_dda_detector`, `project_l2_touch_decider`.
+> **The state in one line:** the Quant Data options pivot ran its full course — rigorous testing (multivariate walk-forward + VRP premium backtests) found **NO directional or premium edge** on NQ/ES after honest OOS + costs; the ONE real deliverable is a validated **volatility/range forecaster** (morning-IV → rest-of-day range, Spearman 0.79). We then pivoted to the **8-layer ORDERFLOW rebuild** (§25.3's design, now being BUILT): a persistent lifecycle **level-memory spine** + **multi-scale swing detector** + **footprint engine**, under a strict research protocol (R-multiple/expectancy — NOT win-rate/direction, Shapley attribution, signal ledger).
+> **Open threads:** (a) continue the spine build — wire per-visit footprint into level-memory + build the heatmap engine (§26.6/26.8); (b) run the calibration studies (micro-L2 vs mini-L3 footprint agreement + aggressor error) BEFORE pattern screening; (c) EVERYTHING this session is UNCOMMITTED on branch `fix/cockpit-chart-live-tail-poll`.
+> §25 = the options pivot + the studies that produced the verdict. §24 = RS-feed pipeline (still current infra). §1–23 earlier layers — the stale-warning below applies to them.
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-07-01 (Wednesday) — see **§24** (RS-feed rewritten into a disjoint-file pipeline + a full feed-health / staleness / Tradovate-WS-auto-restart safety stack, committed `f31b6e2`; a BZB DD-gate / L2-touch-decider thread is mid-build + UNCOMMITTED). **§23** covers the RS-framework / Lightspeed-L3 pivot (→06-24); **§22** covers 2026-06-08→06-16.
+> **Last updated**: 2026-07-06 (Monday) — latest state is **§26** (see START HERE above). **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
 > ⚠️ **Sections 1–21 are a 2026-06-07/08 snapshot and are now partly stale.** The
 > biggest drift: (1) the **V3 framework was fully removed** — §6 is historical,
 > read §22.2; (2) **mbo.db (SQLite) was replaced by a Parquet + DuckDB store** —
-> §3.3 is historical, read §22.3; (3) there is a **known data-integrity bug in the
-> Parquet store** (≈30% duplicate trade rows) — read §22.9 **before trusting any
-> parquet CVD/volume number**.
+> §3.3 is historical, read §22.3; (3) the parquet duplicate-row bug flagged here
+> earlier was **FIXED 2026-06-16** (§22.9 — store deduped, acceptance passed);
+> parquet CVD/volume numbers are trustworthy again. (4) **§5/§8 carry stale LIVE
+> CONFIG numbers** — for gate version, enabled rules, and risk caps trust
+> `reapply_quality_gates.ts`, `apps/trader/.env`, and `risk-guard.ts` over this doc.
 
 ---
 
@@ -144,7 +146,7 @@ lsof -p <pid> | grep cwd
 
 ## 3. Data Stores & Schemas
 
-### 3.1 trading.db (1.3 GB)
+### 3.1 trading.db (2.66 GB as of 2026-07-06)
 
 | Table | Purpose | Key columns |
 |---|---|---|
@@ -160,7 +162,7 @@ lsof -p <pid> | grep cwd
 | **signal_outcomes** | Post-hoc outcome tracking |  |
 | **expl_short_observations** | EXPL short OOS observations |  |
 
-### 3.2 ticks.db (32 GB)
+### 3.2 ticks.db (78.5 GB as of 2026-07-06)
 
 | Table | Purpose | Key columns |
 |---|---|---|
@@ -176,7 +178,7 @@ lsof -p <pid> | grep cwd
 
 **ticks.db NQ symbol is actually MNQ data** — same underlying instrument as `mbo.db symbol='MNQM'`.
 
-### 3.3 mbo.db (76 GB)
+### 3.3 mbo.db — **HISTORICAL: this DB no longer exists** (deleted; replaced by `data/mbo-parquet/` + DuckDB, see §22.3)
 
 | Table | Purpose |
 |---|---|
@@ -256,7 +258,7 @@ The `B AND score >= 80` catches tape-speed (n=2433 ≥80) and large-print (n=242
 `apps/aggregator/src/quality.ts` → returns `{ tier: 'gold' | 'silenced', reason: string }` per signal.
 Script: `scripts/reapply_quality_gates.ts` re-runs the gate for all historical signals when `GATE_VERSION` is bumped.
 
-Currently: **GATE_VERSION = 4**.
+Currently: **GATE_VERSION = 5** (verify in `scripts/reapply_quality_gates.ts` — this number drifts; the code is canonical).
 
 ### 5.2 Gate cascade (FLIP / clean-impulse)
 
@@ -293,7 +295,7 @@ This is the **single biggest silencer** of FLIP LONGs — 71 of 89 silenced NQ F
 
 ---
 
-## 6. V3 Framework
+## 6. V3 Framework — **HISTORICAL (framework deleted 2026-06-09; read §22.2. Current term: "tradable signal pipeline")**
 
 ### 6.1 Concept
 
@@ -364,7 +366,7 @@ This is **race-condition-safe** by design — only the highest-quality opposing 
 
 ---
 
-## 7. Performance Cohorts (NQ FLIP, inception → 2026-06-05)
+## 7. Performance Cohorts (NQ FLIP, inception → 2026-06-05) — **HISTORICAL (superseded by §22.2 acceptance data + §24.9 replay numbers)**
 
 ### 7.1 The three nested cohorts
 
@@ -413,8 +415,8 @@ For $3,000/day target → **22× MNQ contracts (≈ 2 NQ)**.
 
 **`apps/trader/.env`** (current):
 ```
-TRADER_MODE=live                    # placing real orders
-TRADER_ENABLED_RULES=clean-impulse  # FLIP only (not WBF, CONT, EXPL)
+TRADER_MODE=live                                 # placing real orders
+TRADER_ENABLED_RULES=clean-impulse,cont-reentry  # FLIP + CONT live (CONT enabled ab56d86, §22.6)
 ```
 
 Account: **Tradovate live 1557816**. The trader has **no HTTP server** — it's a pure daemon: outbound SSE to aggregator (`ws://127.0.0.1:8787/ws/cockpit`) + outbound WS to Tradovate. Health checks happen via `pgrep -f 'tsx.*trader/src/index'` (see §2.5).
@@ -435,7 +437,7 @@ Account: **Tradovate live 1557816**. The trader has **no HTTP server** — it's 
 type BlockReason =
   | 'halt_file'              // kill-switch active
   | 'outside_rth'            // not RTH (09:30-16:00 ET)
-  | 'daily_loss_limit'       // -$300 hit
+  | 'daily_loss_limit'       // TRADER_MAX_DAILY_LOSS hit (currently -$1000, raised from -$500 — .env is canonical)
   | 'max_positions'          // already open
   | 'duplicate_signal'       // dedupe
   | 'news_blackout'          // FOMC/CPI/NFP ±15 min
@@ -447,7 +449,7 @@ const FLIP_LONG_START_MIN = 10 * 60 + 30;   // 10:30 ET
 const UNIVERSAL_STOP_MIN  = 14 * 60 + 30;   // 14:30 ET
 ```
 
-**Daily-loss cap**: currently **-$300** (lowered from -$500 on 2026-06-02). When hit, no new entries until next day.
+**Daily-loss cap**: currently **-$1000** (raised from -$500; `apps/trader/.env` `TRADER_MAX_DAILY_LOSS` is canonical). When hit, no new entries until next day.
 
 ### 8.4 Tradovate API quirks (per memory `feedback_tradovate_api_quirks`)
 
@@ -586,9 +588,9 @@ Top bar showing: COCKPIT, NQ, ES, timeframe selector, alert toggle, IDLE/PnL wid
 
 ---
 
-## 11. Scripts Directory (apps/aggregator/scripts/)
+## 11. Scripts Directory (apps/aggregator/scripts/) — **HISTORICAL SNAPSHOT (now ~285 scripts; the §23–§26 research scripts are absent here)**
 
-100+ scripts. The most important ones:
+100+ scripts as of 2026-06-07. The most important ones then:
 
 ### 11.1 Operations
 - **mbo_ingest.ts** — incremental MBO log → mbo.db ingest. Resume-from-offset. Manually invoked every ~30 min.
@@ -1820,3 +1822,65 @@ Long working session on *why* orderflow strategies keep failing and how to do it
 5. **Fix root `.env`** (`git rm --cached .env` + rotate) once Ravi signs off (§25.6).
 6. Optional: **FlashAlpha head-to-head** (we have a disconnected stub) before over-committing to one vendor (§25.4).
 7. For MCP-based interactive Quant Data queries, **restart the session** so the `quantdata` tools load (REST client doesn't need this).
+
+## 26. 2026-07-02 — Options-landscape VERDICT + the ORDERFLOW-SYSTEM rebuild (spine: multi-scale swings + footprint)
+
+### 26.0 TL;DR — what materially changed
+- **The Quant Data options pivot ran its full course and reached an honest VERDICT: no directional or premium edge on NQ/ES after rigorous OOS testing + realistic costs.** Direction (multivariate walk-forward, 12 features, all 6 endpoint families) → AUC 0.49 (below chance, below shuffled-null, below always-long). ATM 0DTE premium selling → efficiently priced (credit≈realized move, QQQ 374d naked −$4337). OTM defined-risk credit spreads (put/call/iron-condor) → all negative after honest costs. **The ONE real, validated deliverable: a volatility/range FORECASTER** (morning IV → rest-of-day range, Spearman 0.79, +0.62 marginal over the free price-only baseline). Options predict MAGNITUDE, not DIRECTION.
+- **We then PIVOTED to building the 8-layer ORDERFLOW system** (§25.3's design). This is now the active work. Built so far: the **persistent lifecycle level-memory spine** (visit-normalized), the **multi-scale swing detector** (fixes the vol-scaling granularity drift + a trend-day δ-cap), and the **footprint engine** (book-relative aggressor, significance-based imbalances). Under a strict research protocol: **R-multiple/expectancy as the metric (NOT win-rate/direction)**, one pre-registered hypothesis at a time, univariate-IC → conditional-on-context → **Shapley attribution**, a written signal ledger.
+- **A persistent Quant Data store** was built (`data/quantdata.db`) — universal gzipped raw cache + materialized tables + `qdCached` read-through; a **concurrency-safe throttle fix** (Ravi caught 429 rate-limiting corrupting a sample). Reusable regardless of the options verdict.
+- **Nothing is armed / no live-trading changes.** All work is UNCOMMITTED on `fix/cockpit-chart-live-tail-poll`.
+
+### 26.1 ⚠️ Read-first — build state (everything UNCOMMITTED)
+- **Branch:** `fix/cockpit-chart-live-tail-poll`. Nothing from §26 is committed. Memories are the durable record: **`project_orderflow_system` (read FIRST)**, `project_quant_data_phase0` (the full options arc + verdict + the store).
+- **New source modules (aggregator):** `src/sources/quantdata.ts` (REST client + throttle), `src/sources/quantdata-store.ts` (the persistent store), `src/l3/swing-levels-ms.ts` (multi-scale swing detector — the new level source), `src/l3/footprint.ts` (the footprint engine). Plus the earlier `src/l3/level-memory.ts` (the spine, visit-normalized).
+- **Data assets:** `data/quantdata.db` (options store, gzipped), `data/level-memory.db` (the spine trace), `data/quantdata_features.csv` (the multivariate-model matrix). Many scratch scripts in `apps/aggregator/scripts/` (dump_swings_*, fp_smoke, build_level_memory, *_backtest, *_check).
+- **The orderflow rebuild governs now.** The options thread is CLOSED (verdict reached); its store + vol-forecaster remain reusable assets. Do NOT re-mine options for a directional/premium edge — 7 checks + a proper multivariate model + premium backtests all say it isn't there.
+
+### 26.2 The options arc → the honest verdict (why we stopped)
+Ran the full Phase-0→Phase-3 program with placebo/null discipline. Every DIRECTIONAL/LEVEL test came back null; the MAGNITUDE test passed. Chronology:
+- **Phase 0 locked** the grading vector; **Phase 1 gate PASSED** (QuantData serves 1-min history to Jan-2025, walls agree with RS hedge-pressure AND actual 06-26 price turns; basis NQ−NDX ~+167 small). Store + client built.
+- **RS-level hold/break study** (2688 touches, 28 days, structural label, graded via `snapshotTime`): net-GEX sign flat, wall-side flat, wall-proximity died on normalization, family×regime sign-inconsistent = **NULL**. Refinement (fixed flip + local-GEX): direction-correct but **concentrated in ~2 weeks / driven by 06-26** → not a stable edge.
+- **Day-regime** (does flip-side split trend vs range days, 36d): **dead** (fracEff ~0.07 EVERY day).
+- **Flow-leads-price** (net-drift, 18d): LEAD corr 0.039 (coherent lead>lag>null but untradeable linearly).
+- **Vol-drift / VRP:** IV−realized gap corr with day RANGE% = **0.857** (but with efficiency only 0.138 → range predictable, direction NOT). **Causal gate:** morning IV → rest-of-day range **Spearman 0.79**, marginal 0.62 over free baseline = the one real edge.
+- **Multivariate walk-forward model** (`walk_forward_model.py`, HistGradientBoosting, TimeSeriesSplit, 12 features, 373d): **OOS AUC 0.490** — below chance, below shuffled-null (0.533), below always-long (0.564). Definitive: the full smart-money combination does NOT predict NQ/ES intraday direction.
+- **Premium backtests:** vol-scaled 0DTE ATM straddle (mean-rev) FAILS OOS (QQQ test 41.8% WR, losing). Naked 0DTE ATM straddle = efficiently priced (credit≈move). OTM defined-risk spreads (put/call/iron-condor, 372d, real wing cost): all negative; iron condor (direction-neutral) train −$1265/test −$2367; put spread loses even in a bull market; 74% WR still negative (pennies-vs-steamroller; 4-leg cost eats 30% of credit).
+- **VERDICT:** options data on NQ/ES = a validated volatility/range forecaster (analytical/risk-sizing tool), NOT a turnkey directional or premium strategy. Ravi trades MNQ/MES.
+
+### 26.3 The Quant Data persistent store + client (reusable regardless)
+- `data/quantdata.db`: **`api_responses`** (universal gzipped raw cache, keyed by endpoint + canonical-body-sha256, ~5× compression) + materialized **`chain_snapshots`** (per-strike/expiry grids, opaque `cells_json`) + **`price_bars`** + **`coverage`** + **`regime_vector`**. `qdCached(endpoint, body)` = read-through: pulls once, owns forever, works offline/past-rate-limit.
+- **All 23 options endpoints probed** → mapped to 6 shape-families (chain-grid / time-series / bars / trade-tape / oi-change / ticker-scalar). Confirmed REST paths: exposure `/options/tool/exposure-by-strike` (body `filter:{ticker}`+greekMode+representationMode+sessionDate|snapshotTime); price `/equities/tool/stock-price-over-time` (`filter:{ticker}`); option OHLC `/options/tool/option-price-over-time` (`filter:{ticker,expirationDate,strikePrice,contractType}`); also net-drift, vol-drift, vol-skew, oi-change, dark-flow paths (see memory). History to Jan-2025 (order flow to Aug-2020).
+- **⚠️ Throttle bug FIXED (Ravi caught 429s on the dashboard):** the client throttle used a shared `lastCallMs` that isn't concurrency-safe → `Promise.all` multi-leg fetches bursted past 240/min → 429s were caught as SKIPS, biasing samples (OTM backtest 304-skip vs proper 20). NO data was corrupted (429s throw before caching; cache verified clean). FIX: serialized promise-chain throttle (MIN_SPACING 300ms) + 429/503 retry-with-backoff in `qdPost`. Re-ran OTM clean (372d).
+
+### 26.4 The ORDERFLOW-SYSTEM rebuild — design LOCKED (the active work)
+The rigorous rebuild of §25.3's 8-layer design. **Locked decisions (Ravi, PhD-quant framing):**
+- **8 layers:** (0) primitives [`l3/order-book`, `l2/cqg-l2-book`, `divergence` OFI/Kyle-λ/MK] · (1) **level-memory/running trace** [`l3/level-memory` — the spine] · (2) multi-source level unification [`l3/swing-levels-ms` + footprint HVN/POC + RS + walls + session refs] · (3) liquidity/heatmap-as-data [TODO] · (4) interaction semantics [footprint + divergence] · (5) **regime conditioning — use VOL/expected-range (validated 0.79), NOT GEX** (this session found GEX doesn't predict level hold/break) · (6) synthesis/thesis [`engine-thesis`] · (7) lifecycle: entry SEPARATED from management, structural stops + next-liquidity targets · (8) descriptive-first eval + forward accumulation. Carmine Rosato's discretionary method maps onto this (validates the shape).
+- **Research protocol:** metric = **R-multiple / expectancy distribution, NOT win-rate/direction** (a 48%-win 2.5:1 setup beats a 60%-win 1:1). Outcome = WIN/LOSS/OPEN at a FIXED pre-registered R-bracket grid {1,1.5,2,3}R, 1R = structural stop beyond the zone (NO MFE/MAE per the hard rule; fixed brackets = anti-overfit guard, walk-forward OOS). One pre-registered hypothesis at a time → univariate IC → conditional-on-context → **Shapley attribution** (which pattern is the differentiator when several fire) → a written **signal ledger**. This is the cure for "kitchen-sink → no edge, no clue what to adjust."
+- **Level zones are DATA-DEFINED, not a fixed band:** swings = *candidates*; the footprint/heatmap at formation defines the zone WIDTH + significance (orderblock/sweep/HVN/absorption), and filters out thin/random swings.
+- **MASTER DATAPOINT CATALOG** written (the trace-schema blueprint) — categories: level-identity / significance-zone / visit-geometry / footprint / orderbook-heatmap / flow / L3-institutional (iceberg/meta-order/VPIN) / outcome / test-over-test-deltas / context / cross-instrument — each tagged core-vs-phase2 + L2/L3. (Full catalog in the 2026-07-02 conversation; reproduce into a `docs/` file when convenient.)
+
+### 26.5 Data provenance + the L2/L3 usage framework
+- **CQG L2 (`ticks.db` / `ticks-parquet`, labeled NQ/ES) = actually MICRO (MNQ/MES)** — the mislabel is known but not renamed (scripts depend on it). NQ 2026-05-04→07-02 (54d), ES 05-12→07-02 (46d). ~1-lot avg trade size (retail/micro), consistent throughout (no micro→mini switch). **Ravi trades MNQ/MES.** Live data lands in `ticks.db`; the parquet converter LAGS (today often only partially converted → read `ticks.db` for the current day).
+- **L3 MBO capture (`~/cockpit-mbo-capture`, Bookmap) = has BOTH mini and micro:** mini NQU6/ESU6 + micro MNQU6/MESU6, **2026-06-19 → 07-02** (~12 clean days; 06-29 index contracts missing = the BMD-delayed day; CL/GC from 06-24). This is the full-size institutional-flow **playground**. No separate mini-L2 exists — mini only lives in L3.
+- **Usage framework — route each pattern by OBSERVABILITY:** *institutional-only* patterns (iceberg / meta-order / passive-accumulation, need order-lifecycle) → **L3 mini only** (low-N, use mini-ES as the replication). *Cross-observable* patterns (footprint delta/imbalance, sweep, structure) → **L2 micro (54d) for statistical-power screening**, **L3 mini for mechanism confirmation**, and on the ~12 OVERLAP days **race the L2-version vs L3-version against the same shared outcome** (outcomes = price = arbitrage-shared) to decide which read wins per pattern. Micro-is-retail hazard guarded by L3 confirmation; micro may also be usable as a retail-contrarian gauge. **Run the two CALIBRATION studies first** (micro-L2 vs mini-L3 footprint agreement; inferred-vs-true aggressor error).
+- **Price identity vs flow:** MNQ/NQ prices are arbitrage-pinned (price discovered in the mini, micro inherits) → micro is perfect for LEVEL detection; but ORDER FLOW differs (different crowds) → footprint delta can diverge from institutional truth. **Q/S value = `qqqSpyRs` (rs-context.ts:154) = (QQQ%chg − SPY%chg)×100 pct-pts; >0 = NQ/tech leading.** Cross-instrument confluence (common-factor vs spread decomposition: both-move-together = macro, trust the break; NQ-alone = rotation, fade) is DESIGNED, deferred to a later phase (build ES spine now, analysis later).
+
+### 26.6 The SPINE build state (what's built + verified)
+- **Level-memory spine — `l3/level-memory.ts` (BUILT, visit-normalized):** persistent lifecycle level registry (dedup-by-price, merges across retire — fixes the duplicate-level bug) + a **VISIT model with hysteresis** that fixed the over-count (naive band-exit = interaction over-counted chop: 56% of interactions <5s apart, 13 "touches"/minute; visit model collapsed 94106→4751 interactions, 30202-level 296→9 visits). **KEY FINDING:** once counted as real visits, the apparent "level memory" signal VANISHED — P(hold|prior held)=64.5% vs P(hold|prior broke)=64.6% (identical) — the 94/7 was a construction artifact. Naive hold/break has no edge; richer features (P2) are the open question. Writes `data/level-memory.db` (`levels` + `interactions`).
+- **Multi-scale swing detector — `l3/swing-levels-ms.ts` (BUILT + tuned):** replaces the v1 2-min-reactive vol (which caused granularity drift). Design: **session-anchored stable base vol (floor 2 / cap 40) + MULTI-SCALE zigzags (scales 1.5×/3×/6× base) + leg-relative threshold** `δ=min(DELTA_CAP[s], max(scale×base, 0.5×leg))`. **δ-cap `[40,90,180]pt` was added after today's (07-02) −1050pt trend-down day exposed the leg-relative term growing UNBOUNDED in a trend** (965pt selloff demanded a ~480pt bounce → zero swings). Tuned + verified on trend(06-05)/chop(05-29)/normal(06-02): generalizes; nested scales capture Ravi's visual swings ACROSS scales; scale+legSize = built-in significance. Insight: WHICH scale is useful depends on day character (coarse=trends, medium=chop/normal). Runs via `dump_swings_parq.ts` (parquet, fast trades-only) / `dump_swings_ticksdb.ts` (live day). Marked on TradingView tab-2 as zigzags (via `ui_evaluate` + `removeEntity`/`createMultipointShape` — the MCP `draw_remove_one`/`draw_clear`/`scroll` tools are BROKEN this session with `getChartApi is not defined`; drive the chart's real shape API via `ui_evaluate` instead).
+- **Footprint engine — `l3/footprint.ts` (BUILT + validated):** incremental per-price BUY(ask-aggressor)/SELL(bid-aggressor) tallies; **book-relative aggressor** (trade≥ask=buy, ≤bid=sell — NOT the ~3.5×-off CQG flag); per-instrument binning (`FP_CFG`: NQ 4-tick, ES 1-tick); **significance-based diagonal imbalances** (signed binomial z=(a−b)/√(a+b), minZ=2 — replaces folk 3:1/4:1, makes each cell meaningful regardless of bin size); features: POC, delta, aggressorRatio, value-area(70%), imbalances, STACKED imbalances(≥3). **Reusable at TWO scopes: session-wide (always-on, cheap O(1)/trade — a LEVEL SOURCE via POC/HVN/LVN + birth-context) AND per-visit (spun up only at tracked levels, the auction read for decisions).** Validated on 06-05 down day: session delta −57927 (NEGATIVE = classification correct); notable — delta only −1.6% on a −1016pt move = the delta-vs-price DECOUPLING (passive absorption drove the move) that footprint exists to reveal. Verify via `fp_smoke.ts`.
+
+### 26.7 The footprint's role in the system (the two-tier answer)
+- **Tier 1 — session-wide footprint (always-on):** builds the full volume profile → POC/HVN/LVN/value-area are LEVEL SOURCES (not swings — must be discovered) + every swing's birth context (was it born on an HVN / absorption → zone width + significance). Cheap; must be always-on (live can't reconstruct the past profile).
+- **Tier 2 — per-visit footprint (level-local):** a fresh footprint per level-test, fed only that visit's zone trades → the fine auction read (delta/imbalances/absorption/who-wins) → snapshotted into the trace + compared to the prior visit (test-over-test). Only at tracked levels (a decision only happens at a level).
+- So footprint is BOTH a level **source** (Tier 1 volume levels) and a level **grader** (Tier 2 auction). NOT confined to swing zones — it *creates* some zones and grades all of them (swing-based + volume-based).
+
+### 26.8 Immediate next-steps for the incoming session (resume here tomorrow)
+1. **Wire the per-visit footprint into `level-memory.ts`** — spin up a Tier-2 `Footprint` per open visit, snapshot its features (delta/POC/imbalances/absorption) into the `interactions` trace, add test-over-test deltas. (This is Stage-2 completion.)
+2. **Add Tier-1 volume levels** (POC/HVN/LVN) as a level source into the registry (Layer-2 unification), alongside the multi-scale swings.
+3. **Build the heatmap engine (Stage 3)** — resting liquidity from the depth stream: walls (defended vs pulled/spoof), voids, book-flip. Snapshot at levels.
+4. **Run the two CALIBRATION studies** on the 06-19→07-02 overlap BEFORE pattern screening: (a) micro-L2 vs mini-L3 footprint agreement (sets trust in the 54-day dataset + routes each pattern to L2/L3), (b) inferred-vs-true aggressor error (confidence bounds on delta).
+5. **Then P2/P3 pattern screening** under the research protocol (R-multiple/expectancy, pre-registered hypotheses, univariate→conditional→Shapley, signal ledger). First pattern candidates: absorption-on-retest, sweep/stop-run-reversal, stacked-imbalance→absorption→delta-flip sequence, book-flip.
+6. **Deferred:** cross-instrument NQ↔ES confluence (common-factor/spread) — build the ES spine now, analysis later. Options vol-forecaster available as a sizing/regime input.
+7. **Housekeeping (not urgent):** everything is uncommitted; the committed root `.env` security issue (§25.6) still pending; reproduce the master datapoint catalog into a `docs/` file.

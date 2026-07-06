@@ -1,30 +1,19 @@
 # Trading Cockpit — Claude Code Project Instructions
 
-> Auto-loaded by Claude Code at session start. Keep this file short — it's part of every prompt.
+> Auto-loaded every prompt. RULES only — project state lives in `HANDOFF.md`, durable lessons in memory, research standards in `RESEARCH_PROTOCOL.md`.
 
-## Read this first
+## Session boot — before any non-trivial work
 
-Before answering any non-trivial question or making any code change, **read `./HANDOFF.md`** (838 lines, sectioned). It contains:
-
-- Repo layout, schemas, signal strategies, V3 framework
-- WR/PnL data per cohort
-- Trader integration, race conditions, race-safety design
-- Cockpit features, conventions, pending tasks
-- Open questions and immediate next-steps
-
-Skim the table of contents (section headings) and read the relevant sections in detail. The HANDOFF is the single source of truth for project state as of 2026-06-07.
-
-After reading the HANDOFF, also check:
-- `git log --oneline -10` to see what's changed since the doc was written
-- `git status` to see uncommitted work
-- TaskList (via the TaskList tool) for current task state
+1. Read `./HANDOFF.md` — the **START HERE block at the top** routes to the current sections (~1,900 lines, sectioned; §1–§21 are historical). For live config, **trust code over docs**: `apps/trader/.env` (rules, risk caps), `apps/aggregator/src/config.ts`, `apps/aggregator/scripts/reapply_quality_gates.ts` (gate version).
+2. `git log --oneline -10` + `git status` — docs lag the tree.
+3. For anything touching live trading: verify the trader's Tradovate WS is actually alive (recent "tradovate WS opened" + fresh log mtime). Process running ≠ connected.
 
 ## Hard rules — non-negotiable
 
 These apply to **every** interaction:
 
 1. **NEVER place broker orders directly via curl/Bash/scripts without explicit per-order user confirmation.**
-   The trader daemon placing orders autonomously when picking up real V3 signals = standing consent.
+   The trader daemon placing orders autonomously when picking up real tradable signals = standing consent.
    You issuing a broker API call = requires confirmation for that specific order.
 
 2. **NEVER report MFE/MAE.** Only WIN/LOSS/OPEN at fixed TP/SL. Per the user's stated rule for backtests.
@@ -37,63 +26,51 @@ These apply to **every** interaction:
 
 6. **Never skip git hooks** (`--no-verify`) or bypass signing unless the user explicitly asks.
 
+7. **RS platform boundary**: passive CDP reads of the debug Chrome only. NEVER call the RS platform's API or drive its UI.
+
+## Research standards
+
+Read `./RESEARCH_PROTOCOL.md` before running or judging any backtest/study. Non-negotiables: expectancy at fixed pre-registered brackets; chronological train/test + placebo null; beat a baseline, not zero; check its **settled-nulls list** before proposing a study — most past "edges" died OOS and must not be relitigated without materially new data.
+
 ## Working directory & key paths
 
 - **Repo root**: `/Users/ravikumarbasker/trading-cockpit`
 - **Aggregator**: `apps/aggregator/` — Fastify HTTP + WS, **port 8787**
-- **Tick-store**: `apps/tick-store/` — Fastify HTTP + WS ingest, **port 8788**
+- **Tick-store**: `apps/tick-store/` — HTTP + WS ingest, **port 8788**
 - **Cockpit**: `apps/cockpit/` — Vite dev server, **port 5173** (proxies to 8787)
-- **Trader**: `apps/trader/` — **no HTTP server**; outbound SSE client → 8787, outbound WS → Tradovate
-- **Contracts**: `packages/contracts/` (shared TS types + LEVEL_STYLES palette)
-- **MBO capture**: `~/cockpit-mbo-capture/` (outside repo)
-- **Data**: `data/` (4 SQLite DBs, gitignored: trading.db, ticks.db, mbo.db, positions.db)
+- **Trader**: `apps/trader/` — **no HTTP server**; outbound SSE → 8787, outbound WS → Tradovate
+- **Contracts**: `packages/contracts/` (shared types + LEVEL_STYLES)
+- **Data**: `data/` — multiple SQLite DBs (trading, ticks, positions, level-memory, quantdata, rs-*…) + parquet stores (`ticks-parquet/`, `mbo-parquet/`), all gitignored
+- **MBO capture**: `~/cockpit-mbo-capture/` (outside repo; launchd converter → parquet, no manual ingest)
 
-**Port assignments are fixed — do not change.** See HANDOFF.md §2.5 for the full service topology table.
+**Port assignments are fixed — do not change.** Full topology: HANDOFF §2.5.
 
 ## Common ops
 
 ```bash
-# Dev environment
-cd ~/trading-cockpit && pnpm dev
-
-# Incremental MBO ingest (manually triggered)
-cd ~/trading-cockpit && pnpm --filter @trading/aggregator exec tsx scripts/mbo_ingest.ts
-
-# Re-qualify all signals (bump GATE_VERSION in reapply_quality_gates.ts first)
-cd ~/trading-cockpit && pnpm --filter @trading/aggregator qualify
-
-# Compute structural levels (pre-RTH)
-cd ~/trading-cockpit && pnpm --filter @trading/aggregator levels:structural
-
-# Run any backtest
-cd ~/trading-cockpit && pnpm --filter @trading/aggregator exec tsx scripts/<name>.ts
-
-# Typecheck before commits
-cd ~/trading-cockpit/apps/<app> && pnpm typecheck
+cd ~/trading-cockpit && pnpm dev                                   # dev environment
+pnpm --filter @trading/aggregator qualify                          # re-qualify signals (bump GATE_VERSION first)
+pnpm --filter @trading/aggregator levels:structural                # structural levels (pre-RTH)
+pnpm --filter @trading/aggregator exec tsx scripts/<name>.ts       # any backtest/research script
+cd apps/<app> && pnpm typecheck                                    # before commits
 ```
+
+For backtest math, use existing scripts in `apps/aggregator/scripts/` as templates — don't reinvent conventions.
 
 ## Communication style
 
 The user (Ravi) prefers:
 - **Terse, direct responses** — no preamble, no excessive caveats
-- **Tables for dense info** — easier to scan than prose
+- **Tables for dense info**; plain conversational language for narrative answers
 - **File:line citations** when referencing code
-- **Honest assessments** — don't soft-pedal trade-offs
-- **Markdown formatting** — but no emojis unless he uses them first
+- **Honest assessments** — verdicts, not hedging
+- No emojis unless he uses them first
+- All timestamps in **ET**
 
-When proposing changes that affect live trading (V3 config, trader rules, position sizing): **always quantify the impact** before shipping. Use the perf scripts in `apps/aggregator/scripts/`.
-
-## When the user asks for an MBO ingest
-
-It happens every ~30 minutes during active sessions. Always:
-1. Check `pgrep -f mbo_ingest` first to avoid concurrent SQLite writes
-2. If clean, run the ingest
-3. Report a 1-line summary: which files had new bytes, MB ingested, parse errors
-
-Never report MFE/MAE for trades. Repeat for emphasis.
+When proposing changes that affect live trading: **always quantify the impact first** using the perf scripts.
 
 ## When in doubt
 
-- **Verify against current code, not just docs/memories**. HANDOFF.md is a point-in-time snapshot.
-- Ask the user for clarification on ambiguous requests rather than guessing.
-- For backtest math, use existing scripts in `apps/aggregator/scripts/` as templates — don't reinvent the conventions.
+- **Verify against current code, not docs/memories** — every doc is a point-in-time snapshot.
+- Ask for clarification on ambiguous requests rather than guessing.
+- Destructive ops: show exact rows/files to be removed and pause for sign-off — "go ahead" is not blanket consent.
