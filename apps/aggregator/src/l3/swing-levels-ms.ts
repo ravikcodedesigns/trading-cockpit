@@ -21,6 +21,11 @@ export interface MSSwing {
   price: number; ts: number; kind: 'high' | 'low';
   scale: number;       // scale index (0=finest); higher = bigger/more significant swing
   legSize: number;     // size of the impulse leg that produced the reversal (points)
+  // When the swing became KNOWLEDGE: the tick whose δ-retrace confirmed it. `ts`
+  // is the extreme (where the swing IS); `confirmTs` is when we could first know
+  // it (always later). All joins and level-births MUST use confirmTs — joining on
+  // the extreme ts is lookahead (Cracker Phase 0.1, fix B2).
+  confirmTs: number;
 }
 
 const MS_CFG = {
@@ -62,18 +67,18 @@ export class MultiScaleSwingDetector {
       const delta = Math.min(this.cfg.DELTA_CAP[s]!, Math.max(this.cfg.SCALES[s]! * base, this.cfg.RETRACE_FRAC * legSize));
       if (L.dir === 1) {
         if (price > L.extPrice) { L.extPrice = price; L.extTs = ts; }
-        else if (price <= L.extPrice - delta) { const sw = this.commit(s, 'high', delta, legSize); if (sw) out.push(sw); L.legStart = L.extPrice; L.dir = -1; L.extPrice = price; L.extTs = ts; }
+        else if (price <= L.extPrice - delta) { const sw = this.commit(s, 'high', delta, legSize, ts); if (sw) out.push(sw); L.legStart = L.extPrice; L.dir = -1; L.extPrice = price; L.extTs = ts; }
       } else {
         if (price < L.extPrice) { L.extPrice = price; L.extTs = ts; }
-        else if (price >= L.extPrice + delta) { const sw = this.commit(s, 'low', delta, legSize); if (sw) out.push(sw); L.legStart = L.extPrice; L.dir = 1; L.extPrice = price; L.extTs = ts; }
+        else if (price >= L.extPrice + delta) { const sw = this.commit(s, 'low', delta, legSize, ts); if (sw) out.push(sw); L.legStart = L.extPrice; L.dir = 1; L.extPrice = price; L.extTs = ts; }
       }
     }
     return out;
   }
 
-  private commit(s: number, kind: 'high' | 'low', delta: number, legSize: number): MSSwing | null {
+  private commit(s: number, kind: 'high' | 'low', delta: number, legSize: number, confirmTs: number): MSSwing | null {
     const L = this.legs[s]!;
-    const sw: MSSwing = { price: L.extPrice, ts: L.extTs, kind, scale: s, legSize };
+    const sw: MSSwing = { price: L.extPrice, ts: L.extTs, kind, scale: s, legSize, confirmTs };
     const arr = this.swings[s]!;
     if (arr.some((x) => x.kind === kind && Math.abs(x.price - sw.price) <= this.cfg.DEDUP_FRAC * delta)) return null;
     arr.push(sw);
@@ -85,13 +90,14 @@ export class MultiScaleSwingDetector {
   all(): MSSwing[] { return this.swings.flat().sort((a, b) => a.ts - b.ts); }
 
   /** Merge across scales into unique price levels, tagging each with its MAX scale
-   *  (a level that's a swing at a coarse scale is more significant). */
-  levels(mergePts: number): { price: number; kind: 'high' | 'low'; maxScale: number; ts: number }[] {
-    const merged: { price: number; kind: 'high' | 'low'; maxScale: number; ts: number }[] = [];
+   *  (a level that's a swing at a coarse scale is more significant). `bornTs` =
+   *  earliest confirmTs of the merged swings — the causal birth time for registries. */
+  levels(mergePts: number): { price: number; kind: 'high' | 'low'; maxScale: number; ts: number; bornTs: number }[] {
+    const merged: { price: number; kind: 'high' | 'low'; maxScale: number; ts: number; bornTs: number }[] = [];
     for (const sw of this.all()) {
       const hit = merged.find((m) => m.kind === sw.kind && Math.abs(m.price - sw.price) <= mergePts);
-      if (hit) { hit.maxScale = Math.max(hit.maxScale, sw.scale); }
-      else merged.push({ price: sw.price, kind: sw.kind, maxScale: sw.scale, ts: sw.ts });
+      if (hit) { hit.maxScale = Math.max(hit.maxScale, sw.scale); hit.bornTs = Math.min(hit.bornTs, sw.confirmTs); }
+      else merged.push({ price: sw.price, kind: sw.kind, maxScale: sw.scale, ts: sw.ts, bornTs: sw.confirmTs });
     }
     return merged;
   }

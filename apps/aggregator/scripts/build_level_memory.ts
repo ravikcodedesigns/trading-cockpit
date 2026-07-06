@@ -17,8 +17,11 @@ import { LevelMemory, type LevelSource } from '../src/l3/level-memory.js';
 const SYM = 'NQ', TICK = 0.25;
 const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
 const PROOT = `${ROOT}/ticks-parquet`;
-const DB = `${ROOT}/level-memory.db`;
-const gp = (type: string, day: string) => `read_parquet('${PROOT}/${type}/symbol=${SYM}/date=${day}/*.parquet')`;
+// Env knobs (Cracker 0.1 acceptance harness): LM_DB = db path override;
+// LM_DAYS = "N" (first N days) or "YYYY-MM-DD[,…]" (specific days); LM_KEEP=1 =
+// don't wipe the db first (incremental/idempotency mode); LM_QUIET=1 = no summary.
+const DB = process.env.LM_DB ?? `${ROOT}/level-memory.db`;
+const gp = (type: string, day: string) => `read_parquet('${PROOT}/${type}/symbol=${SYM}/date=${day}/*.parquet', filename=true, file_row_number=true)`;
 const SANE = 'price BETWEEN 20000 AND 40000';
 const THROTTLE = 200, RV_MS = 1000, SWING_MULT = 3, WARM_RV = 30, TAU = 45;
 const et = (d: string, hm: string) => Date.parse(`${d}T${hm}:00-04:00`);
@@ -37,10 +40,19 @@ async function runDay(con: any, day: string, mem: LevelMemory) {
   const swing = new SwingDetector();
   const mids: number[] = [], midTs: number[] = [];
   let lastObs = 0, lastRv = 0, obsCount = 0;
+  // Deterministic + truth-preserving ORDER BY (Cracker 0.1). Bare "ORDER BY ts"
+  // let DuckDB's parallel scan break same-ms ties differently per run → replays
+  // diverged (caught by cracker_p01_accept: 88559 vs 88561 obs). And a canonical
+  // re-sort by price/size is WRONG: depth updates carry ABSOLUTE sizes, so
+  // same-price updates within one ms are order-dependent ("5 then 0" clears the
+  // level; re-sorted "0 then 5" leaves a phantom) — testing that variant left the
+  // book permanently crossed (96,781 crossed obs vs 467). The parquet's FILE ROW
+  // ORDER is the converter's capture order = the true sequence, exposed via
+  // file_row_number. Order: ts, then depth-before-trades, then capture sequence.
   const SQL = `
-    SELECT ts,'D' s, price, size, side, CAST(NULL AS BOOLEAN) iba FROM ${gp('depth', day)} WHERE ${SANE} AND ts BETWEEN ${warm} AND ${end}
-    UNION ALL SELECT ts,'T', price, size, CAST(NULL AS BIGINT), is_bid_aggressor FROM ${gp('trades', day)} WHERE size>0 AND ${SANE} AND ts BETWEEN ${warm} AND ${end}
-    ORDER BY ts`;
+    SELECT ts,'D' s, price, size, side, CAST(NULL AS BOOLEAN) iba, filename fn, file_row_number frn FROM ${gp('depth', day)} WHERE ${SANE} AND ts BETWEEN ${warm} AND ${end}
+    UNION ALL SELECT ts,'T', price, size, CAST(NULL AS BIGINT), is_bid_aggressor, filename, file_row_number FROM ${gp('trades', day)} WHERE size>0 AND ${SANE} AND ts BETWEEN ${warm} AND ${end}
+    ORDER BY ts, s, fn, frn`;
   const stream = await con.stream(SQL);
   let chunk;
   while ((chunk = await stream.fetchChunk()) && chunk.rowCount > 0) {
@@ -96,9 +108,11 @@ function summary() {
 }
 
 async function main() {
-  const days = availableDays();
+  let days = availableDays();
   if (!days.length) { console.log(`no ticks-parquet found under ${PROOT}/depth/symbol=${SYM}`); return; }
-  fs.rmSync(DB, { force: true }); fs.rmSync(DB + '-wal', { force: true }); fs.rmSync(DB + '-shm', { force: true });
+  const sel = process.env.LM_DAYS;
+  if (sel) days = /^\d+$/.test(sel) ? days.slice(0, Number(sel)) : days.filter((d) => sel.split(',').includes(d));
+  if (!process.env.LM_KEEP) { fs.rmSync(DB, { force: true }); fs.rmSync(DB + '-wal', { force: true }); fs.rmSync(DB + '-shm', { force: true }); }
   process.stderr.write(`replaying ${days.length} NQ days ${days[0]}→${days[days.length - 1]} into level-memory...\n`);
   const inst = await DuckDBInstance.create();
   const con = await inst.connect();
@@ -108,7 +122,7 @@ async function main() {
     catch (e: any) { process.stderr.write(`  ${day} ERR ${e.message.slice(0, 70)}\n`); }
     finally { mem.close(); }
   }
-  summary();
+  if (!process.env.LM_QUIET) summary();
   process.exit(0);
 }
 main().catch((e) => { console.error(e); process.exit(1); });
