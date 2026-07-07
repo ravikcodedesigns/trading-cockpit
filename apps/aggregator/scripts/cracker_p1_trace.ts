@@ -234,6 +234,21 @@ async function runDay(con: any, days: string[], di: number) {
   return { obs, resolved, ctx };
 }
 
+
+/** TRACE_NEW=1: skip days already in the DB and the (incomplete) current ET day,
+ *  while the full day list still provides causal context for placebos/profiles. */
+function newDaySkipper(): (d: string) => boolean {
+  if (!process.env.TRACE_NEW) return () => false;
+  const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  let done = new Set<string>();
+  try {
+    const db = new Database(DB, { readonly: true });
+    done = new Set((db.prepare(`SELECT DISTINCT trading_day d FROM visit_features WHERE symbol = ?`).all(SYM) as any[]).map((r) => r.d));
+    db.close();
+  } catch { /* fresh DB */ }
+  return (d: string) => done.has(d) || d >= todayEt;
+}
+
 async function main() {
   const days = availableDays();
   if (!days.length) { console.log('no L3 mini days found'); return; }
@@ -243,7 +258,9 @@ async function main() {
   process.stderr.write(`building Cracker trace: ${days.length} ${SYM}-mini days ${days[0]} → ${days[days.length - 1]} → ${DB}\n`);
   const inst = await DuckDBInstance.create();
   const con = await inst.connect();
+  const skip = newDaySkipper();
   for (const [di, day] of days.entries()) {
+    if (skip(day)) continue;
     try { const { obs, resolved } = await runDay(con, days, di); process.stderr.write(`  ${day} → ${obs} obs, ${resolved} visits resolved\n`); }
     catch (e: any) { process.stderr.write(`  ${day} ERR ${e.message.slice(0, 80)}\n`); }
   }
