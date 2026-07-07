@@ -222,3 +222,21 @@
   - **Reading:** deeper/faster spike-and-reclaim predicts LESS follow-through, not more — spike exhaustion/mean-reversion, generic to the tape, opposite to the stop-run-reversal story. The trader folklore appears to have the sign backwards.
 - **→ F7b REGISTERED for the FORWARD family (2026-07-07):** "sweep-exhaustion (general tape): IC(sweep, y(5m)) < 0 on swept-and-reclaimed visits, level-agnostic (real+placebo pooled)." Test set = the L3 FORWARD LOCKBOX at Phase 5 (the L2 set is consumed — it screened this factor and cannot confirm its own child hypothesis). Forward family {F7b, …} gets its own BH-FDR at q=0.10, separate from the L2-confirmation family.
 - **Decision:** F7 recorded, dropped as a standalone level factor. Ladder remainder: F8 (test-over-test delta divergence) — the last rung.
+
+## 2026-07-07 · P3 · F8 — test-over-test delta divergence: NULL — Carmine's discriminator is flat at scale · THE F1–F8 LADDER IS COMPLETE
+
+- **Spec (pre-registered):** pairs = consecutive same-side tests of the same level; att = aggression INTO the level as contact-volume fraction; factor = att_prev − att_cur (positive = weakening attack); expected positive (weakening attack → hold → bounce); declared 5m/15m.
+- **Result: NULL.** With 6,415/6,560 paired re-tests per half on the L2-NQ screen, every estimate sits within ±0.037 of zero with no sign consistency: NQ-L2 15m POWERED NULL; L3-NQ both declared cells POWERED NULL; the rest underpowered-but-flat. Twins ≈ 0 (L3 twin mildly positive — generic). Whether the re-test arrives with weaker or stronger flow than last time tells you nothing about the outcome.
+- **THE SINGLE-FACTOR LADDER (F1–F8) IS COMPLETE.** Final scoreboard:
+  | F | factor | verdict |
+  |---|---|---|
+  | F1 | source identity | NULL (train mirage killed OOS) |
+  | F2 | confluence | NULL (powered, near-miss theme queued) |
+  | F3 | visit history / 94-7 | NULL (in-sample "memory" = day-regime artifact) |
+  | F4 | absorption ratio | UNDERPOWERED → **F4b general-tape effect (confirmed, not level-specific)** |
+  | F5 | contact delta | UNDERPOWERED → **F5b CONFIRMED: flow-following reverses at real structure** |
+  | F6 | approach imbalance | POWERED NULL |
+  | F7 | sweep geometry | no edge; folklore sign-backwards → F7b forward-registered |
+  | F8 | test-over-test divergence | NULL (powered at key cells) |
+- **What survived Phase 3:** one confirmed structural mechanism (F5b), one confirmed general-tape effect (F4b), one forward-registered tape hypothesis (F7b), a recurring sub-MDE "NQ 5m structure bounce" theme accruing forward, and four measured demolitions of core level-trading folklore. NO standalone tradable factor — exactly what the two-gate design anticipated: single features don't trade; compositions might.
+- **Next per plan:** PHASE 4 — the heatmap/book-state engine (pulls, adds, icebergs, synthetic refills — the L3-only order-book detectors, never yet consumed by the trace), whose factors then join the ladder; per the rebuild directive this is also the trigger to REBUILD the order-book detector layer as a Cracker-owned primitive. Forward-queues keep accruing (~430 visits/day L3) toward the Phase-5 lockbox.
