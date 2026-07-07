@@ -13,9 +13,12 @@
 // NEAR_TICKS (the ±zone around mid, matching the LM tape window: 16 NQ / 4 ES).
 //
 //   SWEEP — one aggressor execution trading at ≥ SWEEP_MIN_PRICES distinct
-//     prices (grouped by aggressor_order_id, with is_execution_start/end
-//     brackets honored when present — the truth columns the legacy detector
-//     ignored). Direction = aggressor side. Intensity = distinct prices ×
+//     prices. Grouping = CONTIGUOUS same-aggressor_order_id, same-side trades,
+//     closed on id/side change, a >SWEEP_GAP_MS intra-id gap, or a genuine
+//     is_execution_end. (E0 amendment 2026-07-07, pre-outcome: the
+//     is_execution_start flag is unreliable in the store — set on 81% of rows
+//     vs 3.5% ends on the probe day — so starts are NOT trusted as brackets.)
+//     Direction = aggressor side. Intensity = distinct prices ×
 //     total size (rank-analyzed downstream; any monotone measure suffices).
 //     Same-direction sweeps within SWEEP_MERGE_MS merge into one event.
 //   ABSORPTION — a WIN_MS window whose traded volume per point of price
@@ -57,6 +60,7 @@ export const TE_CFG = {
   MED_WARMUP: 60,         // minimum samples before any median-based trigger arms
   NEAR_TICKS: 16,         // ±zone around mid (NQ; ES override 4)
   SWEEP_MIN_PRICES: 3,
+  SWEEP_GAP_MS: 1_000,
   SWEEP_MERGE_MS: 2_000,
   IMB_MIN_Z: 3,
   ABS_MULT: 5,
@@ -114,7 +118,7 @@ export class TapeEventEngine {
 
     // ── sweep grouping: contiguous same-aggressor trades = one execution ──
     const id = t.aggId ?? null;
-    if (this.curAgg && (id !== this.curAgg.id || t.buy !== this.curAgg.buy || t.execStart)) this.closeAgg(out);
+    if (this.curAgg && (id !== this.curAgg.id || t.buy !== this.curAgg.buy || t.ts - this.curAgg.ts > this.cfg.SWEEP_GAP_MS)) this.closeAgg(out);
     if (!this.curAgg && id != null) this.curAgg = { id, ts: t.ts, prices: new Set(), size: 0, buy: t.buy, lastPi: t.priceInt };
     if (this.curAgg && id === this.curAgg.id && t.buy === this.curAgg.buy) {
       this.curAgg.prices.add(t.priceInt);
