@@ -54,7 +54,7 @@ export function lcg(seed: number) { let s = seed >>> 0; return () => (s = (16645
 export interface VisitRow {
   day: string; closeTs: number; levelId: string; source: string; kind: string; side: string; held: number;
   visitIndex: number; confluenceN: number | null; band: number; sigmaEv: number;
-  penetration: number; apDelta: number; apVol: number; ctDelta: number; ctVol: number;
+  penetration: number; dwellMs: number; apDelta: number; apVol: number; ctDelta: number; ctVol: number;
   rsDelta: number; rsVol: number; imbN: number; absorbRatio: number;
   uniq: number; drift: number; todPhase: string | null; esAgree: number | null; rs30: number | null;
   y: Record<number, number | null>;   // side-signed drift-adjusted markout per horizon
@@ -65,7 +65,7 @@ export function loadVisits(sym: string): { rows: VisitRow[]; days: string[] } {
   const raw = db.prepare(`
     SELECT vf.trading_day day, vf.close_ts closeTs, vf.level_id levelId, vf.source, vf.kind, vf.side, vf.held,
       vf.visit_index visitIndex, vf.confluence_n confluenceN, vf.band, vf.sigma_ev sigmaEv,
-      vf.penetration, vf.ap_delta apDelta, vf.ap_vol apVol, vf.ct_delta ctDelta, vf.ct_vol ctVol,
+      vf.penetration, li.dwell_ms dwellMs, vf.ap_delta apDelta, vf.ap_vol apVol, vf.ct_delta ctDelta, vf.ct_vol ctVol,
       vf.rs_delta rsDelta, vf.rs_vol rsVol, vf.imb_n imbN, vf.absorb_ratio absorbRatio,
       vo.uniq_w uniq, dc.drift_pt_min drift, vc.tod_phase todPhase, vc.es_agree esAgree, vc.rs_30m_bp rs30,
       vo.mo_1m, vo.mo_5m, vo.mo_15m, vo.mo_30m
@@ -73,6 +73,7 @@ export function loadVisits(sym: string): { rows: VisitRow[]; days: string[] } {
     JOIN visit_outcomes vo ON vo.level_id = vf.level_id AND vo.close_ts = vf.close_ts AND vo.symbol = vf.symbol
     JOIN day_context dc ON dc.symbol = vf.symbol AND dc.trading_day = vf.trading_day
     LEFT JOIN visit_context vc ON vc.level_id = vf.level_id AND vc.close_ts = vf.close_ts AND vc.symbol = vf.symbol
+    LEFT JOIN interactions li ON li.level_id = vf.level_id AND li.ts_ms = vf.close_ts AND li.symbol = vf.symbol
     WHERE vf.symbol = ? AND vf.trading_day <= ? AND vf.sigma_ev IS NOT NULL
     ORDER BY vf.trading_day, vf.close_ts`).all(sym, FREEZE_DAY) as any[];
   db.close();
