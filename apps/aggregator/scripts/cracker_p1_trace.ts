@@ -98,6 +98,12 @@ function availableDays(): string[] {
   const dir = `${ROOT}/mbo-parquet/trades/symbol=${SYM}`;
   let days = fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.startsWith('date=')).map((x) => x.slice(5)).sort() : [];
   days = days.filter((d) => !EXCLUDE.has(d));
+  // never trace the CURRENT ET day — mid-session partials would freeze in
+  // (TRACE_NEW skips them on nightly runs; full rebuilds need the same guard)
+  if (!process.env.TRACE_INCLUDE_TODAY) {
+    const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+    days = days.filter((d) => d < todayEt);
+  }
   const sel = process.env.TRACE_DAYS;
   if (sel) {
     if (/^\d+$/.test(sel)) days = days.slice(0, Number(sel));
