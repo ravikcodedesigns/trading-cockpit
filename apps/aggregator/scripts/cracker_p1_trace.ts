@@ -22,13 +22,37 @@ import fs from 'node:fs';
 import { OrderBook } from '../src/l3/order-book.js';
 import { MultiScaleSwingDetector } from '../src/l3/swing-levels-ms.js';
 import { SigmaEv } from '../src/l3/sigma-ev.js';
-import { LevelMemory, type LevelSource } from '../src/l3/level-memory.js';
-import { TraceEngine } from '../src/l3/trace.js';
-import { computeProfile, type VolumeProfile } from '../src/l3/volume-profile.js';
+import { LevelMemory, LM_CFG, type LevelSource, type LmCfg } from '../src/l3/level-memory.js';
+import { TraceEngine, T_CFG } from '../src/l3/trace.js';
+import { computeProfile, VP_CFG, type VolumeProfile } from '../src/l3/volume-profile.js';
 import type { CtxBar } from '../src/l3/trace.js';
 import { getVolDrift } from '../src/sources/quantdata-store.js';
 
-const SYM = 'NQ', TICK = 0.25;                          // L3 mini
+// ── Phase 1.7: per-instrument config (same code, per-symbol constants) ────────
+// Dimensionless constants (σ multipliers, priors, retirement, hysteresis, z
+// cutoffs) are SHARED. Price-dimension constants scale by the NQ/ES price ratio
+// (~4.0 at 30,000/7,500), rounded tick-friendly; the profile floor was probed
+// on 3 real ES days exactly like NQ (2026-07-07): 0.5pt fragments one shelf
+// into three "HVNs" 4–8pt apart, 1.0pt yields 5–7 clean shelves (the NQ-2pt
+// analogue), 2pt merges real ones → ES floor = 1.0pt. Round-number grid: ES
+// flow clusters on 10s with 50s as majors (NQ: 50s/100s).
+const INSTR: Record<string, {
+  round: { step: number; major: number };
+  lm: Partial<LmCfg>; tr: object; vp: object; ms: object; sg: object;
+}> = {
+  NQ: { round: { step: 50, major: 100 }, lm: {}, tr: {}, vp: {}, ms: {}, sg: {} },
+  ES: {
+    round: { step: 10, major: 50 },
+    lm: { MERGE_PTS: 1.25, CONFLUENCE_PTS: 1.25, NEAR_TICKS: 4 },  // 5/5/4pt ÷ 4
+    tr: { CLUSTER_PTS: 2.5, IMB_BIN_PTS: 0.25 },                   // 10pt ÷ 4 · 1pt ÷ 4
+    vp: { H_FLOOR_PTS: 1.0 },                                      // probe-validated (see above)
+    ms: { DELTA_CAP: [10, 22.5, 45], BASE_FLOOR: 0.5, BASE_CAP: 10 },  // [40,90,180]/2/40 ÷ 4
+    sg: { CAP_PT: 15 },   // 60 ÷ 4; floor stays 0.5pt = 2 ticks on both (dead-tape guard is tick-scale)
+  },
+};
+
+const SYM = process.env.TRACE_SYM ?? 'NQ', TICK = 0.25;  // L3 mini
+const CFG = INSTR[SYM] ?? (() => { throw new Error(`no instrument config for ${SYM}`); })();
 const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
 const DB = process.env.TRACE_DB ?? `${ROOT}/cracker-trace.db`;
 const EXCLUDE = new Set(['2026-06-29']);
@@ -107,7 +131,7 @@ async function priorProfile(con: any, days: string[], di: number): Promise<{ p: 
     const totVol = Number(tot[0] ?? 0), totVolSq = Number(tot[1] ?? 0);
     if (!(totVol >= MIN_PROF_VOL)) continue;
     const rows = (await con.streamAndReadAll(`SELECT price, SUM(size) FROM ${src} WHERE ${where} GROUP BY price`)).getRows();
-    const p = computeProfile({ pxVol: rows.map((r: any) => ({ price: Number(r[0]), vol: Number(r[1]) })), totVol, totVolSq, tick: TICK });
+    const p = computeProfile({ pxVol: rows.map((r: any) => ({ price: Number(r[0]), vol: Number(r[1]) })), totVol, totVolSq, tick: TICK }, { ...VP_CFG, ...CFG.vp } as typeof VP_CFG);
     if (p) return { p, day: d };
   }
   return null;
@@ -120,9 +144,12 @@ function makePlacebos(day: string, range: { lo: number; hi: number } | null, pri
   const rng = range.hi - range.lo, lo = range.lo - 0.25 * rng, hi = range.hi + 0.25 * rng;
   const rnd = lcg(hashDay(day));
   for (let i = 0; i < 12; i++) out.push({ price: Math.round((lo + rnd() * (hi - lo)) / TICK) * TICK, source: 'placebo-random' as LevelSource, kind: 'rand' });
-  const off = (20 + rnd() * 40) * (rnd() < 0.5 ? -1 : 1);
+  // shifted-placebo offset scales with the round-number grid (NQ 20–60pt ↔ ES 4–12pt)
+  const offScale = CFG.round.step / 50;
+  const off = (20 + rnd() * 40) * offScale * (rnd() < 0.5 ? -1 : 1);
   for (const p of priorSwings.slice(0, 20)) out.push({ price: Math.round((p + off) / TICK) * TICK, source: 'placebo-shifted' as LevelSource, kind: 'shift' });
-  for (let p = Math.ceil(lo / 50) * 50; p <= hi; p += 50) out.push({ price: p, source: 'round' as LevelSource, kind: p % 100 === 0 ? '100' : '50' });
+  const { step, major } = CFG.round;
+  for (let p = Math.ceil(lo / step) * step; p <= hi; p += step) out.push({ price: p, source: 'round' as LevelSource, kind: p % major === 0 ? String(major) : String(step) });
   return out;
 }
 
@@ -130,8 +157,8 @@ async function runDay(con: any, days: string[], di: number) {
   const day = days[di]!;
   const [warm, rthLo, rthHi, end] = [et(day, '09:00'), et(day, '09:30'), et(day, '16:00'), et(day, '16:05')];
   const g = gp(day);
-  const trace = new TraceEngine(DB, SYM, day);
-  const mem2 = new LevelMemory(DB, SYM, day, trace.hooks);
+  const trace = new TraceEngine(DB, SYM, day, { ...T_CFG, ...CFG.tr } as typeof T_CFG);
+  const mem2 = new LevelMemory(DB, SYM, day, trace.hooks, { ...LM_CFG, ...CFG.lm });
   // placebo-shifted basis = PRE-day registry swings (constructor has already wiped
   // own-day births, so this read is causally clean)
   const lvlDb = new Database(DB, { readonly: true });
@@ -149,8 +176,8 @@ async function runDay(con: any, days: string[], di: number) {
   if (prof) process.stderr.write(`    ${day} ← profile(${prof.day}) h=${prof.p.bandwidth.toFixed(2)}pt/${prof.p.bandwidthMethod} HVN×${prof.p.hvns.length} LVN×${prof.p.lvns.length} POC ${prof.p.poc}\n`);
 
   const book = new OrderBook(SYM, TICK);
-  const sv = new SigmaEv();
-  const ms = new MultiScaleSwingDetector();
+  const sv = new SigmaEv(CFG.sg);
+  const ms = new MultiScaleSwingDetector(CFG.ms);
   let lastObs = 0, lastRv = 0, obs = 0, visits0 = 0;
   let dayO = NaN, dayC = NaN, dayH = -Infinity, dayL = Infinity;
 
@@ -198,8 +225,11 @@ async function runDay(con: any, days: string[], di: number) {
     GROUP BY 1 ORDER BY 1`)).getRows().map((r: any) => ({ t: Number(r[0]), o: Number(r[1]), h: Number(r[2]), l: Number(r[3]), c: Number(r[4]) }));
   const { resolved } = trace.resolveOutcomes(bars, { lvns: lvnPrices, tick: TICK });
   if (isFinite(dayO)) trace.writeDayContext({ openPx: dayO, closePx: dayC, hiPx: dayH, loPx: dayL });
-  // Phase 1.4: context pass (tod phase, NQ–ES common factor, morning IV)
-  const ctx = trace.writeVisitContext(await ctxBars(con, day, SYM), await ctxBars(con, day, 'ES'), await morningIv(day));
+  // Phase 1.4: context pass. The common factor is a MARKET-STATE variable, fixed
+  // as (NQ, ES) regardless of the trace symbol — es_agree is symmetric and
+  // rs_30m_bp is always NQ−ES. morning_iv = NDX ATM-IV for both symbols (the
+  // market-vol proxy; SPX vol-drift has ~10 days of coverage, not viable).
+  const ctx = trace.writeVisitContext(await ctxBars(con, day, 'NQ'), await ctxBars(con, day, 'ES'), await morningIv(day));
   trace.close(); mem2.close();
   return { obs, resolved, ctx };
 }
@@ -207,7 +237,9 @@ async function runDay(con: any, days: string[], di: number) {
 async function main() {
   const days = availableDays();
   if (!days.length) { console.log('no L3 mini days found'); return; }
-  if (!process.env.TRACE_KEEP) for (const s of ['', '-wal', '-shm']) fs.rmSync(DB + s, { force: true });
+  // fresh-wipe only on the default NQ run — a non-NQ run shares the DB with the
+  // standing NQ trace and must never delete it (per-day idempotency still applies)
+  if (!process.env.TRACE_KEEP && SYM === 'NQ') for (const s of ['', '-wal', '-shm']) fs.rmSync(DB + s, { force: true });
   process.stderr.write(`building Cracker trace: ${days.length} ${SYM}-mini days ${days[0]} → ${days[days.length - 1]} → ${DB}\n`);
   const inst = await DuckDBInstance.create();
   const con = await inst.connect();
@@ -217,25 +249,25 @@ async function main() {
   }
   // QA summary
   const db = new Database(DB, { readonly: true });
-  const g1 = db.prepare(`SELECT COUNT(*) n FROM visit_features`).get() as any;
-  const g2 = db.prepare(`SELECT COUNT(*) n FROM visit_outcomes`).get() as any;
-  console.log(`\n=== TRACE QA ===`);
+  const g1 = db.prepare(`SELECT COUNT(*) n FROM visit_features WHERE symbol = ?`).get(SYM) as any;
+  const g2 = db.prepare(`SELECT COUNT(*) n FROM visit_outcomes WHERE symbol = ?`).get(SYM) as any;
+  console.log(`\n=== TRACE QA (${SYM}) ===`);
   console.log(`visit_features ${g1.n} rows · visit_outcomes ${g2.n} rows`);
-  for (const r of db.prepare(`SELECT source, COUNT(*) n, ROUND(AVG(held),3) hold FROM visit_features GROUP BY source ORDER BY n DESC`).all() as any[])
+  for (const r of db.prepare(`SELECT source, COUNT(*) n, ROUND(AVG(held),3) hold FROM visit_features WHERE symbol = '${SYM}' GROUP BY source ORDER BY n DESC`).all() as any[])
     console.log(`  ${String(r.source).padEnd(16)} visits ${String(r.n).padStart(5)}  hold ${r.hold}`);
-  const nulls = db.prepare(`SELECT SUM(sigma_ev IS NULL) s, SUM(mo_30m IS NULL) m FROM visit_features vf LEFT JOIN visit_outcomes vo USING (level_id, close_ts)`).get() as any;
+  const nulls = db.prepare(`SELECT SUM(sigma_ev IS NULL) s, SUM(mo_30m IS NULL) m FROM visit_features vf LEFT JOIN visit_outcomes vo USING (level_id, close_ts) WHERE vf.symbol = '${SYM}'`).get() as any;
   console.log(`null rates: sigma_ev ${nulls.s}, mo_30m ${nulls.m}`);
-  const bar = db.prepare(`SELECT bl_2, COUNT(*) n FROM visit_outcomes GROUP BY bl_2`).all() as any[];
+  const bar = db.prepare(`SELECT bl_2, COUNT(*) n FROM visit_outcomes WHERE symbol = '${SYM}' GROUP BY bl_2`).all() as any[];
   console.log(`barrier long@2R distribution: ${bar.map((b) => `${b.bl_2}:${b.n}`).join('  ')}`);
   // Phase 1.6 QA: structural-stop engagement + confluence distribution (descriptive only)
-  const ss = db.prepare(`SELECT stop_src_l, COUNT(*) n, ROUND(AVG(stop_1r_l),1) r FROM visit_outcomes GROUP BY stop_src_l`).all() as any[];
+  const ss = db.prepare(`SELECT stop_src_l, COUNT(*) n, ROUND(AVG(stop_1r_l),1) r FROM visit_outcomes WHERE symbol = '${SYM}' GROUP BY stop_src_l`).all() as any[];
   console.log(`stop source (long): ${ss.map((s) => `${s.stop_src_l}:${s.n} (avg 1R ${s.r}pt)`).join('  ')}`);
-  const cf = db.prepare(`SELECT confluence_n, COUNT(*) n FROM visit_features GROUP BY confluence_n ORDER BY confluence_n`).all() as any[];
+  const cf = db.prepare(`SELECT confluence_n, COUNT(*) n FROM visit_features WHERE symbol = '${SYM}' GROUP BY confluence_n ORDER BY confluence_n`).all() as any[];
   console.log(`confluence_n distribution: ${cf.map((c) => `${c.confluence_n}:${c.n}`).join('  ')}`);
   // Phase 1.4 QA
-  const vc = db.prepare(`SELECT COUNT(*) n, ROUND(AVG(es_agree),3) ea, SUM(es_agree IS NULL) ean, ROUND(AVG(rs_30m_bp),1) rs FROM visit_context`).get() as any;
-  const ph = db.prepare(`SELECT tod_phase, COUNT(*) n FROM visit_context GROUP BY tod_phase ORDER BY n DESC`).all() as any[];
-  const iv = db.prepare(`SELECT SUM(morning_iv IS NOT NULL) y, COUNT(*) n FROM day_context`).get() as any;
+  const vc = db.prepare(`SELECT COUNT(*) n, ROUND(AVG(es_agree),3) ea, SUM(es_agree IS NULL) ean, ROUND(AVG(rs_30m_bp),1) rs FROM visit_context WHERE symbol = '${SYM}'`).get() as any;
+  const ph = db.prepare(`SELECT tod_phase, COUNT(*) n FROM visit_context WHERE symbol = '${SYM}' GROUP BY tod_phase ORDER BY n DESC`).all() as any[];
+  const iv = db.prepare(`SELECT SUM(morning_iv IS NOT NULL) y, COUNT(*) n FROM day_context WHERE symbol = '${SYM}'`).get() as any;
   console.log(`visit_context ${vc.n} rows · es_agree avg ${vc.ea} (null ${vc.ean}) · rs_30m avg ${vc.rs}bp · phases ${ph.map((p) => `${p.tod_phase}:${p.n}`).join(' ')} · morning_iv ${iv.y}/${iv.n} days`);
   db.close();
   process.exit(0);

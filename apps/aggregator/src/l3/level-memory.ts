@@ -134,7 +134,7 @@ export class LevelMemory {
   private visits = new Map<string, Visit>();   // levelId → open visit
   private prevMid = NaN;
   private insInt: Database.Statement;
-  private cfg = LM_CFG;
+  private cfg: LmCfg;
 
   /** Prices of levels with an OPEN visit right now (for trace zone-trade routing). */
   openVisitLevels(): { id: string; price: number }[] {
@@ -143,14 +143,18 @@ export class LevelMemory {
     return out;
   }
 
-  constructor(dbPath: string, private symbol: string, private tradingDay: string, private hooks: LmHooks = {}) {
+  constructor(dbPath: string, private symbol: string, private tradingDay: string, private hooks: LmHooks = {}, cfg: LmCfg = LM_CFG) {
+    this.cfg = cfg;
     this.db = new Database(dbPath); this.db.pragma('journal_mode = WAL');
+    // (cfg is per-instrument: price-dimension constants — MERGE/CONFLUENCE/NEAR —
+    // are NQ-point-denominated in LM_CFG and must be rescaled for other symbols.
+    // Dimensionless constants — prior, retirement, hysteresis multipliers — are shared.)
     // schema v2 (Cracker 0.1): hold_post/last_test_session replace strength; meta
     // table added. v1 DBs are regenerable research output → drop and recreate.
     const ver = (this.db.pragma('user_version', { simple: true }) as number) ?? 0;
     if (ver < 2) { this.db.exec(`DROP TABLE IF EXISTS levels; DROP TABLE IF EXISTS interactions; DROP TABLE IF EXISTS meta;`); this.db.exec(SCHEMA); this.db.pragma('user_version = 2'); }
     else this.db.exec(SCHEMA);
-    this.reg = new LevelRegistry(symbol);
+    this.reg = new LevelRegistry(symbol, cfg);
 
     // ── TAIL-ONLY GUARD — re-running a day is only coherent if no LATER days
     // exist (later lifecycle state depends on this day's replay). Enforce it.
@@ -201,10 +205,10 @@ export class LevelMemory {
       const a = agg.get(l.id);
       l.visits = a?.v ?? 0; l.holds = a?.h ?? 0; l.breaks = (a?.v ?? 0) - (a?.h ?? 0);
       if (a) { l.lastTestTs = a.lt; l.lastTestSession = a.ls ?? l.lastTestSession; }
-      l.holdPost = holdPosterior(l.holds, l.visits);
+      l.holdPost = holdPosterior(l.holds, l.visits, cfg);
       l.naked = l.visits === 0 && l.source !== 'swing';
-      l.retired = (l.visits >= LM_CFG.RETIRE_MIN_VISITS && l.holdPost < LM_CFG.RETIRE_POST)
-        || (this.reg.sessionIdx - l.lastTestSession >= LM_CFG.RETIRE_AGE_SESSIONS);
+      l.retired = (l.visits >= cfg.RETIRE_MIN_VISITS && l.holdPost < cfg.RETIRE_POST)
+        || (this.reg.sessionIdx - l.lastTestSession >= cfg.RETIRE_AGE_SESSIONS);
     }
 
     this.insInt = this.db.prepare(`INSERT INTO interactions

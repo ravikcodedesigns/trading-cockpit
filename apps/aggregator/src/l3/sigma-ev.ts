@@ -38,6 +38,11 @@ function etHour(tsMs: number): number {
 }
 
 export class SigmaEv {
+  // Per-instrument override: FLOOR_PT/CAP_PT are the only point-denominated
+  // constants (the variance itself is computed on log returns — scale-free).
+  // Half-life is time-dimension and stays global (module-level λ).
+  private cfg: typeof SIGMA_CFG;
+  constructor(cfg: Partial<typeof SIGMA_CFG> = {}) { this.cfg = { ...SIGMA_CFG, ...cfg }; }
   private curMinute = -1;
   private lastClose = NaN;
   private ewVar = NaN;          // EWMA of centered squared 1-min log returns
@@ -75,12 +80,12 @@ export class SigmaEv {
 
   /** σ per √minute, in POINTS at the current price level. Floor/cap applied. */
   sigma1m(): number {
-    if (this.minutesSeen < SIGMA_CFG.WARMUP_MIN) {
-      return isFinite(this.carried) ? this.carried : SIGMA_CFG.FLOOR_PT;   // warmup: carry or floor
+    if (this.minutesSeen < this.cfg.WARMUP_MIN) {
+      return isFinite(this.carried) ? this.carried : this.cfg.FLOOR_PT;   // warmup: carry or floor
     }
     const retSigma = Math.sqrt(Math.max(0, this.ewVar));
     const pts = retSigma * (isFinite(this.lastPrice) ? this.lastPrice : 0);
-    return Math.min(SIGMA_CFG.CAP_PT, Math.max(SIGMA_CFG.FLOOR_PT, pts));
+    return Math.min(this.cfg.CAP_PT, Math.max(this.cfg.FLOOR_PT, pts));
   }
 
   /** Diffusion-scaled noise band over a horizon of h minutes: σ_1m·√h (points). */
