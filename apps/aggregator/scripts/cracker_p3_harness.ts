@@ -52,8 +52,8 @@ export const PLACEBO_POOL = ['placebo-random', 'placebo-shifted'];
 export function lcg(seed: number) { let s = seed >>> 0; return () => (s = (1664525 * s + 1013904223) >>> 0) / 2 ** 32; }
 
 export interface VisitRow {
-  day: string; closeTs: number; levelId: string; source: string; kind: string; side: string; held: number;
-  visitIndex: number; confluenceN: number | null; band: number; sigmaEv: number;
+  day: string; closeTs: number; openTs: number; levelId: string; source: string; kind: string; side: string; held: number;
+  levelPrice: number; visitIndex: number; confluenceN: number | null; band: number; sigmaEv: number;
   penetration: number; dwellMs: number; apDelta: number; apVol: number; ctDelta: number; ctVol: number;
   rsDelta: number; rsVol: number; imbN: number; absorbRatio: number;
   uniq: number; drift: number; todPhase: string | null; esAgree: number | null; rs30: number | null;
@@ -64,8 +64,8 @@ export interface VisitRow {
 export function loadVisits(sym: string): { rows: VisitRow[]; days: string[] } {
   const db = new Database(DB_PATH, { readonly: true });
   const raw = db.prepare(`
-    SELECT vf.trading_day day, vf.close_ts closeTs, vf.level_id levelId, vf.source, vf.kind, vf.side, vf.held,
-      vf.visit_index visitIndex, vf.confluence_n confluenceN, vf.band, vf.sigma_ev sigmaEv,
+    SELECT vf.trading_day day, vf.close_ts closeTs, vf.open_ts openTs, vf.level_id levelId, vf.source, vf.kind, vf.side, vf.held,
+      vf.level_price levelPrice, vf.visit_index visitIndex, vf.confluence_n confluenceN, vf.band, vf.sigma_ev sigmaEv,
       vf.penetration, li.dwell_ms dwellMs, vf.ap_delta apDelta, vf.ap_vol apVol, vf.ct_delta ctDelta, vf.ct_vol ctVol,
       vf.rs_delta rsDelta, vf.rs_vol rsVol, vf.imb_n imbN, vf.absorb_ratio absorbRatio,
       vo.uniq_w uniq, dc.drift_pt_min drift, vc.tod_phase todPhase, vc.es_agree esAgree, vc.rs_30m_bp rs30,
