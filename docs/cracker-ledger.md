@@ -161,3 +161,13 @@
   - Twins ≈ 0 throughout — proximity-to-structure alone does nothing either.
 - **Reading:** stacking levels does not measurably improve the bounce at current power; the NQ-5m near-miss is the same sub-MDE theme as F1-hvn and accrues forward with the sample. Confluence as a STANDALONE factor: dropped (NULL at the powered declared cell). Underpowered cells (NQ 15m, ES both) → forward-accumulation queue.
 - **Decision:** F2 recorded. Next: F3 (visit-index / test-over-test hold posterior — the corrected 94/7 question) or jump to F4 (absorption) per user's mechanism priority.
+
+## 2026-07-07 · P3 · F3 — visit-index / test-over-test posterior: NULL/UNDERPOWERED — the "94/7" ghost dies OOS
+
+- **Spec (pre-registered):** history = observed prior visits of the same level_id, strictly causal; (a) visit-index IC (all visits); (b) prior-only Beta-posterior IC within the has-history population (survivorship handled by ranking WITHIN has-history, never has-vs-hasn't); (c) test-over-test Δhold = P(hold|prev held) − P(hold|prev broke), secondary. Sharp twin: placebo levels accrue histories through the same registry. Declared 5m/15m, ρ*=0.05.
+- **Result: no EDGE anywhere.**
+  - (a) visit-index: UNDERPOWERED at all declared cells (MDE 0.058–0.125 vs ρ* 0.05); NQ-5m validation −0.055 sig but train +0.004 — no same-sign support.
+  - (b) prior-record posterior: NQ 15m sign-flips (train +0.026 → valid −0.095); ES 5m NULL (powered); ES 15m/30m same-sign positive train/valid (+0.040/+0.045, +0.068/+0.052) but UNDERPOWERED → forward-queue.
+  - (c) **the centerpiece: NQ test-over-test Δhold = +6.8pp in train, CI [0.9, 10.7] — SIGNIFICANT in-sample — then −5.9pp in validation.** The exact shape of the original 94/7 claim: in-sample, levels appear to "remember"; out-of-sample the memory reverses. With the twin showing the same reversal, the in-sample effect reads as day-regime artifact, not level memory. ES: nothing in either half.
+- **Reading:** a level's own track record does NOT predict its next test at current power — and the historical "levels that held keep holding" folklore is now measured as an in-sample mirage (3rd such train-only pattern this phase: F1 swing-15m, F2 partially, F3 TOT). Distribution note: 80% of real visits are to levels with 3+ prior visits — levels get retested constantly, so if memory existed the sample to see it is there.
+- **Decision:** F3 recorded — visit-index and TOT dropped as standalone factors (NULL-pattern with sign flips); ES posterior 15/30m cells → forward-accumulation queue. Ladder next: F4 (absorption ratio at contact) — first flow factor.
