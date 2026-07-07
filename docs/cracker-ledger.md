@@ -30,3 +30,19 @@
   - **Live-code audit:** cvd-session / order-book / backtest-expl already use true⇔BUY correctly. **`morning-brief.ts:85` had it inverted** (buy/sell vols swapped in the brief) — fixed this commit.
   - Data flag: 3 of 5 Part-1 days (06-15, 06-19, 07-03) could not sustain a valid L3 book (depth present, book never two-sided) — does not affect this verdict; logged as an open item for Phase 4b (L3 institutional work).
 - **Decision:** **L2 flow features CERTIFIED for the full 54-day set — via the NATIVE flag (true⇔BUY), not book-relative inference.** Footprint/Tier-2 wiring (Phase 1.5) switches its aggressor source to the flag; book-relative stays as a fallback only. Error bars: per-minute delta |r| ≈ 0.994. Book-relative method verdict stands as FAIL — do not use it where the flag exists.
+
+## 2026-07-06 · P0.4 — Micro-vs-mini footprint agreement (the routing study)
+
+- **Question:** we screen on micro (54-day power) and confirm on mini (institutional truth) — do the two crowds' footprints agree well enough for that to work, per feature family?
+- **Method:** `cracker_p04_micromini.ts` — mini vs micro compared WITHIN the same Bookmap capture (same clock; isolates crowd difference from feed artifacts), native flag both sides, 13 clean days each pair. Metrics: per-minute delta r, per-bin profile correlation + POC distance + 70% value-area Jaccard, per-bin imbalance-category Cohen's κ. Estimation study — distributions, no pass/fail.
+- **Result (NQ/MNQ · ES/MES):**
+  - **Profile family: near-identical.** vol-r 0.966 · 0.956; VA-Jaccard 0.88 both; median |POC dist| 4.0pt · 0.3pt. Caveat: NQ shows **twin-peak instability** — ~5/13 days have POC distance 50–120pt (two competing HVNs; the crowds pick different peaks) while value areas still overlap ≥0.69 → use **HVN sets, not single POC**, as level sources.
+  - **Delta family: correlated but attenuated.** r1m 0.799 ± 0.029 (NQ — remarkably stable) · 0.645 ± 0.115 (ES). The crowds genuinely differ minute-to-minute.
+  - **Imbalance family: does NOT transfer.** κ 0.162 · 0.267 — bin-level imbalance flags are crowd-specific.
+- **Decision (routing table):**
+  | family | route |
+  |---|---|
+  | volume structure (POC/HVN/LVN/VA/zones) | **micro-OK** — screen on the full 54-day L2 set (HVN-set caveat) |
+  | delta/flow | **BOTH-with-correction** — screen on micro, expect ~0.8 (NQ) / ~0.65 (ES) attenuation vs institutional truth; mini confirmation mandatory; **Phase 2.3 power table must incorporate the attenuation** (a true mini effect appears shrunk on micro) |
+  | bin-level imbalances (incl. stacked) | **mini-ONLY** (L3, ~13–17 days, mechanism-grade); revisit coarser-granularity definitions if imbalance factors matter later |
+- Composition with P0.3: L2-micro ≈ L3-micro at 0.994 (feed error is negligible); L3-micro ≈ L3-mini at ~0.8 (crowd gap is the dominant term). The pipeline's total distortion budget is now measured end-to-end.
