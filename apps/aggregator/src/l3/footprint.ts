@@ -128,4 +128,4 @@ export class Footprint {
 /** signed size-aware z of volume `a` vs `b`: (a-b)/sqrt(Σsize²) — the exact null
  *  variance when each TRADE (not each contract) is a fair coin. Reduces to the
  *  binomial (a-b)/√(a+b) when all trades are 1-lots. +z = a-dominant. */
-function zvar(a: number, b: number, sumSq: number): number { return sumSq > 0 ? (a - b) / Math.sqrt(sumSq) : 0; }
+export function zvar(a: number, b: number, sumSq: number): number { return sumSq > 0 ? (a - b) / Math.sqrt(sumSq) : 0; }

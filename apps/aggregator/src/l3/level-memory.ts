@@ -21,7 +21,8 @@ import Database from 'better-sqlite3';
 import type { OrderBook } from './order-book.js';
 import { kyleLambda, ofiSeries, type Quote } from './divergence.js';
 
-export type LevelSource = 'swing' | 'rs' | 'session' | 'wall' | 'hvn';
+export type LevelSource = 'swing' | 'rs' | 'session' | 'wall' | 'hvn'
+  | 'placebo-random' | 'placebo-shifted' | 'round';   // Phase-1 null/control sources (CRACKER_PLAN §1.3)
 
 export interface RegisteredLevel {
   id: string; symbol: string; price: number; source: LevelSource; kind: string;
@@ -105,6 +106,16 @@ interface Visit {
   quotes: Quote[]; taps: number; minMid: number; maxMid: number; awaySince: number | null;
 }
 
+/** Cracker Phase-1 hooks: lets a trace engine attach per-visit feature capture
+ *  without duplicating the hysteresis state machine. */
+export interface LmHooks {
+  onVisitOpen?: (lvl: RegisteredLevel, startTs: number, approachSign: number) => void;
+  onVisitClose?: (lvl: RegisteredLevel, info: {
+    startTs: number; closeTs: number; approachSign: number; held: boolean; side: string;
+    visitIndex: number; taps: number; dwellMs: number; penetration: number; band: number;
+  }) => void;
+}
+
 /** Wraps the registry + per-level visit state machines; persists one interaction per visit. */
 export class LevelMemory {
   private db: Database.Database;
@@ -114,7 +125,14 @@ export class LevelMemory {
   private insInt: Database.Statement;
   private cfg = LM_CFG;
 
-  constructor(dbPath: string, private symbol: string, private tradingDay: string) {
+  /** Prices of levels with an OPEN visit right now (for trace zone-trade routing). */
+  openVisitLevels(): { id: string; price: number }[] {
+    const out: { id: string; price: number }[] = [];
+    for (const id of this.visits.keys()) { const l = this.reg.all().find((x) => x.id === id); if (l) out.push({ id, price: l.price }); }
+    return out;
+  }
+
+  constructor(dbPath: string, private symbol: string, private tradingDay: string, private hooks: LmHooks = {}) {
     this.db = new Database(dbPath); this.db.pragma('journal_mode = WAL');
     // schema v2 (Cracker 0.1): hold_post/last_test_session replace strength; meta
     // table added. v1 DBs are regenerable research output → drop and recreate.
@@ -199,6 +217,7 @@ export class LevelMemory {
         if (ad <= band) {   // OPEN a visit — approach side = which side price came from
           v = { startTs: now, lastInBandTs: now, approachSign: Math.sign((isFinite(this.prevMid) ? this.prevMid : mid) - lvl.price) || Math.sign(d) || 1, quotes: [], taps: 0, minMid: mid, maxMid: mid, awaySince: null };
           this.visits.set(lvl.id, v);
+          this.hooks.onVisitOpen?.(lvl, now, v.approachSign);
         } else continue;
       }
       // update open visit
@@ -207,13 +226,13 @@ export class LevelMemory {
       if (ad <= band) { v.taps++; v.lastInBandTs = now; v.awaySince = null; }
       else if (ad > depart) {   // beyond departure zone → candidate close (needs dwell)
         if (v.awaySince == null) v.awaySince = now;
-        if (now - v.awaySince >= this.cfg.MIN_AWAY_MS) this.closeVisit(book, lvl, v, mid, d, now);
+        if (now - v.awaySince >= this.cfg.MIN_AWAY_MS) this.closeVisit(book, lvl, v, mid, d, now, band);
       } else v.awaySince = null;   // in the hysteresis band — still the same visit
     }
     this.prevMid = mid;
   }
 
-  private closeVisit(book: OrderBook, lvl: RegisteredLevel, v: Visit, mid: number, d: number, now: number): void {
+  private closeVisit(book: OrderBook, lvl: RegisteredLevel, v: Visit, mid: number, d: number, now: number, band = 0): void {
     this.visits.delete(lvl.id);
     const exitSign = Math.sign(d);
     const held = exitSign === v.approachSign;   // left back the way it came = held; through = broke
@@ -229,6 +248,10 @@ export class LevelMemory {
       level_price: lvl.price, side, visit_index: lvl.visits, held: held ? 1 : 0, taps: v.taps,
       dwell_ms: v.lastInBandTs - v.startTs, penetration, absorbed_vol: absorbed,
       lambda: lam ? Math.abs(lam.lambda) : null, ofi_net: ofiSeries(v.quotes).reduce((s, x) => s + x, 0),
+    });
+    this.hooks.onVisitClose?.(lvl, {
+      startTs: v.startTs, closeTs: now, approachSign: v.approachSign, held, side,
+      visitIndex: lvl.visits, taps: v.taps, dwellMs: v.lastInBandTs - v.startTs, penetration, band,
     });
   }
 
