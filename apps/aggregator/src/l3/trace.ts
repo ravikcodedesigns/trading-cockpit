@@ -18,26 +18,33 @@
 // OUTCOMES (frozen, RESEARCH_PROTOCOL two-gate):
 //   markouts  — raw forward mid move (points) at {1,5,15,30} min from visit close
 //               (fixed-horizon signed returns — NOT MFE/MAE)
-//   barriers  — WIN/LOSS/TIME at targets {1,1.5,2,3}R for BOTH directions;
-//               INTERIM 1R = σ_ev·√15 (h_ref=15min) until the LVN-structural term
-//               lands in Phase 1.6 — pre-registered interim, no factor test has
-//               consumed these numbers yet. Vertical barrier T = 2·(1R/σ_1m)² = 30min.
+//   barriers  — WIN/LOSS/TIME at targets {1,1.5,2,3}R for BOTH directions.
+//               1R (Phase 1.6, FINAL per the frozen plan-§1 rule): per direction,
+//               max(distance to 1 tick beyond the nearest prior-session LVN behind
+//               the level, σ_ev·√15). LVN search window = 5×σ-floor beyond the
+//               level; no qualifying LVN → σ-floor (stop_src records which).
+//               Vertical barrier T = 2·(1R/σ_1m)² min, capped at VERT_CAP_MIN
+//               (floor-1R reproduces the interim 30min exactly).
 //               Same-bar target+stop → conservative LOSS.
 //   uniqueness — mean over the 30-min outcome window of 1/(concurrent open windows)
+//                (window fixed at 30min per plan §1.2 regardless of per-row T)
 //   cluster_id — union-find over visits with overlapping time windows at levels ≤10pt apart
+//   confluence_n — distinct structural sources near the level at visit open (plan §1.6)
 
 import Database from 'better-sqlite3';
 import type { RegisteredLevel, LmHooks } from './level-memory.js';
 import { zvar } from './footprint.js';
+import { structuralStopDist } from './volume-profile.js';
 
 const T_CFG = {
   RING_MS: 90_000,          // trade ring buffer horizon
   APPROACH_MS: 60_000,      // attack window before visit open
   APPROACH_BAND_K: 3,       // approach zone = 3×band
   VISIT_BUF_CAP: 20_000,    // per-visit trade buffer cap
-  H_REF_MIN: 15,            // interim 1R = σ_ev·√H_REF
+  H_REF_MIN: 15,            // 1R σ-floor = σ_ev·√H_REF
   R_GRID: [1, 1.5, 2, 3],
-  VERT_MIN: 30,             // = 2·(1R/σ_1m)² with the interim rule
+  VERT_MIN: 30,             // uniqueness window; also T with a floor-1R (= 2·H_REF)
+  VERT_CAP_MIN: 60,         // vertical-barrier cap when the structural 1R > floor
   MO_HORIZONS: [1, 5, 15, 30],
   CLUSTER_PTS: 10,
   IMB_BIN_PTS: 1.0, IMB_MIN_Z: 2.0,
@@ -81,15 +88,26 @@ export class TraceEngine {
   constructor(dbPath: string, private symbol: string, private tradingDay: string, private cfg: TraceCfg = T_CFG) {
     this.db = new Database(dbPath);
     this.db.pragma('journal_mode = WAL');
+    // trace schema v3 (Phase 1.6: confluence_n + per-direction structural stops).
+    // The DB file is shared with the spine (level-memory owns user_version 2);
+    // v<3 trace tables are regenerable research output with an incompatible
+    // shape → drop and recreate. Spine tables are untouched.
+    // Stamping 3 also short-circuits level-memory's v1 cleanup (`ver < 2`) — safe:
+    // that drop only matters for legacy pre-v2 files, which this engine never opens.
+    const ver = (this.db.pragma('user_version', { simple: true }) as number) ?? 0;
+    if (ver < 3) {
+      this.db.exec(`DROP TABLE IF EXISTS visit_features; DROP TABLE IF EXISTS visit_outcomes; DROP TABLE IF EXISTS day_context;`);
+      this.db.pragma('user_version = 3');
+    }
     this.db.exec(TRACE_SCHEMA);
     // idempotency: wipe this day's trace rows (spine does the same for interactions)
     for (const t of ['visit_features', 'visit_outcomes']) this.db.prepare(`DELETE FROM ${t} WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.db.prepare(`DELETE FROM day_context WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.insFeat = this.db.prepare(`INSERT INTO visit_features
       (level_id, symbol, trading_day, close_ts, open_ts, source, kind, level_price, side, visit_index, held, band, sigma_ev, penetration,
-       ap_delta, ap_vol, ap_n, ct_delta, ct_vol, ct_n, rs_delta, rs_vol, rs_n, imb_n, absorb_ratio)
+       ap_delta, ap_vol, ap_n, ct_delta, ct_vol, ct_n, rs_delta, rs_vol, rs_n, imb_n, absorb_ratio, confluence_n)
       VALUES (@level_id, @symbol, @trading_day, @close_ts, @open_ts, @source, @kind, @level_price, @side, @visit_index, @held, @band, @sigma_ev, @penetration,
-       @ap_delta, @ap_vol, @ap_n, @ct_delta, @ct_vol, @ct_n, @rs_delta, @rs_vol, @rs_n, @imb_n, @absorb_ratio)`);
+       @ap_delta, @ap_vol, @ap_n, @ct_delta, @ct_vol, @ct_n, @rs_delta, @rs_vol, @rs_n, @imb_n, @absorb_ratio, @confluence_n)`);
 
     this.hooks = {
       onVisitOpen: (lvl, startTs) => {
@@ -115,6 +133,7 @@ export class TraceEngine {
           rs_delta: rs.delta, rs_vol: rs.vol, rs_n: rs.n,
           imb_n: imbCount(contact, this.cfg.IMB_BIN_PTS, this.cfg.IMB_MIN_Z),
           absorb_ratio: ct.vol / Math.max(info.penetration, 0.25),
+          confluence_n: info.confluenceN,
         });
       },
     };
@@ -130,8 +149,10 @@ export class TraceEngine {
     }
   }
 
-  /** Deferred resolution pass — run after the day's replay with the day's 1-min bars. */
-  resolveOutcomes(bars: { t: number; o: number; h: number; l: number; c: number }[]): { resolved: number } {
+  /** Deferred resolution pass — run after the day's replay with the day's 1-min bars.
+   *  `stops.lvns` = the PRIOR session's LVN prices (causal) for the structural 1R;
+   *  omitted → σ-floor only (identical to the pre-1.6 interim rule). */
+  resolveOutcomes(bars: { t: number; o: number; h: number; l: number; c: number }[], stops?: { lvns: number[]; tick: number }): { resolved: number } {
     const rows = this.db.prepare(`SELECT rowid, level_id, close_ts, sigma_ev, level_price FROM visit_features WHERE symbol = ? AND trading_day = ?`)
       .all(this.symbol, this.tradingDay) as any[];
     if (!bars.length || !rows.length) return { resolved: 0 };
@@ -139,10 +160,10 @@ export class TraceEngine {
     const idx = new Map(bars.map((b, i) => [b.t, i]));
     const barAt = (ts: number) => idx.get(Math.floor(ts / 60_000) * 60_000) ?? -1;
     const ins = this.db.prepare(`INSERT INTO visit_outcomes
-      (level_id, symbol, trading_day, close_ts, entry_px, stop_1r, vert_min, mo_1m, mo_5m, mo_15m, mo_30m,
-       bl_1, bl_15, bl_2, bl_3, bs_1, bs_15, bs_2, bs_3, uniq_w, cluster_id)
-      VALUES (@level_id, @symbol, @trading_day, @close_ts, @entry_px, @stop_1r, @vert_min, @mo_1m, @mo_5m, @mo_15m, @mo_30m,
-       @bl_1, @bl_15, @bl_2, @bl_3, @bs_1, @bs_15, @bs_2, @bs_3, @uniq_w, @cluster_id)`);
+      (level_id, symbol, trading_day, close_ts, entry_px, stop_1r_l, stop_1r_s, stop_src_l, stop_src_s, vert_l, vert_s,
+       mo_1m, mo_5m, mo_15m, mo_30m, bl_1, bl_15, bl_2, bl_3, bs_1, bs_15, bs_2, bs_3, uniq_w, cluster_id)
+      VALUES (@level_id, @symbol, @trading_day, @close_ts, @entry_px, @stop_1r_l, @stop_1r_s, @stop_src_l, @stop_src_s, @vert_l, @vert_s,
+       @mo_1m, @mo_5m, @mo_15m, @mo_30m, @bl_1, @bl_15, @bl_2, @bl_3, @bs_1, @bs_15, @bs_2, @bs_3, @uniq_w, @cluster_id)`);
 
     // concurrency per minute for uniqueness (30-min outcome windows)
     const winMin = this.cfg.VERT_MIN;
@@ -165,12 +186,22 @@ export class TraceEngine {
         const entry = bars[bi]!.c;
         const baseT = bars[bi]!.t;
         const sig = r.sigma_ev ?? 1;
-        const oneR = sig * Math.sqrt(this.cfg.H_REF_MIN);
+        // ── 1R (frozen §1 rule): per direction, max(1 tick beyond nearest LVN
+        // behind the level, σ_ev·√h_ref). LVNs are PRIOR-session (causal).
+        const floorR = sig * Math.sqrt(this.cfg.H_REF_MIN);
+        const structOf = (dir: 1 | -1): number | null => stops
+          ? structuralStopDist(stops.lvns, r.level_price, entry, dir, floorR, stops.tick) : null;
+        const structL = structOf(1), structS = structOf(-1);
+        const oneRL = Math.max(floorR, structL ?? 0), oneRS = Math.max(floorR, structS ?? 0);
+        // vertical barrier tracks the actual 1R (T = 2·(1R/σ_1m)² min), capped;
+        // floor-1R reproduces the interim 30 min exactly
+        const vertOf = (oneR: number) => Math.min(this.cfg.VERT_CAP_MIN, Math.round(2 * (oneR / sig) ** 2));
+        const vertL = vertOf(oneRL), vertS = vertOf(oneRS);
         const mo = (h: number) => { const j = idx.get(baseT + h * 60_000); return j != null ? bars[j]!.c - entry : null; };
         // dual-direction barrier march, conservative same-bar rule, time-bounded (gap-safe)
-        const march = (dir: 1 | -1): Record<string, string> => {
+        const march = (dir: 1 | -1, oneR: number, vertMin: number): Record<string, string> => {
           const out: Record<string, string> = {};
-          const tEnd = baseT + this.cfg.VERT_MIN * 60_000;
+          const tEnd = baseT + vertMin * 60_000;
           for (const R of this.cfg.R_GRID) {
             const key = String(R).replace('.', '');
             const tgt = entry + dir * R * oneR, stp = entry - dir * oneR;
@@ -186,12 +217,15 @@ export class TraceEngine {
           }
           return out;
         };
-        const L = march(1), S = march(-1);
+        const L = march(1, oneRL, vertL), S = march(-1, oneRS, vertS);
         const m0 = Math.floor(r.close_ts / 60_000);
         let u = 0; for (let m = m0; m < m0 + winMin; m++) u += 1 / (conc.get(m) ?? 1);
         ins.run({
           level_id: r.level_id, symbol: this.symbol, trading_day: this.tradingDay, close_ts: r.close_ts,
-          entry_px: entry, stop_1r: oneR, vert_min: this.cfg.VERT_MIN,
+          entry_px: entry, stop_1r_l: oneRL, stop_1r_s: oneRS,
+          stop_src_l: structL != null && structL > floorR ? 'lvn' : 'floor',
+          stop_src_s: structS != null && structS > floorR ? 'lvn' : 'floor',
+          vert_l: vertL, vert_s: vertS,
           mo_1m: mo(1), mo_5m: mo(5), mo_15m: mo(15), mo_30m: mo(30),
           bl_1: L['1'], bl_15: L['15'], bl_2: L['2'], bl_3: L['3'],
           bs_1: S['1'], bs_15: S['15'], bs_2: S['2'], bs_3: S['3'],
@@ -220,12 +254,12 @@ CREATE TABLE IF NOT EXISTS visit_features (
   source TEXT, kind TEXT, level_price REAL, side TEXT, visit_index INTEGER, held INTEGER,
   band REAL, sigma_ev REAL, penetration REAL,
   ap_delta REAL, ap_vol REAL, ap_n INTEGER, ct_delta REAL, ct_vol REAL, ct_n INTEGER,
-  rs_delta REAL, rs_vol REAL, rs_n INTEGER, imb_n INTEGER, absorb_ratio REAL
+  rs_delta REAL, rs_vol REAL, rs_n INTEGER, imb_n INTEGER, absorb_ratio REAL, confluence_n INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_vf_day ON visit_features(symbol, trading_day);
 CREATE TABLE IF NOT EXISTS visit_outcomes (
   level_id TEXT, symbol TEXT, trading_day TEXT, close_ts INTEGER,
-  entry_px REAL, stop_1r REAL, vert_min INTEGER,
+  entry_px REAL, stop_1r_l REAL, stop_1r_s REAL, stop_src_l TEXT, stop_src_s TEXT, vert_l INTEGER, vert_s INTEGER,
   mo_1m REAL, mo_5m REAL, mo_15m REAL, mo_30m REAL,
   bl_1 TEXT, bl_15 TEXT, bl_2 TEXT, bl_3 TEXT, bs_1 TEXT, bs_15 TEXT, bs_2 TEXT, bs_3 TEXT,
   uniq_w REAL, cluster_id TEXT

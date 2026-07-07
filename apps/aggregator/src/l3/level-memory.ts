@@ -21,7 +21,7 @@ import Database from 'better-sqlite3';
 import type { OrderBook } from './order-book.js';
 import { kyleLambda, ofiSeries, type Quote } from './divergence.js';
 
-export type LevelSource = 'swing' | 'rs' | 'session' | 'wall' | 'hvn'
+export type LevelSource = 'swing' | 'rs' | 'session' | 'wall' | 'hvn' | 'lvn'   // hvn/lvn: prior-session kernel profile (Phase 1.6)
   | 'placebo-random' | 'placebo-shifted' | 'round';   // Phase-1 null/control sources (CRACKER_PLAN §1.3)
 
 export interface RegisteredLevel {
@@ -47,6 +47,15 @@ const LM_CFG = {
   // test) drops below 0.05 ⇔ untested for ≥9 sessions. Retired levels keep their
   // history and revive on re-approach (upsert merges across the retired boundary).
   RETIRE_POST: 0.35, RETIRE_MIN_VISITS: 3, RETIRE_AGE_SESSIONS: 9,
+  // ── Cracker Phase 1.6: confluence (frozen) ─────────────────────────────────
+  // confluence_n = # DISTINCT structural sources among OTHER active levels within
+  // ±CONFLUENCE_PTS at visit OPEN (causal — registry state at that moment). Self
+  // excluded, so an isolated level scores 0 for every source — placebo rows get
+  // the same yardstick as real ones. Placebos never CONTRIBUTE (they are
+  // synthetic constructs, not market structure); 'round' contributes (it carries
+  // real flow — the honest-null property is exactly why it belongs in the count).
+  CONFLUENCE_PTS: 5,
+  CONFLUENCE_SOURCES: ['swing', 'hvn', 'lvn', 'session', 'wall', 'rs', 'round'] as string[],
 };
 export type LmCfg = typeof LM_CFG;
 
@@ -104,6 +113,7 @@ export class LevelRegistry {
 interface Visit {
   startTs: number; lastInBandTs: number; approachSign: number;   // +1 tested from above (support), -1 from below (resistance)
   quotes: Quote[]; taps: number; minMid: number; maxMid: number; awaySince: number | null;
+  confluenceN: number;   // distinct structural sources nearby at visit open (Phase 1.6)
 }
 
 /** Cracker Phase-1 hooks: lets a trace engine attach per-visit feature capture
@@ -113,6 +123,7 @@ export interface LmHooks {
   onVisitClose?: (lvl: RegisteredLevel, info: {
     startTs: number; closeTs: number; approachSign: number; held: boolean; side: string;
     visitIndex: number; taps: number; dwellMs: number; penetration: number; band: number;
+    confluenceN: number;
   }) => void;
 }
 
@@ -215,7 +226,13 @@ export class LevelMemory {
       let v = this.visits.get(lvl.id);
       if (!v) {
         if (ad <= band) {   // OPEN a visit — approach side = which side price came from
-          v = { startTs: now, lastInBandTs: now, approachSign: Math.sign((isFinite(this.prevMid) ? this.prevMid : mid) - lvl.price) || Math.sign(d) || 1, quotes: [], taps: 0, minMid: mid, maxMid: mid, awaySince: null };
+          // confluence at OPEN (causal): distinct structural sources among OTHER active levels nearby
+          const confl = new Set<string>();
+          for (const o of this.reg.active()) {
+            if (o.id === lvl.id || Math.abs(o.price - lvl.price) > this.cfg.CONFLUENCE_PTS) continue;
+            if (this.cfg.CONFLUENCE_SOURCES.includes(o.source)) confl.add(o.source);
+          }
+          v = { startTs: now, lastInBandTs: now, approachSign: Math.sign((isFinite(this.prevMid) ? this.prevMid : mid) - lvl.price) || Math.sign(d) || 1, quotes: [], taps: 0, minMid: mid, maxMid: mid, awaySince: null, confluenceN: confl.size };
           this.visits.set(lvl.id, v);
           this.hooks.onVisitOpen?.(lvl, now, v.approachSign);
         } else continue;
@@ -252,6 +269,7 @@ export class LevelMemory {
     this.hooks.onVisitClose?.(lvl, {
       startTs: v.startTs, closeTs: now, approachSign: v.approachSign, held, side,
       visitIndex: lvl.visits, taps: v.taps, dwellMs: v.lastInBandTs - v.startTs, penetration, band,
+      confluenceN: v.confluenceN,
     });
   }
 

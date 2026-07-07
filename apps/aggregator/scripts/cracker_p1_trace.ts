@@ -23,6 +23,7 @@ import { MultiScaleSwingDetector } from '../src/l3/swing-levels-ms.js';
 import { SigmaEv } from '../src/l3/sigma-ev.js';
 import { LevelMemory, type LevelSource } from '../src/l3/level-memory.js';
 import { TraceEngine } from '../src/l3/trace.js';
+import { computeProfile, type VolumeProfile } from '../src/l3/volume-profile.js';
 
 const SYM = 'NQ', TICK = 0.25;                          // L3 mini
 const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
@@ -66,6 +67,26 @@ async function priorRange(con: any, days: string[], di: number): Promise<{ lo: n
   return null;
 }
 
+// Phase 1.6: kernel profile of the PRIOR valid RTH session (causal — Monday reads
+// Friday automatically by walking back through the available-days list). A session
+// qualifies at ≥ MIN_PROF_VOL contracts (dominant contract, RTH) — thin partial-
+// capture days walk further back rather than yield a junk profile.
+const MIN_PROF_VOL = 50_000;
+async function priorProfile(con: any, days: string[], di: number): Promise<{ p: VolumeProfile; day: string } | null> {
+  for (let j = di - 1; j >= 0; j--) {
+    const d = days[j]!;
+    const src = `read_parquet('${ROOT}/mbo-parquet/trades/symbol=${SYM}/date=${d}/*.parquet')`;
+    const where = `contract = ${domSQL(d)} AND size > 0 AND NOT is_otc AND ts_ms >= ${et(d, '09:30')} AND ts_ms < ${et(d, '16:00')}`;
+    const tot = (await con.streamAndReadAll(`SELECT SUM(size), SUM(size*size) FROM ${src} WHERE ${where}`)).getRows()[0]!;
+    const totVol = Number(tot[0] ?? 0), totVolSq = Number(tot[1] ?? 0);
+    if (!(totVol >= MIN_PROF_VOL)) continue;
+    const rows = (await con.streamAndReadAll(`SELECT price, SUM(size) FROM ${src} WHERE ${where} GROUP BY price`)).getRows();
+    const p = computeProfile({ pxVol: rows.map((r: any) => ({ price: Number(r[0]), vol: Number(r[1]) })), totVol, totVolSq, tick: TICK });
+    if (p) return { p, day: d };
+  }
+  return null;
+}
+
 type Src = { price: number; source: LevelSource; kind: string };
 function makePlacebos(day: string, range: { lo: number; hi: number } | null, priorSwings: number[]): Src[] {
   if (!range) return [];
@@ -91,6 +112,15 @@ async function runDay(con: any, days: string[], di: number) {
   const swings0 = (lvlDb.prepare(`SELECT price FROM levels WHERE symbol = ? AND source = 'swing' AND retired = 0`).all(SYM) as any[]).map((r) => r.price);
   lvlDb.close();
   const placebos = makePlacebos(day, await priorRange(con, days, di), swings0);
+
+  // Phase 1.6: prior-session profile → hvn/lvn level sources + LVNs for the structural 1R
+  const prof = await priorProfile(con, days, di);
+  const profSources: Src[] = prof ? [
+    ...prof.p.hvns.map((n) => ({ price: n.price, source: 'hvn' as LevelSource, kind: n.price === prof.p.poc ? 'poc' : 'hvn' })),
+    ...prof.p.lvns.map((n) => ({ price: n.price, source: 'lvn' as LevelSource, kind: 'lvn' })),
+  ] : [];
+  const lvnPrices = prof ? prof.p.lvns.map((n) => n.price) : [];
+  if (prof) process.stderr.write(`    ${day} ← profile(${prof.day}) h=${prof.p.bandwidth.toFixed(2)}pt/${prof.p.bandwidthMethod} HVN×${prof.p.hvns.length} LVN×${prof.p.lvns.length} POC ${prof.p.poc}\n`);
 
   const book = new OrderBook(SYM, TICK);
   const sv = new SigmaEv();
@@ -129,7 +159,7 @@ async function runDay(con: any, days: string[], di: number) {
       ms.update(mid, ts, sigma);
       if (ts < rthLo || ts > rthHi) continue;
       const sources: Src[] = ms.levels(sigma).map((s) => ({ price: s.price, source: 'swing' as LevelSource, kind: s.kind }));
-      sources.push(...placebos);
+      sources.push(...placebos, ...profSources);
       mem2.observe(book, sources, mid, sigma, ts);
       obs++;
     }
@@ -140,7 +170,7 @@ async function runDay(con: any, days: string[], di: number) {
       FIRST(price ORDER BY ts_ms) o, MAX(price) h, MIN(price) l, LAST(price ORDER BY ts_ms) c
     FROM ${g.trades} WHERE contract = ${domSQL(day)} AND size > 0 AND NOT is_otc AND ts_ms >= ${rthLo} AND ts_ms < ${end}
     GROUP BY 1 ORDER BY 1`)).getRows().map((r: any) => ({ t: Number(r[0]), o: Number(r[1]), h: Number(r[2]), l: Number(r[3]), c: Number(r[4]) }));
-  const { resolved } = trace.resolveOutcomes(bars);
+  const { resolved } = trace.resolveOutcomes(bars, { lvns: lvnPrices, tick: TICK });
   if (isFinite(dayO)) trace.writeDayContext({ openPx: dayO, closePx: dayC, hiPx: dayH, loPx: dayL });
   trace.close(); mem2.close();
   return { obs, resolved };
@@ -169,6 +199,11 @@ async function main() {
   console.log(`null rates: sigma_ev ${nulls.s}, mo_30m ${nulls.m}`);
   const bar = db.prepare(`SELECT bl_2, COUNT(*) n FROM visit_outcomes GROUP BY bl_2`).all() as any[];
   console.log(`barrier long@2R distribution: ${bar.map((b) => `${b.bl_2}:${b.n}`).join('  ')}`);
+  // Phase 1.6 QA: structural-stop engagement + confluence distribution (descriptive only)
+  const ss = db.prepare(`SELECT stop_src_l, COUNT(*) n, ROUND(AVG(stop_1r_l),1) r FROM visit_outcomes GROUP BY stop_src_l`).all() as any[];
+  console.log(`stop source (long): ${ss.map((s) => `${s.stop_src_l}:${s.n} (avg 1R ${s.r}pt)`).join('  ')}`);
+  const cf = db.prepare(`SELECT confluence_n, COUNT(*) n FROM visit_features GROUP BY confluence_n ORDER BY confluence_n`).all() as any[];
+  console.log(`confluence_n distribution: ${cf.map((c) => `${c.confluence_n}:${c.n}`).join('  ')}`);
   db.close();
   process.exit(0);
 }
