@@ -275,3 +275,19 @@
 - **Science impact: zero.** All science columns byte-identical across every diffed table-day; absorbed_vol was never consumed by any F1–F11 verdict; its semantics are now cleaner (causal open boundary) and exact (no truncation).
 - **Code state:** LevelMemory now takes a structural `BookView` (only MarketBook satisfies it); both trace runners + build_level_memory.ts construct MarketBook; every event carries its own timestamp (caller-set clock eliminated). Legacy order-book.ts remains ONLY for pre-Cracker scripts. divergence.ts remains only for the recorded-but-never-consumed λ/OFI columns (retire when Phase E's rebuilt impact estimator lands).
 - **Next:** four full trace rebuilds on the new engine (in flight), then tape-events.ts (primitive #4) + Phase E0 pre-registration.
+
+## 2026-07-07 · Rebuilt primitive #4 — tape-events.ts: the E0 event taxonomy, FROZEN and certified (11/11)
+
+- **Phase E0 pre-registration (in the file header, frozen before any outcome scan):** five detectors, all triggers DIMENSIONLESS (z-scores / trailing-median multiples, no fixed lots or points):
+  | event | trigger | direction |
+  |---|---|---|
+  | SWEEP | one aggressor execution ≥3 distinct prices (aggressor_order_id + is_execution_start/end brackets — the truth columns legacy ignored); same-dir merge ≤2s | aggressor side |
+  | ABSORPTION | 10s window vol/(range+1 tick) ≥ 5× trailing median (30-min ring, 60-sample warmup) | the ABSORBING side |
+  | IMBALANCE | frozen P0.5 Kish z ≥ 3 on the 10s window | sign |
+  | REPLENISHMENT | ≥5 fill→repost chains (≤1.5s) within ±NEAR_TICKS of mid in 10s | refilling side |
+  | WALL-PULL | cancelled volume near mid ≥ 5× trailing median | pulled side (bid pull ⇒ bearish) |
+  Refractory 30s per (type,dir); median detectors silent pre-warmup; coverage-uncovered windows never evaluated.
+- **E2 declared now:** direction-signed drift-adjusted markouts {1,5,15,30}m; DECLARED 1m/5m all five; dose-response primary (intensity IC + terciles); L2-NQ screen; **BH-FDR q=0.10 across the five-detector family**; ES sign-consistency; structure-zone proximity = conditioning flag ONLY (F5b), never a filter.
+- **Acceptance 11/11:** scripted sweep with exact intensity + merge-union; two-price non-event; hand-computed Kish z=3.162; absorption after warmup with correct absorbing-side direction; warmup silence; cancel-storm wall-pull; 6-chain replenishment; refractory once-per-burst; determinism.
+- **Retirement note:** the absorption detector's vol-per-move formulation replaces DDA's kyleLambda in the EVENT path; divergence.ts now survives only as the recorded-never-consumed λ/OFI visit columns.
+- **Next:** E1 — the event-trace scanner (one row per event over both stores: intensity, direction, structure-zone flag, context, outcomes) once the four MarketBook trace rebuilds land, then E2 through the harness.

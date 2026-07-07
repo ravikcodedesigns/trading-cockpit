@@ -329,10 +329,14 @@ export class MarketBook {
   }
   addsNear(priceInt: number, ticks: number, side: 'bid' | 'ask', since: number): Windowed<number> { return this.jNear(this.adds, priceInt, ticks, side, since); }
   pullsNear(priceInt: number, ticks: number, side: 'bid' | 'ask', since: number): Windowed<number> { return this.jNear(this.pulls, priceInt, ticks, side, since); }
-  refillsNear(priceInt: number, ticks: number, since: number): Windowed<number> {
+  refillsNear(priceInt: number, ticks: number, since: number, side?: 'bid' | 'ask'): Windowed<number> {
     const w = this.refills.since(since);
     let n = 0;
-    for (const e of w.value) if (Math.abs(e.p - priceInt) <= ticks) n++;
+    for (const e of w.value) {
+      if (Math.abs(e.p - priceInt) > ticks) continue;
+      if (side !== undefined && e.bid !== (side === 'bid')) continue;
+      n++;
+    }
     return { value: n, covered: w.covered };
   }
 
