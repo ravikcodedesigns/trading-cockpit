@@ -567,3 +567,16 @@ trade fires on confirmation; 20–40pt scalp bracket. Core L2 signals: Kyle's-λ
 divergence.ts), approach-vs-touch CVD/OFI, Δsize-vs-trade-volume reconciliation, relative sweep.
 L3 reads commented out until BMD v1.2 timing validated (#13). Build stages 0→4, shadow-only,
 must beat the engine-prior baseline OOS before arming. See plan for the 6 open decisions.
+
+## 16. Re-convert CL/GC (+ MCL/MGC) mbo-parquet from raw logs — capture-order repair (from 2026-07-06)
+
+The nightly dedup compaction (`dedup_parquet_store.py`, one script covering ALL symbols/tables
+under `data/mbo-parquet/`) rewrote partitions via `SELECT DISTINCT` with no ORDER BY → row order
+destroyed on every compacted day (94–99% displaced; order books unreplayable). Root cause fixed
+2026-07-06 (`seq` column = log byte offset; order-safe dedup; compaction disarmed until verified) —
+see `docs/cracker-ledger.md`. NQ/ES minis + micros re-converted first (Cracker discovery set).
+**Remaining: CL, GC (and micro MCL/MGC if present) — logs exist 2026-06-24→ in
+`~/cockpit-mbo-capture/`.** Same command pattern:
+`scripts/.venv-mbo/bin/python scripts/mbo_parquet_converter.py --out data/mbo-parquet-refill backfill --force <CLQ6/GCQ6 logs>`
+then monotonicity check + partition swap. Low priority: CL/GC are parked in the Cracker data
+policy (CRACKER_PLAN §1.5); do before any crude/gold book-replay work.
