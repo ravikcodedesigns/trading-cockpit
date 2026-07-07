@@ -72,3 +72,11 @@
 - **Trace rebuild = repair PROVEN:** 439 visits/2 days → **4,312 visits/12 clean days** (06-19 97, 06-22 368, 06-23 262, 06-24 349, 06-25 628, 06-26 383, 06-30 335, 07-01 535, 07-02 826, 07-03 90). Remaining zeros = Sundays + thin 06-16 + live 07-06 (re-converts after 07-07 close).
 - **Baseline at scale (the wall P3 must beat):** hold rates — swing 0.665, placebo-random 0.654, placebo-shifted 0.661, round 0.669. **Raw hold-rate carries ZERO level-identity information.**
 - Pending: micro re-conversion (in flight) → swap → P0.2 clock-study re-run on 06-24/25/26 → prove order-safe dedup on one day → re-enable compaction. CL/GC = BACKLOG item 16.
+
+## 2026-07-07 · Repair completed: micros swapped, dedup proven order-safe, compaction re-enabled — and one hypothesis FALSIFIED
+
+- **Micros re-converted & swapped:** MNQU6+MESU6 (~220 GB) → all partitions PASS (zero displaced per source file; trades +1.7–2.6% recovered) → 80 partitions swapped; quarantine now 12 GB total (160 partitions preserved).
+- **HYPOTHESIS FALSIFIED — the P0.2 junk cluster was NOT the shuffle.** Re-run on repaired data: 06-24/25/26 remain uncorrelatable (peakR 0.03–0.10). Correct in hindsight — P0.2 used order-independent GROUP-BY binning, so row order never touched it. Those days have a genuine timestamp-VALUE problem on the Bookmap side (window coincides with the addon exchange-time migration, BACKLOG #13). Their exclusion from fine cross-feed joins stands, now with the right cause attached. All other days: offsets stable (MES σ 24ms).
+- **Order-safe dedup PROVEN on live data:** ran on all 18 of 07-07's partitions — compacted outputs ts-monotone in file order (12/12 checked PASS); the 3.1% removed = true at-least-once duplicates from the 22:04 converter restart (same line ⇒ same seq ⇒ collapsed), while legitimate identical trades survive (different seq). Both dedup behaviors correct simultaneously.
+- **Nightly compaction RE-ENABLED** (order-safe; refuses legacy no-seq partitions). Remaining tail: re-convert 07-06 after today's close (its partition is mixed pre/post-fix); CL/GC = BACKLOG 16.
+- **Net state:** the L3 store is order-proof end-to-end — capture (raw logs) → conversion (seq) → compaction (ORDER BY + seq-gate) → verification tooling in repo. Discovery dataset: 12 clean days + every day forward.

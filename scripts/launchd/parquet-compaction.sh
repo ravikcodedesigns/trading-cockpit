@@ -34,14 +34,18 @@ fi
 
 cd "$REPO" || { echo "$(date '+%Y-%m-%d %H:%M:%S')  ERROR: repo not found" >> "$LOG"; exit 1; }
 
-# ── MBO COMPACTION DISARMED 2026-07-06 (Cracker data-integrity finding) ──────
-# dedup_parquet_store.py used SELECT DISTINCT with no ORDER BY → DuckDB rewrote
-# every multi-file partition in ARBITRARY row order, destroying capture order
-# (94–99% of rows displaced on affected days; order book replay unusable from
-# ~06-19). Re-enable ONLY after the order-safe rewrite (seq-column dedup) is
-# verified — see docs/cracker-ledger.md 2026-07-06 entry.
-echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== MBO compaction SKIPPED (disarmed — order-corruption fix pending, see cracker-ledger)" >> "$LOG"
-# PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
+# ── MBO compaction: ORDER-SAFE version re-enabled 2026-07-07 ─────────────────
+# History: the original dedup (SELECT DISTINCT, no ORDER BY) destroyed capture
+# order on every partition it rewrote (94–99% rows displaced; book replay
+# unusable from ~06-19) AND silently merged 1–5% of legitimate identical trades.
+# Disarmed 2026-07-06; re-enabled after the fix was proven on live 07-07 data
+# (18 partitions compacted, ts monotone in file order on all 12 checked,
+# duplicate collapse still working via seq determinism). The rewritten dedup
+# ORDERs BY (ts_ms, seq) and REFUSES partitions lacking the seq column.
+# Full story: docs/cracker-ledger.md 2026-07-06/07 entries.
+echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction starting (order-safe)" >> "$LOG"
+PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
+echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction done (exit $?)" >> "$LOG"
 
 # Prune .trash to a ~2-day rollback window so it can't silently balloon. Compaction
 # moves every pre-compaction original here; un-pruned it hit 81GB by 2026-06-25 (4.7x
