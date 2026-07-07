@@ -20,7 +20,7 @@ import fs from 'node:fs';
 
 const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
 const DB = process.env.TRACE_DB ?? `${ROOT}/cracker-trace.db`;
-const OUT = '/Users/ravikumarbasker/trading-cockpit/docs/cracker-power.md';
+const OUT = process.env.POWER_OUT ?? '/Users/ravikumarbasker/trading-cockpit/docs/cracker-power.md';
 const SYMS = ['NQ', 'ES'];
 const HORIZONS = [1, 5, 15, 30] as const;
 const NS = [50, 100, 200, 500, 1000, 2000] as const;

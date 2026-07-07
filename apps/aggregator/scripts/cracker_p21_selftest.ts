@@ -173,11 +173,23 @@ async function main() {
     const key = `${sym}|${day}`;
     if (barsCache.has(key)) return barsCache.get(key)!;
     try {
-      const src = `read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${day}/*.parquet')`;
-      const dom = `(SELECT contract FROM ${src} WHERE ts_ms >= ${et(day, '09:30')} AND ts_ms < ${et(day, '16:00')} GROUP BY contract ORDER BY SUM(size) DESC LIMIT 1)`;
-      const bars = (await con.streamAndReadAll(`SELECT CAST(FLOOR(ts_ms/60000) AS BIGINT)*60000 t, MAX(price) h, MIN(price) l, LAST(price ORDER BY ts_ms) c
-        FROM ${src} WHERE contract = ${dom} AND size > 0 AND NOT is_otc AND ts_ms >= ${et(day, '09:30')} AND ts_ms < ${et(day, '16:05')}
-        GROUP BY 1 ORDER BY 1`)).getRows().map((r: any) => ({ t: Number(r[0]), h: Number(r[1]), l: Number(r[2]), c: Number(r[3]) }));
+      // TRACE_L2=1 → bars from the ticks-parquet L2 store (ts column, SANE
+      // filter, single contract); default = L3 mbo-parquet (dominant contract).
+      let sql: string;
+      if (process.env.TRACE_L2) {
+        const sane = sym === 'ES' ? 'price BETWEEN 4000 AND 9000' : 'price BETWEEN 20000 AND 40000';
+        sql = `SELECT CAST(FLOOR(ts/60000) AS BIGINT)*60000 t, MAX(price) h, MIN(price) l, LAST(price ORDER BY ts) c
+          FROM read_parquet('${ROOT}/ticks-parquet/trades/symbol=${sym}/date=${day}/*.parquet')
+          WHERE size > 0 AND ${sane} AND ts >= ${et(day, '09:30')} AND ts < ${et(day, '16:05')}
+          GROUP BY 1 ORDER BY 1`;
+      } else {
+        const src = `read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${day}/*.parquet')`;
+        const dom = `(SELECT contract FROM ${src} WHERE ts_ms >= ${et(day, '09:30')} AND ts_ms < ${et(day, '16:00')} GROUP BY contract ORDER BY SUM(size) DESC LIMIT 1)`;
+        sql = `SELECT CAST(FLOOR(ts_ms/60000) AS BIGINT)*60000 t, MAX(price) h, MIN(price) l, LAST(price ORDER BY ts_ms) c
+          FROM ${src} WHERE contract = ${dom} AND size > 0 AND NOT is_otc AND ts_ms >= ${et(day, '09:30')} AND ts_ms < ${et(day, '16:05')}
+          GROUP BY 1 ORDER BY 1`;
+      }
+      const bars = (await con.streamAndReadAll(sql)).getRows().map((r: any) => ({ t: Number(r[0]), h: Number(r[1]), l: Number(r[2]), c: Number(r[3]) }));
       const entry = { bars, idx: new Map(bars.map((b: Bar, i: number) => [b.t, i])) };
       barsCache.set(key, entry);
       return entry;
