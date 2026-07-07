@@ -1,14 +1,15 @@
 # Trading Cockpit — Handoff Document
 
 > ## ▶ START HERE — new session, read this first
-> **Latest state = §26** (2026-07-02: options-landscape VERDICT + the START of the rigorous ORDERFLOW-SYSTEM rebuild — multi-scale swings + footprint engine + spine/level-memory). Orient in this order:
-> **1.** §26.1 (read-first — build state, what's built) → **2.** §26.8 (next-steps) + §26.0 (TL;DR) → **3.** `git log --oneline -10`, `git status`, memories `project_orderflow_system` (NEW — read first), `project_quant_data_phase0` (the options arc + verdict), `project_dda_detector`, `project_l2_touch_decider`.
-> **The state in one line:** the Quant Data options pivot ran its full course — rigorous testing (multivariate walk-forward + VRP premium backtests) found **NO directional or premium edge** on NQ/ES after honest OOS + costs; the ONE real deliverable is a validated **volatility/range forecaster** (morning-IV → rest-of-day range, Spearman 0.79). We then pivoted to the **8-layer ORDERFLOW rebuild** (§25.3's design, now being BUILT): a persistent lifecycle **level-memory spine** + **multi-scale swing detector** + **footprint engine**, under a strict research protocol (R-multiple/expectancy — NOT win-rate/direction, Shapley attribution, signal ledger).
-> **Open threads:** (a) continue the spine build — wire per-visit footprint into level-memory + build the heatmap engine (§26.6/26.8); (b) run the calibration studies (micro-L2 vs mini-L3 footprint agreement + aggressor error) BEFORE pattern screening; (c) EVERYTHING this session is UNCOMMITTED on branch `fix/cockpit-chart-live-tail-poll`.
+> **Latest state = §27** (2026-07-07: CRACKER Phases 1–4 EXECUTED — full F1–F10 factor ladder run to verdicts, L2 screening set certified, first confirmed finding F5b, book-state engine, nightly lockbox-fill). Orient in this order:
+> **1.** §27.1 (read-first — pickup points + do-NOTs) → **2.** `docs/cracker-ledger.md` from "P1.6" on (the authoritative study-by-study record) + `docs/cracker-registrations.json` (open hypotheses) → **3.** §27.3 (frozen math/methods — do not re-derive), `git log --oneline -20`, memory `project_cracker`.
+> **The state in one line:** Cracker's measurement instrument is COMPLETE and self-feeding (4 traces, nightly job); the F1–F10 single-factor ladder measured level-trading folklore DEAD (identity/confluence/history/flow/sweeps/walls/voids all null, 5 train-mirages killed by validation); the ONE confirmed mechanism is **F5b — flow-following reverses at real structure** (BH-confirmed, small); F4b/F7b general-tape effects + the NQ-5m-bounce theme await the forward lockbox; F11 (icebergs, L3-only) is the last untested mechanism before Phase 5 (composition → ONE lockbox shot).
+> **Open threads:** (a) F11 mechanism study OR let forward data accrue ~2wks then resolve the lockbox family (BH q=0.10); (b) parked FLIP/CONT live fixes await user approval (`docs/flip-cont-review-2026-07-06.md`); (c) trader WS watchdog unbuilt (2nd silent death 07-07 — §27.5); (d) Phase-8 band-sensitivity item registered, do NOT run early.
+> §26 = the orderflow-rebuild design + spine (now superseded by the executed Cracker build). §25 = options pivot + verdict. §24 = RS-feed pipeline (still current infra).
 > §25 = the options pivot + the studies that produced the verdict. §24 = RS-feed pipeline (still current infra). §1–23 earlier layers — the stale-warning below applies to them.
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-07-06 (Monday) — latest state is **§26** (see START HERE above). **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
+> **Last updated**: 2026-07-07 (Tuesday) — latest state is **§27** (see START HERE above). **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
@@ -1884,3 +1885,66 @@ The rigorous rebuild of §25.3's 8-layer design. **Locked decisions (Ravi, PhD-q
 5. **Then P2/P3 pattern screening** under the research protocol (R-multiple/expectancy, pre-registered hypotheses, univariate→conditional→Shapley, signal ledger). First pattern candidates: absorption-on-retest, sweep/stop-run-reversal, stacked-imbalance→absorption→delta-flip sequence, book-flip.
 6. **Deferred:** cross-instrument NQ↔ES confluence (common-factor/spread) — build the ES spine now, analysis later. Options vol-forecaster available as a sizing/regime input.
 7. **Housekeeping (not urgent):** everything is uncommitted; the committed root `.env` security issue (§25.6) still pending; reproduce the master datapoint catalog into a `docs/` file.
+
+---
+
+## 27. 2026-07-07 — CRACKER Phases 1–4 EXECUTED: full factor ladder run, L2 screening set, first confirmed finding, book-state engine
+
+### 27.0 TL;DR — what materially changed
+
+- **Cracker went from "Phase 0 done" to "Phases 1–4 complete" in one arc.** The measurement layer was finished (P1.4/1.6/1.7), calibrated (P2), and the entire single-factor ladder **F1–F10** ran to verdicts. Headline: **level-trading folklore is measured dead** — level identity, confluence, track record ("94/7"), approach flow, contact flow, test-over-test divergence, stop-run sweeps, pulled walls, and trapdoor voids ALL null (several at full power); **five separate train-half "edges" died in validation** (the harness caught each mechanically).
+- **One confirmed mechanism (F5b):** flow-following predicts continuation at arbitrary prices but is neutralized/REVERSED at real structure — confirmed on an independent sample under BH-FDR q=0.10. Small (ΔIC ≈ 0.04); a conditioning layer for Phase 6, not a standalone signal.
+- **Two general-tape effects registered:** F4b (high absorption ⇒ 1m continuation, at ANY price — failed its level-specificity twin gate) and F7b (deep-fast sweep-reclaims ⇒ LESS follow-through, folklore sign-backwards; awaiting the forward lockbox).
+- **The 54-day L2 micro history is now the SCREENING set** (user data-policy amendment): `cracker-trace-l2.db`, NQ 19,908 + ES 12,682 visits, P2-certified, own power table. L3 mini remains discovery/confirmation.
+- **Self-feeding forward pipeline:** nightly launchd job fills all four traces at 04:35 ET; the Phase-5 lockbox (days > 2026-07-07) accrues untouched — the harness REFUSES to read it.
+- Everything committed on `fix/cockpit-chart-live-tail-poll` (21d01a7 → aae07ea, 20 commits). Ledger (`docs/cracker-ledger.md`) is the authoritative step-by-step record.
+
+### 27.1 ⚠️ Read-first — where the next session picks up
+
+1. Read `docs/cracker-ledger.md` from "P1.6" onward (every study: question/method/result/decision) + `docs/cracker-registrations.json` (machine-readable open hypotheses — Phase-5 runners consume THIS, not memory).
+2. **Open options, in priority order:** (a) **Phase 4b / F11** — iceberg/replenishment at levels, the LAST untested mechanism family (L3-only, `icebergsNear`/`syntheticRefillsNear` in order-book.ts, never consumed; low-N mechanism-grade study); (b) let forward data accrue (~2 weeks) then resolve the forward-lockbox family (F5b-fwd, F7b, NQ5M-THEME) via BH-FDR q=0.10 and re-test the underpowered queue; (c) the parked FLIP/CONT live fixes (`docs/flip-cont-review-2026-07-06.md` — RS-filter leak + July news blackout, awaiting user approval).
+3. **Do NOT**: re-tune frozen parameters (band sweep is REGISTERED for Phase 8), reuse the L2 pre-06-16 segment to confirm hypotheses born from it (it screened F7/F9/F10 — spent), read lockbox days, or relitigate the nulls (they're powered).
+
+### 27.2 The phase work — what was built and found
+
+| Phase | Built | Verdict/state |
+|---|---|---|
+| P1.6 | `src/l3/volume-profile.ts` (1st rebuilt primitive) + hvn/lvn sources + structural 1R + confluence | 24/24 accepted; P0.1 regate 15/15 |
+| P1.4 | `visit_context` (tod_phase, es_agree, rs_30m_bp) + `day_context.morning_iv` (NDX 09:30–10:00) | 12/12; knowledge-times documented per column |
+| P1.7 | ES trace via per-instrument INSTR config (price constants ÷4, probe-validated ES profile floor 1.0pt) | Phase 1 COMPLETE; NQ rows verified untouched |
+| P2 | Self-test + baselines + power tables (`docs/cracker-power.md`, `-l2.md`) | GATE OPEN. Two null models FALSIFIED en route (see 27.3); barrier gate re-aimed at bookkeeping: 12,040/12,040 labels re-derived identically |
+| P3 F1–F8 | Frozen harness `cracker_p3_harness.ts` + one script per factor | F1/F2/F3/F6/F8 NULL · F4→F4b · F5→F5b CONFIRMED · F7→F7b (sign-backwards) |
+| L2 amendment | `cracker_p1_trace_l2.ts` → `cracker-trace-l2.db` (44+40 days) | Certified (P2 gates 2/2); placebo wall TRIPLE-replicated (all sources ≈ 0.64–0.68 hold everywhere) |
+| P4.0/4.1 | `src/l3/book-state.ts` (2nd rebuilt primitive) + `visit_book` capture at OPEN | 15/15 accepted; 96–99% coverage after 2 smoke-caught bugs (capture-at-close outlived ring; registry-vs-source price drift → `LevelMemory.activeLevels()`) |
+| P4.2 F9/F10 | `cracker_p3_f9f10_book.ts` | F9 pulled-wall: POWERED NULL; F10 trapdoor: NULL (+5th train mirage) |
+
+### 27.3 Mathematics & methods (what the next session must not re-derive)
+
+- **Volume profile (P1.6):** weighted Gaussian KDE on the exact tick histogram; bandwidth = Improved Sheather-Jones (Botev–Grotowski–Kroese 2010, DCT fixed point) with **Kish n_eff** = (Σs)²/Σs²; **structural floor h = max(ISJ, 2pt NQ / 1pt ES)** — probe-validated (raw MISE-optimal h≈0.6pt fragments one shelf into six "HVNs"); HVN/LVN = topographic-prominence-qualified extrema (≥10% of peak, edge-zone excluded); HVN SETS per P0.4 twin-peak caveat.
+- **Structural 1R (frozen):** per direction, max(1 tick beyond nearest prior-session LVN behind the level within 5×σfloor, σ_ev·√15); vertical barrier T = 2·(1R/σ_1m)² min capped 60; `stop_src_l/s` records the binding term.
+- **Outcome:** y(h) = side-signed drift-adjusted markout (bounce-ness, points) at h ∈ {1,5,15,30}m; barriers = dual-direction W/L/T on the frozen R-grid; NEVER MFE/MAE.
+- **Stat machinery (harness):** uniq_w-weighted everything; weighted Spearman IC (average-tie ranks per resample); **day-block bootstrap** B=2000 seeded LCG (days resampled whole — visits within a day are one evidence block); train-fit terciles; chronological 60/40 split inside the discovery freeze (≤ 2026-07-07); verdicts EDGE / NULL / UNDERPOWERED with MDE = 2.8×SE vs E* (0.15×random-time SD in points; ρ*=0.05 for ICs).
+- **The P2 lessons that BIND all future tests:** (1) **visits-vs-visits only** — visit-close moments are state-selected (+6pp NQ long continuation vs random-time entries; published curve); bystander nulls (analytic OR random-time) flatter every factor. Two null models were falsified proving this: iid-Gaussian (bursty drift, thin tails) and empirical random-time (can't match state-selected entries). (2) Placebo twins on every factor (placebos live under identical rules — a design distortion dilutes symmetrically but cannot fabricate). (3) Power gating — UNDERPOWERED ≠ NULL; thin cells forward-queue.
+- **Multiplicity:** every emergent hypothesis is pre-registered with declared sign/horizon/test-set in `docs/cracker-registrations.json`; families resolved under **BH-FDR q=0.10**; data that generated a hypothesis never confirms it (L2 pre-06-16 confirmed F4b/F5b then was spent for F7-child claims → forward lockbox).
+- **Book-state (P4):** pure geometry over ladder snapshots — wallAt(±16 ticks NQ / 4 ES), depthBeyond + maxGapBeyond (40/10 ticks) with **coverage-honesty** (truncated window ⇒ NULL, never a clipped number; CQG L2 book = ±50pt banded window, probed); ApproachTracker = 5s ring of per-price walls + snapshots, zero-lookahead reads, capture AT VISIT OPEN.
+- **L2 conventions:** ticks-parquet `is_bid_aggressor=true ⇔ BUY` (P0.3: graded under true⇔SELL gave r=−0.994); delta-family effects attenuate ×0.8 NQ / ×0.65 ES vs mini truth; imbalance family does NOT transfer (L3-only).
+
+### 27.4 Code map (all new/changed this session)
+
+- **Engines (`apps/aggregator/src/l3/`):** `volume-profile.ts` (NEW, rebuilt primitive #1) · `book-state.ts` (NEW, #2) · `trace.ts` (visit_context/visit_book tables, resolveContext, structural stops, schema v3) · `level-memory.ts` (confluence, per-instance cfg, `activeLevels()`) · `sigma-ev.ts` (per-instance floor/cap).
+- **Runners:** `cracker_p1_trace.ts` (L3) / `cracker_p1_trace_l2.ts` (L2) — INSTR per-instrument tables, TRACE_NEW incremental mode, current-ET-day guard (TRACE_INCLUDE_TODAY escape), book capture wiring.
+- **Acceptance suites:** `cracker_p16_accept` (24) · `cracker_p14_context` (12) · `cracker_p40_accept` (15) · `cracker_p21_selftest` (P2 gates, TRACE_L2 bars switch) · `cracker_p23_power` (POWER_OUT env).
+- **Ladder:** `cracker_p3_harness.ts` (FROZEN) + `cracker_p3_f{1..8}*.ts`, `cracker_p3_f9f10_book.ts`, `cracker_p3_confirm_l2.ts`.
+- **Ops:** `scripts/launchd/cracker-nightly-trace.sh` + `com.cockpit.cracker-trace` (04:35 ET, all four traces, TRACE_NEW).
+- **DBs (gitignored):** `data/cracker-trace.db` (L3: NQ 5,200 + ES 4,174 visits, 12–13 days) · `data/cracker-trace-l2.db` (L2: 19,908 + 12,682, 44/40 days). Tables: levels/interactions/meta (spine) + visit_features/visit_outcomes/visit_context/visit_book/day_context. Env: TRACE_DB, TRACE_SYM, TRACE_DAYS, TRACE_KEEP, TRACE_NEW, TRACE_INCLUDE_TODAY.
+
+### 27.5 Live-system notes (same day, unrelated to Cracker)
+
+- **Trader Tradovate-WS silent death #2** (07:13→11:01 ET, process alive, KeepAlive blind) — fixed by `launchctl kickstart -k gui/$UID/com.cockpit.trader`, verified reconnected past the 15s failure window. **Watchdog still unbuilt** (natural home: feed-health job). FLIP/CONT runs pre-review behavior (two fixes parked).
+- `rs-levels` exits 2 daily: NQ/ES levels WRITE FINE (09:38); the FATAL is CL/GC charts not loaded in RS Chrome (parked instruments) — noisy, demote to non-fatal or load charts.
+- Aggregator `flashalpha: disconnected` — believed deprecated, unverified.
+- Nightly compaction's first live run (03:10) succeeded; 07-06 re-conversion after close still pending (ledger).
+
+### 27.6 The state in one paragraph (for the next session's first read)
+
+Cracker's instrument is finished, calibrated, and self-feeding; the folklore hypothesis space is measured and (almost entirely) dead at current power; one mechanism is confirmed (structure scrambles flow signals); three registered hypotheses + the sub-MDE NQ-5m-bounce theme are accruing forward evidence daily toward a single BH-corrected resolution; the only untested mechanism is iceberg/replenishment (F11); and Phase 5 (composition → Gate-2 tradability → the ONE lockbox shot) begins when the survivor set justifies it. The discipline artifacts — frozen harness, ledger, registrations file, power tables — are the project's real assets: nothing needs to be re-argued, only extended.
