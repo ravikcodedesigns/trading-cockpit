@@ -150,3 +150,14 @@
   - Δhold ≈ 0 everywhere (secondary) — triple-confirms P1/P2: level identity carries no raw hold-rate information.
 - **Reading:** merely BEING at a swing/HVN/LVN/round level predicts nothing detectable at current power. Level identity is context, not signal — discrimination must come from flow/interaction factors (F4–F8) or wait for power (hvn 5m retest as forward days accrue).
 - **Decision:** F1 recorded — swing/round NULL at declared horizons (dropped from compositions as standalone factors); hvn/lvn 5m → forward-accumulation queue. Next: F2 (confluence count) through the same harness.
+
+## 2026-07-07 · P3 · F2 — confluence count: NULL (NQ 5m, powered) / UNDERPOWERED elsewhere
+
+- **Spec (pre-registered):** factor = confluence_n (distinct other structural sources ±5pt at visit open); population = real-source visits; SHARP twin = same count on placebo visits (isolates "is being structure special" from "is being near structure special"); tests = weighted Spearman IC + stacked(≥2)-vs-lone(0) contrast; declared 5m/15m.
+- **Harness fix mid-factor (disclosed):** IC verdicts had a units bug — the points-denominated E* (6.15pt) made dimensionless ICs always "powered" → auto-NULL. Added frozen PLAUSIBLE_IC ρ* = 0.05 (conventional decision-relevant IC bar; chosen on convention, not tuned — the fix can only relabel NULL→UNDERPOWERED, never produce EDGE). F1 unaffected (its contrasts are in points).
+- **Result: no EDGE.**
+  - NQ IC(5m): train +0.060 CI [0.023, 0.084] significant; validation +0.034 CI [−0.004, 0.061] — same sign, near-miss, and POWERED (MDE 0.046 ≤ ρ* 0.050) → **NULL by the frozen rule.** Stacked-vs-lone Δ(5m): train +6.1pt CI [3.2, 9.4] sig, valid +7.1pt same-sign n.s., twin +4.0 n.s. — the recurring "NQ 5m structure bounce" theme (F1 hvn showed the same shape) stays sub-threshold.
+  - NQ IC(15m): sign flips train/valid, UNDERPOWERED (MDE 0.084). ES 5m/15m: UNDERPOWERED (MDE 0.099/0.148, validation n≈950).
+  - Twins ≈ 0 throughout — proximity-to-structure alone does nothing either.
+- **Reading:** stacking levels does not measurably improve the bounce at current power; the NQ-5m near-miss is the same sub-MDE theme as F1-hvn and accrues forward with the sample. Confluence as a STANDALONE factor: dropped (NULL at the powered declared cell). Underpowered cells (NQ 15m, ES both) → forward-accumulation queue.
+- **Decision:** F2 recorded. Next: F3 (visit-index / test-over-test hold posterior — the corrected 94/7 question) or jump to F4 (absorption) per user's mechanism priority.

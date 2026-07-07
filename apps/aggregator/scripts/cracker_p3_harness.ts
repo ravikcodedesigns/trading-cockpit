@@ -159,11 +159,18 @@ export const excl0 = (b: Boot) => b.ci95[0] > 0 || b.ci95[1] < 0;
 export const fmt = (b: Boot, unit = '') =>
   `${b.est >= 0 ? '+' : ''}${b.est.toFixed(3)}${unit} CI95 [${b.ci95[0].toFixed(3)}, ${b.ci95[1].toFixed(3)}] n=${b.n}`;
 
-/** Verdict for one declared horizon: EDGE / NULL / UNDERPOWERED (frozen rules). */
-export function verdict(sym: string, h: number, train: Boot, valid: Boot, beatsTwin: boolean): string {
-  const eStar = PLAUSIBLE_FRAC * RT_SD[sym]![h]!;
+/** Plausible-effect bar for a dimensionless rank IC (frozen: ρ* = 0.05, the
+ *  conventional bar for a decision-relevant IC). Added 2026-07-07 when F2
+ *  exposed a units bug — the points-denominated E* made IC verdicts default to
+ *  NULL regardless of power. The fix can only relabel NULL→UNDERPOWERED. */
+export const PLAUSIBLE_IC = 0.05;
+
+/** Verdict for one declared horizon: EDGE / NULL / UNDERPOWERED (frozen rules).
+ *  `kind`: 'points' for markout contrasts, 'ic' for dimensionless correlations. */
+export function verdict(sym: string, h: number, train: Boot, valid: Boot, beatsTwin: boolean, kind: 'points' | 'ic' = 'points'): string {
+  const eStar = kind === 'ic' ? PLAUSIBLE_IC : PLAUSIBLE_FRAC * RT_SD[sym]![h]!;
   const sameSign = Math.sign(train.est) === Math.sign(valid.est);
   if (excl0(train) && excl0(valid) && sameSign && beatsTwin) return 'EDGE';
   const mde = Z_MDE * valid.se;
-  return mde > eStar ? `UNDERPOWERED (MDE ${mde.toFixed(2)} > E* ${eStar.toFixed(2)})` : 'NULL';
+  return mde > eStar ? `UNDERPOWERED (MDE ${mde.toFixed(kind === 'ic' ? 3 : 2)} > E* ${eStar.toFixed(kind === 'ic' ? 3 : 2)})` : 'NULL';
 }
