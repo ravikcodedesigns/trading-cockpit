@@ -82,8 +82,10 @@ function getOHLCV(db: Database.Database, symbol: string, fromMs: number, toMs: n
   type AggRow = { high: number; low: number; buy_vol: number; sell_vol: number; cnt: number };
   const agg = db.prepare(`
     SELECT MAX(price) AS high, MIN(price) AS low,
-           SUM(CASE WHEN is_bid_aggressor = 0 THEN size ELSE 0 END) AS buy_vol,
-           SUM(CASE WHEN is_bid_aggressor = 1 THEN size ELSE 0 END) AS sell_vol,
+           -- is_bid_aggressor=1 ⇔ BUY-aggressor (convention re-confirmed vs Bookmap L3
+           -- ground truth, Cracker P0.3 2026-07-06, per-minute |r|=0.994). Was inverted here.
+           SUM(CASE WHEN is_bid_aggressor = 1 THEN size ELSE 0 END) AS buy_vol,
+           SUM(CASE WHEN is_bid_aggressor = 0 THEN size ELSE 0 END) AS sell_vol,
            COUNT(*) AS cnt
     FROM trades WHERE symbol = ? AND ts BETWEEN ? AND ?
   `).get(symbol, fromMs, toMs) as AggRow;
