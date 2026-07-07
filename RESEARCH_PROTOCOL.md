@@ -89,6 +89,6 @@ Phase-2 (after a pattern passes both gates): **meta-labeling** — the pattern d
 
 ## Session workflow
 
-- New pattern → pre-register (mechanism hypothesis, horizons, sample, nulls) → **Gate 1 discovery** on L2 micro (statistical power) → confirm mechanism on L3 mini → **Gate 2 tradability** (triple-barrier, frozen 1R) → lockbox confirmation → shadow-forward → only then discuss arming.
+- New pattern → pre-register (mechanism hypothesis, horizons, sample, nulls) → **Gate 1 discovery on L3 mini NQ** (truth flags; levels/structure supplied by the L2 full-history registry) → validation = chronological OOS → ES-mini replication → **Gate 2 tradability** (triple-barrier, frozen 1R) → **forward-days lockbox** confirmation → shadow-forward → only then discuss arming. (Data policy: CRACKER_PLAN §1.5.)
 - Every strategy iteration = a NEW file (never overwrite v1 to make v2).
 - Findings go to HANDOFF + memory as **rules with WHY + HOW-TO-APPLY**, not session narratives.

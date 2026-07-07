@@ -32,6 +32,20 @@
 
 ---
 
+## 1.5 DATA POLICY (locked 2026-07-06 — supersedes "routing-with-correction")
+
+Two lines, informed by P0.3/P0.4 calibrations. Note: the L2 store's "NQ"/"ES" labels actually contain MICRO (MNQ/MES) data — kept as-is by user decision; this table is the authoritative reading.
+
+| Data | Coverage (valid) | Used for |
+|---|---|---|
+| L2 micro ("NQ" 05-04→, "ES" 05-12→) | ~40/~37d, live | **Levels & structure ONLY** (registry, level-memory, swings, POC/HVN/LVN, zones) + σ_ev/vol context. Structure transfers micro↔mini at 0.96 (P0.4). NO flow research here. |
+| L3 mini NQ (06-16→) | ~13 clean, +5/wk | **Flow DISCOVERY** (Gate 1): delta, absorption, sweeps, imbalances, order-lifecycle. Truth flags, full MBO. |
+| L3 mini ES (06-16→) | ~13 clean | **Replication** of NQ survivors (pre-registered: failure weakens, doesn't auto-kill). |
+| L3 micro MNQ/MES (06-01→) | ~19 clean | Retail-lens contrast for confirmed factors. Not a discovery set. |
+| CL/GC L3 (06-24→) | ~9 | Parked. |
+
+**Split design (flow factors):** train = first ~60% of clean NQ-mini days · validation = last ~40% (chronological OOS, primary) · **lockbox = the NEXT 10 forward days as they arrive** (capture is live — confirmation data doesn't exist yet at freeze time) · replication = ES mini · placebos always from the same store as the factor. The Phase-2.3 power table declares per-factor "testable now" vs "queue for forward accumulation" — thin-sample factors WAIT rather than get fake verdicts.
+
 ## 2. The phase ladder
 
 ### PHASE 0 — Instrument hardening (no research; make the tools trustworthy)
@@ -89,7 +103,7 @@
 
 **2.1 Pipeline self-test on placebos:** at placebo levels, barrier outcomes must reproduce the drift-adjusted analytic null (within bootstrap CI). *This validates the measurement code itself* — if placebo ≠ theory, the pipeline is broken, not the market.
 **2.2 Baseline curves:** mean-reversion-at-band hold rate (the ~65%) with CIs; markout distribution at random times.
-**2.3 Power table (kills "underpowered-reported-as-null" forever):** block-bootstrap (by day) SE of mean markout per subsample size → **minimum detectable effect** MDE ≈ (z_{α/2} + z_β)·SE = 2.8·SE for 80% power at α = 0.05. Published per horizon. Any factor whose plausible effect < MDE at available n is *pre-declared untestable on this sample* — it goes to the forward-accumulation queue instead of being burned.
+**2.3 Power table (kills "underpowered-reported-as-null" forever):** block-bootstrap (by day) SE of mean markout per subsample size → **minimum detectable effect** MDE ≈ (z_{α/2} + z_β)·SE = 2.8·SE for 80% power at α = 0.05. Published per horizon, **on the L3-mini discovery set (§1.5) — and re-published as forward days accrue**. Any factor whose plausible effect < MDE at available n is *pre-declared untestable on this sample* — it goes to the forward-accumulation queue instead of being burned.
 
 **GATE 2→3: nulls reproduce theory; power table published.**
 
@@ -105,7 +119,7 @@ The heart of Cracker. A fixed harness; factors queue through it one at a time; e
 3. Binary split (top vs bottom tercile) conditional markout curves.
 4. Same computation on **placebo levels** — factor must beat its own placebo twin.
 5. Verdict: EDGE (CI excludes 0, beats placebo, mechanism-consistent horizon) / NULL / UNDERPOWERED (per the Phase-2 power table). Ledger entry with all numbers.
-6. Train (~30d) + validation (~12d). **Lockbox (final 12d) untouched until Phase 5.**
+6. Splits per the DATA POLICY (§1.5): train = first ~60% of clean NQ-mini days, validation = last ~40% (chronological), **lockbox = the next 10 forward days (accruing live), untouched until Phase 5.**
 
 **The queue (ordered by mechanism prior; each is a separate session-sized experiment):**
 | # | Factor | The question |

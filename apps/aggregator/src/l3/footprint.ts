@@ -11,14 +11,20 @@
 //   • Per-instrument BINNING — NQ bins 4 ticks (thin top-of-book fragments per-tick),
 //     ES runs at 1 tick.
 //   • SIGNIFICANCE-BASED imbalance — a diagonal is flagged when the buy/sell split
-//     is ≥ minZ std-errs from 50/50 (binomial), NOT a folk 3:1/4:1. This makes each
-//     cell statistically meaningful regardless of bin size (thin cells need a bigger
+//     is ≥ minZ std-errs from 50/50, NOT a folk 3:1/4:1. This makes each cell
+//     statistically meaningful regardless of bin size (thin cells need a bigger
 //     skew to flag), achieving the "meaningful cell" goal without shifting bins.
+//   • TRADE-SIZE-AWARE variance (Cracker 0.5, frozen) — the null model is "each
+//     TRADE's side is a fair coin," not each contract: a single 200-lot is ONE
+//     observation, not 200. Var(buyVol − sellVol) = Σ size² over the contributing
+//     trades, so z = (a − b) / √(Σs²). With all 1-lots this reduces exactly to
+//     the old binomial (a − b)/√(a + b); with clumpy sizes it stops a lone block
+//     trade from minting a fake "significant" imbalance. (Kish n_eff, exact form.)
 //
 // Reusable at TWO scopes: a session-cumulative Footprint (volume profile / birth
 // context) and a fresh per-VISIT Footprint (the auction during one test of a level).
 
-export interface FootCell { buy: number; sell: number; }   // buy = ask-aggressor vol, sell = bid-aggressor vol
+export interface FootCell { buy: number; sell: number; buySq: number; sellSq: number; }   // vol + Σsize² per side (variance for the size-aware z)
 
 export interface Imbalance { price: number; side: 'buy' | 'sell'; z: number; buy: number; sell: number; }
 export interface StackedImbalance { loPrice: number; hiPrice: number; side: 'buy' | 'sell'; count: number; }
@@ -59,10 +65,10 @@ export class Footprint {
     else side = 'mid';
     const bin = this.binOf(price);
     let c = this.cells.get(bin);
-    if (!c) { c = { buy: 0, sell: 0 }; this.cells.set(bin, c); }
-    if (side === 'buy') c.buy += size;
-    else if (side === 'sell') c.sell += size;
-    else { c.buy += size / 2; c.sell += size / 2; }   // mid: split (rare on futures)
+    if (!c) { c = { buy: 0, sell: 0, buySq: 0, sellSq: 0 }; this.cells.set(bin, c); }
+    if (side === 'buy') { c.buy += size; c.buySq += size * size; }
+    else if (side === 'sell') { c.sell += size; c.sellSq += size * size; }
+    else { c.buy += size / 2; c.sell += size / 2; c.buySq += (size / 2) ** 2; c.sellSq += (size / 2) ** 2; }   // mid: split (rare)
   }
 
   /** True if any volume has been recorded. */
@@ -99,10 +105,10 @@ export class Footprint {
     for (const b of bins) {
       const cur = byBin.get(b)!;
       const below = byBin.get(b - 1), above = byBin.get(b + 1);
-      // buy imbalance: ask-vol here vs bid-vol one below
-      if (below) { const z = zprop(cur.buy, below.sell); if (z >= this.cfg.minZ) { imbalances.push({ price: this.binPrice(b), side: 'buy', z: +z.toFixed(2), buy: cur.buy, sell: below.sell }); flag.set(b, 'buy'); } }
-      // sell imbalance: bid-vol here vs ask-vol one above
-      if (above) { const z = zprop(cur.sell, above.buy); if (z >= this.cfg.minZ && flag.get(b) !== 'buy') { imbalances.push({ price: this.binPrice(b), side: 'sell', z: +z.toFixed(2), buy: above.buy, sell: cur.sell }); flag.set(b, 'sell'); } }
+      // buy imbalance: ask-vol here vs bid-vol one below (size-aware variance)
+      if (below) { const z = zvar(cur.buy, below.sell, cur.buySq + below.sellSq); if (z >= this.cfg.minZ) { imbalances.push({ price: this.binPrice(b), side: 'buy', z: +z.toFixed(2), buy: cur.buy, sell: below.sell }); flag.set(b, 'buy'); } }
+      // sell imbalance: bid-vol here vs ask-vol one above (size-aware variance)
+      if (above) { const z = zvar(cur.sell, above.buy, cur.sellSq + above.buySq); if (z >= this.cfg.minZ && flag.get(b) !== 'buy') { imbalances.push({ price: this.binPrice(b), side: 'sell', z: +z.toFixed(2), buy: above.buy, sell: cur.sell }); flag.set(b, 'sell'); } }
     }
     // stacked = runs of ≥ minStack consecutive bins flagged same side
     const stacked: StackedImbalance[] = [];
@@ -119,5 +125,7 @@ export class Footprint {
   }
 }
 
-/** signed binomial z of `a` vs `b` around 50/50: (a-b)/sqrt(a+b). +z = a-dominant. */
-function zprop(a: number, b: number): number { const n = a + b; return n > 0 ? (a - b) / Math.sqrt(n) : 0; }
+/** signed size-aware z of volume `a` vs `b`: (a-b)/sqrt(Σsize²) — the exact null
+ *  variance when each TRADE (not each contract) is a fair coin. Reduces to the
+ *  binomial (a-b)/√(a+b) when all trades are 1-lots. +z = a-dominant. */
+function zvar(a: number, b: number, sumSq: number): number { return sumSq > 0 ? (a - b) / Math.sqrt(sumSq) : 0; }

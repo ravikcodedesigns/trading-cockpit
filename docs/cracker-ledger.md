@@ -46,3 +46,12 @@
   | delta/flow | **BOTH-with-correction** — screen on micro, expect ~0.8 (NQ) / ~0.65 (ES) attenuation vs institutional truth; mini confirmation mandatory; **Phase 2.3 power table must incorporate the attenuation** (a true mini effect appears shrunk on micro) |
   | bin-level imbalances (incl. stacked) | **mini-ONLY** (L3, ~13–17 days, mechanism-grade); revisit coarser-granularity definitions if imbalance factors matter later |
 - Composition with P0.3: L2-micro ≈ L3-micro at 0.994 (feed error is negligible); L3-micro ≈ L3-mini at ~0.8 (crowd gap is the dominant term). The pipeline's total distortion budget is now measured end-to-end.
+- **Post-study simplification (user decision):** the routing-with-correction model is replaced by the two-line DATA POLICY (CRACKER_PLAN §1.5): L2 full history = levels & structure ONLY; L3 mini NQ = flow discovery; ES mini = replication; lockbox = next 10 forward days. No renaming of the L2 "NQ"/"ES" labels (they mean MNQ/MES — documented, not refactored).
+
+## 2026-07-06 · P0.5 — Estimator freezes (σ_ev + size-aware imbalance z)
+
+- **Question:** freeze the two statistical rulers before any research uses them.
+- **σ_ev** (`src/l3/sigma-ev.ts`, frozen): EWMA variance of drift-stripped 1-min log returns, half-life 30 min, session-anchored (18:00 ET reset, warmup carries prior session's value), floor 0.5pt / cap 60pt, output in points per √min + σ√h horizon scaling. Units: floors the Gate-2 stop, sizes the vertical barrier, feeds the swing detector.
+- **Size-aware imbalance z** (`footprint.ts`, frozen): null model = each TRADE (not contract) is a fair coin → Var(buyVol−sellVol) = Σsize², z = (a−b)/√(Σs²). Reduces exactly to the old binomial with 1-lots; a lone 36-lot block at z_naive≈5.06 now reads z≈0.89 → no fake significance from single blocks.
+- **Acceptance (8/8):** synthetic-vol recovery within 2% (est 20.6 vs true 21.0pt); drift-stripping verified (10bp/min trend + 2bp noise reads 5.5pt ≈ noise, not 27pt drift); session-reset carry; floor; binomial-reduction; block-rejection; reference days sane (trend 06-05 σ 16.4pt > chop 05-29 10.7pt > normal 06-02 7.1pt).
+- **Decision:** both estimators FROZEN. **PHASE 0 COMPLETE** — instrument hardened (0.1), clocks measured (0.2), aggressor certified via native flag (0.3), crowd-agreement routed → simplified to the data policy (0.4), rulers frozen (0.5). Next: Phase 1 (the trace).
