@@ -27,7 +27,7 @@ import 'dotenv/config';
 import { DuckDBInstance } from '@duckdb/node-api';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
-import { OrderBook } from '../src/l3/order-book.js';
+import { MarketBook } from '../src/l3/market-book.js';
 import { MultiScaleSwingDetector } from '../src/l3/swing-levels-ms.js';
 import { SigmaEv } from '../src/l3/sigma-ev.js';
 import { LevelMemory, LM_CFG, type LevelSource, type LmCfg } from '../src/l3/level-memory.js';
@@ -204,7 +204,7 @@ async function runDay(con: any, days: string[], di: number) {
   const lvnPrices = prof ? prof.p.lvns.map((n) => n.price) : [];
   if (prof) process.stderr.write(`    ${day} ← profile(${prof.day}) h=${prof.p.bandwidth.toFixed(2)}pt/${prof.p.bandwidthMethod} HVN×${prof.p.hvns.length} LVN×${prof.p.lvns.length} POC ${prof.p.poc}\n`);
 
-  const book = new OrderBook(SYM, TICK);
+  const book = new MarketBook(SYM, TICK);
   const sv = new SigmaEv(CFG.sg);
   const ms = new MultiScaleSwingDetector(CFG.ms);
   let lastObs = 0, lastRv = 0, obs = 0;
@@ -221,11 +221,11 @@ async function runDay(con: any, days: string[], di: number) {
   let chunk;
   while ((chunk = await stream.fetchChunk()) && chunk.rowCount > 0) {
     for (const row of chunk.getRows() as any[]) {
-      const ts = Number(row[0]); book.lastTs = ts;
+      const ts = Number(row[0]);
       const price = num(row[2])!, size = num(row[3])!;
-      if (row[1] === 'D') { book.applyDepth({ is_bid: Number(row[4]) === 0, size, price_int: book.intFromPrice(price) }); continue; }
+      if (row[1] === 'D') { book.applyDepth({ ts, priceInt: book.intFromPrice(price), size, isBid: Number(row[4]) === 0 }); continue; }
       // trade: is_bid_aggressor=true ⇔ BUY (P0.3-pinned L2 convention)
-      book.applyTrade({ price_int: book.intFromPrice(price), price, size, is_bid_aggressor: !!row[5] });
+      book.applyTrade({ ts, priceInt: book.intFromPrice(price), size, isBuy: !!row[5] });
       trace.onTrade(ts, price, size, !!row[5]);
       if (ts >= rthLo && ts <= rthHi) {
         if (isNaN(dayO)) dayO = price;

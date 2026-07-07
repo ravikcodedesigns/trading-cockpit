@@ -9,7 +9,7 @@
 import { DuckDBInstance } from '@duckdb/node-api';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
-import { OrderBook } from '../src/l3/order-book.js';
+import { MarketBook } from '../src/l3/market-book.js';
 import { SwingDetector } from '../src/l3/swing-levels.js';
 import { diffusionScale } from '../src/l3/divergence.js';
 import { LevelMemory, type LevelSource } from '../src/l3/level-memory.js';
@@ -36,7 +36,7 @@ function availableDays(): string[] {
 
 async function runDay(con: any, day: string, mem: LevelMemory) {
   const [warm, rthLo, rthHi, end] = [et(day, '09:00'), et(day, '09:30'), et(day, '16:00'), et(day, '17:00')];
-  const book = new OrderBook(SYM, TICK);
+  const book = new MarketBook(SYM, TICK);
   const swing = new SwingDetector();
   const mids: number[] = [], midTs: number[] = [];
   let lastObs = 0, lastRv = 0, obsCount = 0;
@@ -58,9 +58,8 @@ async function runDay(con: any, day: string, mem: LevelMemory) {
   while ((chunk = await stream.fetchChunk()) && chunk.rowCount > 0) {
     for (const row of chunk.getRows() as any[]) {
       const ts = Number(row[0]);
-      book.lastTs = ts;
-      if (row[1] === 'D') { const sz = num(row[3]); if (sz != null) book.applyDepth({ is_bid: Number(row[4]) === 0, size: sz, price_int: book.intFromPrice(num(row[2])!) }); }
-      else book.applyTrade({ price_int: book.intFromPrice(num(row[2])!), price: num(row[2])!, size: num(row[3])!, is_bid_aggressor: !!row[5] });
+      if (row[1] === 'D') { const sz = num(row[3]); if (sz != null) book.applyDepth({ ts, priceInt: book.intFromPrice(num(row[2])!), size: sz, isBid: Number(row[4]) === 0 }); }
+      else book.applyTrade({ ts, priceInt: book.intFromPrice(num(row[2])!), size: num(row[3])!, isBuy: !!row[5] });
       if (ts - lastObs < THROTTLE) continue;
       lastObs = ts;
       const bb = book.bestBid(), ba = book.bestAsk();

@@ -99,6 +99,9 @@ const check = (name: string, ok: boolean, detail = '') => {
   check('D3 boundary exact (first retained ts is covered)', edge.covered === true && edge.value === 11);
   const atEvicted = b.absorbedNear(100, 0, 19_000);
   check('D4 boundary exact (last-evicted ts is uncovered)', atEvicted.covered === false);
+  // D5: the cumulative path has NO window — exact across spans >> retention
+  const base = 0;   // tradedNear at "open" (t=0, before any trades) was 0
+  check('D5 cumulative tradedNear exact across a span beyond retention', b.tradedNear(100, 0) - base === 31);
 }
 
 // ── E. depth-vs-L3 reconciliation ─────────────────────────────────────────────
@@ -131,27 +134,35 @@ const check = (name: string, ok: boolean, detail = '') => {
   check('F1 1M mixed events + periodic reads under 10s', ms < 10_000, `${ms}ms (${Math.round(n / ms)}k ev/s)`);
 }
 
-// ── G. real-day PARITY vs the legacy order-book ───────────────────────────────
-async function parity() {
+// ── G. real-day PARITY vs the legacy order-book — all four feed×symbol combos ──
+async function parityOne(con: any, store: 'l3' | 'l2', sym: string, day: string, demoTruncation: boolean): Promise<void> {
   const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
-  const day = '2026-06-18';
-  if (!fs.existsSync(`${ROOT}/mbo-parquet/trades/symbol=NQ/date=${day}`)) { check('G0 parity day available', false, 'store missing'); return; }
   const et = (hm: string) => Date.parse(`${day}T${hm}:00-04:00`);
-  const inst = await DuckDBInstance.create();
-  const con = await inst.connect();
-  const dom = `(SELECT contract FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=NQ/date=${day}/*.parquet') WHERE ts_ms >= ${et('09:30')} AND ts_ms < ${et('16:00')} GROUP BY contract ORDER BY SUM(size) DESC LIMIT 1)`;
-  const SQL = `
-    SELECT ts_ms,'D' s, price_int, size, is_bid, CAST(NULL AS BOOLEAN) f, filename fn, file_row_number frn
-      FROM read_parquet('${ROOT}/mbo-parquet/depth/symbol=NQ/date=${day}/*.parquet', filename=true, file_row_number=true)
-      WHERE contract = ${dom} AND ts_ms BETWEEN ${et('09:00')} AND ${et('12:00')}
-    UNION ALL SELECT ts_ms,'T', price_int, size, CAST(NULL AS BOOLEAN), is_bid_aggressor, filename, file_row_number
-      FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=NQ/date=${day}/*.parquet', filename=true, file_row_number=true)
-      WHERE contract = ${dom} AND size > 0 AND NOT is_otc AND ts_ms BETWEEN ${et('09:00')} AND ${et('12:00')}
-    ORDER BY ts_ms, s, fn, frn`;
-  const nu = new MarketBook('NQ', 0.25);
-  const old = new OrderBook('NQ', 0.25);
-  let n = 0, cmps = 0, mism = 0;
-  let truncationShown = false;
+  let SQL: string;
+  if (store === 'l3') {
+    const dom = `(SELECT contract FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${day}/*.parquet') WHERE ts_ms >= ${et('09:30')} AND ts_ms < ${et('16:00')} GROUP BY contract ORDER BY SUM(size) DESC LIMIT 1)`;
+    SQL = `
+      SELECT ts_ms,'D' s, price_int, size, is_bid b, CAST(NULL AS BOOLEAN) f, filename fn, file_row_number frn
+        FROM read_parquet('${ROOT}/mbo-parquet/depth/symbol=${sym}/date=${day}/*.parquet', filename=true, file_row_number=true)
+        WHERE contract = ${dom} AND ts_ms BETWEEN ${et('09:00')} AND ${et('12:00')}
+      UNION ALL SELECT ts_ms,'T', price_int, size, CAST(NULL AS BOOLEAN), is_bid_aggressor, filename, file_row_number
+        FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${day}/*.parquet', filename=true, file_row_number=true)
+        WHERE contract = ${dom} AND size > 0 AND NOT is_otc AND ts_ms BETWEEN ${et('09:00')} AND ${et('12:00')}
+      ORDER BY ts_ms, s, fn, frn`;
+  } else {
+    const sane = sym === 'ES' ? 'price BETWEEN 4000 AND 9000' : 'price BETWEEN 20000 AND 40000';
+    SQL = `
+      SELECT ts,'D' s, CAST(ROUND(price/0.25) AS INTEGER) pi, size, (side = 0) b, CAST(NULL AS BOOLEAN) f, filename fn, file_row_number frn
+        FROM read_parquet('${ROOT}/ticks-parquet/depth/symbol=${sym}/date=${day}/*.parquet', filename=true, file_row_number=true)
+        WHERE ${sane} AND ts BETWEEN ${et('09:00')} AND ${et('12:00')}
+      UNION ALL SELECT ts,'T', CAST(ROUND(price/0.25) AS INTEGER), size, CAST(NULL AS BOOLEAN), is_bid_aggressor, filename, file_row_number
+        FROM read_parquet('${ROOT}/ticks-parquet/trades/symbol=${sym}/date=${day}/*.parquet', filename=true, file_row_number=true)
+        WHERE size > 0 AND ${sane} AND ts BETWEEN ${et('09:00')} AND ${et('12:00')}
+      ORDER BY ts, s, fn, frn`;
+  }
+  const nu = new MarketBook(sym, 0.25);
+  const old = new OrderBook(sym, 0.25);
+  let n = 0, cmps = 0, mism = 0, truncationShown = !demoTruncation;
   const stream = await con.stream(SQL);
   let chunk;
   while ((chunk = await stream.fetchChunk()) && chunk.rowCount > 0) {
@@ -174,19 +185,30 @@ async function parity() {
         const bb = nu.bestBid();
         const dOk = bb == null || nu.depthNear(bb, 16, 'bid').size === old.depthNear(bb, 16, 'bid').size;
         if (!(ok && lOk && dOk)) mism++;
-        // demonstrate the legacy truncation once, mid-session, over a 10-min window
         if (!truncationShown && cmps === 15 && bb != null) {
           const wNew = nu.absorbedNear(bb, 16, ts - 600_000);
           let oldSum = 0; for (const t of old.tapeNear(bb, 16, ts - 600_000)) oldSum += t.size;
           truncationShown = true;
-          check('G2 legacy 10-min tape window silently truncated vs honest new read', oldSum < wNew.value && wNew.covered, `legacy ${oldSum} vs new ${wNew.value} (covered=${wNew.covered})`);
+          check('G2 legacy 10-min tape window silently truncated vs honest new read', oldSum < wNew.value && wNew.covered, `legacy ${oldSum} vs new ${wNew.value}`);
         }
       }
     }
   }
-  check('G1 parity: best/ladder/depthNear identical at every checkpoint', mism === 0, `${cmps} checkpoints, ${n} events, ${mism} mismatches`);
-  const h = nu.health();
-  console.log(`  health: crossedMs ${h.counters.crossedMs} · tsRegressions ${h.counters.tsRegressions} · tape ${h.tapeSize}`);
+  check(`G1 parity ${store.toUpperCase()}-${sym}: best/ladder/depthNear identical`, mism === 0 && cmps > 5, `${cmps} checkpoints, ${n} events, ${mism} mismatches`);
+}
+
+async function parity() {
+  const inst = await DuckDBInstance.create();
+  const con = await inst.connect();
+  const combos: Array<['l3' | 'l2', string, string, boolean]> = [
+    ['l3', 'NQ', '2026-06-18', true], ['l3', 'ES', '2026-06-18', false],
+    ['l2', 'NQ', '2026-06-18', false], ['l2', 'ES', '2026-06-18', false],
+  ];
+  for (const [store, sym, day, demo] of combos) {
+    const dir = store === 'l3' ? `mbo-parquet` : `ticks-parquet`;
+    if (!fs.existsSync(`/Users/ravikumarbasker/trading-cockpit/data/${dir}/trades/symbol=${sym}/date=${day}`)) { check(`G0 ${store}-${sym} day available`, false); continue; }
+    await parityOne(con, store, sym, day, demo);
+  }
 }
 
 async function main() {

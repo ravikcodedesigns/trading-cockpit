@@ -18,8 +18,20 @@
 // same throttled replay/live loop as backtest_dda_swing.
 
 import Database from 'better-sqlite3';
-import type { OrderBook } from './order-book.js';
 import { kyleLambda, ofiSeries, type Quote } from './divergence.js';
+
+/** Structural view of the market engine (implemented by MarketBook — the
+ *  rebuilt primitive; the legacy OrderBook no longer satisfies it and is
+ *  retired from all Cracker paths). */
+export interface BookView {
+  bestBid(): number | null;
+  bestAsk(): number | null;
+  priceFromInt(pi: number): number;
+  intFromPrice(p: number): number;
+  depthNear(priceInt: number, ticks: number, side: 'bid' | 'ask'): { size: number; orders: number };
+  /** Cumulative traded volume near a price — visits difference open/close reads. */
+  tradedNear(priceInt: number, ticks: number): number;
+}
 
 export type LevelSource = 'swing' | 'rs' | 'session' | 'wall' | 'hvn' | 'lvn'   // hvn/lvn: prior-session kernel profile (Phase 1.6)
   | 'placebo-random' | 'placebo-shifted' | 'round';   // Phase-1 null/control sources (CRACKER_PLAN §1.3)
@@ -114,6 +126,7 @@ interface Visit {
   startTs: number; lastInBandTs: number; approachSign: number;   // +1 tested from above (support), -1 from below (resistance)
   quotes: Quote[]; taps: number; minMid: number; maxMid: number; awaySince: number | null;
   confluenceN: number;   // distinct structural sources nearby at visit open (Phase 1.6)
+  absorbedBase: number;  // cumulative tradedNear at visit open (exact absorbed = close − base)
 }
 
 /** Cracker Phase-1 hooks: lets a trace engine attach per-visit feature capture
@@ -223,7 +236,7 @@ export class LevelMemory {
   }
 
   /** Drive on each throttled book update. `mid`/`band` supplied by the caller (same as the swing loop). */
-  observe(book: OrderBook, sources: { price: number; source: LevelSource; kind: string }[], mid: number, band: number, now: number): void {
+  observe(book: BookView, sources: { price: number; source: LevelSource; kind: string }[], mid: number, band: number, now: number): void {
     for (const s of sources) this.reg.upsert(s.price, s.source, s.kind, now);
     if (band <= 0) { this.prevMid = mid; return; }
     const bbI = book.bestBid(), baI = book.bestAsk();
@@ -242,7 +255,7 @@ export class LevelMemory {
             if (o.id === lvl.id || Math.abs(o.price - lvl.price) > this.cfg.CONFLUENCE_PTS) continue;
             if (this.cfg.CONFLUENCE_SOURCES.includes(o.source)) confl.add(o.source);
           }
-          v = { startTs: now, lastInBandTs: now, approachSign: Math.sign((isFinite(this.prevMid) ? this.prevMid : mid) - lvl.price) || Math.sign(d) || 1, quotes: [], taps: 0, minMid: mid, maxMid: mid, awaySince: null, confluenceN: confl.size };
+          v = { startTs: now, lastInBandTs: now, approachSign: Math.sign((isFinite(this.prevMid) ? this.prevMid : mid) - lvl.price) || Math.sign(d) || 1, quotes: [], taps: 0, minMid: mid, maxMid: mid, awaySince: null, confluenceN: confl.size, absorbedBase: book.tradedNear(book.intFromPrice(lvl.price), this.cfg.NEAR_TICKS) };
           this.visits.set(lvl.id, v);
           this.hooks.onVisitOpen?.(lvl, now, v.approachSign);
         } else continue;
@@ -259,14 +272,17 @@ export class LevelMemory {
     this.prevMid = mid;
   }
 
-  private closeVisit(book: OrderBook, lvl: RegisteredLevel, v: Visit, mid: number, d: number, now: number, band = 0): void {
+  private closeVisit(book: BookView, lvl: RegisteredLevel, v: Visit, mid: number, d: number, now: number, band = 0): void {
     this.visits.delete(lvl.id);
     const exitSign = Math.sign(d);
     const held = exitSign === v.approachSign;   // left back the way it came = held; through = broke
     const side = v.approachSign > 0 ? 'support' : 'resistance';
     const penetration = v.approachSign > 0 ? Math.max(0, lvl.price - v.minMid) : Math.max(0, v.maxMid - lvl.price);
     const lvInt = book.intFromPrice(lvl.price);
-    let absorbed = 0; for (const p of book.tapeNear(lvInt, this.cfg.NEAR_TICKS, v.startTs)) absorbed += p.size;
+    // EXACT absorbed volume: cumulative-counter difference (no window, no
+    // eviction, visit-length independent). Legacy count-capped ring truncated
+    // silently — absorbed_vol can only be ≥ old builds' values.
+    const absorbed = book.tradedNear(lvInt, this.cfg.NEAR_TICKS) - v.absorbedBase;
     const lam = kyleLambda(v.quotes);
     this.reg.onVisit(lvl, held, now);
     this.insInt.run({

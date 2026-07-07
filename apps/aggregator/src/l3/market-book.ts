@@ -134,6 +134,11 @@ export class MarketBook {
   private l3Ask = new Map<number, number>();
   private recentFill = new Map<number, number>();    // priceInt → ts of last FULL passive fill
 
+  // cumulative traded volume by price (session-scoped, never evicted) — the
+  // EXACT basis for visit-absorbed reads: absorbed = cum(close) − cum(open).
+  // Windowed tape reads stay available for detectors; this path has no window.
+  private cumTraded = new Side();   // sizes map reused as cumulative volume
+
   // time-retained buffers (coverage-honest)
   private tape: Journal<MBTrade>;
   private adds: Journal<JEntry>;
@@ -166,6 +171,7 @@ export class MarketBook {
   reset(): void {
     this.bid.clear(); this.ask.clear();
     this.ords.clear(); this.hot.clear(); this.l3Bid.clear(); this.l3Ask.clear();
+    this.cumTraded.clear();
     this.recentFill.clear();
     this.tape.clear(); this.adds.clear(); this.pulls.clear(); this.refills.clear();
     this.cvd = 0; this.prevTs = -Infinity;
@@ -240,6 +246,7 @@ export class MarketBook {
     this.clock(e.ts);
     this.counters.tradeEvents++;
     this.cvd += e.isBuy ? e.size : -e.size;
+    this.cumTraded.set(e.priceInt, (this.cumTraded.sizes.get(e.priceInt) ?? 0) + e.size);
     this.tape.push({
       ts: e.ts, priceInt: e.priceInt, price: this.priceFromInt(e.priceInt), size: e.size, buy: e.isBuy,
       aggId: e.aggId ?? null, passId: e.passId ?? null, execStart: !!e.execStart, execEnd: !!e.execEnd,
@@ -283,6 +290,13 @@ export class MarketBook {
   depthNear(priceInt: number, ticks: number, side: 'bid' | 'ask'): { size: number; orders: number } {
     const [size, orders] = (side === 'bid' ? this.bid : this.ask).rangeSum(priceInt - ticks, priceInt + ticks);
     return { size, orders };
+  }
+
+  /** CUMULATIVE traded volume within ±ticks of a price since session start.
+   *  Exact and unevictable — callers difference two reads to get the volume
+   *  absorbed over any span (visit-length independent). */
+  tradedNear(priceInt: number, ticks: number): number {
+    return this.cumTraded.rangeSum(priceInt - ticks, priceInt + ticks)[0];
   }
 
   /** Active hidden-size orders (filled beyond displayed, or replaced-up) near a price. */
