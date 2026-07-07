@@ -158,8 +158,14 @@ export class TapeEventEngine {
     if (ts - this.lastTick < this.cfg.TICK_MS) return;
     this.lastTick = ts;
     this.flushMergedSweep(out, ts);
-    const mid = book.bestBid() != null && book.bestAsk() != null ? Math.round(((book.bestBid()! + book.bestAsk()!) / 2)) : null;
-    if (mid == null) return;
+    // E0 amendment #3 (pre-outcome, 2026-07-07): evaluate only on a SANE book —
+    // two-sided with spread ≤ NEAR_TICKS. Early-session/thin books whose best
+    // is far GTC junk produced garbage mid anchors (found in E1 QA: imbalance
+    // dist-to-level averaging hundreds of points while trade-anchored events sat
+    // at ~1-5pt). Detectors that lacked a warmup gate were the ones affected.
+    const bb = book.bestBid(), ba = book.bestAsk();
+    if (bb == null || ba == null || ba <= bb || ba - bb > this.cfg.NEAR_TICKS) return;
+    const mid = Math.round((bb + ba) / 2);
 
     // window stats over the trade buffer
     let vol = 0, delta = 0, sumSq = 0, hi = -Infinity, lo = Infinity;
