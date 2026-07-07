@@ -1,5 +1,5 @@
 {
-  "_doc": "Machine-readable registry of Cracker forward-registered hypotheses and sensitivity items. Append-only in spirit — entries may gain a 'resolution' but never be edited or removed. The git history of this file + docs/cracker-ledger.md is the tamper-evident record. Phase-5/8 runners consume this file; do not rely on session memory.",
+  "_doc": "Machine-readable registry of Cracker forward-registered hypotheses and sensitivity items. Append-only in spirit \u2014 entries may gain a 'resolution' but never be edited or removed. The git history of this file + docs/cracker-ledger.md is the tamper-evident record. Phase-5/8 runners consume this file; do not rely on session memory.",
   "families": {
     "l2-confirmation": {
       "testSet": "cracker-trace-l2.db, days < 2026-06-16 (independent of L3 discovery)",
@@ -9,7 +9,7 @@
     "forward-lockbox": {
       "testSet": "cracker-trace.db (L3 mini), days > 2026-07-07, untouched until Phase 5",
       "correction": "Benjamini-Hochberg FDR q=0.10 across all OPEN entries in this family at resolution time",
-      "status": "OPEN — accruing"
+      "status": "OPEN \u2014 accruing"
     }
   },
   "hypotheses": [
@@ -23,7 +23,7 @@
       "twinGate": true,
       "resolution": {
         "date": "2026-07-07",
-        "verdict": "GENERAL-TAPE — BH-rejected with declared sign (p=0.0585) but FAILED the registered twin gate (twin -0.044 vs real -0.039): effect is real but not level-specific. Rejected as a level factor; retained as a tape-state candidate for Phase-6 composition."
+        "verdict": "GENERAL-TAPE \u2014 BH-rejected with declared sign (p=0.0585) but FAILED the registered twin gate (twin -0.044 vs real -0.039): effect is real but not level-specific. Rejected as a level factor; retained as a tape-state candidate for Phase-6 composition."
       }
     },
     {
@@ -36,7 +36,7 @@
       "twinGate": false,
       "resolution": {
         "date": "2026-07-07",
-        "verdict": "CONFIRMED — +0.040, one-sided p=0.0558, BH q=0.10 (step-up). Small effect; FINAL word owed by the forward-lockbox re-test at Phase 5 (entry F5b-fwd below)."
+        "verdict": "CONFIRMED \u2014 +0.040, one-sided p=0.0558, BH q=0.10 (step-up). Small effect; FINAL word owed by the forward-lockbox re-test at Phase 5 (entry F5b-fwd below)."
       }
     },
     {
@@ -66,6 +66,16 @@
       "claim": "The recurring sub-MDE 'NQ 5m structure bounce': hvn-vs-placebo dy(5m) > 0 (F1 shape: +4.3/+4.6pt train/valid) AND stacked-vs-lone confluence dy(5m) > 0 (F2 shape: +6.1/+7.1pt). Two-part claim, both parts must hold sign.",
       "declaredSign": 1,
       "horizonMin": 5,
+      "twinGate": true,
+      "resolution": null
+    },
+    {
+      "id": "F11c",
+      "registered": "2026-07-07",
+      "family": "forward-lockbox",
+      "claim": "Replenishment intensity (fill->repost <=1.5s count at the defending zone during the visit) predicts 1m continuation INTO the level: IC(refills, y(1m)) < 0 on ES real-source visits (emergent from F11's undeclared-horizon cell: train -0.062 sig / valid -0.060 sig, twin n.s.)",
+      "declaredSign": -1,
+      "horizonMin": 1,
       "twinGate": true,
       "resolution": null
     }
