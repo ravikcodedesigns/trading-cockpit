@@ -101,7 +101,7 @@ export class TraceEngine {
     }
     this.db.exec(TRACE_SCHEMA);
     // idempotency: wipe this day's trace rows (spine does the same for interactions)
-    for (const t of ['visit_features', 'visit_outcomes']) this.db.prepare(`DELETE FROM ${t} WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
+    for (const t of ['visit_features', 'visit_outcomes', 'visit_context']) this.db.prepare(`DELETE FROM ${t} WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.db.prepare(`DELETE FROM day_context WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.insFeat = this.db.prepare(`INSERT INTO visit_features
       (level_id, symbol, trading_day, close_ts, open_ts, source, kind, level_price, side, visit_index, held, band, sigma_ev, penetration,
@@ -238,6 +238,11 @@ export class TraceEngine {
     return { resolved };
   }
 
+  /** Phase 1.4 context pass for this engine's day (see resolveContext). */
+  writeVisitContext(barsNq: CtxBar[], barsEs: CtxBar[], morningIv: number | null): number {
+    return resolveContext(this.db, this.symbol, this.tradingDay, barsNq, barsEs, morningIv);
+  }
+
   writeDayContext(ctx: { openPx: number; closePx: number; hiPx: number; loPx: number }): void {
     const drift = (ctx.closePx - ctx.openPx) / 390;
     const dirRatio = ctx.hiPx > ctx.loPx ? Math.abs(ctx.closePx - ctx.openPx) / (ctx.hiPx - ctx.loPx) : 0;
@@ -246,6 +251,83 @@ export class TraceEngine {
   }
 
   close(): void { this.db.close(); }
+}
+
+// ── Phase 1.4: context columns (plan §1.4) ────────────────────────────────────
+// STRATIFICATION columns, NOT entry features — each carries a defined knowledge
+// time and Phase-2+ tests must respect it:
+//   tod_phase   — knowledge time: visit close (pure function of the clock).
+//   es_agree / rs_30m_bp — knowledge time: visit close (trailing 30-min window
+//                 of our own two feeds; nothing forward).
+//   morning_iv  — knowledge time: 10:00 ET (mean NDX ATM-IV 09:30–10:00, the
+//                 validated IV→range forecaster input, quantdata store). Stored
+//                 RAW: conditioning is rank-based, a fitted IV→points calibration
+//                 would be an unnecessary estimated parameter.
+//   dir_ratio (day_context, pre-existing) — knowledge time 16:00; post-hoc
+//                 day-regime stratification only.
+// Frozen definitions:
+//   tod_phase: open = [09:30,10:30) · close = ≥14:30 · mid = between (ET).
+//   es_agree: of the 6 non-overlapping 5-min log returns ending at the visit-
+//     close minute, the fraction where sign(NQ)==sign(ES) among pairs where both
+//     are nonzero; null if <4 valid pairs (thin tape / session edge).
+//   rs_30m_bp: 30-min log-return differential (NQ − ES) × 10⁴; null unless both
+//     symbols have closes at m and m−30.
+
+export interface CtxBar { t: number; c: number; }
+
+export function todPhase(closeTs: number, tradingDay: string): 'open' | 'mid' | 'close' {
+  const m = closeTs - Date.parse(`${tradingDay}T09:30:00-04:00`);
+  if (m < 60 * 60_000) return 'open';
+  if (m >= 5 * 3600_000) return 'close';
+  return 'mid';
+}
+
+export function commonFactor(nq: Map<number, number>, es: Map<number, number>, minuteMs: number): { agree: number | null; rsBp: number | null } {
+  const M5 = 5 * 60_000;
+  const ret = (m: Map<number, number>, t: number): number | null => {
+    const a = m.get(t), b = m.get(t - M5);
+    return a != null && b != null && b > 0 ? Math.log(a / b) : null;
+  };
+  let valid = 0, agree = 0;
+  for (let i = 0; i < 6; i++) {
+    const t = minuteMs - i * M5;
+    const rn = ret(nq, t), re = ret(es, t);
+    if (rn == null || re == null || rn === 0 || re === 0) continue;
+    valid++; if (rn * re > 0) agree++;
+  }
+  const a0 = nq.get(minuteMs), a30 = nq.get(minuteMs - 30 * 60_000);
+  const b0 = es.get(minuteMs), b30 = es.get(minuteMs - 30 * 60_000);
+  const rsBp = a0 != null && a30 != null && b0 != null && b30 != null && a30 > 0 && b30 > 0
+    ? (Math.log(a0 / a30) - Math.log(b0 / b30)) * 1e4 : null;
+  return { agree: valid >= 4 ? agree / valid : null, rsBp };
+}
+
+/** Idempotent per-day context pass over existing visit_features rows. Needs NO
+ *  book replay — safe as a backfill on an already-built trace. Bars should start
+ *  ≥35 min before the first visit close (the runner pulls from 08:55). */
+export function resolveContext(db: Database.Database, symbol: string, tradingDay: string,
+  barsNq: CtxBar[], barsEs: CtxBar[], morningIv: number | null): number {
+  db.exec(`CREATE TABLE IF NOT EXISTS visit_context (
+    level_id TEXT, symbol TEXT, trading_day TEXT, close_ts INTEGER,
+    tod_phase TEXT, es_agree REAL, rs_30m_bp REAL);
+  CREATE INDEX IF NOT EXISTS idx_vc_day ON visit_context(symbol, trading_day);`);
+  try { db.exec(`ALTER TABLE day_context ADD COLUMN morning_iv REAL`); } catch { /* column exists */ }
+  db.prepare(`DELETE FROM visit_context WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
+  const rows = db.prepare(`SELECT level_id, close_ts FROM visit_features WHERE symbol = ? AND trading_day = ?`)
+    .all(symbol, tradingDay) as any[];
+  const nqC = new Map(barsNq.map((b) => [b.t, b.c])), esC = new Map(barsEs.map((b) => [b.t, b.c]));
+  const ins = db.prepare(`INSERT INTO visit_context (level_id, symbol, trading_day, close_ts, tod_phase, es_agree, rs_30m_bp)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`);
+  const tx = db.transaction(() => {
+    for (const r of rows) {
+      const m = Math.floor(r.close_ts / 60_000) * 60_000;
+      const cf = commonFactor(nqC, esC, m);
+      ins.run(r.level_id, symbol, tradingDay, r.close_ts, todPhase(r.close_ts, tradingDay), cf.agree, cf.rsBp);
+    }
+    db.prepare(`UPDATE day_context SET morning_iv = ? WHERE symbol = ? AND trading_day = ?`).run(morningIv, symbol, tradingDay);
+  });
+  tx();
+  return rows.length;
 }
 
 const TRACE_SCHEMA = `
@@ -267,7 +349,12 @@ CREATE TABLE IF NOT EXISTS visit_outcomes (
 CREATE INDEX IF NOT EXISTS idx_vo_day ON visit_outcomes(symbol, trading_day);
 CREATE TABLE IF NOT EXISTS day_context (
   symbol TEXT, trading_day TEXT, open_px REAL, close_px REAL, hi_px REAL, lo_px REAL,
-  drift_pt_min REAL, dir_ratio REAL, PRIMARY KEY (symbol, trading_day)
+  drift_pt_min REAL, dir_ratio REAL, morning_iv REAL, PRIMARY KEY (symbol, trading_day)
 );
+CREATE TABLE IF NOT EXISTS visit_context (
+  level_id TEXT, symbol TEXT, trading_day TEXT, close_ts INTEGER,
+  tod_phase TEXT, es_agree REAL, rs_30m_bp REAL
+);
+CREATE INDEX IF NOT EXISTS idx_vc_day ON visit_context(symbol, trading_day);
 `;
 export { T_CFG };

@@ -15,6 +15,7 @@
 // DB: data/cracker-trace.db (fresh Cracker dataset; spine tables via LevelMemory
 // + trace tables via TraceEngine). Env: TRACE_DAYS = "N" | "d1,d2" | "until:YYYY-MM-DD".
 // Run: pnpm --filter @trading/aggregator exec tsx scripts/cracker_p1_trace.ts
+import 'dotenv/config';
 import { DuckDBInstance } from '@duckdb/node-api';
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
@@ -24,6 +25,8 @@ import { SigmaEv } from '../src/l3/sigma-ev.js';
 import { LevelMemory, type LevelSource } from '../src/l3/level-memory.js';
 import { TraceEngine } from '../src/l3/trace.js';
 import { computeProfile, type VolumeProfile } from '../src/l3/volume-profile.js';
+import type { CtxBar } from '../src/l3/trace.js';
+import { getVolDrift } from '../src/sources/quantdata-store.js';
 
 const SYM = 'NQ', TICK = 0.25;                          // L3 mini
 const ROOT = '/Users/ravikumarbasker/trading-cockpit/data';
@@ -36,8 +39,31 @@ const gp = (d: string) => ({
   depth: `read_parquet('${ROOT}/mbo-parquet/depth/symbol=${SYM}/date=${d}/*.parquet', filename=true, file_row_number=true)`,
   trades: `read_parquet('${ROOT}/mbo-parquet/trades/symbol=${SYM}/date=${d}/*.parquet', filename=true, file_row_number=true)`,
 });
-const domSQL = (d: string) => `(SELECT contract FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=${SYM}/date=${d}/*.parquet')
+const domSQL = (d: string, sym = SYM) => `(SELECT contract FROM read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${d}/*.parquet')
   WHERE ts_ms >= ${et(d, '09:30')} AND ts_ms < ${et(d, '16:00')} GROUP BY contract ORDER BY SUM(size) DESC LIMIT 1)`;
+
+// Phase 1.4: 1-min closes 08:55→16:05 (context windows need 35 min of pre-RTH tape)
+async function ctxBars(con: any, day: string, sym: string): Promise<CtxBar[]> {
+  try {
+    const src = `read_parquet('${ROOT}/mbo-parquet/trades/symbol=${sym}/date=${day}/*.parquet')`;
+    return (await con.streamAndReadAll(`SELECT CAST(FLOOR(ts_ms / 60000) AS BIGINT) * 60000 t, LAST(price ORDER BY ts_ms) c
+      FROM ${src} WHERE contract = ${domSQL(day, sym)} AND size > 0 AND NOT is_otc
+        AND ts_ms >= ${et(day, '08:55')} AND ts_ms < ${et(day, '16:05')}
+      GROUP BY 1 ORDER BY 1`)).getRows().map((r: any) => ({ t: Number(r[0]), c: Number(r[1]) }));
+  } catch { return []; }   // symbol/day absent from the store → context columns null
+}
+
+// Phase 1.4: morning IV = mean NDX ATM-IV 09:30–10:00 ET (the validated IV→range
+// forecaster input). qdCached: store hit or live fetch-and-persist; holidays /
+// fetch failures resolve to null.
+async function morningIv(day: string): Promise<number | null> {
+  try {
+    const vd = await getVolDrift('NDX', day);
+    const lo = et(day, '09:30'), hi = et(day, '10:00');
+    const pts = vd.filter((x) => x.epoch_ms >= lo && x.epoch_ms < hi && Number.isFinite(x.iv)).map((x) => x.iv);
+    return pts.length >= 5 ? pts.reduce((a, b) => a + b, 0) / pts.length : null;
+  } catch { return null; }
+}
 
 function lcg(seed: number) { let s = seed >>> 0; return () => (s = (1664525 * s + 1013904223) >>> 0) / 2 ** 32; }
 const hashDay = (d: string) => [...d].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -172,8 +198,10 @@ async function runDay(con: any, days: string[], di: number) {
     GROUP BY 1 ORDER BY 1`)).getRows().map((r: any) => ({ t: Number(r[0]), o: Number(r[1]), h: Number(r[2]), l: Number(r[3]), c: Number(r[4]) }));
   const { resolved } = trace.resolveOutcomes(bars, { lvns: lvnPrices, tick: TICK });
   if (isFinite(dayO)) trace.writeDayContext({ openPx: dayO, closePx: dayC, hiPx: dayH, loPx: dayL });
+  // Phase 1.4: context pass (tod phase, NQ–ES common factor, morning IV)
+  const ctx = trace.writeVisitContext(await ctxBars(con, day, SYM), await ctxBars(con, day, 'ES'), await morningIv(day));
   trace.close(); mem2.close();
-  return { obs, resolved };
+  return { obs, resolved, ctx };
 }
 
 async function main() {
@@ -204,6 +232,11 @@ async function main() {
   console.log(`stop source (long): ${ss.map((s) => `${s.stop_src_l}:${s.n} (avg 1R ${s.r}pt)`).join('  ')}`);
   const cf = db.prepare(`SELECT confluence_n, COUNT(*) n FROM visit_features GROUP BY confluence_n ORDER BY confluence_n`).all() as any[];
   console.log(`confluence_n distribution: ${cf.map((c) => `${c.confluence_n}:${c.n}`).join('  ')}`);
+  // Phase 1.4 QA
+  const vc = db.prepare(`SELECT COUNT(*) n, ROUND(AVG(es_agree),3) ea, SUM(es_agree IS NULL) ean, ROUND(AVG(rs_30m_bp),1) rs FROM visit_context`).get() as any;
+  const ph = db.prepare(`SELECT tod_phase, COUNT(*) n FROM visit_context GROUP BY tod_phase ORDER BY n DESC`).all() as any[];
+  const iv = db.prepare(`SELECT SUM(morning_iv IS NOT NULL) y, COUNT(*) n FROM day_context`).get() as any;
+  console.log(`visit_context ${vc.n} rows · es_agree avg ${vc.ea} (null ${vc.ean}) · rs_30m avg ${vc.rs}bp · phases ${ph.map((p) => `${p.tod_phase}:${p.n}`).join(' ')} · morning_iv ${iv.y}/${iv.n} days`);
   db.close();
   process.exit(0);
 }
