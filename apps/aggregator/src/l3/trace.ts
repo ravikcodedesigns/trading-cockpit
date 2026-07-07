@@ -101,7 +101,7 @@ export class TraceEngine {
     }
     this.db.exec(TRACE_SCHEMA);
     // idempotency: wipe this day's trace rows (spine does the same for interactions)
-    for (const t of ['visit_features', 'visit_outcomes', 'visit_context']) this.db.prepare(`DELETE FROM ${t} WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
+    for (const t of ['visit_features', 'visit_outcomes', 'visit_context', 'visit_book']) this.db.prepare(`DELETE FROM ${t} WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.db.prepare(`DELETE FROM day_context WHERE symbol = ? AND trading_day = ?`).run(symbol, tradingDay);
     this.insFeat = this.db.prepare(`INSERT INTO visit_features
       (level_id, symbol, trading_day, close_ts, open_ts, source, kind, level_price, side, visit_index, held, band, sigma_ev, penetration,
@@ -238,6 +238,18 @@ export class TraceEngine {
     return { resolved };
   }
 
+  /** Phase 4.1: per-visit book-state row (walls at open / 60s pre, capacity and
+   *  gap behind the level on the break side). NULL columns = tracker had no
+   *  causal sample or the ladder didn't cover the window (coverage honesty). */
+  recordBookState(row: { level_id: string; close_ts: number; wd_open: number | null; wa_open: number | null;
+    wd_pre: number | null; wa_pre: number | null; beyond_def: number | null; gap_max: number | null }): void {
+    if (!this.insBook) this.insBook = this.db.prepare(`INSERT INTO visit_book
+      (level_id, symbol, trading_day, close_ts, wd_open, wa_open, wd_pre, wa_pre, beyond_def, gap_max)
+      VALUES (@level_id, @symbol, @trading_day, @close_ts, @wd_open, @wa_open, @wd_pre, @wa_pre, @beyond_def, @gap_max)`);
+    this.insBook.run({ ...row, symbol: this.symbol, trading_day: this.tradingDay });
+  }
+  private insBook: Database.Statement | null = null;
+
   /** Phase 1.4 context pass for this engine's day (see resolveContext). */
   writeVisitContext(barsNq: CtxBar[], barsEs: CtxBar[], morningIv: number | null): number {
     return resolveContext(this.db, this.symbol, this.tradingDay, barsNq, barsEs, morningIv);
@@ -356,5 +368,10 @@ CREATE TABLE IF NOT EXISTS visit_context (
   tod_phase TEXT, es_agree REAL, rs_30m_bp REAL
 );
 CREATE INDEX IF NOT EXISTS idx_vc_day ON visit_context(symbol, trading_day);
+CREATE TABLE IF NOT EXISTS visit_book (
+  level_id TEXT, symbol TEXT, trading_day TEXT, close_ts INTEGER,
+  wd_open REAL, wa_open REAL, wd_pre REAL, wa_pre REAL, beyond_def REAL, gap_max INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_vb_day ON visit_book(symbol, trading_day);
 `;
 export { T_CFG };

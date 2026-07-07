@@ -136,6 +136,12 @@ export class LevelMemory {
   private insInt: Database.Statement;
   private cfg: LmCfg;
 
+  /** Active (non-retired) levels — id + CURRENT registry price. Used by the
+   *  Phase-4 book tracker so ring keys match the prices the hooks look up. */
+  activeLevels(): { id: string; price: number }[] {
+    return this.reg.active().map((l) => ({ id: l.id, price: l.price }));
+  }
+
   /** Prices of levels with an OPEN visit right now (for trace zone-trade routing). */
   openVisitLevels(): { id: string; price: number }[] {
     const out: { id: string; price: number }[] = [];

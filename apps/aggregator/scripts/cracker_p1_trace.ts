@@ -25,6 +25,7 @@ import { SigmaEv } from '../src/l3/sigma-ev.js';
 import { LevelMemory, LM_CFG, type LevelSource, type LmCfg } from '../src/l3/level-memory.js';
 import { TraceEngine, T_CFG } from '../src/l3/trace.js';
 import { computeProfile, VP_CFG, type VolumeProfile } from '../src/l3/volume-profile.js';
+import { ApproachTracker, depthBeyond, maxGapBeyond, BS_CFG } from '../src/l3/book-state.js';
 import type { CtxBar } from '../src/l3/trace.js';
 import { getVolDrift } from '../src/sources/quantdata-store.js';
 
@@ -38,16 +39,17 @@ import { getVolDrift } from '../src/sources/quantdata-store.js';
 // flow clusters on 10s with 50s as majors (NQ: 50s/100s).
 const INSTR: Record<string, {
   round: { step: number; major: number };
-  lm: Partial<LmCfg>; tr: object; vp: object; ms: object; sg: object;
+  lm: Partial<LmCfg>; tr: object; vp: object; ms: object; sg: object; bs: object;
 }> = {
-  NQ: { round: { step: 50, major: 100 }, lm: {}, tr: {}, vp: {}, ms: {}, sg: {} },
+  NQ: { round: { step: 50, major: 100 }, lm: {}, tr: {}, vp: {}, ms: {}, sg: {}, bs: {} },
   ES: {
     round: { step: 10, major: 50 },
     lm: { MERGE_PTS: 1.25, CONFLUENCE_PTS: 1.25, NEAR_TICKS: 4 },  // 5/5/4pt ÷ 4
     tr: { CLUSTER_PTS: 2.5, IMB_BIN_PTS: 0.25 },                   // 10pt ÷ 4 · 1pt ÷ 4
     vp: { H_FLOOR_PTS: 1.0 },                                      // probe-validated (see above)
     ms: { DELTA_CAP: [10, 22.5, 45], BASE_FLOOR: 0.5, BASE_CAP: 10 },  // [40,90,180]/2/40 ÷ 4
-    sg: { CAP_PT: 15 },   // 60 ÷ 4; floor stays 0.5pt = 2 ticks on both (dead-tape guard is tick-scale)
+    sg: { CAP_PT: 15 },
+    bs: { K_WALL_TICKS: 4, W_BEYOND_TICKS: 10 },   // 16/40 NQ ticks ÷ 4 (price-scale)   // 60 ÷ 4; floor stays 0.5pt = 2 ticks on both (dead-tape guard is tick-scale)
   },
 };
 
@@ -158,7 +160,47 @@ async function runDay(con: any, days: string[], di: number) {
   const [warm, rthLo, rthHi, end] = [et(day, '09:00'), et(day, '09:30'), et(day, '16:00'), et(day, '16:05')];
   const g = gp(day);
   const trace = new TraceEngine(DB, SYM, day, { ...T_CFG, ...CFG.tr } as typeof T_CFG);
-  const mem2 = new LevelMemory(DB, SYM, day, trace.hooks, { ...LM_CFG, ...CFG.lm });
+  // Phase 4.1: book-state capture — tracker sampled on the throttle loop; the
+  // wrapped close-hook computes wall/beyond/gap columns with zero lookahead.
+  const bsCfg = { ...BS_CFG, ...CFG.bs } as typeof BS_CFG;
+  const tracker = new ApproachTracker(bsCfg);
+  // Book-state is computed AT OPEN (ring history is short; a long visit would
+  // outlive it) and emitted at close when close_ts is known.
+  type BookRow = { wd_open: number | null; wa_open: number | null; wd_pre: number | null; wa_pre: number | null; beyond_def: number | null; gap_max: number | null };
+  const pendingBook = new Map<string, BookRow>();
+  const hooks: typeof trace.hooks = {
+    onVisitOpen: (lvl, startTs, approachSign) => {
+      trace.hooks.onVisitOpen?.(lvl, startTs, approachSign);
+      const pi = Math.round(lvl.price / TICK);
+      const at = tracker.wallsAt(pi, startTs);
+      const pre = tracker.wallsPre(pi, startTs);
+      const defBid = approachSign > 0;                 // tested from above = support
+      const snap = tracker.snapAt(startTs);
+      let beyond: number | null = null, gap: number | null = null;
+      if (snap) {
+        const side = defBid ? snap.bids : snap.asks;
+        const dir = (defBid ? -1 : 1) as 1 | -1;
+        const dbb = depthBeyond(side, pi, dir, bsCfg.W_BEYOND_TICKS, bsCfg.LADDER_N);
+        if (dbb.covered) beyond = dbb.size;
+        const g = maxGapBeyond(side, pi, dir, bsCfg.W_BEYOND_TICKS, bsCfg.LADDER_N);
+        if (g.covered) gap = g.gapTicks;
+      }
+      pendingBook.set(lvl.id, {
+        wd_open: at ? (defBid ? at.bid : at.ask) : null,
+        wa_open: at ? (defBid ? at.ask : at.bid) : null,
+        wd_pre: pre ? (defBid ? pre.bid : pre.ask) : null,
+        wa_pre: pre ? (defBid ? pre.ask : pre.bid) : null,
+        beyond_def: beyond, gap_max: gap,
+      });
+    },
+    onVisitClose: (lvl, info) => {
+      trace.hooks.onVisitClose?.(lvl, info);
+      const row = pendingBook.get(lvl.id);
+      pendingBook.delete(lvl.id);
+      if (row) trace.recordBookState({ level_id: lvl.id, close_ts: info.closeTs, ...row });
+    },
+  };
+  const mem2 = new LevelMemory(DB, SYM, day, hooks, { ...LM_CFG, ...CFG.lm });
   // placebo-shifted basis = PRE-day registry swings (constructor has already wiped
   // own-day births, so this read is causally clean)
   const lvlDb = new Database(DB, { readonly: true });
@@ -210,9 +252,16 @@ async function runDay(con: any, days: string[], di: number) {
       const sigma = sv.sigma1m();
       trace.currentSigma = sigma;
       ms.update(mid, ts, sigma);
-      if (ts < rthLo || ts > rthHi) continue;
       const sources: Src[] = ms.levels(sigma).map((s) => ({ price: s.price, source: 'swing' as LevelSource, kind: s.kind }));
       sources.push(...placebos, ...profSources);
+      if (tracker.due(ts)) {   // ladder() sort only when a sample will be taken
+        const lad = book.ladder(bsCfg.LADDER_N);
+        // sample REGISTRY prices (hooks look up lvl.price) + today's raw source prices
+        const keys = mem2.activeLevels().map((l) => Math.round(l.price / TICK))
+          .concat(sources.map((x) => Math.round(x.price / TICK)));
+        tracker.maybeSample(ts, { ts, bids: lad.bids, asks: lad.asks }, keys);
+      }
+      if (ts < rthLo || ts > rthHi) continue;
       mem2.observe(book, sources, mid, sigma, ts);
       obs++;
     }
