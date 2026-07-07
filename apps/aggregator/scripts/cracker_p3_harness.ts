@@ -57,6 +57,7 @@ export interface VisitRow {
   penetration: number; dwellMs: number; apDelta: number; apVol: number; ctDelta: number; ctVol: number;
   rsDelta: number; rsVol: number; imbN: number; absorbRatio: number;
   uniq: number; drift: number; todPhase: string | null; esAgree: number | null; rs30: number | null;
+  wdOpen: number | null; waOpen: number | null; wdPre: number | null; waPre: number | null; beyondDef: number | null; gapMax: number | null;
   y: Record<number, number | null>;   // side-signed drift-adjusted markout per horizon
 }
 
@@ -68,12 +69,14 @@ export function loadVisits(sym: string): { rows: VisitRow[]; days: string[] } {
       vf.penetration, li.dwell_ms dwellMs, vf.ap_delta apDelta, vf.ap_vol apVol, vf.ct_delta ctDelta, vf.ct_vol ctVol,
       vf.rs_delta rsDelta, vf.rs_vol rsVol, vf.imb_n imbN, vf.absorb_ratio absorbRatio,
       vo.uniq_w uniq, dc.drift_pt_min drift, vc.tod_phase todPhase, vc.es_agree esAgree, vc.rs_30m_bp rs30,
+      vb.wd_open wdOpen, vb.wa_open waOpen, vb.wd_pre wdPre, vb.wa_pre waPre, vb.beyond_def beyondDef, vb.gap_max gapMax,
       vo.mo_1m, vo.mo_5m, vo.mo_15m, vo.mo_30m
     FROM visit_features vf
     JOIN visit_outcomes vo ON vo.level_id = vf.level_id AND vo.close_ts = vf.close_ts AND vo.symbol = vf.symbol
     JOIN day_context dc ON dc.symbol = vf.symbol AND dc.trading_day = vf.trading_day
     LEFT JOIN visit_context vc ON vc.level_id = vf.level_id AND vc.close_ts = vf.close_ts AND vc.symbol = vf.symbol
     LEFT JOIN interactions li ON li.level_id = vf.level_id AND li.ts_ms = vf.close_ts AND li.symbol = vf.symbol
+    LEFT JOIN visit_book vb ON vb.level_id = vf.level_id AND vb.close_ts = vf.close_ts AND vb.symbol = vf.symbol
     WHERE vf.symbol = ? AND vf.trading_day <= ? AND vf.sigma_ev IS NOT NULL
     ORDER BY vf.trading_day, vf.close_ts`).all(sym, FREEZE_DAY) as any[];
   db.close();
