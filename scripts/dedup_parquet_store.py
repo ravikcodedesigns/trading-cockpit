@@ -93,7 +93,10 @@ def dedup_incremental(con, files, stage_file) -> int:
         )
         con.execute("INSERT INTO acc SELECT * FROM newrows")
         con.execute("DROP TABLE newrows")
-    con.execute(f"COPY acc TO '{stage_file}' (FORMAT PARQUET, COMPRESSION zstd, COMPRESSION_LEVEL 3)")
+    # ORDER-SAFE rewrite (2026-07-06): capture order IS meaning for book replay —
+    # depth updates carry absolute sizes, so same-ms same-price updates are
+    # order-dependent. Write back in (ts_ms, seq) order, always.
+    con.execute(f"COPY (SELECT * FROM acc ORDER BY ts_ms, seq) TO '{stage_file}' (FORMAT PARQUET, COMPRESSION zstd, COMPRESSION_LEVEL 3)")
     n = con.execute("SELECT count(*) FROM acc").fetchone()[0]
     con.execute("DROP TABLE acc")
     return n
@@ -154,8 +157,20 @@ def main() -> int:
 
         # --- EXECUTE: single distinct pass via COPY, verify the (small) output, swap in ---
         # No separate pre-count (that would double the expensive distinct over
-        # billions of rows). No ORDER BY (sorting the full input is a needless
-        # second spill); a single-ET-day partition is queried by full scan anyway.
+        # billions of rows).
+        #
+        # ⚠ ORDER-SAFE REWRITE REQUIRED (2026-07-06, Cracker data-integrity finding):
+        # the previous "no ORDER BY" version rewrote partitions in ARBITRARY row
+        # order, destroying capture order — order books replayed from those files
+        # were permanently corrupted (94–99% displaced rows). Depth updates carry
+        # absolute sizes: same-ms same-price update order IS meaning. Therefore:
+        #   • partitions WITHOUT a seq column (pre-fix legacy) are SKIPPED, never
+        #     rewritten — their small-file layout is the only order they have left;
+        #   • rewrites always ORDER BY (ts_ms, seq).
+        cols = {r[0] for r in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{glob}', union_by_name=true)").fetchall()}
+        if "seq" not in cols:
+            print(f"{table:7} {sym:3} {date:12} {len(files):6d} {total:14,d}  SKIPPED (no seq column — legacy partition, order not rewritable)", flush=True)
+            continue
         staging.mkdir(parents=True, exist_ok=True)
         stage_file = staging / f"{table}_{sym}_{date}.parquet"
         if stage_file.exists():
@@ -165,7 +180,7 @@ def main() -> int:
             dedup_incremental(con, files, stage_file)
         else:
             con.execute(
-                f"COPY (SELECT DISTINCT * FROM read_parquet('{glob}', union_by_name=true)) "
+                f"COPY (SELECT DISTINCT * FROM read_parquet('{glob}', union_by_name=true) ORDER BY ts_ms, seq) "
                 f"TO '{stage_file}' (FORMAT PARQUET, COMPRESSION zstd, COMPRESSION_LEVEL 3)"
             )
         # Verify on the small deduped output: non-empty, not larger than input,

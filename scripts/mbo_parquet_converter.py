@@ -62,9 +62,17 @@ COMPRESSION_LEVEL = 3
 # ts_ms = EXCHANGE time (addon v1.2+; was capture-arrival time in v1.1 — see backlog #13).
 # ts_recv = capture-arrival time, present only from v1.2 logs (null for older .log lines);
 #   feed lag = ts_recv - ts_ms. Partitioning + all timing use ts_ms.
+# seq (2026-07-06, Cracker data-integrity fix) = BYTE OFFSET of the source line in
+#   its .log file. Capture order is MEANING for book replay (depth updates carry
+#   absolute sizes), and the nightly DISTINCT compaction was shuffling row order —
+#   destroying it. seq makes capture order an explicit, rewrite-proof column:
+#   replays ORDER BY (ts_ms, seq); dedup re-writes ORDER BY (ts_ms, seq). Byte
+#   offset is deterministic across re-reads (same line ⇒ same seq), so the
+#   at-least-once tail's duplicate rows still collapse under full-row DISTINCT.
 TRADES_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
     ("ts_recv", pa.int64()),
+    ("seq", pa.int64()),
     ("contract", pa.string()),       # MNQM6 / MNQU6 / MESM6 / MESU6 / MNQM26 (CQG-style) ...
     ("price_int", pa.int32()),
     ("price", pa.float64()),
@@ -80,6 +88,7 @@ TRADES_SCHEMA = pa.schema([
 DEPTH_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
     ("ts_recv", pa.int64()),
+    ("seq", pa.int64()),
     ("contract", pa.string()),
     ("price_int", pa.int32()),
     ("price", pa.float64()),
@@ -90,6 +99,7 @@ DEPTH_SCHEMA = pa.schema([
 MBO_SCHEMA = pa.schema([
     ("ts_ms", pa.int64()),
     ("ts_recv", pa.int64()),
+    ("seq", pa.int64()),
     ("contract", pa.string()),
     ("action", pa.string()),  # send / cancel / replace
     ("order_id", pa.string()),
@@ -349,7 +359,10 @@ def run_backfill(log_files: List[Path], out_dir: Path) -> None:
 
         try:
             with path.open("rb") as f:
+                line_off = 0                    # byte offset of the current line start → seq
                 for raw in f:
+                    this_off = line_off
+                    line_off += len(raw)
                     n_total += 1
                     try:
                         line = raw.decode("utf-8")
@@ -365,6 +378,7 @@ def run_backfill(log_files: List[Path], out_dir: Path) -> None:
                     if date is None:        # corrupt/out-of-range ts_ms -> skip
                         n_unknown += 1
                         continue
+                    row["seq"] = this_off       # capture-order key (see schema note)
                     sinks.append(table, sym, date, row)
                     n_parsed += 1
 
@@ -540,7 +554,12 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
             leftover[path] = lines[-1]
             consumed_bytes = len(data) - len(lines[-1])
 
+            # byte offset (in the FILE) of the first byte of `data` → per-line seq
+            base_off = off - len(data) + len(chunk)
+            pos = 0
             for raw in lines[:-1]:
+                this_off = base_off + pos
+                pos += len(raw) + 1             # +1 for the split '\n'
                 if not raw:
                     continue
                 try:
@@ -558,6 +577,7 @@ def run_tail(log_dir: Path, out_dir: Path) -> None:
                 date = et_date_str(row["ts_ms"])
                 if date is None:            # corrupt/out-of-range ts_ms -> skip
                     continue
+                row["seq"] = this_off           # capture-order key (see schema note)
                 buffers.append(table, sym, date, row)
 
             # Advance the in-memory read position only. The on-disk checkpoint

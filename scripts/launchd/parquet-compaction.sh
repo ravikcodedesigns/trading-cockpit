@@ -34,9 +34,14 @@ fi
 
 cd "$REPO" || { echo "$(date '+%Y-%m-%d %H:%M:%S')  ERROR: repo not found" >> "$LOG"; exit 1; }
 
-echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction starting" >> "$LOG"
-PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
-echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== parquet compaction done (exit $?)" >> "$LOG"
+# ── MBO COMPACTION DISARMED 2026-07-06 (Cracker data-integrity finding) ──────
+# dedup_parquet_store.py used SELECT DISTINCT with no ORDER BY → DuckDB rewrote
+# every multi-file partition in ARBITRARY row order, destroying capture order
+# (94–99% of rows displaced on affected days; order book replay unusable from
+# ~06-19). Re-enable ONLY after the order-safe rewrite (seq-column dedup) is
+# verified — see docs/cracker-ledger.md 2026-07-06 entry.
+echo "==[ $(date '+%Y-%m-%d %H:%M:%S') ]== MBO compaction SKIPPED (disarmed — order-corruption fix pending, see cracker-ledger)" >> "$LOG"
+# PYTHONUNBUFFERED=1 "$VENV/bin/python" "$REPO/scripts/dedup_parquet_store.py" --execute >> "$LOG" 2>&1
 
 # Prune .trash to a ~2-day rollback window so it can't silently balloon. Compaction
 # moves every pre-compaction original here; un-pruned it hit 81GB by 2026-06-25 (4.7x

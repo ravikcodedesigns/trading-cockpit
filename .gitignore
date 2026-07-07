@@ -15,6 +15,7 @@ data/level-memory.db*
 data/quantdata.db*
 data/rs-touch-study.db*
 data/cracker-trace.db*
+data/mbo-parquet-refill/
 # Stray root-level trading.db (the real one lives under data/)
 /trading.db*
 dist/
