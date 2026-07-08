@@ -78,6 +78,32 @@
       "horizonMin": 1,
       "twinGate": true,
       "resolution": null
+    },
+    {
+      "id": "QI-REP",
+      "registered": "2026-07-08",
+      "family": "e2b",
+      "claim": "Cont-Stoikov queue-imbalance predicts next-second mid move (one-sided positive)",
+      "declaredSign": 1,
+      "horizonMin": 0.017,
+      "twinGate": false,
+      "resolution": {
+        "date": "2026-07-08",
+        "verdict": "CONFIRMED 8/8 cells p=0.0003; ES day-IC ~0.15-0.18 (53/53 days), NQ ~0.013-0.022."
+      }
+    },
+    {
+      "id": "SWEEP-1S",
+      "registered": "2026-07-08",
+      "family": "e2b",
+      "claim": "Sweep intensity predicts 1s continuation in sweep direction (dose-response)",
+      "declaredSign": 0,
+      "horizonMin": 0.017,
+      "twinGate": false,
+      "resolution": {
+        "date": "2026-07-08",
+        "verdict": "EDGE - first in program. Train +0.112/valid +0.074 both sig, p=0.0005 BH-significant; top-decile +0.836pt NQ (1.62 half-spreads) / +0.690pt ES (5.18 half-spreads), 13/14 days positive both. Tail-tradability -> E3 Gate-2."
+      }
     }
   ],
   "sensitivityItems": [
