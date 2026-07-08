@@ -168,6 +168,16 @@
       "horizonMin": null,
       "twinGate": false,
       "resolution": null
+    },
+    {
+      "id": "COOLDOWN-CAP2",
+      "registered": "2026-07-08",
+      "family": "live-book",
+      "claim": "Relaxing the FLIP/CONT cooldown gate to CAP-2 (take a cooldown-skipped signal only when <2 positions open) is net-positive forward. In-sample (05-05->07-08, n=45 standalone sims): all-taken +528pt (51% WR, but max 6 stacked contracts, 60% of value in n=9 CONT); cap-2 takes 32/45 for +260pt with bounded risk. CAUTION: live shadow (cooldown-shadow.ts -> shadow_trades, running since 06-10) shows the accrued month NEGATIVE: -34.8pt on n=5. Resolver: scripts/cooldown_cap2_resolve.ts (reconstructs cap-2 concurrency from positions.db + shadow intervals). RESOLUTION RULE (frozen): at >=20 forward shadow trades (days > 2026-07-08) or 2026-10-08 hard stop; ADOPT cap-2 only if forward total > 0 AND day-block sign-flip p < 0.10.",
+      "declaredSign": 1,
+      "horizonMin": null,
+      "twinGate": false,
+      "resolution": null
     }
   ],
   "sensitivityItems": [
