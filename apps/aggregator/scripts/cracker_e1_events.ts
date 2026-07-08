@@ -17,10 +17,21 @@
 // near = dist ≤ σ_1m at the event (the visit-band definition — consistency
 // with the whole program; σ recorded per event). Never used as a filter.
 //
-// OUTCOMES (deferred pass, 1-min bars): raw mid markouts at {1,5,15,30}m +
-// day drift — E2 signs them by event direction. Clustering handled by the
-// frozen day-block bootstrap (events are bursts already collapsed by the
-// 30s refractory; day blocks absorb the rest).
+// OUTCOMES — TWO RULERS (E2b amendment, pre-registered 2026-07-08 before any
+// sub-minute outcome was computed):
+//   minute-scale: raw mid markouts {1,5,15,30}m from 1-min bars + day drift
+//     (the original frozen Phase-E grading).
+//   MS-SCALE: mid-price markouts {250ms, 1s, 5s, 10s, 30s} resolved from the
+//     full mid-price series recorded during the replay (mid = the honest
+//     sub-minute price; trade prints are sparse/bouncy at these horizons).
+//     Declared primary horizons 1s & 10s; no drift adjustment (negligible
+//     sub-minute; documented). spread_ticks + top-of-book queue imbalance
+//     qi = (bidSz−askSz)/(bidSz+askSz) recorded at emission — costs and the
+//     book state are part of the row, not an afterthought.
+// QI REPLICATION (registered, one-sided POSITIVE per Cont–Stoikov order-book
+// imbalance/microprice literature): qi sampled every second all session →
+// qi_samples table with forward mid moves at 1s/10s.
+// Clustering handled by the frozen day-block bootstrap throughout.
 //
 // Run: [STORE=l3|l2] [TRACE_SYM=NQ|ES] [TRACE_DAYS=…] pnpm --filter @trading/aggregator exec tsx scripts/cracker_e1_events.ts
 import { DuckDBInstance } from '@duckdb/node-api';
@@ -45,9 +56,16 @@ const SCHEMA = `
 CREATE TABLE IF NOT EXISTS events (
   store TEXT, symbol TEXT, trading_day TEXT, ts INTEGER, type TEXT, dir INTEGER,
   intensity REAL, price_int INTEGER, sigma_ev REAL, dist_level_pts REAL, meta TEXT,
-  mo_1m REAL, mo_5m REAL, mo_15m REAL, mo_30m REAL, drift_pt_min REAL
+  mo_1m REAL, mo_5m REAL, mo_15m REAL, mo_30m REAL, drift_pt_min REAL,
+  spread_ticks INTEGER, qi REAL,
+  ms_250 REAL, ms_1s REAL, ms_5s REAL, ms_10s REAL, ms_30s REAL
 );
-CREATE INDEX IF NOT EXISTS idx_ev_day ON events(store, symbol, trading_day);`;
+CREATE INDEX IF NOT EXISTS idx_ev_day ON events(store, symbol, trading_day);
+CREATE TABLE IF NOT EXISTS qi_samples (
+  store TEXT, symbol TEXT, trading_day TEXT, ts INTEGER, qi REAL, spread_ticks INTEGER,
+  dmid_1s REAL, dmid_10s REAL
+);
+CREATE INDEX IF NOT EXISTS idx_qi_day ON qi_samples(store, symbol, trading_day);`;
 
 function availableDays(): string[] {
   const dir = STORE === 'l3' ? `${ROOT}/mbo-parquet/trades/symbol=${SYM}` : `${ROOT}/ticks-parquet/trades/symbol=${SYM}`;
@@ -70,8 +88,18 @@ async function runDay(con: any, db: Database.Database, day: string): Promise<num
   const eng = new TapeEventEngine(TE);
   const sv = new SigmaEv(SG);
   const events: TapeEvent[] = [];
-  const evCtx: { sigma: number; dist: number | null }[] = [];
+  const evCtx: { sigma: number; dist: number | null; spread: number | null; qi: number | null }[] = [];
   let lastRv = 0, nEmitted = 0;
+  // ms-precision mid series (append on change) + 1s QI samples
+  const midTs: number[] = [], midPx: number[] = [];
+  let lastMid = NaN, lastQiTs = 0;
+  const qiRows: { ts: number; qi: number; spread: number }[] = [];
+  const topState = (): { mid: number; spread: number; qi: number } | null => {
+    const bb = book.bestBid(), ba = book.bestAsk();
+    if (bb == null || ba == null || ba <= bb) return null;
+    const bs = book.depthNear(bb, 0, 'bid').size, as = book.depthNear(ba, 0, 'ask').size;
+    return { mid: (bb + ba) / 2 * TICK, spread: ba - bb, qi: bs + as > 0 ? (bs - as) / (bs + as) : 0 };
+  };
 
   let SQL: string;
   if (STORE === 'l3') {
@@ -104,7 +132,8 @@ async function runDay(con: any, db: Database.Database, day: string): Promise<num
       const d = Math.abs(l.price - px);
       if (dist == null || d < dist) dist = d;
     }
-    evCtx.push({ sigma, dist });
+    const t = topState();
+    evCtx.push({ sigma, dist, spread: t ? t.spread : null, qi: t ? t.qi : null });
   };
 
   const stream = await con.stream(SQL);
@@ -124,7 +153,16 @@ async function runDay(con: any, db: Database.Database, day: string): Promise<num
         book.applyTrade({ ts, priceInt: pi, size: sz, isBuy: !!row[4], aggId: row[6], passId: row[7], execStart: !!row[8], execEnd: !!row[9] });
         if (ts >= lo) eng.onTrade({ ts, priceInt: pi, size: sz, buy: !!row[4], aggId: STORE === 'l3' ? row[6] : null, execStart: !!row[8], execEnd: !!row[9] }, events);
       }
+      // ms mid series (append on change; O(1) best reads)
+      if (typ === 'D') {
+        const t = topState();
+        if (t && t.mid !== lastMid) { lastMid = t.mid; midTs.push(ts); midPx.push(t.mid); }
+      }
       if (ts - lastRv >= 1000) { const m = book.mid(); if (m != null) sv.update(m, ts); lastRv = ts; }
+      if (ts >= lo && ts - lastQiTs >= 1000) {
+        const t = topState();
+        if (t && t.spread <= TE.NEAR_TICKS) { qiRows.push({ ts, qi: t.qi, spread: t.spread }); lastQiTs = ts; }
+      }
       if (ts >= lo) eng.tick(book, ts, events);
       for (let i = before; i < events.length; i++) flag(events[i]!);
     }
@@ -141,18 +179,33 @@ async function runDay(con: any, db: Database.Database, day: string): Promise<num
   const first = bars[0], last = bars[bars.length - 1];
   const drift = first && last && last.t > first.t ? (last.c - first.o) / ((last.t - first.t) / 60_000) : 0;
 
+  // ms-precision mid lookup: last known mid at or before t (binary search)
+  const midAt = (t: number): number | null => {
+    let loI = 0, hiI = midTs.length;
+    while (loI < hiI) { const m = (loI + hiI) >> 1; if (midTs[m]! <= t) loI = m + 1; else hiI = m; }
+    return loI > 0 ? midPx[loI - 1]! : null;
+  };
+  const msMo = (t0: number, hMs: number): number | null => {
+    const a = midAt(t0), b = midAt(t0 + hMs);
+    return a != null && b != null ? b - a : null;
+  };
   db.prepare(`DELETE FROM events WHERE store=? AND symbol=? AND trading_day=?`).run(STORE, SYM, day);
-  const ins = db.prepare(`INSERT INTO events (store,symbol,trading_day,ts,type,dir,intensity,price_int,sigma_ev,dist_level_pts,meta,mo_1m,mo_5m,mo_15m,mo_30m,drift_pt_min)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  db.prepare(`DELETE FROM qi_samples WHERE store=? AND symbol=? AND trading_day=?`).run(STORE, SYM, day);
+  const ins = db.prepare(`INSERT INTO events (store,symbol,trading_day,ts,type,dir,intensity,price_int,sigma_ev,dist_level_pts,meta,mo_1m,mo_5m,mo_15m,mo_30m,drift_pt_min,spread_ticks,qi,ms_250,ms_1s,ms_5s,ms_10s,ms_30s)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const insQi = db.prepare(`INSERT INTO qi_samples (store,symbol,trading_day,ts,qi,spread_ticks,dmid_1s,dmid_10s) VALUES (?,?,?,?,?,?,?,?)`);
   const tx = db.transaction(() => {
     for (let i = 0; i < events.length; i++) {
       const e = events[i]!, c = evCtx[i]!;
       const m0 = Math.floor(e.ts / 60_000) * 60_000;
       const base = idx.get(m0);
       const mo = (h: number) => { const a = idx.get(m0 + h * 60_000); return base != null && a != null ? a - base : null; };
-      ins.run(STORE, SYM, day, e.ts, e.type, e.dir, e.intensity, e.priceInt, c.sigma, c.dist, JSON.stringify(e.meta), mo(1), mo(5), mo(15), mo(30), drift);
+      ins.run(STORE, SYM, day, e.ts, e.type, e.dir, e.intensity, e.priceInt, c.sigma, c.dist, JSON.stringify(e.meta),
+        mo(1), mo(5), mo(15), mo(30), drift, c.spread, c.qi,
+        msMo(e.ts, 250), msMo(e.ts, 1_000), msMo(e.ts, 5_000), msMo(e.ts, 10_000), msMo(e.ts, 30_000));
       nEmitted++;
     }
+    for (const r of qiRows) insQi.run(STORE, SYM, day, r.ts, r.qi, r.spread, msMo(r.ts, 1_000), msMo(r.ts, 10_000));
   });
   tx();
   return nEmitted;
