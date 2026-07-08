@@ -20,6 +20,11 @@
       "testSet": "cracker-events.db, discovery days <= 2026-07-07 (same boundary as E2/E2b; later days accrue to the forward set via the nightly job)",
       "correction": "Benjamini-Hochberg FDR q=0.10 across the 8-cell E0.2 family (2 detectors x 4 declared horizons)",
       "status": "RESOLVED 2026-07-08 (stackimb NULL powered; wallcluster UNDERPOWERED, forward-accruing \u2014 see ledger)"
+    },
+    "live-book": {
+      "testSet": "forward FLIP/CONT tradable-signal sims (trading.db), days > 2026-07-08",
+      "correction": "single hypothesis; day-block permutation at resolution",
+      "status": "OPEN \u2014 accruing"
     }
   },
   "hypotheses": [
@@ -153,6 +158,16 @@
         "date": "2026-07-08",
         "verdict": "UNDERPOWERED by construction at every declared cell (350 events/40d L2-NQ, 128 L3-NQ; MDE 0.21-0.28 vs rho* 0.05). ES produced ZERO events on both stores - the thick uniform ES book never shows a 5x-median wall at 3pt scan range (a detector-scale fact, recorded for Phase 8). No verdict on the mechanism; forward-accrues via the nightly job; thresholds belong to the Phase-8 sweep. Descriptive only: L3-NQ 1s consistency +0.106 (n=128)."
       }
+    },
+    {
+      "id": "FLIP-HIIV-VETO",
+      "registered": "2026-07-08",
+      "family": "live-book",
+      "claim": "FLIP (clean-impulse) expectancy at fixed brackets is NEGATIVE on high-morning-IV days: trailing-tercile T3 of NDX morning IV (first-30-min mean, knowledge 10:00 ET, boundaries from all prior quantdata_features days) -> skip FLIP. In-sample: T3 41% WR / -6.9pt vs T2 67% / +30.8pt, day-block perm p=0.001 (11 vs 21 days, both directions hit, days interleaved) \u2014 BUT FAILED the independent-pool replication (skipped FLIPs flat across terciles: T2 -0.4 vs T3 -1.0pt), so this is a FORWARD hypothesis only, not armable. Resolve at >=30 forward FLIP sims spanning >=5 T3 days.",
+      "declaredSign": -1,
+      "horizonMin": null,
+      "twinGate": false,
+      "resolution": null
     }
   ],
   "sensitivityItems": [
