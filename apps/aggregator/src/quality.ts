@@ -224,7 +224,7 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
     }
     return { tier: 'gold', reason: `H: clean-impulse ${(signal as any).pattern ?? ''} score=${signal.score}` };
   }
-  if (strategy === 'I') return { tier: 'gold', reason: `I: passive-seller score=${signal.score}` };
+  // Strategy I retired 2026-07-08 — gate clause removed with it.
   // Strategy CONT: trend continuation re-entry. SHADOW mode (2026-06-03 promoted from silenced).
   // Empirical analysis on n=24 (May 20 – Jun 3) at TP=80/SL=70 → 66.7% WR, +30.5 EV/sig, +733 pts.
   // Promoted to gold-tier so signals broadcast to chart for visual monitoring. V3 will log

@@ -14,7 +14,8 @@ import { startStrategyE, stopStrategyE } from './rules-v2/strategy-e-index.js';
 import { startStrategyH, stopStrategyH } from './rules-v2/strategy-h-index.js';
 import { startStrategyEsFlip, stopStrategyEsFlip } from './rules-v2/strategy-es-flip-index.js';
 import { startStrategyEXPL, stopStrategyEXPL } from './rules-v2/strategy-expl-index.js';
-import { startStrategyI, stopStrategyI } from './rules-v2/strategy-i-index.js';
+// Strategy I (passive-seller) RETIRED 2026-07-08 (user-approved): 1 signal in
+// 6 weeks — detector thresholds effectively unreachable. Files deleted.
 import { startStrategyJ, stopStrategyJ } from './rules-v2/strategy-j-index.js';
 import { startStrategyCONT, stopStrategyCONT } from './rules-v2/strategy-cont-index.js';
 import { startStrategyRR, stopStrategyRR } from './rules-v2/strategy-rr-index.js';
@@ -184,8 +185,6 @@ async function main() {
     logger.info('strategy-ES-FLIP started (ES-tuned FLIP detector — SHADOW mode)');
     startStrategyEXPL();
     logger.info('strategy-EXPL started (pre-explosive move detector)');
-    startStrategyI();
-    logger.info('strategy-I started (passive-seller: short the pop)');
     startStrategyJ();
     logger.info('strategy-J started (TRAP: tick-level seller/buyer trap detector)');
     startStrategyCONT();
@@ -223,7 +222,6 @@ async function main() {
         stopStrategyH();
         stopStrategyEsFlip();
         stopStrategyEXPL();
-        stopStrategyI();
         stopStrategyJ();
         stopStrategyCONT();
         stopStrategyRR();
