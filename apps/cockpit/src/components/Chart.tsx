@@ -13,7 +13,7 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
-import { tradingDayFor, lookupLevelStyle, isStructuralLevel } from '@trading/contracts';
+import { tradingDayFor, lookupLevelStyle, isStructuralLevel, flipLongFcVeto, contShortRetraceVeto, cvdLongFloorOffTag } from '@trading/contracts';
 import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
 import { ZoneBandsPrimitive } from './zoneBands';
 import { SignalChartCard } from './SignalFeed';
@@ -1191,6 +1191,51 @@ export function Chart() {
           );
           setBarsVersion(v => v + 1);
 
+          // ── Heal INTERIOR holes in the cached range ──────────────────────
+          // A WS drop (feed reconnect, dev-server restart, tab throttle) can
+          // leave a short run of missing buckets INSIDE the cached range. The
+          // forward-only backfill below never re-fetches those — the cache is
+          // trusted on reload, so the hole persists across refreshes until the
+          // cache is manually cleared (observed 2026-07-06: NQ 09:33–09:37
+          // blank after a Vite restart even though /history/bars had the bars).
+          // Scan for gaps bounded on BOTH sides by present bars and short
+          // enough to be a dropout — not a legitimate overnight/weekend gap —
+          // then refetch just that span and merge. Refetching a genuinely-empty
+          // minute (no trades) returns nothing, so this is safe if over-eager.
+          const bucketMs = selectedTimeframe * 60_000;
+          const MAX_HOLE_MS = 90 * 60_000;   // ignore gaps > 90m (overnight/weekend)
+          const ksAll = Array.from(cache.keys()).sort((a, b) => a - b);
+          let holeFrom = Infinity, holeTo = -Infinity;
+          for (let i = 1; i < ksAll.length; i++) {
+            const prevMs = ksAll[i - 1]! * 1000, curMs = ksAll[i]! * 1000;
+            const gap = curMs - prevMs;
+            if (gap > bucketMs && gap <= MAX_HOLE_MS) {
+              holeFrom = Math.min(holeFrom, prevMs + bucketMs);
+              holeTo   = Math.max(holeTo,   curMs - bucketMs);
+            }
+          }
+          if (holeTo >= holeFrom) {
+            const url = `/history/bars?symbol=${selectedSymbol}&from=${holeFrom}&to=${holeTo + bucketMs}&interval=${selectedTimeframe}`;
+            const res = await fetch(url);
+            if (!cancelled && res.ok) {
+              const data = (await res.json()) as {
+                bars: { ts: number; open: number; high: number; low: number; close: number; buyVolume: number; sellVolume: number }[];
+              };
+              let added = false;
+              for (const bar of data.bars) {
+                const t = Math.floor(bar.ts / 1000);
+                if (!cache.has(t)) {
+                  cache.set(t, {
+                    open: bar.open, high: bar.high, low: bar.low, close: bar.close,
+                    volume: (bar.buyVolume ?? 0) + (bar.sellVolume ?? 0),
+                  });
+                  added = true;
+                }
+              }
+              if (added && !cancelled) { renderFromCache(cache, /* anchorVisible= */ false); setBarsVersion(v => v + 1); }
+            }
+          }
+
           // Backfill the gap between last cached bar and now. Skip if the
           // gap is smaller than one TF bucket (cache is already current).
           const ks = Array.from(cache.keys()).sort((a, b) => a - b);
@@ -2052,9 +2097,39 @@ export function Chart() {
         } else if (ruleId === 'clean-impulse') {
           shape = isLong ? 'arrowUp' : 'arrowDown';
           const cfWarning = regimeAlignment('clean-impulse', sig.direction, sig.ts, regimeCheckpoints) === 'against';
-          const rsScore = (sig as any).rsScore ?? (sig as any).rs_score;
-          const rsStr = rsScore != null ? ` ${rsScore}` : '';
-          label = (isLong ? 'FLIP ↑' : 'FLIP ↓') + rsStr + (cfWarning ? ' !' : '');
+          const warn = cfWarning ? ' !' : '';
+          // FLIP-long F_C shadow veto (frozen; @trading/contracts). SHADOW-ONLY — these
+          // are NOT traded; the KEPT / VETO'd tag just renders a visual forward OOS record.
+          // rsScore dropped from the label 2026-07-08 — it's inert as a W/L discriminator
+          // (audit: flat across outcomes, doesn't gate flip/cont). Veto'd = gray so the
+          // KEPT (amber) cohort stands out.
+          if (isLong) {
+            // CVD-LONGFLOOR-OFF forward cohort (long floor disabled 2026-07-08):
+            // longs the OLD cvd<=-1000 floor would have vetoed. Red so the
+            // cohort is visually trackable like the FC KEPT/VETO'd record.
+            const lfo = cvdLongFloorOffTag(sig as unknown as { direction?: string; cvdSession?: number });
+            if (lfo.tagged) {
+              return {
+                time: bucket as UTCTimestamp,
+                position,
+                color: '#ef4444',
+                shape,
+                text: `FLIP ↑ CVD-LONGFLOOR-OFF` + warn,
+                size: 4,
+              };
+            }
+            const fc = flipLongFcVeto(sig as unknown as { deltaT?: number; delta15?: number });
+            label = `FLIP ↑ ${fc.veto ? "VETO'd" : 'KEPT'}` + warn;
+            return {
+              time: bucket as UTCTimestamp,
+              position,
+              color: fc.veto ? '#9ca3af' : (cfWarning ? '#fb923c' : '#f59e0b'),
+              shape,
+              text: label,
+              size: 4,
+            };
+          }
+          label = 'FLIP ↓' + warn;
           return {
             time: bucket as UTCTimestamp,
             position,
@@ -2133,7 +2208,35 @@ export function Chart() {
           // CONT-REENTRY shadow signal (Strategy CONT). Violet to stand apart from
           // FLIP(amber)/EXPL(green)/RR(purple)/FADE(cyan)/BNC(cyan).
           shape = isLong ? 'arrowUp' : 'arrowDown';
-          label = (isLong ? 'CONT-REENTRY-SHADOW ↑' : 'CONT-REENTRY-SHADOW ↓') + `·${sig.score}`;
+          // CONT-short shallow-retrace shadow tag (frozen; @trading/contracts). SHADOW-ONLY —
+          // deep retrace (>0.35) = VETO'd (gray), shallow = KEPT (violet). Short only; longs
+          // keep the plain violet label. See cont_short_gate_audit.ts / BACKLOG §2b.
+          if (!isLong) {
+            const csr = contShortRetraceVeto(sig as unknown as { retracePct?: number });
+            label = `CONT ↓ ${csr.veto ? "VETO'd" : 'KEPT'}·${sig.score}`;
+            return {
+              time: bucket as UTCTimestamp,
+              position,
+              color: csr.veto ? '#9ca3af' : '#8b5cf6',
+              shape,
+              text: label,
+              size: 4,
+            };
+          }
+          // CVD-LONGFLOOR-OFF forward cohort (long floor disabled 2026-07-08):
+          // CONT longs the OLD cvd<=-1000 floor would have vetoed. Red cohort.
+          const contLfo = cvdLongFloorOffTag(sig as unknown as { direction?: string; cvdSession?: number });
+          if (contLfo.tagged) {
+            return {
+              time: bucket as UTCTimestamp,
+              position,
+              color: '#ef4444',
+              shape,
+              text: `CONT ↑ CVD-LONGFLOOR-OFF`,
+              size: 4,
+            };
+          }
+          label = `CONT-REENTRY-SHADOW ↑·${sig.score}`;
           return {
             time: bucket as UTCTimestamp,
             position,

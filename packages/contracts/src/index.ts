@@ -315,6 +315,77 @@ export function tradingDayFor(tsMs: number): string {
   return (minutesOfDay < SESSION_END_MIN) ? today : plusDays(today, 1);
 }
 
+// --- FLIP-long "F_C" shadow veto (FROZEN 2026-07-08) ------------------------
+//
+// Detection-side filter for FLIP-long tradables surfaced by the dream audit
+// (flip_long_dream_audit.ts / flip_long_filter_backtest.ts). Rejects a flip when:
+//   deltaT  > 1200  → reversal bar is a violent buy-spike (the loser fingerprint)
+//   delta15 > -1000 → no real prior sell-flush to reverse into (nothing to exhaust)
+//
+// SHADOW-ONLY. This never blocks a live order — it tags the signal KEPT/VETO'd so
+// a forward out-of-sample record accrues (pipeline reason note + chart marker).
+// Backtest (in-sample, TP80/SL55): recent-era veto cohort 5W/20L; KEEP lifts
+// 43%→61% WR, EV +1.7→+27pt, permutation p=0.002. Survives regime conditioning:
+// within-day paired KEEP 67% vs VETO 21% (same-day, regime held exact), and the
+// veto cohort still loses on up days (29% vs 60%). NOT validated OOS (true-OOS
+// n=16, underpowered) — thresholds are FROZEN pending shadow-forward. See BACKLOG #2.
+// DO NOT TUNE these constants; a new threshold is a new hypothesis needing fresh data.
+export const FC_DELTA_T_MAX = 1200;
+export const FC_DELTA15_FLUSH_MAX = -1000;
+
+export type FcVerdict = 'KEPT' | 'VETO';
+
+export function flipLongFcVeto(
+  sig: { deltaT?: number; delta15?: number },
+): { veto: boolean; verdict: FcVerdict; reason: string } {
+  const reasons: string[] = [];
+  if (typeof sig.deltaT === 'number' && sig.deltaT > FC_DELTA_T_MAX) reasons.push(`deltaT>${FC_DELTA_T_MAX}`);
+  if (typeof sig.delta15 === 'number' && sig.delta15 > FC_DELTA15_FLUSH_MAX) reasons.push(`delta15>${FC_DELTA15_FLUSH_MAX}`);
+  const veto = reasons.length > 0;
+  return { veto, verdict: veto ? 'VETO' : 'KEPT', reason: reasons.join('|') };
+}
+
+// --- CONT-short "CSR" shallow-retrace shadow tag (FROZEN 2026-07-08) ---------
+//
+// Detection-side lever for cont-reentry SHORT tradables (cont_short_gate_audit.ts). The single
+// differentiator that separated winners from losers is the retrace depth into the re-entry:
+//   retracePct <= 0.35 (shallow) → 8W/1L (89%)     KEEP
+//   retracePct  > 0.35 (deep)    → 10W/10L (50%)   VETO  (coin flip — drags the book)
+// The detector already scores the shallow zone +10 (strategy-cont.ts) but still TAKES the deep
+// 0.35–0.48 band. This tag flags the deep ones. SHORT ONLY — CONT-long was not tested; do not
+// extrapolate. SHADOW-ONLY: never blocks an order, just tags KEPT/VETO'd for a forward OOS record.
+// n=29 (18W/11L), exploratory: retrace-band tightening of an EXISTING scored feature, not a new
+// gate. FROZEN pending shadow-forward — do not tune. See BACKLOG §2b.
+export const CONT_SHORT_RETRACE_MAX = 0.35;
+
+export function contShortRetraceVeto(
+  sig: { retracePct?: number },
+): { veto: boolean; verdict: FcVerdict; reason: string } {
+  const veto = typeof sig.retracePct === 'number' && sig.retracePct > CONT_SHORT_RETRACE_MAX;
+  return { veto, verdict: veto ? 'VETO' : 'KEPT', reason: veto ? `retrace>${CONT_SHORT_RETRACE_MAX}` : '' };
+}
+
+// --- CVD-LONGFLOOR-OFF forward tag (FROZEN 2026-07-08) ------------------------
+//
+// The long-side session-CVD floor (block longs when cvdSession <= -1000) was
+// DISABLED 2026-07-08: its founding evidence (4 trades, 0W/4L, 06-17) inverted
+// on the gate's own forward sample (40 vetoed longs = 20W/19L +10.6pt avg;
+// deepest-CVD cohort BEST at +24.5pt), and session-CVD alignment is a
+// directional-alignment filter — a class already rejected OOS for FLIP (fires
+// against momentum by design). Registered as CVD-LONGFLOOR-OFF (live-book).
+// This tag marks long OPENs that the old floor WOULD have vetoed, so the
+// cohort is visually trackable on the chart and queryable in the DB.
+// FROZEN at the old floor value — do not tune. Short floor (+3000) unchanged.
+export const CVD_LFO_OLD_FLOOR = -1000;
+
+export function cvdLongFloorOffTag(
+  sig: { direction?: string; cvdSession?: number },
+): { tagged: boolean; reason: string } {
+  const tagged = sig.direction === 'long'
+    && typeof sig.cvdSession === 'number' && sig.cvdSession <= CVD_LFO_OLD_FLOOR;
+  return { tagged, reason: tagged ? `cvd=${Math.round(sig.cvdSession!)}<=${CVD_LFO_OLD_FLOOR}` : '' };
+}
+
 // --- Tick stream types (Phase 1: tick-store) ---
 
 export interface TickTrade {

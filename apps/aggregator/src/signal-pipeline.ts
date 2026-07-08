@@ -23,6 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { ConfluenceSignal } from '@trading/contracts';
+import { flipLongFcVeto, contShortRetraceVeto, cvdLongFloorOffTag } from '@trading/contracts';
 import { config } from './config.js';
 import { classifySignalQuality } from './quality.js';
 import type { QualityContext } from './quality.js';
@@ -204,7 +205,41 @@ export function evaluateActionability(
   if (ctx.hasOpenTrade) {
     return { action: 'SKIP_COOLDOWN', reason: 'V3 cooldown: a trade is already open' };
   }
-  // Prepend shadow note (if any) so reviewer can later filter for
-  // would-have-blocked rows: `WHERE reason LIKE '[D15-SHADOW:%'`.
-  return { action: 'OPEN', reason: flipLongDelta15ShadowNote + qualifiedReason };
+  // ── FLIP-long F_C shadow veto (2026-07-08) ─────────────────────────────
+  // Tag the OPEN tradable book KEPT vs VETO under the frozen F_C filter
+  // (deltaT>1200 OR delta15>-1000). SHADOW-ONLY — does NOT block; accrues a
+  // forward OOS record on the rows that actually opened. Backtest: recent-era
+  // veto cohort 5W/20L, KEEP lifts 43%→61% WR (perm p=0.002), survives regime
+  // conditioning (within-day paired KEEP 67% vs VETO 21%). NOT validated OOS
+  // (n=16). See BACKLOG #2. Query: `WHERE reason LIKE '[FC-VETO:%'` (or FC-KEPT).
+  let flipLongFcNote = '';
+  if (signal.ruleId === 'clean-impulse' && pattern === 'FLIP' && direction === 'long') {
+    const fc = flipLongFcVeto(signal as unknown as { deltaT?: number; delta15?: number });
+    flipLongFcNote = fc.veto ? `[FC-VETO: ${fc.reason}] ` : '[FC-KEPT] ';
+  }
+
+  // ── CONT-short shallow-retrace shadow tag (2026-07-08) ─────────────────
+  // Tag cont-reentry SHORT OPEN rows KEPT vs VETO under the frozen retrace lever
+  // (retracePct>0.35 = deep = coin flip). SHADOW-ONLY. Short only. Backtest: shallow
+  // 8W/1L (89%) vs deep 10W/10L (50%). See BACKLOG §2b. Query: `reason LIKE '[CSR-%'`.
+  let contShortCsrNote = '';
+  if (signal.ruleId === 'cont-reentry' && direction === 'short') {
+    const csr = contShortRetraceVeto(signal as unknown as { retracePct?: number });
+    contShortCsrNote = csr.veto ? `[CSR-VETO: ${csr.reason}] ` : '[CSR-KEPT] ';
+  }
+
+  // ── CVD-LONGFLOOR-OFF forward tag (2026-07-08) ──────────────────────────
+  // The long-side CVD floor was DISABLED (see config.ts; registered
+  // CVD-LONGFLOOR-OFF). Long OPENs that the OLD floor (cvdSession ≤ -1000)
+  // would have vetoed get tagged so the cohort is queryable
+  // (`reason LIKE '[CVD-LFO%'`) and chart-visible for forward tracking.
+  let cvdLfoNote = '';
+  if (direction === 'long') {
+    const lfo = cvdLongFloorOffTag({ direction, cvdSession: ctx.cvdSession });
+    if (lfo.tagged) cvdLfoNote = `[CVD-LFO: ${lfo.reason}] `;
+  }
+
+  // Prepend shadow notes (if any) so reviewer can later filter for
+  // would-have-blocked rows: `WHERE reason LIKE '[D15-SHADOW:%'` / `'[FC-%'` / `'[CSR-%'` / `'[CVD-LFO%'`.
+  return { action: 'OPEN', reason: cvdLfoNote + flipLongFcNote + contShortCsrNote + flipLongDelta15ShadowNote + qualifiedReason };
 }

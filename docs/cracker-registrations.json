@@ -178,6 +178,16 @@
       "horizonMin": null,
       "twinGate": false,
       "resolution": null
+    },
+    {
+      "id": "CVD-LONGFLOOR-OFF",
+      "registered": "2026-07-08",
+      "family": "live-book",
+      "claim": "Disabling the long-side session-CVD floor (was: block longs when cvdSession <= -1000) is net-positive. Basis: the floor's own forward sample INVERTED its founding claim (armed 06-17 on 4 trades 0W/4L; forward 40 vetoed longs = 20W/19L +10.6pt avg, deepest-CVD cohort BEST at +24.5pt, kept longs -3.3pt same window; contrast ns at p=0.45 but the founding evidence is refuted and session-CVD alignment = directional-alignment filter class already rejected OOS for FLIP). LIVE CHANGE user-approved 2026-07-08: config cvdLongFloor -1000 -> -999999; SHORT floor (+3000) unchanged (its forward sample blocks -16pt/trade losers). Cohort tracking: newly-opened longs with cvd<=-1000 tagged '[CVD-LFO...]' in reason + red 'FLIP/CONT (arrow) CVD-LONGFLOOR-OFF' chart markers (cvdLongFloorOffTag in @trading/contracts, FROZEN at old floor). RESOLUTION: at >=20 tagged OPEN trades or 2026-10-08 \u2014 RE-ARM the floor only if the tagged cohort is negative AND worse than the untagged long book (day-block).",
+      "declaredSign": 1,
+      "horizonMin": null,
+      "twinGate": false,
+      "resolution": null
     }
   ],
   "sensitivityItems": [

@@ -73,13 +73,19 @@ export const config = {
     rthCloseEt: '15:54:00',
 
     // CVD regime gates at signal entry (anchored at 09:30 ET).
-    // 2026-06-17: cvdLongFloor -3000 → -1000. Flip-long diagnostic (69 NQ
-    // clean-impulse longs): the cvd<-1000 cohort was 0W/4L (all max-loss),
-    // permutation p≈0.025 vs random. Cuts only losers; cont-reentry longs have
-    // 0 trades in this zone so no collateral effect. Small/in-sample (test had
-    // no such trades) — low-downside, concept-driven tweak, not a proven edge.
-    cvdLongFloor: -1000,   // LONG entries blocked when cvdSession ≤ this
-    cvdShortFloor: 3000,   // SHORT entries blocked when cvdSession ≥ this
+    // 2026-06-17: cvdLongFloor -3000 → -1000 (armed on 4 trades, 0W/4L, p≈0.025;
+    // the comment itself said "not a proven edge").
+    // 2026-07-08: LONG FLOOR DISABLED (user-approved). Its own forward sample
+    // inverted the founding claim: 40 vetoed longs = 20W/19L +10.6pt avg, and
+    // the DEEPEST-CVD cohort (-28k..-5k) was the BEST at +24.5pt/trade while
+    // kept longs lost -3.3pt on the same window. Session-CVD alignment is a
+    // directional-alignment filter — a class already rejected OOS for FLIP
+    // (fires against momentum by design; Friday 06-12 post-mortem). Registered
+    // CVD-LONGFLOOR-OFF (live-book family); newly-opened rows tagged
+    // '[CVD-LFO...]' in reason + marked on the chart for forward tracking.
+    // Short floor UNCHANGED: its forward sample blocks real losers (-16pt avg).
+    cvdLongFloor: -999_999, // LONG floor DISABLED 2026-07-08 (was -1000; see above)
+    cvdShortFloor: 3000,    // SHORT entries blocked when cvdSession ≥ this
 
     // Direction-specific behavior baked in from backtest findings:
     // dropFlipShorts: 2026-06-04 flipped TRUE → FALSE after 30-day analysis showed

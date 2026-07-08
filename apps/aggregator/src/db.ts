@@ -622,15 +622,21 @@ export const db = {
   // would auto-trade under pipeline.activeMode='live'. Used by /signals/marks
   // to render the TRADABLE button's markers on the chart.
   tradableOpenSignalsForSymbol(symbol: string, sinceMs: number, limit: number): ConfluenceSignal[] {
+    // cvd_session (decision-time session CVD) rides along so the chart can
+    // render the CVD-LONGFLOOR-OFF forward tag (cvdLongFloorOffTag in
+    // @trading/contracts) — it lives on tradable_signals, not in the payload.
     return _db.prepare(`
-      SELECT s.payload
+      SELECT s.payload, t.cvd_session
       FROM tradable_signals t
       JOIN signals s ON s.id = t.signal_id
       WHERE t.symbol = ? AND t.signal_ts >= ? AND t.action = 'OPEN' AND t.shadow = 0
       ORDER BY t.signal_ts DESC
       LIMIT ?
     `).all(symbol, sinceMs, limit)
-      .map((r) => JSON.parse((r as { payload: string }).payload));
+      .map((r) => ({
+        ...JSON.parse((r as { payload: string }).payload),
+        cvdSession: (r as { cvd_session: number | null }).cvd_session ?? undefined,
+      }));
   },
 
   // Returns signals from rules that are in force-shadow (logged but never
