@@ -143,6 +143,68 @@ function calm(e: TapeEventEngine, b: MarketBook, out: TapeEvent[], t0: number, s
   check('T9 refractory: burst = one event', out.filter((x) => x.type === 'imbalance' && x.dir === 1).length === 1);
 }
 
+// ── T11: E0.2 stacked-imbalance (footprint diagonal stack, hand-computed) ──
+{
+  const b = mkBook(), e = new TapeEventEngine(), out: TapeEvent[] = [];
+  let ts = 1_000_000;
+  // sells of 2 at MID−1..MID+1, buys of 10 at MID..MID+2:
+  // buy(p) vs sell(p−1) diagonals = 10/2 = 5 ≥ 3 at all three prices → 3-stack, dir +1
+  for (const pi of [MID - 1, MID, MID + 1]) e.onTrade({ ts: ts += 50, priceInt: pi, size: 2, buy: false }, out);
+  for (const pi of [MID, MID + 1, MID + 2]) e.onTrade({ ts: ts += 50, priceInt: pi, size: 10, buy: true }, out);
+  e.tick(b, ts + 100, out);
+  const si = out.filter((x) => x.type === 'stackimb');
+  const wantInt = 3 * Math.log1p(5);
+  check('T11a stacked-imbalance fires on 3-level 5:1 buy stack, dir +1', si.length === 1 && si[0]!.dir === 1 && si[0]!.meta.len === 3, `${si.length} ev len=${si[0]?.meta.len}`);
+  check('T11b intensity = Σ log1p(ratio) hand-computed', si.length === 1 && Math.abs(si[0]!.intensity - wantInt) < 1e-9, `${si[0]?.intensity.toFixed(4)} vs ${wantInt.toFixed(4)}`);
+  // 2-level stack (gap breaks the run) → silent
+  const b2 = mkBook(), e2 = new TapeEventEngine(), out2: TapeEvent[] = [];
+  ts = 2_000_000;
+  for (const pi of [MID - 1, MID]) e2.onTrade({ ts: ts += 50, priceInt: pi, size: 2, buy: false }, out2);
+  for (const pi of [MID, MID + 1, MID + 3]) e2.onTrade({ ts: ts += 50, priceInt: pi, size: 10, buy: true }, out2);   // MID+3 not contiguous
+  e2.tick(b2, ts + 100, out2);
+  check('T11c two contiguous imbalanced levels are NOT a stack', out2.filter((x) => x.type === 'stackimb').length === 0);
+}
+
+// ── T12: E0.2 wall-cluster (chained outsized walls vs trailing median) ──
+{
+  const mkDeep = (): MarketBook => {
+    const b = new MarketBook('NQ', 0.25);
+    // baseline book: 6 bid + 6 ask levels of size 10 inside the scan range
+    for (let i = 1; i <= 6; i++) {
+      b.applyDepth({ ts: 0, priceInt: MID - i, size: 10, isBid: true });
+      b.applyDepth({ ts: 0, priceInt: MID + i, size: 10, isBid: false });
+    }
+    return b;
+  };
+  const b = mkDeep(), e = new TapeEventEngine(), out: TapeEvent[] = [];
+  // warm the per-side level-size median rings (median = 10)
+  let ts = 1_000_000;
+  for (let i = 0; i < TE_CFG.MED_WARMUP + 5; i++) {
+    e.onTrade({ ts: ts += 1000, priceInt: MID + (i % 2 ? 1 : -1), size: 2, buy: i % 2 === 0 }, out);
+    e.tick(b, ts + 500, out);
+  }
+  out.length = 0;
+  // 3 bid walls of 60 = 6× median(10) ≥ 5×, gaps 3 ticks ≤ 8 → one cluster, dir +1, intensity 180/10 = 18
+  for (const pi of [MID - 3, MID - 6, MID - 9]) b.applyDepth({ ts, priceInt: pi, size: 60, isBid: true });
+  e.onTrade({ ts: ts += 1000, priceInt: MID, size: 2, buy: true }, out);
+  e.tick(b, ts + 500, out);
+  const wc = out.filter((x) => x.type === 'wallcluster');
+  check('T12a wall-cluster fires on 3 chained 6× bid walls, dir +1', wc.length === 1 && wc[0]!.dir === 1 && wc[0]!.meta.walls === 3, `${wc.length} ev walls=${wc[0]?.meta.walls}`);
+  check('T12b intensity = cluster mass / median = 18', wc.length === 1 && Math.abs(wc[0]!.intensity - 18) < 1e-9, `${wc[0]?.intensity.toFixed(2)}`);
+  // two walls only → silent
+  const b2 = mkDeep(), e2 = new TapeEventEngine(), out2: TapeEvent[] = [];
+  ts = 3_000_000;
+  for (let i = 0; i < TE_CFG.MED_WARMUP + 5; i++) {
+    e2.onTrade({ ts: ts += 1000, priceInt: MID + (i % 2 ? 1 : -1), size: 2, buy: i % 2 === 0 }, out2);
+    e2.tick(b2, ts + 500, out2);
+  }
+  out2.length = 0;
+  for (const pi of [MID - 3, MID - 6]) b2.applyDepth({ ts, priceInt: pi, size: 60, isBid: true });
+  e2.onTrade({ ts: ts += 1000, priceInt: MID, size: 2, buy: true }, out2);
+  e2.tick(b2, ts + 500, out2);
+  check('T12c two walls are NOT a cluster', out2.filter((x) => x.type === 'wallcluster').length === 0);
+}
+
 // ── T10: determinism ──
 {
   const run = (): string => {

@@ -50,6 +50,37 @@
 // the five-detector family; ES = sign-consistency; structure-zone proximity
 // (within band of an active registry level) recorded as a CONDITIONING flag
 // per the F5b finding, never as a filter.
+//
+// ═══ E0.2 BATCH (user-gated shapes, REGISTERED 2026-07-08 before any outcome
+// scan; the go was given this session — see ledger) ═══
+// Two additional detectors, canonical order-flow definitions, DIMENSIONLESS
+// triggers, same refractory/warmup/coverage discipline. Both run on BOTH
+// stores (stacked-imbalance needs trades+aggressor flag only; wall-cluster
+// needs displayed depth only — no lifecycle), so L2-NQ is the primary screen.
+//
+//   STACKED-IMBALANCE — the footprint diagonal-stack: within the WIN_MS trade
+//     footprint, ≥ STACK_MIN consecutive price levels (strict 1-tick steps)
+//     each diagonally imbalanced ≥ STACK_RATIO:1 in the same direction
+//     (buy-stack at p: buyVol(p) ≥ STACK_RATIO × max(sellVol(p−1tick), 1);
+//     sell-stack mirrored vs buyVol(p+1tick); the 1-contract floor is the
+//     standard zero-diagonal rule). Direction = the imbalanced side.
+//     Intensity = Σ log1p(ratio) over the run — monotone in stack depth AND
+//     strength. Evaluated at TICK_MS on the sane-book gate; best run per side.
+//   WALL-CLUSTER — a defended-zone read: ≥ WC_MIN walls on ONE side within
+//     WC_SCAN_MULT×NEAR_TICKS of mid, chained with inter-wall gaps
+//     ≤ WC_GAP_MULT×NEAR_TICKS, where a WALL = displayed level size
+//     ≥ WALL_MULT × the side's trailing-median level size (MedianRing per
+//     side over per-tick median level size in the scan range; MED_WARMUP
+//     applies). Direction = bid cluster ⇒ +1 (defense below), ask ⇒ −1.
+//     Intensity = cluster mass / trailing median (dimensionless).
+//
+// E2c DECLARATION (frozen now, before any outcome exists): both rulers per the
+// E2b amendment — DECLARED horizons {1s, 10s} (ms, mid-based) AND {1m, 5m}
+// (minute, drift-adjusted); two-sided (defense-holds vs magnet/spoof stories
+// both live); dose-response IC primary; BH-FDR q=0.10 across the 8-cell E0.2
+// family (2 detectors × 4 declared horizons); primary screen L2-NQ, L3-NQ +
+// ES = sign-consistency; discovery days ≤ 2026-07-07 (lockbox rule carries);
+// structure-zone proximity = conditioning flag only, never a filter.
 
 import type { MarketBook } from './market-book.js';
 
@@ -67,10 +98,17 @@ export const TE_CFG = {
   PULL_MULT: 5,
   REFILL_MIN: 5,
   REFRACTORY_MS: 30_000,
+  // ── E0.2 batch (frozen 2026-07-08, pre-outcome) ──
+  STACK_MIN: 3,           // consecutive imbalanced prices to call a stack
+  STACK_RATIO: 3,         // the canonical 3:1 footprint diagonal ratio
+  WALL_MULT: 5,           // wall = level size ≥ 5× trailing-median level size
+  WC_MIN: 3,              // walls per cluster
+  WC_SCAN_MULT: 3,        // scan range = 3 × NEAR_TICKS around mid
+  WC_GAP_MULT: 0.5,       // max inter-wall gap = 0.5 × NEAR_TICKS
 };
 export type TeCfg = typeof TE_CFG;
 
-export type TapeEventType = 'sweep' | 'absorption' | 'imbalance' | 'replenishment' | 'wallpull';
+export type TapeEventType = 'sweep' | 'absorption' | 'imbalance' | 'replenishment' | 'wallpull' | 'stackimb' | 'wallcluster';
 
 export interface TapeEvent {
   ts: number;
@@ -102,6 +140,8 @@ export class TapeEventEngine {
   private lastTick = -Infinity;
   private absMed = new MedianRing(TE_CFG.MED_RING);
   private pullMed = new MedianRing(TE_CFG.MED_RING);
+  private wcMedBid = new MedianRing(TE_CFG.MED_RING);
+  private wcMedAsk = new MedianRing(TE_CFG.MED_RING);
   private refractory = new Map<string, number>();   // `${type}|${dir}` → last emit ts
   // sweep grouping state
   private curAgg: { id: string; ts: number; prices: Set<number>; size: number; buy: boolean; lastPi: number } | null = null;
@@ -210,6 +250,78 @@ export class TapeEventEngine {
         this.emit(out, { ts, type: 'wallpull', dir, intensity: total / med, priceInt: mid, meta: { pulledBid: pb.value, pulledAsk: pa.value } });
       }
       this.pullMed.push(total);
+    }
+
+    // ── E0.2 stacked-imbalance: footprint diagonal stacks in the window ──
+    if (vol > 0) {
+      const fp = new Map<number, { b: number; s: number }>();
+      for (let i = this.head; i < this.win.length; i++) {
+        const w = this.win[i]!;
+        let f = fp.get(w.priceInt);
+        if (!f) { f = { b: 0, s: 0 }; fp.set(w.priceInt, f); }
+        if (w.buy) f.b += w.size; else f.s += w.size;
+      }
+      const bestRun = (up: boolean): { lo: number; hi: number; len: number; sum: number } | null => {
+        // buy-stack at p: buy(p) ≥ R × max(sell(p−1), 1); sell-stack mirrored vs buy(p+1)
+        const ok = (p: number): number | null => {
+          const f = fp.get(p);
+          if (!f) return null;
+          const dom = up ? f.b : f.s;
+          if (dom <= 0) return null;
+          const oppF = fp.get(up ? p - 1 : p + 1);
+          const opp = Math.max(up ? (oppF?.s ?? 0) : (oppF?.b ?? 0), 1);
+          return dom >= this.cfg.STACK_RATIO * opp ? dom / opp : null;
+        };
+        let best: { lo: number; hi: number; len: number; sum: number } | null = null;
+        const prices = [...fp.keys()].sort((a, b) => a - b);
+        for (let i = 0; i < prices.length; i++) {
+          let p = prices[i]!, len = 0, sum = 0;
+          const lo = p;
+          for (;;) {
+            const r = ok(p);
+            if (r == null) break;
+            len++; sum += Math.log1p(r); p++;
+          }
+          if (len >= this.cfg.STACK_MIN && (!best || sum > best.sum)) best = { lo, hi: p - 1, len, sum };
+        }
+        return best;
+      };
+      for (const up of [true, false]) {
+        const r = bestRun(up);
+        if (r) this.emit(out, { ts, type: 'stackimb', dir: up ? 1 : -1, intensity: r.sum, priceInt: mid, meta: { lo: r.lo, hi: r.hi, len: r.len } });
+      }
+    }
+
+    // ── E0.2 wall-cluster: chained outsized resting walls on one side near mid ──
+    {
+      const scan = Math.round(this.cfg.WC_SCAN_MULT * this.cfg.NEAR_TICKS);
+      const gap = Math.max(1, Math.round(this.cfg.WC_GAP_MULT * this.cfg.NEAR_TICKS));
+      const lad = book.ladder(scan * 2);
+      for (const side of ['bid', 'ask'] as const) {
+        const ring = side === 'bid' ? this.wcMedBid : this.wcMedAsk;
+        const lvls = (side === 'bid' ? lad.bids : lad.asks)
+          .filter((l) => Math.abs(l.priceInt - mid) <= scan && l.size > 0)
+          .sort((a, b) => a.priceInt - b.priceInt);
+        const med = ring.median();
+        if (ring.n >= this.cfg.MED_WARMUP && isFinite(med) && med > 0) {
+          const walls = lvls.filter((l) => l.size >= this.cfg.WALL_MULT * med);
+          // chain walls with inter-wall gaps ≤ gap ticks; best chain per side
+          let best: { n: number; mass: number; lo: number; hi: number } | null = null;
+          let i = 0;
+          while (i < walls.length) {
+            let j = i, mass = walls[i]!.size;
+            while (j + 1 < walls.length && walls[j + 1]!.priceInt - walls[j]!.priceInt <= gap) { j++; mass += walls[j]!.size; }
+            const n = j - i + 1;
+            if (n >= this.cfg.WC_MIN && (!best || mass > best.mass)) best = { n, mass, lo: walls[i]!.priceInt, hi: walls[j]!.priceInt };
+            i = j + 1;
+          }
+          if (best) {
+            const dir: 1 | -1 = side === 'bid' ? 1 : -1;   // bid cluster = defense below ⇒ bullish
+            this.emit(out, { ts, type: 'wallcluster', dir, intensity: best.mass / med, priceInt: mid, meta: { walls: best.n, lo: best.lo, hi: best.hi } });
+          }
+        }
+        if (lvls.length >= 4) ring.push(lvls.map((l) => l.size).sort((a, b) => a - b)[lvls.length >> 1]!);
+      }
     }
   }
 

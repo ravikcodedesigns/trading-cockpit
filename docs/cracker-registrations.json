@@ -15,6 +15,11 @@
       "testSet": "cracker-events.db sweep events with banked ms outcomes (L3-NQ primary, L3-ES consistency) \u2014 Gate-2 cost adjudication of the SWEEP-1S edge, not a new directional hypothesis",
       "correction": "none (single pre-declared decision rule; CIs via day-block bootstrap)",
       "status": "RESOLVED 2026-07-08 (see ledger)"
+    },
+    "e02-shapes": {
+      "testSet": "cracker-events.db, discovery days <= 2026-07-07 (same boundary as E2/E2b; later days accrue to the forward set via the nightly job)",
+      "correction": "Benjamini-Hochberg FDR q=0.10 across the 8-cell E0.2 family (2 detectors x 4 declared horizons)",
+      "status": "OPEN \u2014 scan launched 2026-07-08"
     }
   },
   "hypotheses": [
@@ -122,6 +127,26 @@
         "date": "2026-07-08",
         "verdict": "NO-TRADE (taker), all cells, both symbols. Decision rule triggered: L=0 upper-bound net <= 0 at every H. PRIMARY (NQ top-10%, L=0, H=1s, VALID): net -1.574pt CI[-1.762,-1.344], 0/5 days positive; exact L=250ms cells -2.0 to -2.4pt. ES best cell -0.019 CI[-0.400,+0.179] at L=0/H=5s, -0.49 at L=250. QI overlay does not rescue (all neg). Honest caveat: VALID-period gross tail continuation (+0.22pt L=0 H=1s) far below full-sample descriptive (+0.836) -- SWEEP-1S stands as a PREDICTION edge; the taker-tradable magnitude does not exist. Open paths: maker/passive execution (needs queue-position replay, Phase-5 scope), QI as execution overlay for the existing live book, composition."
       }
+    },
+    {
+      "id": "E0.2-STACKIMB",
+      "registered": "2026-07-08",
+      "family": "e02-shapes",
+      "claim": "Footprint diagonal-stack imbalance (>=3 consecutive prices each >=3:1 diagonally imbalanced, canonical definition; intensity = sum log1p(ratio)) predicts direction-signed continuation. Declared horizons {1s, 10s} ms mid-based + {1m, 5m} drift-adjusted; TWO-SIDED (continuation vs exhaustion both live). Primary screen L2-NQ; L3-NQ + ES sign-consistency. Dose-response IC, chrono 60/40, day-block bootstrap. Smoke 06-18: 1,070 events L2-NQ / 895 L3-NQ.",
+      "declaredSign": 0,
+      "horizonMin": 0.017,
+      "twinGate": false,
+      "resolution": null
+    },
+    {
+      "id": "E0.2-WALLCLUSTER",
+      "registered": "2026-07-08",
+      "family": "e02-shapes",
+      "claim": "Wall-cluster (>=3 chained resting walls, each >=5x trailing-median level size, within 3xNEAR_TICKS of mid, gaps <=0.5xNEAR_TICKS; intensity = cluster mass / median; bid cluster = bullish defense) predicts direction-signed continuation. Same declared cells/harness as E0.2-STACKIMB; TWO-SIDED (defense-holds vs magnet/spoof both live). Primary screen L2-NQ with L3-NQ consistency (L3 richer: smoke 06-18 = 33 events L3 vs 4 L2; if L2 is event-starved the L3-NQ cells carry the verdict \u2014 declared now, before outcomes).",
+      "declaredSign": 0,
+      "horizonMin": 0.017,
+      "twinGate": false,
+      "resolution": null
     }
   ],
   "sensitivityItems": [
