@@ -1,15 +1,14 @@
 # Trading Cockpit — Handoff Document
 
 > ## ▶ START HERE — new session, read this first
-> **Latest state = §27** (2026-07-07: CRACKER Phases 1–4 EXECUTED — full F1–F10 factor ladder run to verdicts, L2 screening set certified, first confirmed finding F5b, book-state engine, nightly lockbox-fill). Orient in this order:
-> **1.** §27.1 (read-first — pickup points + do-NOTs) → **2.** `docs/cracker-ledger.md` from "P1.6" on (the authoritative study-by-study record) + `docs/cracker-registrations.json` (open hypotheses) → **3.** §27.3 (frozen math/methods — do not re-derive), `git log --oneline -20`, memory `project_cracker`.
-> **The state in one line:** Cracker's measurement instrument is COMPLETE and self-feeding (4 traces, nightly job); the F1–F10 single-factor ladder measured level-trading folklore DEAD (identity/confluence/history/flow/sweeps/walls/voids all null, 5 train-mirages killed by validation); the ONE confirmed mechanism is **F5b — flow-following reverses at real structure** (BH-confirmed, small); F4b/F7b general-tape effects + the NQ-5m-bounce theme await the forward lockbox; F11 (icebergs, L3-only) is the last untested mechanism before Phase 5 (composition → ONE lockbox shot).
-> **Open threads:** (a) F11 mechanism study OR let forward data accrue ~2wks then resolve the lockbox family (BH q=0.10); (b) parked FLIP/CONT live fixes await user approval (`docs/flip-cont-review-2026-07-06.md`); (c) trader WS watchdog unbuilt (2nd silent death 07-07 — §27.5); (d) Phase-8 band-sensitivity item registered, do NOT run early.
-> §26 = the orderflow-rebuild design + spine (now superseded by the executed Cracker build). §25 = options pivot + verdict. §24 = RS-feed pipeline (still current infra).
-> §25 = the options pivot + the studies that produced the verdict. §24 = RS-feed pipeline (still current infra). §1–23 earlier layers — the stale-warning below applies to them.
+> **Latest state = §28** (2026-07-08: PHASE E EXECUTED END-TO-END — event-first discovery E0→E3 + the E0.2 shape batch all resolved; first EDGE found (sweep-continuation@1s) and proven NOT taker-tradable (E3); QI replication CONFIRMED; DISCOVERY ERA CLOSED). Orient in this order:
+> **1.** §28.1 (read-first — pickup points + do-NOTs) → **2.** `docs/cracker-ledger.md` from "market-book.ts" (2026-07-07) on + `docs/cracker-registrations.json` (resolutions + the OPEN forward family) → **3.** §28.3 (measured latency/slippage ground truth), §28.4 (asset inventory), §27.3 (frozen math — do not re-derive), `git log --oneline -20`, memory `project_cracker`.
+> **The state in one line:** every discovery avenue is measured — 17 single-signal nulls (incl. the canonical footprint stacked-imbalance at 44,966 events), 7 mirages killed, 3 confirmed mechanisms (**F5b** structure-scrambles-flow, **QI** seconds-scale predictability ES≫NQ, **sweep impact curve** — completes ≤250ms, untradable by taking), 1 confirmed tool (IV→range); predictability lives at seconds / in the book / in composition, not in single signals at minutes.
+> **Open threads:** (a) forward-lockbox family {F5b-fwd, F7b, NQ5M-THEME, F11c} resolves ~**2026-07-21** under BH q=0.10 (nightly job feeds it; wallcluster accrues alongside); (b) **Phase-5 composition** with the confirmed roster after that; (c) QI execution-overlay study for the live book (can run any time); (d) trader hot-path fixes + WS watchdog + parked FLIP/CONT fixes (§28.1 item 3); (e) Phase-8 sensitivity items registered — do NOT run early.
+> §27 = Cracker Phases 1–4 (the levels ladder). §26 = orderflow-rebuild design (superseded). §25 = options pivot + verdict. §24 = RS-feed pipeline (still current infra). §1–23 earlier layers — the stale-warning below applies to them.
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-07-07 (Tuesday) — latest state is **§27** (see START HERE above). **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
+> **Last updated**: 2026-07-08 (Wednesday) — latest state is **§28** (see START HERE above). **§27** = Cracker Phases 1–4; **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
@@ -1948,3 +1947,67 @@ The rigorous rebuild of §25.3's 8-layer design. **Locked decisions (Ravi, PhD-q
 ### 27.6 The state in one paragraph (for the next session's first read)
 
 Cracker's instrument is finished, calibrated, and self-feeding; the folklore hypothesis space is measured and (almost entirely) dead at current power; one mechanism is confirmed (structure scrambles flow signals); three registered hypotheses + the sub-MDE NQ-5m-bounce theme are accruing forward evidence daily toward a single BH-corrected resolution; all four mechanism families are measured (F11 closed discovery: true icebergs ~absent at visits, refills = requoting noise); and Phase 5 (composition → Gate-2 tradability → the ONE lockbox shot) begins when the survivor set justifies it. The discipline artifacts — frozen harness, ledger, registrations file, power tables — are the project's real assets: nothing needs to be re-argued, only extended.
+
+---
+
+## 28. 2026-07-08 — PHASE E EXECUTED END-TO-END: event-first discovery, ms-precision outcomes, first EDGE (untradable by taking), E0.2 shape batch — DISCOVERY ERA CLOSED
+
+### 28.0 TL;DR — what materially changed since §27
+
+- **The Phase-E pivot (user-approved 07-07) ran to completion in two days**: events-not-levels discovery. Two more primitives rebuilt and certified (`market-book.ts` #3, `tape-events.ts` #4), the E0 taxonomy frozen, the E1 scanner built, and THREE verdict families resolved: **E2** (five detectors at 1–30m: NULL at max power), **E2b** (ms-precision re-grade: **the program's first EDGE — sweep-continuation@1s** — plus the **Cont–Stoikov QI replication CONFIRMED 8/8**), and **E3** (Gate-2: the sweep tail is **NOT taker-tradable** — the entire move is realized within 250ms of the sweep print; the "continuation" IS the impact).
+- **The user's E0.2 shape batch registered, built, scanned, and resolved same-day**: stacked-imbalance (the canonical 3:1×3 footprint stack) = **NULL at all 4 declared cells at near-max power** (44,966 events/45d — 17th single-signal verdict); wall-cluster = UNDERPOWERED (350/128 events; **ES = 0 events on both stores** — the thick uniform ES book never shows a 5×-median wall; a detector-scale fact for Phase 8), forward-accruing.
+- **Live-infra latency measured from trader logs** (the user's slippage question): signal→order ~142ms; fill CONFIRMATION bimodal 15–46ms (WS) vs ~1.1s (REST-poll fallback, 12/20 entries); the observed 3–5pt live "slippage" = **zero-mean bar-poll staleness drift** (n=24, mean −0.9pt ns, |slip| 4.3pt), NOT broker slippage. Grounded E3's latency grid (250ms = honest base case).
+- **Discovery is CLOSED.** 17 single-signal verdicts, 7 in-sample mirages killed by validation, 3 confirmed mechanisms (F5b, QI, sweep-impact-curve), 1 confirmed non-directional tool (IV→range). Board: forward lockbox resolves ~07-21; Phase-5 composition next with the confirmed roster.
+- 16 commits since §27 (b99802b → 878ee7b). Ledger + registrations file carry every step.
+
+### 28.1 ⚠️ Read-first — where the next session picks up
+
+1. `docs/cracker-ledger.md` from "market-book.ts" (2026-07-07) onward + `docs/cracker-registrations.json` — E2b/E3/E0.2 resolutions recorded; forward family {F5b-fwd, F7b, NQ5M-THEME, F11c} still OPEN, resolves ~2026-07-21 under BH q=0.10 (nightly job feeds it; wallcluster accrues alongside informally).
+2. **Next research moves, in order:** (a) ~07-21 resolve the forward-lockbox family; (b) **Phase-5 composition** with the confirmed roster (F5b conditioning × QI × sweep-impact state variable × F4b tape-state); (c) the **QI execution-overlay study** for the live FLIP/CONT book (ES day-IC 0.15–0.18 — entry/exit timing, zero new risk) — can run any time, doesn't touch the lockbox.
+3. **Live-system work approved-in-principle but NOT applied:** three trader hot-path fixes (pre-warm `ensureAuth` out of the order path; fix the WS fill-push miss — 12/20 entries waited out the 1s poll = ~1.1s naked-bracket window; 250ms poll backstop in `waitForFill`, tradovate.ts:461–510). Plus the two parked FLIP/CONT fixes (`docs/flip-cont-review-2026-07-06.md`) and the trader-WS watchdog (§27.5 — still unbuilt).
+4. **Do NOT**: relitigate the 17 nulls (all powered or honestly labeled underpowered), re-tune detector thresholds outside Phase 8 (BAND-SWEEP + wall/absorption 5× starvation are registered there), read lockbox days (> 2026-07-07) before Phase 5, or treat SWEEP-1S as tradable (E3 resolved NO-TRADE for a taker at every latency ≥ 0; only maker/passive execution — a Phase-5 infra question — could change that).
+
+### 28.2 The Phase-E arc — studies and verdicts (chronological)
+
+| Step | What | Verdict |
+|---|---|---|
+| Primitive #3 | `market-book.ts` — full L3/L2 book replay (pulls/refills/icebergs/cumTraded, coverage-honest) | 28/28 + 4-combo parity 30.7M events 0 mismatches; swap certified; legacy `order-book.ts` = pre-Cracker scripts only |
+| Primitive #4 | `tape-events.ts` — frozen E0 taxonomy: sweep/absorption/imbalance/replenishment/wallpull, dimensionless triggers, 30s refractory | 11/11; 3 pre-outcome amendments (L2 = absorption+imbalance only; sweep grouping by aggressor-id contiguity; sane-book gate) |
+| E1 | `cracker_e1_events.ts` → `data/cracker-events.db` — one row per event, both stores, 4 datasets | ~121k events; QA caught garbage mids → amendment #3 → clean rescan |
+| E2 | Five detectors at declared 1m/5m, dose-response IC, BH q=0.10 | **NULL across the family** (imbalance null at 38.6k events = max power; absorption/wallpull event-starved by the 5× triggers → Phase 8) |
+| E2b | User-directed ms precision: outcomes re-graded {250ms,1s,5s,10s,30s} from the recorded mid series + spread_ticks + qi per event + qi_samples (1/s, 2.2M rows) | **SWEEP-1S = first EDGE** (train +0.112/valid +0.074, p=0.0005 BH-sig; impact-then-reversion curve; top-decile +0.836pt NQ / +0.690pt ES). **QI-REP CONFIRMED 8/8** (ES day-IC 0.15–0.18, 53/53 days; NQ ~0.02 — thick-book≫thin-book per theory) |
+| E3 | Gate-2 taker tradability, registered decision rule (`cracker_e3_gate2.ts`): Net(L,H) = dir·(ms_H−ms_L) − 2·halfspread − fees; L∈{0 upper bound, 250ms exact}; train-decile threshold → valid verdict | **NO-TRADE (taker), all cells, both symbols.** NQ primary: −1.574pt CI[−1.76,−1.34] at the UNPHYSICAL L=0; the tail move is fully realized ≤250ms. Valid-period gross (+0.22pt) ≪ full-sample (+0.836) — SWEEP-1S stands as PREDICTION only. Open: maker/passive sim (Phase 5), QI overlay |
+| E0.2 | User's shapes registered → built → scanned → resolved same-day: `stackimb` (≥3 consecutive prices ≥3:1 diagonal, intensity Σlog1p(ratio)) + `wallcluster` (≥3 chained ≥5×-median walls within 3×NEAR_TICKS); acceptance 17/17; old detectors re-emit byte-identically | **STACKIMB NULL** at all 4 cells (1s/10s/1m/5m), 44,966 events/45d, best p=0.056 = IC +0.009 = nil, L3 consistency negative. **WALLCLUSTER UNDERPOWERED** (350/128; ES 0 events both stores). 0/8 BH survivors (`cracker_e2c_verdicts.ts`) |
+
+### 28.3 Latency & slippage — measured ground truth (for all future Gate-2 math)
+
+- **Pipeline (1m-bar path, live FLIP/CONT):** signal bar open → order = 61–65s (60s bar + 1–5s qualify poll). Trader receives → order on wire ~142ms (incl. ~50ms lazy re-auth). REST order round-trip 50–100ms. Exchange fills market orders in ms.
+- **Fill confirmation bimodal:** 15–46ms via WS push (8/20) vs ~1.08–1.11s via the 1s REST poll (12/20) — the WS fill push is missed >half the time despite the buffered-race fix (tradovate.ts:496–508); delays bracket attach, not fill price.
+- **Slippage vs signal price (n=24 live fills):** mean −0.9pt (slightly favorable, ns), mean |slip| 4.3pt, range −20.25…+9.25. It is ZERO-MEAN drift over the 1–5s staleness window — a variance drag ≈5% of TP on the current book, NOT a systematic cost. True broker cost ≈ half-spread.
+- **Fee model (declared in E3):** Tradovate micros all-in ≈ $0.74/side → $1.48 RT = 0.74 NQ-pt (MNQ $2/pt) / 0.296 ES-pt (MES $5/pt). `positions.db pnl_usd` is fee-free (pts × $2).
+
+### 28.4 The asset inventory (what survives all the nulls)
+
+**Data:** (1) MBO parquet L3 tape NQ/ES/CL/GC, ms-precision, repaired+certified; (2) L2 ticks-parquet 54-day micro history; (3) cracker-trace.db + -l2.db — ~40k labeled visits, 4 datasets; (4) **cracker-events.db — ~200k tape events × 7 detector types with dual-ruler outcomes + spread + qi + structure distance**; (5) qi_samples — 2.2M per-second QI panel with forward mid moves; (6) level-memory.db; (7) rs-context-history.db + rs-shadow.db (accruing); (8) the nightly self-feeding lockbox pipeline.
+**Code:** (9) market-book.ts; (10) tape-events.ts (7 detectors); (11) volume-profile.ts (ISJ-KDE); (12) book-state.ts; (13) sigma-ev + Kish-z; (14) cracker_p3_harness.ts (the discipline in code); (15) E1 scanner (new detector = ~50-line change, proven twice); (16) DDA-era OFI/Kyle-λ/CUSUM modules (tested, unconsumed).
+**Knowledge:** (17) the settled-null map — 17 verdicts + 7 mirages (RESEARCH_PROTOCOL + ledger); (18) F5b — flow reverses at real structure (confirmed); (19) QI replication (confirmed; execution overlay); (20) sweep-impact curve (confirmed; state variable); (21) IV→range forecaster (confirmed, ρ 0.79); (22) power tables (docs/cracker-power*.md); (23) registrations machinery (cracker-registrations.json + ledger); (24) the measured latency/slippage profile (§28.3).
+
+### 28.5 Scheduled processes (launchd, all com.cockpit.*, verified 2026-07-08)
+
+| Job | Schedule | Purpose |
+|---|---|---|
+| trader · rs-chrome · rs-feed · rs-shadow · mbo-parquet-converter · l3-book-worker · l3-decision-worker | keepalive daemons | live trading, RS CDP feed, shadow engines, tape conversion, live L3 book+decisions |
+| feed-health | every 20s | feed liveness checks (natural home for the unbuilt trader-WS watchdog) |
+| rs-mm | every 60s | RS market-maker zones poll |
+| parquet-compaction | 03:10 | nightly parquet compaction |
+| data-integrity-check | 04:00 | store integrity audit |
+| **cracker-trace** | **04:35** | **fills all 4 traces + events DB incrementally (TRACE_NEW) — the lockbox feed** |
+| reminder-contract-roll / -cvd / -flipshorts | 08:00 / 08:43 / 08:53 | morning reminders |
+| structural-levels / rs-levels | 09:23 / 09:32 | pre-RTH structural + RS levels (rs-levels exits 2 daily on parked CL/GC charts — noisy, known) |
+| l2-touch-capture | 16:15 | L2 touch-event capture (L2 Touch Decider forward sample) |
+| reminder-machine-repair / l3-resolve / reminder-l3-scorecard / reminder-parquet-fix | 16:30 / 16:35 / 16:45 / 17:10 | afternoon ops |
+| structural-levels-evening | 17:55 | evening structural levels |
+
+### 28.6 The state in one paragraph
+
+Every discovery avenue the program defined — locations (F1–F10), hidden liquidity (F11), raw tape events at minutes (E2), tape events at milliseconds (E2b), and the user's own shape batch (E0.2) — has now been measured to a verdict at institutional rigor: 17 single-signal nulls, 3 confirmed mechanisms (F5b structure-scrambles-flow, QI seconds-scale predictability, the sweep impact curve), 1 confirmed forecasting tool (IV→range), and 1 edge that exists but cannot be harvested by aggression (sweep-continuation@1s — E3 proved the move completes within 250ms). The market's short-horizon direction is efficient against every single-variable read; what predictability exists lives at seconds, in the book, and in composition. Phase 5 (composition → Gate-2 → the ONE lockbox shot) begins when the forward family resolves ~07-21; the interim work is the QI execution overlay, the trader hot-path fixes, and the parked FLIP/CONT fixes. The instrument, the data, the confirmed mechanisms, and the discipline are the assets; nothing needs re-arguing, only extending.
