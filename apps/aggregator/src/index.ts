@@ -2,7 +2,11 @@ import { startServer } from './server.js';
 import { startLevelsWatcher } from './sources/levels.js';
 import { startFlashAlphaPoller } from './sources/flashalpha.js';
 import { startVXPoller } from './sources/vx-poller.js';
-import { startRulesEngine } from './rules/index.js';
+// Strategy A (v1 rules: sweep + delta-divergence + absorption-at-zone) RETIRED
+// 2026-07-08: all three fed by dead event sources (flashalpha/bookmap — nothing
+// fired since 05-07); sweep/divergence rebuilt to a far higher standard in the
+// Cracker L3 stack (tape-events.ts, divergence.ts). src/rules/ deleted; signal
+// history rows retained in trading.db.
 import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
 // import { startStrategyC, stopStrategyC } from './rules-v2/strategy-c-index.js';
 import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
@@ -14,7 +18,11 @@ import { startStrategyI, stopStrategyI } from './rules-v2/strategy-i-index.js';
 import { startStrategyJ, stopStrategyJ } from './rules-v2/strategy-j-index.js';
 import { startStrategyCONT, stopStrategyCONT } from './rules-v2/strategy-cont-index.js';
 import { startStrategyRR, stopStrategyRR } from './rules-v2/strategy-rr-index.js';
-import { startStrategyALA, stopStrategyALA } from './rules-v2/strategy-ala-index.js';
+// Strategy ALA SILENCED 2026-07-08 (user-approved): graded at its declared
+// brackets (TP40/structural stop) the observe log runs 6W/29L (17% WR),
+// -624.8pt over 35 signals / 10 days. Code + chart branches kept; re-enable
+// only with a materially changed spec.
+// import { startStrategyALA, stopStrategyALA } from './rules-v2/strategy-ala-index.js';
 import { startExplShortObserver, stopExplShortObserver } from './observers/expl-short-observer.js';
 import { getRecentTrades } from './rules-v2/tick-client.js';
 import { tickRouter } from './tick-router.js';
@@ -28,7 +36,7 @@ import { loadContext, watchContext } from './rs-context.js';
 import { startContextHistoryLogger } from './rs-context-history.js';
 import { loadCalendar, getTodayEvents } from './economic-calendar.js';
 import { fireOvernightBriefing } from './morning-brief.js';
-import type { Symbol, DailyLevels, FlashAlphaSnapshot } from '@trading/contracts';
+import type { Symbol, DailyLevels } from '@trading/contracts';
 import { tradingDayFor } from '@trading/contracts';
 
 const snapshot = () => state.snapshot();
@@ -36,7 +44,6 @@ const getLevels = (s: Symbol): DailyLevels | undefined => {
   const today = tradingDayFor(Date.now());
   return state.levelsForDay(today)?.[s];
 };
-const getFlashAlpha = (s: Symbol): FlashAlphaSnapshot | undefined => snapshot().flashAlpha[s];
 
 // Current price: last trade from tick-store (Strategy C needs this)
 const _lastPrice: Partial<Record<Symbol, number>> = {};
@@ -145,10 +152,7 @@ async function main() {
   startFlashAlphaPoller();
   startVXPoller();
 
-  if (config.activeStrategy === 'A' || config.activeStrategy === 'BOTH') {
-    startRulesEngine(getLevels, getFlashAlpha);
-    logger.info('strategy-A started (bar-based: sweep + divergence)');
-  }
+  // Strategy A retired 2026-07-08 (see import-block note).
 
   if (config.activeStrategy === 'B' || config.activeStrategy === 'BOTH' || config.activeStrategy === 'ALL') {
     startStrategyB(getLevels);
@@ -188,8 +192,7 @@ async function main() {
     logger.info('strategy-CONT started (trend continuation re-entry)');
     startStrategyRR();
     logger.info('strategy-RR started (Reject Resistance: short broken-support-becomes-resistance)');
-    startStrategyALA();
-    logger.info('strategy-ALA started (Absorption at Level: long bias on MHP/HP/ON_MHP/ON_HP absorption)');
+    // startStrategyALA();  // SILENCED 2026-07-08 — 17% WR / -624.8pt graded (see import note)
   }
 
   // Passive observers (data collection, no signals emitted)
@@ -224,7 +227,7 @@ async function main() {
         stopStrategyJ();
         stopStrategyCONT();
         stopStrategyRR();
-        stopStrategyALA();
+        // stopStrategyALA();  // SILENCED 2026-07-08
       }
       stopExplShortObserver();
       tickRouter.stop();
