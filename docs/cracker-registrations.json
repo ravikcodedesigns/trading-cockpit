@@ -10,6 +10,11 @@
       "testSet": "cracker-trace.db (L3 mini), days > 2026-07-07, untouched until Phase 5",
       "correction": "Benjamini-Hochberg FDR q=0.10 across all OPEN entries in this family at resolution time",
       "status": "OPEN \u2014 accruing"
+    },
+    "e3-gate2": {
+      "testSet": "cracker-events.db sweep events with banked ms outcomes (L3-NQ primary, L3-ES consistency) \u2014 Gate-2 cost adjudication of the SWEEP-1S edge, not a new directional hypothesis",
+      "correction": "none (single pre-declared decision rule; CIs via day-block bootstrap)",
+      "status": "RESOLVED 2026-07-08 (see ledger)"
     }
   },
   "hypotheses": [
@@ -103,6 +108,19 @@
       "resolution": {
         "date": "2026-07-08",
         "verdict": "EDGE - first in program. Train +0.112/valid +0.074 both sig, p=0.0005 BH-significant; top-decile +0.836pt NQ (1.62 half-spreads) / +0.690pt ES (5.18 half-spreads), 13/14 days positive both. Tail-tradability -> E3 Gate-2."
+      }
+    },
+    {
+      "id": "E3-GATE2",
+      "registered": "2026-07-08",
+      "family": "e3-gate2",
+      "claim": "Top-decile sweep-continuation is NET-POSITIVE for a TAKER after all-in costs at realistic latency. Trade sim: enter taker in sweep dir at event_ts+L, exit taker at event_ts+H. Net(L,H) = dir*(ms_H - ms_L) - 2*halfspread_event - fees_rt. Cells: L in {0 (upper bound, dominates all L<250ms incl. the 100ms assumption), 250ms (exact, banked), 500ms (dominated by 250ms cell \u2014 impact curve flat/declining after 250ms)}; H in {1s, 5s, 10s, 30s}. Threshold: top-decile intensity from TRAIN days (chrono 60/40), applied unchanged to VALID; verdict on VALID. Costs: spread rt = 2*(spread_ticks*0.25/2) per event (event-time spread; optimistic post-sweep -> strengthens a NO); fees all-in Tradovate micros $0.74/side: MNQ $1.48rt = 0.74 NQpt, MES $1.48rt = 0.296 ESpt. PRIMARY CELL: NQ, L=0, H=1s. DECISION RULE: if L=0 net<=0 at every H -> NO-TRADE(taker) for all latency cells by dominance; else adjudicate the exact L=250ms cells. SECONDARY (declared): QI-agreement overlay (sign(qi)==dir at event), top-5% and top-2% train-threshold cuts, per-cell day-block bootstrap CI95 + positive-day counts. Latency grid grounding: measured live infra 2026-07-08 (trader log) = detection-to-order ~150ms + REST order ~50-100ms -> 250ms is the honest base case; 100ms requires WS orders + warm auth; sub-100ms is not our stack.",
+      "declaredSign": 1,
+      "horizonMin": 0.017,
+      "twinGate": false,
+      "resolution": {
+        "date": "2026-07-08",
+        "verdict": "NO-TRADE (taker), all cells, both symbols. Decision rule triggered: L=0 upper-bound net <= 0 at every H. PRIMARY (NQ top-10%, L=0, H=1s, VALID): net -1.574pt CI[-1.762,-1.344], 0/5 days positive; exact L=250ms cells -2.0 to -2.4pt. ES best cell -0.019 CI[-0.400,+0.179] at L=0/H=5s, -0.49 at L=250. QI overlay does not rescue (all neg). Honest caveat: VALID-period gross tail continuation (+0.22pt L=0 H=1s) far below full-sample descriptive (+0.836) -- SWEEP-1S stands as a PREDICTION edge; the taker-tradable magnitude does not exist. Open paths: maker/passive execution (needs queue-position replay, Phase-5 scope), QI as execution overlay for the existing live book, composition."
       }
     }
   ],
