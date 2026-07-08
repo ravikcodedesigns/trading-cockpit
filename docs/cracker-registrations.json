@@ -19,7 +19,7 @@
     "e02-shapes": {
       "testSet": "cracker-events.db, discovery days <= 2026-07-07 (same boundary as E2/E2b; later days accrue to the forward set via the nightly job)",
       "correction": "Benjamini-Hochberg FDR q=0.10 across the 8-cell E0.2 family (2 detectors x 4 declared horizons)",
-      "status": "OPEN \u2014 scan launched 2026-07-08"
+      "status": "RESOLVED 2026-07-08 (stackimb NULL powered; wallcluster UNDERPOWERED, forward-accruing \u2014 see ledger)"
     }
   },
   "hypotheses": [
@@ -136,7 +136,10 @@
       "declaredSign": 0,
       "horizonMin": 0.017,
       "twinGate": false,
-      "resolution": null
+      "resolution": {
+        "date": "2026-07-08",
+        "verdict": "NULL at all 4 declared cells, at near-max power (44,966 events / 45d L2-NQ). ICs +0.000/+0.009/+0.006/+0.004 at 1s/10s/1m/5m; best p=0.056 (10s) with IC +0.009 = economically nil; zero BH survivors; consistency sets flat or sign-inconsistent (L3-NQ negative at every cell). Mean y(1s) = 0.06 half-spreads. The canonical footprint stacked-imbalance signal carries no directional information on NQ/ES at 1s-5m."
+      }
     },
     {
       "id": "E0.2-WALLCLUSTER",
@@ -146,7 +149,10 @@
       "declaredSign": 0,
       "horizonMin": 0.017,
       "twinGate": false,
-      "resolution": null
+      "resolution": {
+        "date": "2026-07-08",
+        "verdict": "UNDERPOWERED by construction at every declared cell (350 events/40d L2-NQ, 128 L3-NQ; MDE 0.21-0.28 vs rho* 0.05). ES produced ZERO events on both stores - the thick uniform ES book never shows a 5x-median wall at 3pt scan range (a detector-scale fact, recorded for Phase 8). No verdict on the mechanism; forward-accrues via the nightly job; thresholds belong to the Phase-8 sweep. Descriptive only: L3-NQ 1s consistency +0.106 (n=128)."
+      }
     }
   ],
   "sensitivityItems": [
