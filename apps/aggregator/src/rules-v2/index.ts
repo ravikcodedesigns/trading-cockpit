@@ -92,6 +92,14 @@ async function runOnce(): Promise<void> {
             ...result.signal,
             strategyVersion: 'B' as const,
           };
+          // tape-speed / large-print are CONFLUENCE-ONLY inputs to absorption
+          // (they call recordConfluenceSignal internally → in-memory _store that
+          // checkTapeSpeedConfirmed/checkLargePrintConfirmed read). They have no
+          // standalone edge (quality.ts: "no edge" / "0% clean wins") and never
+          // trade, so we DON'T persist their ~1k/day rows to the signals table
+          // (2026-07-08 lean-out; historical rows archived+deleted). Absorption
+          // untouched — its score/conviction/CONT-parenting don't use these tags.
+          if (rule.id === 'tape-speed' || rule.id === 'large-print') continue;
           state.applySignal(signal);
         }
       } catch (err) {

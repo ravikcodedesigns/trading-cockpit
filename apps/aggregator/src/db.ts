@@ -389,7 +389,7 @@ const stmtRecentSignals = _db.prepare(
   // filters added 2026-05-18 — they stay in the DB for outcome analysis but
   // are excluded from the cockpit display.
   `SELECT payload FROM signals
-   WHERE (rule_id IN ('absorption', 'delta-divergence', 'large-print', 'expl', 'clean-impulse', 'trap')
+   WHERE (rule_id IN ('absorption', 'delta-divergence', 'expl', 'clean-impulse', 'trap')
       OR (rule_id = 'sweep' AND score >= 60))
      AND json_extract(meta, '$.filtered') IS NOT 1
      AND rs_hard_filtered IS NOT 1
@@ -560,7 +560,11 @@ export const db = {
         AND (
           (strategy_version = 'H')
           OR (strategy_version = 'EXPL' AND direction = 'long')
-          OR (strategy_version = 'B' AND score >= 80)
+          -- 2026-07-08: was strategy_version=B AND score>=80, which also matched
+          -- tape-speed/large-print (both sv=B, no edge). Narrowed to the two rules
+          -- that legitimately parent CONTs. WBF rows split across sv='B'/'WBF' in
+          -- the column, so match WBF by rule_id here + keep the sv='WBF' clause below.
+          OR (rule_id IN ('absorption', 'wall-broken-fade') AND score >= 80)
           OR (strategy_version = 'WBF')
         )
       ORDER BY ts DESC
