@@ -159,15 +159,7 @@ export const config = {
       'clean-impulse-FLIP':      { tp: 80, sl: { long: 55, short: 105 } },
       'expl':                    { tp: 80, sl: 70 },
       'wall-broken-fade':        { tp: 20, sl: 10 },
-      // 2026-06-03: compression+real-wall+capitulation. SHADOW only — single-day
-      // MBO produced zero qualifying setups (no confluence formed on bull-trend day).
-      // R:R 1:4 strict. Re-validate when 2+ weeks of MBO accumulated.
-      'compression-realwall':    { tp: 24, sl: 6 },
-      // 2026-06-03: flip-long-pmcore. FLIP-long filtered to 10:30-13:30 ET window +
-      // deltaLast3 ≤ -300 (strong prior bearish). Backtested on 41 historical signals
-      // (60-day window) achieving 69.6% WR (16W/7L/8 BE-scratch) at TP=60/SL=40 R:R 1.5.
-      // Per-trade slipped ~+21 pts. SHADOW pending live validation.
-      'flip-long-pmcore':        { tp: 60, sl: 40 },
+      // compression-realwall + flip-long-pmcore RETIRED 2026-07-09 (never fired/never wired).
       // 2026-06-03: cont-reentry (Strategy CONT). SHADOW pending more signal accumulation.
       // Empirical analysis on n=24 (May 20 – Jun 3) at TP=80/SL=70 → 66.7% WR, +30.5 EV/sig,
       // +733 pts total. Wide stops required — median time-to-peak 73 min, median DD on

@@ -85,9 +85,6 @@ function signalDisplayName(ruleId: string, direction: 'long' | 'short'): string 
   const map: Record<string, string> = {
     'clean-impulse':        `Flip`,
     'passive-seller':       `Passive Seller`,
-    'absorption-scalp':     `Absorption`,
-    'absorption-scalp-15m': `Absorption`,
-    'compression-breakout': `Compression`,
     'absorption':           `Absorption`,
     'expl':                 `EXPL`,
   };

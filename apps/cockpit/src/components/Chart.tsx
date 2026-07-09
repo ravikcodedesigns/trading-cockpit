@@ -2026,12 +2026,6 @@ export function Chart() {
       .filter((s) => filterByToggles(s.ts))
       .filter((s) => {
         const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? "";
-        // Strategy D: compression-breakout → 15m chart only
-        if (ruleId === 'compression-breakout') return selectedTimeframe === 15;
-        // Strategy E 15m: bear bar absorption → 15m chart only
-        if (ruleId === 'absorption-scalp-15m') return selectedTimeframe === 15;
-        // Strategy E 5m: bull bar absorption → 5m chart only
-        if (ruleId === 'absorption-scalp') return selectedTimeframe === 5;
         // EXPL → 1m chart only
         if (ruleId === 'expl') return selectedTimeframe === 1;
         // CLEAN (FLIP) shows on ALL timeframes — these are tradable signals,
@@ -2073,15 +2067,6 @@ export function Chart() {
         if (ruleId === 'delta-divergence') {
           shape = 'circle';
           label = `DIV·${sig.score}`;
-        } else if (ruleId === 'compression-breakout') {
-          shape = isLong ? 'arrowUp' : 'arrowDown';
-          label = `COMP`;
-        } else if (ruleId === 'absorption-scalp') {
-          shape = 'arrowUp';
-          label = `SCALP`;
-        } else if (ruleId === 'absorption-scalp-15m') {
-          shape = 'arrowUp';
-          label = `SCALP`;
         } else if (ruleId === 'expl') {
           shape = 'arrowUp';
           const exWarning = regimeAlignment('expl', sig.direction, sig.ts, regimeCheckpoints) === 'against';
@@ -2374,9 +2359,6 @@ export function Chart() {
           const ruleId = (s as any).ruleId ?? (s as any).rule_id ?? '';
           if (ruleId === 'clean-impulse')      return selectedTimeframe === 1;
           if (ruleId === 'expl')               return selectedTimeframe === 1;
-          if (ruleId === 'compression-breakout') return selectedTimeframe === 15;
-          if (ruleId === 'absorption-scalp')   return selectedTimeframe === 5;
-          if (ruleId === 'absorption-scalp-15m') return selectedTimeframe === 15;
           return selectedTimeframe === 1;
         })
         .slice(0, 5);

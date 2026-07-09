@@ -146,30 +146,13 @@ export function classifySignalQuality(signal: ConfluenceSignal, ctx: QualityCont
   if (signal.ruleId === 'wall-broken-fade') {
     return { tier: 'gold', reason: `WBF visual-monitor mode: score=${signal.score}` };
   }
-  // compression-realwall (shipped 2026-06-03): SHADOW pending multi-day MBO validation.
+  // compression-realwall RETIRED 2026-07-09 (never fired).
   // Single-day MBO produced 0 qualifying setups (no confluence formed on the bull-trend test day).
   // Force 'silenced' tier — signals still log to qualified_signals/v3_decisions for
   // accumulation but don't broadcast to chart/Discord and don't auto-trade.
-  if (signal.ruleId === 'compression-realwall') {
-    return { tier: 'silenced', reason: 'compression-realwall: shadow pending multi-day MBO data' };
-  }
-  // es-flip (2026-06-03): ES-tuned FLIP detector. SHADOW mode — gold tier so signals
-  // broadcast to chart for visual monitoring. V3 logs decisions to v3_decisions but
-  // doesn't auto-trade (forceShadowRules list).
-  if (signal.ruleId === 'es-flip') {
-    const ext = signal as any;
-    return {
-      tier: 'gold',
-      reason: `ES-FLIP shadow: ${signal.direction} K=${ext.passCount ?? '?'}/5 score=${signal.score}`,
-    };
-  }
   if (strategy === 'A') return classifyStrategyA(signal.ruleId, session, signal.score);
   if (strategy === 'B') return classifyStrategyB(signal.ruleId, session, signal.score, signal.direction, (signal as any).conviction, ctx, (signal as any).entry);
-  // Strategy C: all signals are gold — the level watcher is the quality gate.
-  // Minimum score 50 is enforced inside strategy-c.ts before emission.
-  if (strategy === 'C') return { tier: 'silenced', reason: 'C: temporarily silenced for CLEAN analysis' };
-  if (strategy === 'D') return { tier: 'silenced', reason: 'D: temporarily silenced for CLEAN analysis' };
-  if (strategy === 'E') return { tier: 'silenced', reason: 'E: temporarily silenced for CLEAN analysis' };
+  // Strategies C/D/E retired 2026-07-09.
   // Strategy EXPL: SILENCED COMPLETELY (2026-06-04).
   // Performance through 06-02:
   //   LONG qualified (n=59): 30.5% WR / -19.1 EV / -1,130 pts

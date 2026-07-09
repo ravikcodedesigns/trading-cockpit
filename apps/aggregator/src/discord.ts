@@ -140,8 +140,6 @@ class DiscordAlerter {
     // removed from V3 (entry + opp-exit) and Discord. Re-enable when/if a
     // future score-model refactor restores edge.
     if (sig.ruleId === 'absorption') return;
-    // compression-realwall muted (shadow pending multi-day MBO data)
-    if (sig.ruleId === 'compression-realwall') return;
 
     const color = sig.direction === 'long' ? COLOR.longSignal : COLOR.shortSignal;
     const arrow = sig.direction === 'long' ? '▲' : '▼';

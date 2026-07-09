@@ -8,9 +8,8 @@ import { startVXPoller } from './sources/vx-poller.js';
 // Cracker L3 stack (tape-events.ts, divergence.ts). src/rules/ deleted; signal
 // history rows retained in trading.db.
 import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
-// import { startStrategyC, stopStrategyC } from './rules-v2/strategy-c-index.js';
-import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
-import { startStrategyE, stopStrategyE } from './rules-v2/strategy-e-index.js';
+// Strategies C (RS Level Watcher), D (compression breakout), E (absorption
+// scalp) RETIRED 2026-07-09 — dormant/never-fired, no edge, not feeders. Files deleted.
 import { startStrategyH, stopStrategyH } from './rules-v2/strategy-h-index.js';
 // Strategy ES-FLIP RETIRED 2026-07-08 (user-approved): pure-OOS grade of all 266
 // post-derivation signals = LONG 40% WR (-$2,825 MES; spec promised 60.7%),
@@ -165,22 +164,6 @@ async function main() {
 
 //   if (config.activeStrategy === 'C' || config.activeStrategy === 'ALL') {
 //     // Start price refresh loop before Strategy C
-//     setInterval(refreshPrices, 1000);
-//     await refreshPrices();
-//     startStrategyC(getLevels, getPrice);
-//     logger.info('strategy-C started (RS level watcher)');
-//   }
-
-  if (config.activeStrategy === 'D' || config.activeStrategy === 'ALL') {
-    startStrategyD();
-    logger.info('strategy-D started (15-min compression → 5-min entry)');
-  }
-
-  if (config.activeStrategy === 'E' || config.activeStrategy === 'ALL') {
-    startStrategyE();
-    logger.info('strategy-E started (5-min absorption scalp — observe only)');
-  }
-
   if (config.activeStrategy === 'H' || config.activeStrategy === 'ALL') {
     startStrategyH();
     logger.info('strategy-H started (CLEAN impulse: FLIP + CONT, both directions)');

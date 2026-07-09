@@ -106,7 +106,6 @@ function isTradableRule(signal: ConfluenceSignal): boolean {
   // the real FLIP/CONT signal. To be re-evaluated as a standalone strategy
   // (see WBF-only backtest). Live V3 path still includes WBF until cutover.
   // if (signal.ruleId === 'wall-broken-fade') return true;
-  if (signal.ruleId === 'compression-realwall') return true;
   if (signal.ruleId === 'cont-reentry') return true;
   return false;
 }
