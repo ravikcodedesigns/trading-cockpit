@@ -2104,7 +2104,7 @@ export function Chart() {
           // (audit: flat across outcomes, doesn't gate flip/cont). Veto'd = gray so the
           // KEPT (amber) cohort stands out.
           // DANGER-FLAG cohort suffix (registered DANGER-FLAG-CONFIRM):
-          // 🟩 violent tape at decision, 🟥 calm, none = unknown/uncovered.
+          // 🔋 violent tape at decision, 🪫 calm, none = unknown/uncovered.
           const df = dangerFlagEmoji((sig as unknown as { dflag?: number }).dflag);
           if (isLong) {
             // CVD-LONGFLOOR-OFF forward cohort (long floor disabled 2026-07-08):
