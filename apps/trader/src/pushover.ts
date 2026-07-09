@@ -74,13 +74,15 @@ function etTime(ts: number): string {
 }
 
 export const pushover = {
-  open(opts: { ruleId: string; direction: 'long' | 'short'; symbol: string; entry: number; tp: number; sl: number; pointValue: number; qty: number; }): void {
+  open(opts: { ruleId: string; direction: 'long' | 'short'; symbol: string; entry: number; tp: number; sl: number; pointValue: number; qty: number; dflag?: number }): void {
     const arrow = opts.direction === 'long' ? '↑' : '↓';
+    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🟩 violent tape / 🟥 calm
+    const df = opts.dflag === 1 ? ' 🟩' : opts.dflag === 0 ? ' 🟥' : '';
     const slRiskUsd = opts.sl * opts.pointValue * opts.qty;
     const tpPts = (opts.tp - opts.entry).toFixed(0);
     const slPts = (opts.direction === 'long' ? opts.entry - opts.sl : opts.sl - opts.entry).toFixed(0);
     void send({
-      title:   `🟢 OPEN · ${opts.ruleId.toUpperCase()} ${opts.direction.toUpperCase()} ${arrow} ${opts.symbol}`,
+      title:   `🟢 OPEN · ${opts.ruleId.toUpperCase()} ${opts.direction.toUpperCase()} ${arrow} ${opts.symbol}${df}`,
       message: `@ ${opts.entry} (${etTime(Date.now())} ET)\nTP ${opts.tp.toFixed(2)} (+${tpPts})   SL ${opts.sl.toFixed(2)} (-${slPts})\nRisk ${fmtUsd(-Math.abs(slRiskUsd))}`,
       sound:    'magic',
       priority: 0,

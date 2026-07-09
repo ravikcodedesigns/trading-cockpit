@@ -386,6 +386,36 @@ export function cvdLongFloorOffTag(
   return { tagged, reason: tagged ? `cvd=${Math.round(sig.cvdSession!)}<=${CVD_LFO_OLD_FLOOR}` : '' };
 }
 
+// --- DANGER-FLAG confirmation tag (FROZEN 2026-07-08) --------------------------
+//
+// From the EXPL-short design study (commit 8da15df): a validated VOLATILITY-state
+// detector — when the last 3 one-minute bars span ≥ DFLAG_CRNG_MIN pts AND the
+// last 11 bars traded ≥ DFLAG_VOL_MIN contracts, the probability of an 80pt move
+// within 35 min is ~2× base. NOT directional. On the FLIP/CONT book the flag-UP
+// cohorts outperformed on BOTH sides (+26.8 vs +9.7pt longs, +38.2 vs +20.8
+// shorts; ns at n=126) — consistent with mean-reversion signals harvesting
+// violence. Registered DANGER-FLAG-CONFIRM (live-book): shadow-tag only; the
+// pre-committed action IF confirmed at ≥40 tagged opens is a sizing overlay
+// (2 MNQ flag-up / 1 flag-down), never a gate. Thresholds are train-period
+// terciles (≤2026-06-12) in ABSOLUTE units — a known regime dependence; do not
+// tune outside a new registration.
+export const DFLAG_CRNG_MIN = 41;      // pts — 3-bar (1m) high-low range
+export const DFLAG_VOL_MIN = 73_758;   // contracts — 11-bar (1m) volume sum
+
+export function dangerFlag(crng3: number | undefined, vol11: number | undefined): boolean | undefined {
+  if (typeof crng3 !== 'number' || typeof vol11 !== 'number') return undefined;
+  return crng3 >= DFLAG_CRNG_MIN && vol11 >= DFLAG_VOL_MIN;
+}
+
+/** Chart/notification suffix: 🟩 flag-up (violent tape), 🟥 flag-down, '' unknown.
+ *  (Unicode has no plain green *flag* emoji; the color rectangles are the
+ *  closest country-flag-shaped pair and render identically everywhere.) */
+export function dangerFlagEmoji(dflag: number | boolean | null | undefined): string {
+  if (dflag === 1 || dflag === true) return ' 🟩';
+  if (dflag === 0 || dflag === false) return ' 🟥';
+  return '';
+}
+
 // --- Tick stream types (Phase 1: tick-store) ---
 
 export interface TickTrade {

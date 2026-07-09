@@ -20,6 +20,7 @@ import type {
   SourceName,
   Symbol,
 } from '@trading/contracts';
+import { dangerFlag } from '@trading/contracts';
 
 const EXPL_LOOKBACK_MS = 60 * 60_000; // 60-min window for EXPL conflict detection
 const FLIP_LOOKBACK_MS = 60 * 60_000; // 60-min window for absorption FLIP-context filter
@@ -369,8 +370,33 @@ class State {
         ? db.lastSignalTsBefore('trap', symbol, 'long', signal.ts)
         : 0;
 
+      // ── DANGER-FLAG (registered DANGER-FLAG-CONFIRM 2026-07-08) ─────────
+      // Violent-tape state at decision: 3-bar range + 11-bar volume vs the
+      // frozen thresholds (@trading/contracts). Bars end at the signal bar
+      // (same convention as the design study). Shadow/cohort only; optional.
+      let dangerFlagVal: boolean | undefined;
+      if (signal.ruleId === 'clean-impulse' || signal.ruleId === 'cont-reentry') {
+        try {
+          const dfBars = (db.recentBars(symbol, signal.ts - 10.5 * 60_000) as
+            { ts: number; high: number; low: number; volume?: number }[])
+            .filter((b) => b.ts <= signal.ts);
+          if (dfBars.length >= 11) {
+            const ap = dfBars.slice(-11);
+            const comp = dfBars.slice(-3);
+            dangerFlagVal = dangerFlag(
+              Math.max(...comp.map((b) => b.high)) - Math.min(...comp.map((b) => b.low)),
+              ap.reduce((sum, b) => sum + (b.volume ?? 0), 0),
+            );
+          }
+        } catch { /* flag optional — never blocks the decision path */ }
+      }
+      // Attach for downstream consumers (WS broadcast → cockpit live marker,
+      // discord signal embed, trader SSE payload). 1/0/undefined.
+      (signal as { dflag?: number }).dflag =
+        dangerFlagVal === undefined ? undefined : (dangerFlagVal ? 1 : 0);
+
       const act = evaluateActionability(signal, tech.qualified, tech.reason,
-                                        { cvdSession: cvd, hasOpenTrade, lastSameDirTrapMs });
+                                        { cvdSession: cvd, hasOpenTrade, lastSameDirTrapMs, dangerFlag: dangerFlagVal });
 
       // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule (es-flip,
       // expl) that would otherwise OPEN is logged but not traded.
@@ -453,6 +479,7 @@ class State {
         cvd_session:  cvd,
         entry:        (signal as { entry?: number }).entry,
         evaluated_at: Date.now(),
+        dflag:        (signal as { dflag?: number }).dflag,
       });
 
       return act.action;

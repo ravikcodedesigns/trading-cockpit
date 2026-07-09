@@ -167,6 +167,13 @@ _db.exec(`
   CREATE INDEX IF NOT EXISTS idx_signals_ctx_lm_code ON signals(ctx_lm_code);
 `);
 
+// Migration: DANGER-FLAG cohort column (registered DANGER-FLAG-CONFIRM,
+// 2026-07-08). 1 = flag-up (violent tape at decision), 0 = down, NULL = not
+// computable (insufficient bars / outside coverage). Written live by the
+// pipeline; historical FLIP/CONT rows backfilled from the design-study
+// candidate set (scripts/backfill_dflag.ts).
+try { _db.exec(`ALTER TABLE tradable_signals ADD COLUMN dflag INTEGER`); } catch { /* already exists */ }
+
 // Migration: add delta15 percentile columns to qualified_signals.
 // These are observational flags — signals are never removed based on them.
 for (const [col, type] of [
@@ -280,7 +287,8 @@ _db.exec(`
     shadow       INTEGER NOT NULL DEFAULT 0,  -- 1 = logged for analysis, not traded (force-shadow rules)
     cvd_session  REAL,
     entry        REAL,
-    evaluated_at INTEGER NOT NULL
+    evaluated_at INTEGER NOT NULL,
+    dflag        INTEGER            -- DANGER-FLAG at decision: 1 up / 0 down / NULL unknown (registered DANGER-FLAG-CONFIRM)
   );
   CREATE INDEX IF NOT EXISTS idx_tradable_ts            ON tradable_signals(signal_ts);
   CREATE INDEX IF NOT EXISTS idx_tradable_symbol_ts     ON tradable_signals(symbol, signal_ts);
@@ -626,7 +634,7 @@ export const db = {
     // render the CVD-LONGFLOOR-OFF forward tag (cvdLongFloorOffTag in
     // @trading/contracts) — it lives on tradable_signals, not in the payload.
     return _db.prepare(`
-      SELECT s.payload, t.cvd_session
+      SELECT s.payload, t.cvd_session, t.dflag
       FROM tradable_signals t
       JOIN signals s ON s.id = t.signal_id
       WHERE t.symbol = ? AND t.signal_ts >= ? AND t.action = 'OPEN' AND t.shadow = 0
@@ -636,6 +644,7 @@ export const db = {
       .map((r) => ({
         ...JSON.parse((r as { payload: string }).payload),
         cvdSession: (r as { cvd_session: number | null }).cvd_session ?? undefined,
+        dflag: (r as { dflag: number | null }).dflag ?? undefined,
       }));
   },
 
@@ -790,6 +799,7 @@ export const db = {
         row.pattern ?? null, row.direction, row.score,
         row.qualified ? 1 : 0, row.action, row.reason, row.shadow ? 1 : 0,
         row.cvd_session ?? null, row.entry ?? null, row.evaluated_at,
+        row.dflag ?? null,
       );
     },
   },
@@ -849,6 +859,8 @@ export interface TradableSignalRow {
   cvd_session?: number;
   entry?:       number;
   evaluated_at: number;
+  /** DANGER-FLAG at decision time: 1 up / 0 down / undefined unknown. */
+  dflag?:       number;
 }
 
 /** Row shape for the signal_results table (renamed from v3_decisions 2026-06-09). */
@@ -899,8 +911,8 @@ const stmtInsertSignalResult = _db.prepare(`
 const stmtTradableUpsert = _db.prepare(`
   INSERT INTO tradable_signals (
     signal_id, signal_ts, symbol, rule_id, pattern, direction, score,
-    qualified, action, reason, shadow, cvd_session, entry, evaluated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    qualified, action, reason, shadow, cvd_session, entry, evaluated_at, dflag
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(signal_id) DO UPDATE SET
     signal_ts    = excluded.signal_ts,
     symbol       = excluded.symbol,
@@ -914,7 +926,8 @@ const stmtTradableUpsert = _db.prepare(`
     shadow       = excluded.shadow,
     cvd_session  = excluded.cvd_session,
     entry        = excluded.entry,
-    evaluated_at = excluded.evaluated_at
+    evaluated_at = excluded.evaluated_at,
+    dflag        = excluded.dflag
 `);
 
 // ── shadow_trades prepared statements ───────────────────────────────────────

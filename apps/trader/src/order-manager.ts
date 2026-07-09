@@ -53,7 +53,7 @@ export async function warmContractCache(broker: TradovateClient): Promise<void> 
 
 // ── Main entry point ──────────────────────────────────────────────────────────
 export async function handleSignal(broker: TradovateClient, signal: ConfluenceSignal): Promise<void> {
-  const { ruleId, direction, symbol, ts: signalTs } = signal as any;
+  const { ruleId, direction, symbol, ts: signalTs, dflag } = signal as any;
 
   const params = signalParams(ruleId, direction);
   if (!params) {
@@ -129,7 +129,7 @@ export async function handleSignal(broker: TradovateClient, signal: ConfluenceSi
     notify.open({
       ruleId, direction, symbol: contractRoot,
       entry: fillPrice, tp: tpPrice, sl: slPrice,
-      pointValue, qty,
+      pointValue, qty, dflag,
     });
 
     // ── 7. Monitor for close ───────────────────────────────────────────────

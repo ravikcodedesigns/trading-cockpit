@@ -13,7 +13,7 @@ import {
   CrosshairMode,
 } from 'lightweight-charts';
 import { useStore } from '../lib/ws';
-import { tradingDayFor, lookupLevelStyle, isStructuralLevel, flipLongFcVeto, contShortRetraceVeto, cvdLongFloorOffTag } from '@trading/contracts';
+import { tradingDayFor, lookupLevelStyle, isStructuralLevel, flipLongFcVeto, contShortRetraceVeto, cvdLongFloorOffTag, dangerFlagEmoji } from '@trading/contracts';
 import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
 import { ZoneBandsPrimitive } from './zoneBands';
 import { SignalChartCard } from './SignalFeed';
@@ -2103,6 +2103,9 @@ export function Chart() {
           // rsScore dropped from the label 2026-07-08 — it's inert as a W/L discriminator
           // (audit: flat across outcomes, doesn't gate flip/cont). Veto'd = gray so the
           // KEPT (amber) cohort stands out.
+          // DANGER-FLAG cohort suffix (registered DANGER-FLAG-CONFIRM):
+          // 🟩 violent tape at decision, 🟥 calm, none = unknown/uncovered.
+          const df = dangerFlagEmoji((sig as unknown as { dflag?: number }).dflag);
           if (isLong) {
             // CVD-LONGFLOOR-OFF forward cohort (long floor disabled 2026-07-08):
             // longs the OLD cvd<=-1000 floor would have vetoed. Red so the
@@ -2114,12 +2117,12 @@ export function Chart() {
                 position,
                 color: '#ef4444',
                 shape,
-                text: `FLIP ↑ CVD-LONGFLOOR-OFF` + warn,
+                text: `FLIP ↑ CVD-LONGFLOOR-OFF` + warn + df,
                 size: 4,
               };
             }
             const fc = flipLongFcVeto(sig as unknown as { deltaT?: number; delta15?: number });
-            label = `FLIP ↑ ${fc.veto ? "VETO'd" : 'KEPT'}` + warn;
+            label = `FLIP ↑ ${fc.veto ? "VETO'd" : 'KEPT'}` + warn + df;
             return {
               time: bucket as UTCTimestamp,
               position,
@@ -2129,7 +2132,7 @@ export function Chart() {
               size: 4,
             };
           }
-          label = 'FLIP ↓' + warn;
+          label = 'FLIP ↓' + warn + df;
           return {
             time: bucket as UTCTimestamp,
             position,
@@ -2211,9 +2214,10 @@ export function Chart() {
           // CONT-short shallow-retrace shadow tag (frozen; @trading/contracts). SHADOW-ONLY —
           // deep retrace (>0.35) = VETO'd (gray), shallow = KEPT (violet). Short only; longs
           // keep the plain violet label. See cont_short_gate_audit.ts / BACKLOG §2b.
+          const contDf = dangerFlagEmoji((sig as unknown as { dflag?: number }).dflag);
           if (!isLong) {
             const csr = contShortRetraceVeto(sig as unknown as { retracePct?: number });
-            label = `CONT ↓ ${csr.veto ? "VETO'd" : 'KEPT'}·${sig.score}`;
+            label = `CONT ↓ ${csr.veto ? "VETO'd" : 'KEPT'}·${sig.score}` + contDf;
             return {
               time: bucket as UTCTimestamp,
               position,
@@ -2232,11 +2236,11 @@ export function Chart() {
               position,
               color: '#ef4444',
               shape,
-              text: `CONT ↑ CVD-LONGFLOOR-OFF`,
+              text: `CONT ↑ CVD-LONGFLOOR-OFF` + contDf,
               size: 4,
             };
           }
-          label = `CONT-REENTRY-SHADOW ↑·${sig.score}`;
+          label = `CONT-REENTRY-SHADOW ↑·${sig.score}` + contDf;
           return {
             time: bucket as UTCTimestamp,
             position,

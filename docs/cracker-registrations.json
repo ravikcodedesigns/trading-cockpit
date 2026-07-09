@@ -188,6 +188,16 @@
       "horizonMin": null,
       "twinGate": false,
       "resolution": null
+    },
+    {
+      "id": "DANGER-FLAG-CONFIRM",
+      "registered": "2026-07-08",
+      "family": "live-book",
+      "claim": "FLIP/CONT entries taken in the danger-flag-UP state (3-bar range >= 41pt AND 11-bar volume >= 73,758 at the signal bar; frozen train-period terciles from the EXPL-short design study, commit 8da15df) carry HIGHER EV than flag-DOWN entries, both directions pooled. In-sample: longs +26.8 vs +9.7pt, shorts +38.2 vs +20.8pt (n=126, perm p=0.24/0.52 - suggestive only). Shadow-only: reason tag [DFLAG-UP]/[DFLAG-DOWN] + dflag column + chart/discord/pushover flag emoji; NEVER gates. PRE-COMMITTED ACTION if confirmed: sizing overlay 2 MNQ flag-up / 1 flag-down (dollar-risk capped); if not confirmed: tag stays as dead cohort marker. RESOLUTION: >= 40 tagged forward OPENs (days > 2026-07-08) with both states represented, or 2026-10-08; day-block permutation on the EV difference, p < 0.10 AND positive.",
+      "declaredSign": 1,
+      "horizonMin": null,
+      "twinGate": false,
+      "resolution": null
     }
   ],
   "sensitivityItems": [

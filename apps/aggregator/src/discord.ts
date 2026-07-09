@@ -2,6 +2,7 @@ import { config } from './config.js';
 import { logger } from './logger.js';
 import { getTodayEvents, getUpcomingEvents, type EconEvent } from './economic-calendar.js';
 import type { ConfluenceSignal } from '@trading/contracts';
+import { dangerFlagEmoji } from '@trading/contracts';
 
 export interface Embed {
   title: string;
@@ -152,6 +153,8 @@ class DiscordAlerter {
 
     const convictionSuffix = ext.conviction ? ` ${ext.conviction}` : '';
     const tierSuffix = sig.rsTier && sig.rsTier !== 'PASS' ? ` · ${sig.rsTier}` : '';
+    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🟩 violent tape / 🟥 calm
+    const dfSuffix = dangerFlagEmoji((sig as unknown as { dflag?: number }).dflag);
 
     const fields = [
       { name: 'Time',     value: new Date(sig.ts).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ET', inline: true },
@@ -190,7 +193,7 @@ class DiscordAlerter {
     }
 
     this.send({
-      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (${sig.score})${tierSuffix}${convictionSuffix}`,
+      title: `${arrow} ${sig.symbol} ${sig.direction.toUpperCase()} — ${sig.ruleId} (${sig.score})${tierSuffix}${convictionSuffix}${dfSuffix}`,
       description: sig.rationale,
       color,
       fields,

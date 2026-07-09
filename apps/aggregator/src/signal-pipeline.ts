@@ -84,6 +84,13 @@ export interface ActionabilityContext {
    * FLIP-long candidates; used by the trap veto. See config.pipeline.flipTrapVeto.
    */
   lastSameDirTrapMs?: number;
+  /**
+   * DANGER-FLAG at decision time (registered DANGER-FLAG-CONFIRM 2026-07-08):
+   * true = violent-tape state (3-bar range + 11-bar volume over the frozen
+   * thresholds in @trading/contracts). Shadow-only — tags the OPEN reason for
+   * cohort tracking; NEVER gates. undefined = not computable.
+   */
+  dangerFlag?: boolean;
 }
 
 /**
@@ -239,7 +246,15 @@ export function evaluateActionability(
     if (lfo.tagged) cvdLfoNote = `[CVD-LFO: ${lfo.reason}] `;
   }
 
+  // ── DANGER-FLAG cohort tag (2026-07-08, registered DANGER-FLAG-CONFIRM) ──
+  // Both directions, FLIP + CONT. Shadow-only; the pre-committed action if the
+  // registration confirms is a SIZING overlay, never a gate.
+  let dflagNote = '';
+  if (ctx.dangerFlag !== undefined && (signal.ruleId === 'clean-impulse' || signal.ruleId === 'cont-reentry')) {
+    dflagNote = ctx.dangerFlag ? '[DFLAG-UP] ' : '[DFLAG-DOWN] ';
+  }
+
   // Prepend shadow notes (if any) so reviewer can later filter for
-  // would-have-blocked rows: `WHERE reason LIKE '[D15-SHADOW:%'` / `'[FC-%'` / `'[CSR-%'` / `'[CVD-LFO%'`.
-  return { action: 'OPEN', reason: cvdLfoNote + flipLongFcNote + contShortCsrNote + flipLongDelta15ShadowNote + qualifiedReason };
+  // would-have-blocked rows: `WHERE reason LIKE '[D15-SHADOW:%'` / `'[FC-%'` / `'[CSR-%'` / `'[CVD-LFO%'` / `'[DFLAG-%'`.
+  return { action: 'OPEN', reason: dflagNote + cvdLfoNote + flipLongFcNote + contShortCsrNote + flipLongDelta15ShadowNote + qualifiedReason };
 }

@@ -52,6 +52,16 @@ for (const h of items) {
       db.close();
       status = `forward cooldown shadows: ${r.n}/20 · resolver: cooldown_cap2_resolve.ts`;
       if (r.n >= 20 || today >= '2026-10-08') status += ' → DUE';
+    } else if (h.id === 'DANGER-FLAG-CONFIRM') {
+      const db = open('trading.db');
+      const r = db.prepare(`SELECT SUM(dflag=1) up, SUM(dflag=0) dn,
+        SUM(CASE WHEN dflag=1 THEN sim_pnl_pts ELSE 0 END) upPts, SUM(CASE WHEN dflag=0 THEN sim_pnl_pts ELSE 0 END) dnPts
+        FROM tradable_signals WHERE action='OPEN' AND rule_id IN ('clean-impulse','cont-reentry') AND dflag IS NOT NULL
+        AND date(signal_ts/1000,'unixepoch','localtime') > '2026-07-08'`).get() as any;
+      db.close();
+      const n = (r.up ?? 0) + (r.dn ?? 0);
+      status = `forward tagged opens: ${n}/40 (🟩 ${r.up ?? 0}: ${(r.upPts ?? 0).toFixed(1)}pt · 🟥 ${r.dn ?? 0}: ${(r.dnPts ?? 0).toFixed(1)}pt)`;
+      if ((n >= 40 && (r.up ?? 0) > 0 && (r.dn ?? 0) > 0) || today >= '2026-10-08') status += ' → DUE';
     } else if (h.id === 'CVD-LONGFLOOR-OFF') {
       const db = open('trading.db');
       const r = db.prepare(`SELECT COUNT(*) n, COALESCE(SUM(sim_pnl_pts),0) pts,
