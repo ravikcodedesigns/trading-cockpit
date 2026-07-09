@@ -407,12 +407,12 @@ export function dangerFlag(crng3: number | undefined, vol11: number | undefined)
   return crng3 >= DFLAG_CRNG_MIN && vol11 >= DFLAG_VOL_MIN;
 }
 
-/** Chart/notification suffix: 🟩 flag-up (violent tape), 🟥 flag-down, '' unknown.
- *  (Unicode has no plain green *flag* emoji; the color rectangles are the
- *  closest country-flag-shaped pair and render identically everywhere.) */
+/** Chart/notification suffix: 🔋 flag-up (violent tape — energy in the tape),
+ *  🪫 flag-down (calm), '' unknown. User-picked pair 2026-07-08 (was 🟩/🟥).
+ *  Note: 🪫 (low battery) is Unicode 14 — renders as a box on pre-2022 OSes. */
 export function dangerFlagEmoji(dflag: number | boolean | null | undefined): string {
-  if (dflag === 1 || dflag === true) return ' 🟩';
-  if (dflag === 0 || dflag === false) return ' 🟥';
+  if (dflag === 1 || dflag === true) return ' 🔋';
+  if (dflag === 0 || dflag === false) return ' 🪫';
   return '';
 }
 

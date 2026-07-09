@@ -2118,7 +2118,7 @@ export function Chart() {
                 color: '#ef4444',
                 shape,
                 text: `FLIP ↑ CVD-LONGFLOOR-OFF` + warn + df,
-                size: 4,
+                size: df ? 5 : 4,
               };
             }
             const fc = flipLongFcVeto(sig as unknown as { deltaT?: number; delta15?: number });
@@ -2129,7 +2129,7 @@ export function Chart() {
               color: fc.veto ? '#9ca3af' : (cfWarning ? '#fb923c' : '#f59e0b'),
               shape,
               text: label,
-              size: 4,
+              size: df ? 5 : 4,
             };
           }
           label = 'FLIP ↓' + warn + df;
@@ -2139,7 +2139,7 @@ export function Chart() {
             color: cfWarning ? '#fb923c' : '#f59e0b',
             shape,
             text: label,
-            size: 4,
+            size: df ? 5 : 4,
           };
         } else if (ruleId === 'ala-bounce') {
           shape = 'arrowUp';
@@ -2224,7 +2224,7 @@ export function Chart() {
               color: csr.veto ? '#9ca3af' : '#8b5cf6',
               shape,
               text: label,
-              size: 4,
+              size: contDf ? 5 : 4,
             };
           }
           // CVD-LONGFLOOR-OFF forward cohort (long floor disabled 2026-07-08):
@@ -2237,7 +2237,7 @@ export function Chart() {
               color: '#ef4444',
               shape,
               text: `CONT ↑ CVD-LONGFLOOR-OFF` + contDf,
-              size: 4,
+              size: contDf ? 5 : 4,
             };
           }
           label = `CONT-REENTRY-SHADOW ↑·${sig.score}` + contDf;
@@ -2247,7 +2247,7 @@ export function Chart() {
             color: '#8b5cf6',  // violet
             shape,
             text: label,
-            size: 4,
+            size: contDf ? 5 : 4,
           };
         } else if (ruleId === 'es-flip') {
           // ES-FLIP shadow signal (ES-tuned FLIP detector). Hot pink to be unmistakably

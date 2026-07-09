@@ -2,6 +2,7 @@
 // Fires async, never throws (Discord failures shouldn't block trading).
 
 import { config } from './config.js';
+import { dangerFlagEmoji } from '@trading/contracts';
 import { logger } from './logger.js';
 
 async function send(content: string): Promise<void> {
@@ -28,8 +29,8 @@ export const discord = {
   open(opts: { ruleId: string; direction: 'long' | 'short'; symbol: string; entry: number; tp: number; sl: number; pointValue: number; qty: number; dflag?: number }): void {
     const arrow = opts.direction === 'long' ? '↑' : '↓';
     const slUsd = opts.sl * opts.pointValue * opts.qty;
-    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🟩 violent tape / 🟥 calm
-    const df = opts.dflag === 1 ? ' 🟩' : opts.dflag === 0 ? ' 🟥' : '';
+    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🔋 violent tape / 🪫 calm
+    const df = dangerFlagEmoji(opts.dflag);
     void send(
       `🟢 **OPEN** | ${opts.ruleId.toUpperCase()} ${opts.direction.toUpperCase()} ${arrow} ${opts.symbol}${df} @ **${opts.entry}** (${etTime(Date.now())} ET)\n` +
       `   TP ${opts.tp.toFixed(2)} (+${(opts.tp - opts.entry).toFixed(0)})  ·  SL ${opts.sl.toFixed(2)} (-${(opts.direction === 'long' ? opts.entry - opts.sl : opts.sl - opts.entry).toFixed(0)})  ·  Risk ${fmtUsd(-Math.abs(slUsd))}`

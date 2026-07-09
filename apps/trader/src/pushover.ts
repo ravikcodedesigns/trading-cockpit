@@ -13,6 +13,7 @@
 // https://pushover.net) in PUSHOVER_USER. Empty = disabled.
 
 import { config } from './config.js';
+import { dangerFlagEmoji } from '@trading/contracts';
 import { logger } from './logger.js';
 
 const PUSHOVER_URL = 'https://api.pushover.net/1/messages.json';
@@ -76,8 +77,8 @@ function etTime(ts: number): string {
 export const pushover = {
   open(opts: { ruleId: string; direction: 'long' | 'short'; symbol: string; entry: number; tp: number; sl: number; pointValue: number; qty: number; dflag?: number }): void {
     const arrow = opts.direction === 'long' ? '↑' : '↓';
-    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🟩 violent tape / 🟥 calm
-    const df = opts.dflag === 1 ? ' 🟩' : opts.dflag === 0 ? ' 🟥' : '';
+    // DANGER-FLAG cohort (registered DANGER-FLAG-CONFIRM): 🔋 violent tape / 🪫 calm
+    const df = dangerFlagEmoji(opts.dflag);
     const slRiskUsd = opts.sl * opts.pointValue * opts.qty;
     const tpPts = (opts.tp - opts.entry).toFixed(0);
     const slPts = (opts.direction === 'long' ? opts.entry - opts.sl : opts.sl - opts.entry).toFixed(0);
