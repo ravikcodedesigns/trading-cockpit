@@ -108,7 +108,6 @@ function isTradableRule(signal: ConfluenceSignal): boolean {
   // if (signal.ruleId === 'wall-broken-fade') return true;
   if (signal.ruleId === 'compression-realwall') return true;
   if (signal.ruleId === 'cont-reentry') return true;
-  if (signal.ruleId === 'es-flip') return true;
   return false;
 }
 

@@ -324,17 +324,14 @@ function health(st: SymState): void {
 }
 
 // ── main ─────────────────────────────────────────────────────────────────────
-// suffix = the BMD contract code in the .log filename (e.g. 2026-06-24-CLQ6_NYMEX_BMD.log).
-// CL/GC have no RS levels yet → loadLevels returns [] → the book just builds (health +
-// crosscheck), no snapshots/touches, until daily_levels_cl/gc.json land. Roll note: these
-// are hardcoded front months (CLQ6/GCQ6) like NQU6/ESU6 — bump on contract roll.
+// suffix = the BMD contract code in the .log filename (e.g. 2026-06-24-NQU6_CME_BMD.log).
+// Roll note: these are hardcoded front months (NQU6/ESU6) — bump on contract roll.
+// CL/GC removed 2026-07-08 — NQ/ES focus only.
 const mkState = (sym: string, suffix: string, tick: number): SymState =>
   ({ sym, suffix, book: new OrderBook(sym, tick), tail: null, logPath: null, levels: [], lastSnap: new Map(), snaps: 0, inZone: new Map(), cvdHist: [], decisions: 0 });
 const states: SymState[] = [
   mkState('NQ', 'NQU6', 0.25),
   mkState('ES', 'ESU6', 0.25),
-  mkState('CL', 'CLQ6', 0.01),
-  mkState('GC', 'GCQ6', 0.10),
 ];
 
 function reloadLevels(): void {
@@ -360,7 +357,7 @@ let lastSignalId: number = (() => {
   if (a?.m != null) return a.m;
   try { const b = tdb?.prepare('SELECT MAX(signal_id) m FROM tradable_signals').get() as { m: number | null }; return b?.m ?? 0; } catch { return 0; }
 })();
-// FLIP rules store pattern='FLIP' (clean-impulse=NQ, es-flip=ES); the CONT family
+// FLIP rules store pattern='FLIP' (clean-impulse=NQ; es-flip retired 07-08); the CONT family
 // (cont-reentry=NQ) stores pattern=NULL, so it must be matched by rule_id. Excludes the
 // high-frequency wall-broken-fade (WBF). Add new FLIP/CONT rule_ids here as they appear.
 const selNewSignals = tdb?.prepare(`SELECT signal_id, signal_ts, symbol, pattern, direction, entry, qualified, action, rule_id

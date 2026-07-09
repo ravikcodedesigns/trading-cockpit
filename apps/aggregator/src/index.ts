@@ -12,7 +12,10 @@ import { startStrategyB, stopStrategyB } from './rules-v2/index.js';
 import { startStrategyD, stopStrategyD } from './rules-v2/strategy-d-index.js';
 import { startStrategyE, stopStrategyE } from './rules-v2/strategy-e-index.js';
 import { startStrategyH, stopStrategyH } from './rules-v2/strategy-h-index.js';
-import { startStrategyEsFlip, stopStrategyEsFlip } from './rules-v2/strategy-es-flip-index.js';
+// Strategy ES-FLIP RETIRED 2026-07-08 (user-approved): pure-OOS grade of all 266
+// post-derivation signals = LONG 40% WR (-$2,825 MES; spec promised 60.7%),
+// SHORT noise. No cross-market value for NQ FLIP/CONT either. Files deleted;
+// DB rows archived to data/retired/ then removed.
 import { startStrategyEXPL, stopStrategyEXPL } from './rules-v2/strategy-expl-index.js';
 // Strategy I (passive-seller) RETIRED 2026-07-08 (user-approved): 1 signal in
 // 6 weeks — detector thresholds effectively unreachable. Files deleted.
@@ -181,8 +184,6 @@ async function main() {
   if (config.activeStrategy === 'H' || config.activeStrategy === 'ALL') {
     startStrategyH();
     logger.info('strategy-H started (CLEAN impulse: FLIP + CONT, both directions)');
-    startStrategyEsFlip();
-    logger.info('strategy-ES-FLIP started (ES-tuned FLIP detector — SHADOW mode)');
     startStrategyEXPL();
     logger.info('strategy-EXPL started (pre-explosive move detector)');
     startStrategyJ();
@@ -220,7 +221,6 @@ async function main() {
       }
       if (config.activeStrategy === 'H' || config.activeStrategy === 'ALL') {
         stopStrategyH();
-        stopStrategyEsFlip();
         stopStrategyEXPL();
         stopStrategyJ();
         stopStrategyCONT();

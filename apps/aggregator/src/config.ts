@@ -105,10 +105,10 @@ export const config = {
     // forceShadowRules: rules evaluated and logged to tradable_signals but
     // NEVER open a trade (action=SKIP_FORCE_SHADOW). Used for rules that need
     // OOS sample accumulation before promotion.
-    //   - es-flip: n=41 test / 60.7% LONG / 50% SHORT WR. Needs OOS.
     //   - expl: SILENCED + force-shadow. LONG 30% WR / -19 EV; SHORT 4% WR /
     //     -62 EV. Both losing; detector kept for research.
-    forceShadowRules: ['es-flip', 'expl'] as string[],
+    // es-flip removed 2026-07-08 (retired: OOS-dead at n=266).
+    forceShadowRules: ['expl'] as string[],
 
     // ── FLIP-long delta15_ratio gate (2026-06-12) ──────────────────────────
     //
@@ -173,12 +173,10 @@ export const config = {
       // +733 pts total. Wide stops required — median time-to-peak 73 min, median DD on
       // losers 72pt. Rule's shipped stopDist=25pt would kill 7/17 winners.
       'cont-reentry':            { tp: 80, sl: 70 },
-      // 2026-06-03: es-flip (ES-tuned FLIP detector). SHADOW pending OOS validation.
       // Derived via labelled-swing analysis on 8 train days, validated on 8 test days.
       // LONG K=4 / SHORT K=5 with swing-confirmation gate (±5 bars).
       // Test results: LONG 60.7% WR / +2.9 EV / 7.2 sig/day; SHORT 50% WR / +2.7 EV / 1.5 sig/day.
       // Symmetric TP=20/SL=20 for simplicity.
-      'es-flip':                 { tp: 20, sl: 20 },
     } as const,
   },
 };

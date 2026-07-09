@@ -525,7 +525,7 @@ export async function startServer(): Promise<FastifyInstance> {
     // Three signal classes the chart can filter on:
     //   qualified    = passed quality gate (broad view)
     //   tradable     = pipeline would OPEN (action='OPEN', shadow=0)
-    //   experimental = force-shadow rules (es-flip, expl, etc.)
+    //   experimental = force-shadow rules (expl, etc.)
     const qualifiedSignals    = db.qualifiedSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS, MARK_EXCLUDED_RULES);
     const tradableSignals     = db.tradableOpenSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);
     const experimentalSignals = db.experimentalSignalsForSymbol(symbol, sinceMs, MAX_SIGNALS);

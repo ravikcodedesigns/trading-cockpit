@@ -12,7 +12,7 @@ import { withRSScore } from './rs-attach.js';
 import type { Symbol } from '@trading/contracts';
 
 const BAR_CLOSE_BUFFER_MS = 100;  // 100ms after :00 — enough for last ticks to flush to DB
-// strategy-h is NQ-tuned. ES uses strategy-es-flip with ES-derived thresholds.
+// strategy-h is NQ-tuned. (ES-FLIP variant retired 2026-07-08 — OOS-dead.)
 const SYMBOLS: Symbol[] = ['NQ'];
 
 let _running     = false;

@@ -398,7 +398,7 @@ class State {
       const act = evaluateActionability(signal, tech.qualified, tech.reason,
                                         { cvdSession: cvd, hasOpenTrade, lastSameDirTrapMs, dangerFlag: dangerFlagVal });
 
-      // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule (es-flip,
+      // Shadow flag mirrors SKIP_FORCE_SHADOW — a force-shadow rule (
       // expl) that would otherwise OPEN is logged but not traded.
       const shadow = act.action === 'SKIP_FORCE_SHADOW';
 

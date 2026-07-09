@@ -85,13 +85,13 @@ const cases: Case[] = [
     expect: { action: 'SKIP_SILENCED', reason: 'silenced: H: FLIP long buyers-dominant' },
   },
   {
-    name: 'SKIP_FORCE_SHADOW — es-flip is in forceShadowRules',
-    signal: { ruleId: 'es-flip', direction: 'long', ts: 1, symbol: 'ES', score: 80 },
-    isQualified: true, qualifiedReason: 'ES-FLIP shadow',
+    name: 'SKIP_FORCE_SHADOW — expl is in forceShadowRules',
+    signal: { ruleId: 'expl', direction: 'long', ts: 1, symbol: 'NQ', score: 80 },
+    isQualified: true, qualifiedReason: 'EXPL shadow',
     ctx: { cvdSession: 0, hasOpenTrade: false },
     expect: {
       action: 'SKIP_FORCE_SHADOW',
-      reason: 'force-shadow rule (es-flip) — observed but not traded',
+      reason: 'force-shadow rule (expl) — observed but not traded',
     },
   },
   {
@@ -122,11 +122,21 @@ const cases: Case[] = [
     expect: { action: 'SKIP_COOLDOWN', reason: 'V3 cooldown: a trade is already open' },
   },
   {
-    name: 'OPEN — all gates pass, FLIP long',
-    signal: { ruleId: 'clean-impulse', pattern: 'FLIP', direction: 'long', ts: 1, symbol: 'NQ', score: 95 },
+    // FLIP-long OPEN rows carry the F_C shadow tag (deltaT<=1200 AND delta15<=-1000 => KEPT).
+    // Shadow-only: the tag never changes the action. See @trading/contracts flipLongFcVeto.
+    name: 'OPEN — all gates pass, FLIP long (F_C KEPT)',
+    signal: { ruleId: 'clean-impulse', pattern: 'FLIP', direction: 'long', ts: 1, symbol: 'NQ', score: 95, deltaT: 500, delta15: -2000 } as Partial<ConfluenceSignal> & { pattern?: string },
     isQualified: true, qualifiedReason: 'H: clean-impulse FLIP score=95',
     ctx: { cvdSession: 0, hasOpenTrade: false },
-    expect: { action: 'OPEN', reason: 'H: clean-impulse FLIP score=95' },
+    expect: { action: 'OPEN', reason: '[FC-KEPT] H: clean-impulse FLIP score=95' },
+  },
+  {
+    // Same OPEN action, but the violent-spike bar trips the F_C veto tag (deltaT>1200).
+    name: 'OPEN — FLIP long, F_C VETO tag (deltaT>1200)',
+    signal: { ruleId: 'clean-impulse', pattern: 'FLIP', direction: 'long', ts: 1, symbol: 'NQ', score: 95, deltaT: 1500, delta15: -2000 } as Partial<ConfluenceSignal> & { pattern?: string },
+    isQualified: true, qualifiedReason: 'H: clean-impulse FLIP score=95',
+    ctx: { cvdSession: 0, hasOpenTrade: false },
+    expect: { action: 'OPEN', reason: '[FC-VETO: deltaT>1200] H: clean-impulse FLIP score=95' },
   },
   {
     name: 'OPEN — all gates pass, FLIP short',
@@ -143,13 +153,29 @@ const cases: Case[] = [
     expect: { action: 'SKIP_NOT_V3_RULE', reason: 'not a V3 entry rule (wall-broken-fade)' },
   },
   {
-    name: 'OPEN — cont-reentry passes (cont is not in current forceShadowRules)',
+    name: 'OPEN — cont-reentry LONG passes (no CSR tag; long is untagged)',
     signal: { ruleId: 'cont-reentry', direction: 'long', ts: 1, symbol: 'NQ', score: 90 },
     isQualified: true, qualifiedReason: 'CONT shadow',
     ctx: { cvdSession: 0, hasOpenTrade: false },
     // NOTE: cont-reentry was REMOVED from forceShadowRules on 2026-06-07 per
     // HANDOFF §20. If you re-add it, flip this expected action to SKIP_FORCE_SHADOW.
     expect: { action: 'OPEN', reason: 'CONT shadow' },
+  },
+  {
+    // CONT-short OPEN rows carry the CSR shadow tag (retracePct<=0.35 => KEPT).
+    name: 'OPEN — cont-reentry SHORT, CSR KEPT (shallow retrace)',
+    signal: { ruleId: 'cont-reentry', direction: 'short', ts: 1, symbol: 'NQ', score: 90, retracePct: 0.30 } as Partial<ConfluenceSignal> & { pattern?: string },
+    isQualified: true, qualifiedReason: 'CONT shadow',
+    ctx: { cvdSession: 0, hasOpenTrade: false },
+    expect: { action: 'OPEN', reason: '[CSR-KEPT] CONT shadow' },
+  },
+  {
+    // Deep retrace (>0.35) trips the CSR veto tag; action still OPEN (shadow-only).
+    name: 'OPEN — cont-reentry SHORT, CSR VETO (deep retrace)',
+    signal: { ruleId: 'cont-reentry', direction: 'short', ts: 1, symbol: 'NQ', score: 80, retracePct: 0.44 } as Partial<ConfluenceSignal> & { pattern?: string },
+    isQualified: true, qualifiedReason: 'CONT shadow',
+    ctx: { cvdSession: 0, hasOpenTrade: false },
+    expect: { action: 'OPEN', reason: '[CSR-VETO: retrace>0.35] CONT shadow' },
   },
 ];
 

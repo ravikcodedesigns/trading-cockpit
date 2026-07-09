@@ -82,7 +82,6 @@ const PIPELINE_TRADABLE_RULES = new Set([
   'cont-reentry',
   'expl',
   'compression-realwall',
-  'es-flip',
 ]);
 
 function advanceOpenStateUpTo(sigTs: number): void {

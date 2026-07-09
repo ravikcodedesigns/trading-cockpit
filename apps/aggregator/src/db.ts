@@ -649,7 +649,7 @@ export const db = {
   },
 
   // Returns signals from rules that are in force-shadow (logged but never
-  // traded — e.g. es-flip, expl). action='OPEN' but shadow=1 OR
+  // traded — e.g. expl). action='OPEN' but shadow=1 OR
   // action='SKIP_FORCE_SHADOW'. Used by /signals/marks to render the
   // EXPERIMENTAL toggle's markers, so the user can see what shadowed rules
   // would have done without committing capital.

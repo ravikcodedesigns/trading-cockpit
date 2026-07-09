@@ -572,7 +572,7 @@ export function Chart() {
   const [regimeCheckpoints, setRegimeCheckpoints] = useState<CheckpointData[]>([]);
   // QUALIFIED and TRADABLE are mutually exclusive — exactly one of them is
   // active at any time. EXPERIMENTAL is an independent toggle that can layer
-  // on top of either (it shows force-shadow rule markers — es-flip, expl, etc).
+  // on top of either (it shows force-shadow rule markers — expl, etc).
   //
   // Default: QUALIFIED on (broader view), TRADABLE off, EXPERIMENTAL off.
   const [showQualified,    setShowQualified]    = useState(true);
@@ -2249,21 +2249,6 @@ export function Chart() {
             text: label,
             size: contDf ? 5 : 4,
           };
-        } else if (ruleId === 'es-flip') {
-          // ES-FLIP shadow signal (ES-tuned FLIP detector). Hot pink to be unmistakably
-          // distinct from NQ FLIP(amber) and other rules. Only appears on /ES chart.
-          shape = isLong ? 'arrowUp' : 'arrowDown';
-          const passCount = (sig as any).passCount;
-          const kStr = passCount ? `·K${passCount}` : '';
-          label = (isLong ? 'ES-FLIP ↑' : 'ES-FLIP ↓') + kStr + `·${sig.score}`;
-          return {
-            time: bucket as UTCTimestamp,
-            position,
-            color: '#ec4899',  // hot pink
-            shape,
-            text: label,
-            size: 4,
-          };
         } else if (ruleId === 'wall-broken-fade') {
           // Wall-broken-fade: cyan-magenta to stand apart from FLIP(orange)/EXPL(green)/ABSO.
           // ASK wall broken → SHORT fade (arrowDown above bar)
@@ -3208,7 +3193,7 @@ export function Chart() {
               TRADABLE
             </button>
 
-            {/* ── EXPERIMENTAL — markers for force-shadow rules (es-flip, expl, etc.) ── */}
+            {/* ── EXPERIMENTAL — markers for force-shadow rules (expl, etc.) ── */}
             <button
               onClick={() => setShowExperimental(!showExperimental)}
               title="Toggle markers for force-shadow rules — these are signals from rules that are logged but never traded (independent of QUALIFIED/TRADABLE)"
