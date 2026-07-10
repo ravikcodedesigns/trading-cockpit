@@ -83,6 +83,26 @@ CREATE TABLE IF NOT EXISTS regime_vector (
   call_wall REAL, put_wall REAL, gamma_flip REAL, dist_to_flip REAL,
   regime_sign INTEGER, local_gex REAL, computed_at INTEGER
 );
+
+-- Forward-validation capture: filtered (ABJ 0DTE/OTM/aggressor) net-drift cumulated
+-- into a per-minute drift curve + its 10-min rolling slope, aligned with underlying
+-- spot + a price-momentum(10m) placebo column. One row per (symbol, minute). Joins to
+-- data/tape-events.db(tape_events) by t_sec for the drift-slope-at-setup forward test.
+-- See scripts/NETDRIFT_FWD_PREREG.md. filter_tag frozen so re-captures never collide.
+CREATE TABLE IF NOT EXISTS netdrift_slope (
+  symbol        TEXT NOT NULL,       -- index queried: 'SPX' | 'NDX'
+  futures       TEXT NOT NULL,       -- mapped future for the join: 'ES' | 'NQ'
+  session_date  TEXT NOT NULL,       -- YYYY-MM-DD (NY)
+  epoch_ms      INTEGER NOT NULL,    -- bucket time (ms)
+  t_sec         INTEGER NOT NULL,    -- epoch SECONDS (matches tape_events.t)
+  net_call_cum  REAL, net_put_cum REAL, net_cum REAL,  -- cumulative drift ($)
+  slope10       REAL,                -- 10-min least-squares slope of net_cum ($/min)
+  price         REAL,                -- underlying spot at the bucket
+  price_slope10 REAL,                -- 10-min LSQ slope of price (placebo yardstick)
+  filter_tag    TEXT NOT NULL DEFAULT 'ABJ_0DTE_OTM_AGGR',
+  UNIQUE(symbol, session_date, epoch_ms, filter_tag)
+);
+CREATE INDEX IF NOT EXISTS idx_netdrift_join ON netdrift_slope(futures, t_sec);
 `;
 
 // ── universal raw cache ──────────────────────────────────────────────────────
@@ -174,12 +194,32 @@ const NET_DRIFT_PATH = '/options/tool/net-drift';
 
 export interface DriftBucket { epoch_ms: number; netCall: number; netPut: number; stock: number }
 
+/** ABJ's day-trading filter (from the Quant Data net-drift tutorial), replicated on the
+ *  raw /v1 endpoint. IMPORTANT: only `filterExpression` applies these exclusions — the
+ *  nested `filter:{isComplex:…}` keys are silently ignored by /v1 (verified via
+ *  scripts/netdrift_filter_probe.ts; this form reproduces the MCP output byte-for-byte).
+ *  0DTE (expiration = the session) + OTM only + drop complex/tied/floor/cancelled prints. */
+export function abjNetDriftFilter(sessionDate: string): Record<string, unknown> {
+  return { conjunction: 'AND', filters: [
+    { field: 'MONEY_TYPE', operation: 'EQUALS', values: ['OUT_OF_THE_MONEY'] },
+    { field: 'IS_COMPLEX', operation: 'EQUALS', values: ['false'] },
+    { field: 'IS_TIED', operation: 'EQUALS', values: ['false'] },
+    { field: 'IS_FLOOR', operation: 'EQUALS', values: ['false'] },
+    { field: 'IS_CANCELLED', operation: 'EQUALS', values: ['false'] },
+    { field: 'EXPIRATION_DATE', operation: 'EQUALS', values: [sessionDate] },
+  ] };
+}
+
 /** Per-bucket net (ask-aggressor minus bid-aggressor) call/put premium + underlying
- *  spot, via the cache. The series carries aligned flow + price → clean lead-lag tests. */
+ *  spot, via the cache. The series carries aligned flow + price → clean lead-lag tests.
+ *  Pass `filterExpression` (e.g. abjNetDriftFilter(day)) to narrow the trades that feed
+ *  the aggregation; the cache key includes it, so filtered/unfiltered never collide. */
 export async function getNetDrift(
   ticker: string, sessionDate: string, aggregationPeriod = 'FIVE_MINUTE',
+  filterExpression?: Record<string, unknown>,
 ): Promise<DriftBucket[]> {
-  const body = { filter: { ticker }, sessionDate, aggregationPeriod };
+  const body: Record<string, unknown> = { filter: { ticker }, sessionDate, aggregationPeriod };
+  if (filterExpression) body.filterExpression = filterExpression;
   const { json } = await qdCached(NET_DRIFT_PATH, body, { ticker, session_date: sessionDate });
   const env = json as any;
   const data = env?.data ?? env;
