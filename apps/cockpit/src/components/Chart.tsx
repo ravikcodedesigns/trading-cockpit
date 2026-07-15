@@ -16,6 +16,13 @@ import { useStore } from '../lib/ws';
 import { tradingDayFor, lookupLevelStyle, isStructuralLevel, flipLongFcVeto, contShortRetraceVeto, cvdLongFloorOffTag, dangerFlagEmoji } from '@trading/contracts';
 import type { ConfluenceSignal, LevelStyle } from '@trading/contracts';
 import { ZoneBandsPrimitive } from './zoneBands';
+import { HeatmapPrimitive } from './heatmapPrimitive';
+import { HeatmapFeed } from '../lib/heatmap-feed';
+import { FlowHud } from './FlowHud';
+import { DriftHud } from './DriftHud';
+import { TapePrimitive } from './tapePrimitive';
+import { TapeFeed, ALL_KINDS, floorMinSize, floorMinLevels } from '../lib/tape-feed';
+import { TAPE_FLOORS, type TapeKind, type TapeEvent } from '@trading/contracts';
 import { SignalChartCard } from './SignalFeed';
 
 // ── Range arithmetic for the dynamic bar-fetch loader ──────────────────────
@@ -474,6 +481,18 @@ export function Chart() {
   const levelLinesRef = useRef<ISeriesApi<'Line'>[]>([]);
   // Shaded bull/bear zone bands (today's RS liquidity-map zones), drawn behind candles.
   const zoneBandsRef = useRef<ZoneBandsPrimitive | null>(null);
+  // Live Bookmap-style order-book heatmap + volume dots (behind/over candles).
+  const heatmapFeedRef = useRef<HeatmapFeed | null>(null);
+  const heatmapRef = useRef<HeatmapPrimitive | null>(null);
+  // Live L3 TAPE event markers (sweep/block/spoof/iceberg) at exact price/time.
+  const tapeFeedRef = useRef<TapeFeed | null>(null);
+  const tapeRef = useRef<TapePrimitive | null>(null);
+  const tapeOnRef = useRef(false);                                  // TAPE state, readable from the scroll sub
+  const tapeLoadedRef = useRef<{ from: number; to: number }>({ from: Infinity, to: 0 });  // loaded history window (sec)
+  const [tapeTip, setTapeTip] = useState<{ ev: TapeEvent; x: number; y: number } | null>(null);  // hover tooltip
+  const tapeTipEvRef = useRef<TapeEvent | null>(null);              // guards tooltip setState churn
+  const [topIce, setTopIce] = useState<TapeEvent[]>([]);           // ranked "top icebergs in view" readout
+  const [priceScaleW, setPriceScaleW] = useState(64);             // right price-axis width → panel offset
   // Per-level label entries for today's levels, drawn as SVG text in the
   // drawing overlay (positioned at top-right of each line) so we can control
   // font-size and placement beyond what lightweight-charts' price-axis chip
@@ -556,7 +575,7 @@ export function Chart() {
   // level line on each bump.
   const [historyReady, setHistoryReady] = useState<Record<string, boolean>>({});
 
-  const [activePanel, setActivePanel] = useState<'regime' | null>(null);
+  const [activePanel, setActivePanel] = useState<'regime' | 'bias' | null>(null);
   const panelWrapRef = useRef<HTMLDivElement>(null);
 
   // ── Drawing tool refs/state ──────────────────────────────────────────────
@@ -574,10 +593,20 @@ export function Chart() {
   // active at any time. EXPERIMENTAL is an independent toggle that can layer
   // on top of either (it shows force-shadow rule markers — expl, etc).
   //
-  // Default: QUALIFIED on (broader view), TRADABLE off, EXPERIMENTAL off.
+  // Default: QUALIFIED + TRADABLE + FLOW + TAPE on; EXPERIMENTAL / HEAT / DRIFT off.
   const [showQualified,    setShowQualified]    = useState(true);
-  const [showTradable,     setShowTradable]     = useState(false);
+  const [showTradable,     setShowTradable]     = useState(true);
   const [showExperimental, setShowExperimental] = useState(false);
+  const [heatOn, setHeatOn] = useState(false);
+  const [flowOn, setFlowOn] = useState(true);
+  const [driftOn, setDriftOn] = useState(false);
+  const [tapeOn, setTapeOn] = useState(true);
+  // Live TAPE display filter — which event kinds to draw + a min-size floor (dial density here).
+  const [tapeKinds, setTapeKinds] = useState<Set<TapeKind>>(() => new Set(ALL_KINDS));
+  const [tapeMinSizes, setTapeMinSizes] = useState<Record<TapeKind, number>>(() => floorMinSize());
+  const [tapeMinLevels, setTapeMinLevels] = useState<Record<TapeKind, number>>(() => floorMinLevels());   // per-kind min price levels (sweep/stacked)
+  const [iceBucketTicks, setIceBucketTicks] = useState(4);   // roll up icebergs within ±N ticks into one diamond
+  const [confTopN, setConfTopN] = useState(8);               // show only top-N confluence stars in view
   const qualifiedTsRef    = useRef<Set<number>>(new Set());
   const tradableTsRef     = useRef<Set<number>>(new Set());
   const experimentalTsRef = useRef<Set<number>>(new Set());
@@ -660,6 +689,107 @@ export function Chart() {
 
   const selectedSymbol    = useStore((s) => s.selectedSymbol);
   const selectedTimeframe = useStore((s) => s.selectedTimeframe);
+
+  // Live heatmap lifecycle: when ON, open the per-symbol feed and attach the primitive
+  // to the (possibly recreated) candle series; when OFF, disable drawing and close the
+  // feed to stop the stream. barsVersion re-runs this after a symbol-switch series rebuild.
+  useEffect(() => {
+    if (!heatOn) {
+      heatmapRef.current?.setEnabled(false);
+      heatmapRef.current = null;
+      heatmapFeedRef.current?.close();
+      heatmapFeedRef.current = null;
+      return;
+    }
+    const s = seriesRef.current;
+    if (!s) return;
+    if (!heatmapFeedRef.current) heatmapFeedRef.current = new HeatmapFeed(selectedSymbol);
+    else heatmapFeedRef.current.setSymbol(selectedSymbol);
+    if (!heatmapRef.current || heatmapRef.current.series !== s) {
+      heatmapRef.current = new HeatmapPrimitive(heatmapFeedRef.current);
+      try { (s as unknown as { attachPrimitive: (p: unknown) => void }).attachPrimitive(heatmapRef.current); } catch { /* older LWC */ }
+    }
+    heatmapRef.current.setBarSeconds(selectedTimeframe * 60);   // px-per-second anchor for the heatmap's live time→x mapping
+    heatmapRef.current.setEnabled(true);
+  }, [heatOn, selectedSymbol, barsVersion, selectedTimeframe]);
+
+  // Close the live feed on unmount so the WS doesn't leak.
+  useEffect(() => () => { heatmapFeedRef.current?.close(); heatmapFeedRef.current = null; }, []);
+
+  // Live TAPE marker lifecycle — mirrors the heatmap: open the per-symbol event feed and attach
+  // the marker primitive when ON; disable + close when OFF.
+  useEffect(() => {
+    if (!tapeOn) {
+      tapeOnRef.current = false;
+      tapeLoadedRef.current = { from: Infinity, to: 0 };
+      tapeRef.current?.setEnabled(false);
+      tapeRef.current = null;
+      tapeFeedRef.current?.close();
+      tapeFeedRef.current = null;
+      return;
+    }
+    const s = seriesRef.current;
+    if (!s) return;
+    if (!tapeFeedRef.current) tapeFeedRef.current = new TapeFeed(selectedSymbol);
+    else tapeFeedRef.current.setSymbol(selectedSymbol);
+    if (!tapeRef.current || tapeRef.current.series !== s) {
+      tapeRef.current = new TapePrimitive(tapeFeedRef.current);
+      try { (s as unknown as { attachPrimitive: (p: unknown) => void }).attachPrimitive(tapeRef.current); } catch { /* older LWC */ }
+    }
+    tapeRef.current.setBarSeconds(selectedTimeframe * 60);
+    tapeRef.current.setIceBucketTicks(iceBucketTicks);
+    tapeRef.current.setConfTopN(confTopN);
+    tapeRef.current.setEnabled(true);
+    tapeFeedRef.current.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels });
+
+    // Durable backfill: load persisted markers for the currently-visible range so they persist
+    // across reload/scroll/toggle. Scrolling into older history refetches via the sub below.
+    tapeOnRef.current = true;
+    tapeLoadedRef.current = { from: Infinity, to: 0 };
+    const vr = chartRef.current?.timeScale().getVisibleRange();
+    if (vr && typeof vr.from === 'number' && typeof vr.to === 'number') {
+      const fromSec = vr.from as number, toSec = vr.to as number;
+      const padSec = (toSec - fromSec) || 3600;
+      tapeLoadedRef.current = { from: fromSec - padSec, to: toSec + padSec };
+      void tapeFeedRef.current.loadRange(fromSec - padSec, toSec + padSec);
+    }
+  }, [tapeOn, selectedSymbol, barsVersion, selectedTimeframe]);
+
+  // Push filter changes to the live feed (redraws with the new density) without reconnecting.
+  useEffect(() => {
+    tapeFeedRef.current?.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels });
+  }, [tapeKinds, tapeMinSizes, tapeMinLevels]);
+
+  // Push the iceberg roll-up bucket size + confluence top-N live.
+  useEffect(() => { tapeRef.current?.setIceBucketTicks(iceBucketTicks); }, [iceBucketTicks]);
+  useEffect(() => { tapeRef.current?.setConfTopN(confTopN); }, [confTopN]);
+
+  useEffect(() => () => { tapeFeedRef.current?.close(); tapeFeedRef.current = null; }, []);
+
+  // Ranked "TOP ICEBERGS in view" readout — mirrors the primitive's ON-SCREEN top set (same dedup +
+  // ranking that drives the in-place labels), so panel + labels always agree and both track the
+  // viewport as you pan. Polled; skips re-render when the set is unchanged (stable event refs).
+  useEffect(() => {
+    if (!tapeOn) { setTopIce([]); return; }
+    const compute = () => {
+      const t = tapeRef.current?.topIce ?? [];
+      // compare by VALUE — the primitive rebuilds these objects on every canvas draw, and episodic
+      // icebergs redraw constantly (active-episode updates), so reference-compare re-rendered the
+      // whole cockpit every poll tick (2Hz flashing)
+      const same = (p: TapeEvent, q: TapeEvent): boolean =>
+        p.t === q.t && p.price === q.price && p.size === q.size && p.side === q.side &&
+        p.refills === q.refills && p.native === q.native && p.state === q.state &&
+        p.exec === q.exec && p.queueCt === q.queueCt;
+      setTopIce((prev) => (prev.length === t.length && prev.every((p, i) => same(p, t[i]!)) ? prev : [...t]));
+      // keep the on-chart liveness gauges aging during quiet tape — the primitive draws
+      // RELOAD/LIVE/COOLING/STALE from wall-clock reload age, so nudge a repaint each poll
+      tapeRef.current?.refresh();
+      try { const w = chartRef.current?.priceScale('right').width(); if (typeof w === 'number' && w > 0) setPriceScaleW((pw) => (Math.abs(pw - w) < 1 ? pw : w)); } catch { /* noop */ }
+    };
+    compute();
+    const id = setInterval(compute, 500);
+    return () => clearInterval(id);
+  }, [tapeOn]);
   const levelsByDay    = useStore((s) => s.levelsByDay);
   const flashAlpha     = useStore((s) => s.flashAlpha[s.selectedSymbol]);
   const recentEvents   = useStore((s) => s.recentEvents);
@@ -890,6 +1020,17 @@ export function Chart() {
     chartRef.current = chart;
     (window as any).__cockpitChart = chart;  // CDP navigation hook
 
+    // Hover tooltip for TAPE markers — hit-test the crosshair against drawn marker positions.
+    chart.subscribeCrosshairMove((param) => {
+      const pt = param.point;
+      const ev = (tapeOnRef.current && tapeRef.current && pt)
+        ? tapeRef.current.hitTest(pt.x as number, pt.y as number)
+        : null;
+      if (!ev) { if (tapeTipEvRef.current) { tapeTipEvRef.current = null; setTapeTip(null); } return; }
+      tapeTipEvRef.current = ev;
+      setTapeTip({ ev, x: pt!.x as number, y: pt!.y as number });
+    });
+
     // Canvas + webfont race: lightweight-charts paints the axis/labels before
     // the Google webfont (Geist Mono) finishes downloading, so it falls back to
     // system mono and never redraws on its own. Force the font to load, then
@@ -984,6 +1125,19 @@ export function Chart() {
       dynamicLoadTimerRef.current = setTimeout(() => {
         dynamicLoadRef.current(fromMs, toMs);
       }, 250);
+
+      // Tape markers: refetch persisted events when the view moves outside the loaded window
+      // (fast indexed range query). Pad by a viewport so small pans don't re-trigger.
+      if (tapeOnRef.current && tapeFeedRef.current) {
+        const fromSec = fromMs / 1000, toSec = toMs / 1000;
+        const L = tapeLoadedRef.current;
+        if (fromSec < L.from || toSec > L.to) {
+          const padSec = (toSec - fromSec) || 3600;
+          const nf = fromSec - padSec, nt = toSec + padSec;
+          tapeLoadedRef.current = { from: nf, to: nt };
+          void tapeFeedRef.current.loadRange(nf, nt);
+        }
+      }
     });
 
     // Shared scroll-restore logic — call after chart.applyOptions() has run.
@@ -2053,8 +2207,20 @@ export function Chart() {
     //   - delta-divergence -> circle (different shape so they're not confused)
     const markers = symbolSignals
       .map((sig) => {
-        const bucket = bucketSecs(sig.ts);
-        if (!history.has(bucket)) return null;
+        let bucket = bucketSecs(sig.ts);
+        if (!history.has(bucket)) {
+          // Live-edge signal whose minute-bar hasn't landed in `history` yet — the
+          // WS `type:'bar'` events and the 20s tail poll lag the signal push, so a
+          // mid-candle signal used to be DROPPED here and only re-attach on the next
+          // new-bucket barsVersion bump (≈a full candle late, while the beep fired on
+          // time). Snap it to the newest bar on the chart so it paints on the forming
+          // candle immediately; once its true bucket lands (next barsVersion bump) the
+          // effect re-runs and it settles onto the correct candle. Genuinely historical
+          // gaps (bucket OLDER than the live edge) still drop as before.
+          const latest = lastLiveSecRef.current[selectedSymbol];
+          if (latest !== undefined && bucket >= latest) bucket = latest;
+          else return null;
+        }
         const isLong = sig.direction?.toLowerCase() === 'long';
         const color = isLong ? '#2bb673' : '#d64545';
         const position = (isLong ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar';
@@ -3012,9 +3178,92 @@ export function Chart() {
     }
   };
 
+  const fmtTipRows = (ev: TapeEvent): [string, string][] => {
+    const rows: [string, string][] = [];
+    if (ev.kind === 'confluence') {
+      rows.push(['score', String(ev.size)]);
+      if (ev.levels != null) rows.push(['# signals', String(ev.levels)]);
+      if (ev.signals?.length) rows.push(['aligned', ev.signals.join(', ')]);
+      rows.push(['bias', ev.side === 'buy' ? 'bullish ▲' : 'bearish ▼']);
+    } else if (ev.kind === 'iceberg') {
+      rows.push([ev.native ? 'contracts' : 'hidden', String(ev.size)]);
+      if (ev.exec) rows.push(['executed', String(ev.exec)]);
+      if (ev.state === 'active') rows.push(['queued', String(ev.queueCt ?? 0)]);   // waiting to execute — live episodes only
+      if (ev.lastFillT) {
+        const age = Math.max(0, Date.now() / 1000 - ev.lastFillT);
+        rows.push(['last reload', age < 60 ? age.toFixed(0) + 's ago' : (age / 60).toFixed(1) + 'm ago']);
+      }
+      if (ev.refills != null) rows.push(['reloads', String(ev.refills)]);
+      if (ev.durMs) rows.push(['duration', (ev.durMs / 1000).toFixed(1) + 's']);
+      if (ev.state) rows.push(['episode', ev.state === 'active' ? 'ACTIVE — defending now' : ev.state === 'held' ? 'HELD — price rejected away' : 'BROKE — traded through']);
+    } else {
+      rows.push(['size', String(ev.size)]);
+      if (ev.levels != null) rows.push(['levels', String(ev.levels)]);
+      if (ev.state) rows.push(['state', ev.state]);
+      if (ev.lamRatio != null) rows.push(['λ ratio', ev.lamRatio.toFixed(2)]);
+      if (ev.lifeMs != null) rows.push(['life', (ev.lifeMs / 1000).toFixed(1) + 's']);
+    }
+    return rows;
+  };
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />
+
+      {/* Ranked TOP ICEBERGS in view — dominant resting hidden size at a glance (contracts + rate). */}
+      {tapeOn && topIce.length > 0 && (
+        <div style={{
+          position: 'absolute', top: 8, right: priceScaleW + 2, zIndex: 20, pointerEvents: 'none',
+          background: 'rgba(10,10,15,0.94)', border: '1px solid #3a3a44', borderRadius: 4,
+          padding: '7px 11px', fontFamily: 'Geist Mono, monospace', fontSize: 13, fontWeight: 700,
+        }}>
+          <div style={{ color: '#7dd3fc', fontSize: 12, letterSpacing: 0.5, marginBottom: 5 }}>TOP ICEBERGS · in view · H hidden E executed Q queued</div>
+          {topIce.map((ev, i) => {
+            const col = ev.side === 'buy' ? '#22d3ee' : '#f472b6';
+            const live = ev.state === 'active';
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, lineHeight: 1.6, opacity: live || !ev.state ? 1 : 0.65 }}>
+                <span style={{ color: '#e2e8f0', width: 12 }}>{i + 1}</span>
+                <span style={{ color: col, width: 70 }}>{ev.price.toFixed(2)}</span>
+                <span style={{ color: '#ffffff', width: 52, textAlign: 'right' }}>H{ev.size}</span>
+                <span style={{ color: '#e2e8f0', width: 52, textAlign: 'right' }}>{ev.exec ? `E${ev.exec}` : '—'}</span>
+                <span style={{ color: live && (ev.queueCt ?? 0) > 0 ? '#4ade80' : '#e2e8f0', width: 46, textAlign: 'right' }}>{live ? `Q${ev.queueCt ?? 0}` : ev.state === 'held' ? 'HELD' : ev.state === 'broke' ? 'BRK' : '—'}</span>
+                <span style={{ color: '#e2e8f0', width: 40, textAlign: 'right' }}>×{ev.refills ?? '—'}</span>
+                <span style={{ color: ev.native ? '#fde047' : col, width: 14, textAlign: 'center' }}>{ev.native ? '★' : '◆'}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* TAPE marker hover tooltip — details for the marker under the crosshair (iceberg: contracts,
+          refills, duration, contracts/time rate — so persistent icebergs can be compared). */}
+      {tapeTip && (() => {
+        const ev = tapeTip.ev;
+        const cw = containerRef.current?.clientWidth ?? 9999;
+        const flipX = tapeTip.x > cw - 210;
+        const sideCol = ev.side === 'buy' ? '#22d3ee' : '#f472b6';
+        const isNative = ev.kind === 'iceberg' && ev.native;
+        const title = ev.kind === 'iceberg' ? `${ev.native ? 'NATIVE' : 'SYNTHETIC'} ICEBERG` : ev.kind.toUpperCase();
+        const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+        return (
+          <div style={{
+            position: 'absolute', left: flipX ? tapeTip.x - 200 : tapeTip.x + 14, top: tapeTip.y + 14,
+            zIndex: 50, pointerEvents: 'none', minWidth: 172,
+            background: 'rgba(10,10,15,0.96)', border: `1px solid ${isNative ? '#fde047' : sideCol}`,
+            borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
+            color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+          }}>
+            <div style={{ color: sideCol, marginBottom: 4 }}>{title} · {ev.side} @ {ev.price.toFixed(2)}</div>
+            {fmtTipRows(ev).map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
+                <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
+              </div>
+            ))}
+            <div style={{ color: '#6b7280', marginTop: 4, fontSize: 11 }}>{et} ET</div>
+          </div>
+        );
+      })()}
 
       {/* Drawing SVG overlay — z-index ensures it sits above the lightweight-charts
           canvas. Without an explicit z-index the canvas's internal layers can
@@ -3113,6 +3362,22 @@ export function Chart() {
 
         return (
           <div ref={panelWrapRef} style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
+            {/* ── OPENING BIAS — expands the opening-bias table (gap / bar1 / CVD3 / bias) ── */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setActivePanel(p => p === 'bias' ? null : 'bias')}
+                title="Toggle the opening-bias table (9:29 gap, 9:31 bar1 position, 9:33 CVD3 → net BIAS)"
+                style={ctrlBtn('#eab308', activePanel === 'bias')}
+              >
+                OPENING BIAS
+              </button>
+              {activePanel === 'bias' && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 3px)', left: 0, zIndex: 100 }}>
+                  <OpeningBias symbol={selectedSymbol} barHistoryRef={barHistoryRef} barsVersion={barsVersion} />
+                </div>
+              )}
+            </div>
+
             {/* ── REGIME ── */}
             <div style={{ position: 'relative' }}>
               <button
@@ -3184,10 +3449,146 @@ export function Chart() {
               EXP
             </button>
 
+            {/* ── HEAT — live Bookmap-style order-book heatmap + volume dots ──
+                 DISABLED 2026-07-09 (Ravi): button hidden + heatmap:worker engine removed from
+                 the dev scripts (see root package.json _heatmap_note). All code kept intact —
+                 to reactivate, un-comment this block AND restore the worker in package.json.
+            <button
+              onClick={() => setHeatOn(!heatOn)}
+              title="Toggle live order-book heatmap (resting depth) + volume dots (trade prints). Zoom in for full temporal detail. Streams from the MBO capture over /ws/heatmap."
+              style={ctrlBtn('#ff5a3c', heatOn)}
+            >
+              HEAT
+            </button>
+            */}
+
+            {/* ── FLOW — live L3 order-flow HUD (imbalance / aggressor delta / tape speed / temp / CVD) ── */}
+            <button
+              onClick={() => setFlowOn(!flowOn)}
+              title="Toggle the live order-flow HUD — book imbalance, aggressor delta, tape speed, book temperature (MBO message rate) and true CVD, from the full L3 stream over /ws/flow."
+              style={ctrlBtn('#22d3ee', flowOn)}
+            >
+              FLOW
+            </button>
+
+            {/* ── TAPE — live L3 event markers (sweeps / blocks / spoofs / icebergs / absorption) on the chart ── */}
+            <button
+              onClick={() => setTapeOn(!tapeOn)}
+              title="Toggle live tape-event markers on the chart — sweeps (▲▼), blocks (●), icebergs (◆), spoofs (×) and absorption (⊢⊣ heavy flow, price pinned), from the full L3 stream over /ws/tape. Use the controls to dial density."
+              style={ctrlBtn('#a78bfa', tapeOn)}
+            >
+              TAPE
+            </button>
+
+            {/* ── DRIFT — live filtered net-drift HUD (SHADOW; 0DTE/OTM/aggressor, 10m slope vs price-momentum placebo) ── */}
+            <button
+              onClick={() => setDriftOn(!driftOn)}
+              title="Toggle the live NET-DRIFT HUD (shadow) — cumulative ABJ-filtered (0DTE/OTM/aggressor) call-vs-put premium for the mapped index (NQ→NDX, ES→SPX), its 10-min slope (the signal) and the price-momentum(10m) placebo it must beat. Forward-validation display only; gates nothing."
+              style={ctrlBtn('#38bdf8', driftOn)}
+            >
+              DRIFT
+            </button>
+
           </div>
         );
       })()}
-      <OpeningBias symbol={selectedSymbol} barHistoryRef={barHistoryRef} barsVersion={barsVersion} />
+      {flowOn && (
+        <div style={{ display: 'flex' }}>
+          <FlowHud symbol={selectedSymbol} />
+        </div>
+      )}
+      {driftOn && (
+        <div style={{ display: 'flex' }}>
+          <DriftHud symbol={selectedSymbol} />
+        </div>
+      )}
+      {tapeOn && (() => {
+        const KIND_META: Record<TapeKind, { label: string; glyph: string }> = {
+          sweep: { label: 'Sweep', glyph: '▲▼' }, block: { label: 'Block', glyph: '●' },
+          iceberg: { label: 'Iceberg', glyph: '◆' }, spoof: { label: 'Spoof', glyph: '×' },
+          absorption: { label: 'Absorb', glyph: '⊢⊣' }, stacked: { label: 'Stacked', glyph: '≡' },
+          wall: { label: 'Wall', glyph: '▭' }, unfinished: { label: 'Unfin', glyph: '⌃' },
+          trapped: { label: 'Trapped', glyph: '▷◁' }, confluence: { label: 'Confluence', glyph: '★' },
+        };
+        const hasLevels = (k: TapeKind) => 'levels' in (TAPE_FLOORS[k] as Record<string, unknown>);
+        const floorLev = (k: TapeKind) => (hasLevels(k) ? (TAPE_FLOORS[k] as { levels: number }).levels : 0);
+        const toggleKind = (k: TapeKind) => setTapeKinds((prev) => {
+          const next = new Set(prev); next.has(k) ? next.delete(k) : next.add(k); return next;
+        });
+        // While typing, store the raw value (allow transiently below the floor so you can type e.g.
+        // "1"→"10"→"1000"); enforce the floor only on blur.
+        const setMin = (k: TapeKind, v: number) => setTapeMinSizes((prev) => ({ ...prev, [k]: Math.max(0, v || 0) }));
+        const setLev = (k: TapeKind, v: number) => setTapeMinLevels((prev) => ({ ...prev, [k]: Math.max(0, v || 0) }));
+        const clampMin = (k: TapeKind) => setTapeMinSizes((prev) => ({ ...prev, [k]: Math.max(TAPE_FLOORS[k].size, prev[k] || 0) }));
+        const clampLev = (k: TapeKind) => setTapeMinLevels((prev) => ({ ...prev, [k]: Math.max(floorLev(k), prev[k] || 0) }));
+        const LUM = '#c4b5fd';   // luminescent lavender for the labels + numbers (was hard-to-see gray)
+        const lbl = (fs: number): React.CSSProperties => ({ color: LUM, fontSize: fs, fontWeight: 700 });
+        const inp = (on: boolean): React.CSSProperties => ({
+          padding: '2px 5px', fontSize: 13, fontWeight: 700,
+          background: 'var(--bg-2)', color: on ? '#ffffff' : 'var(--text-2)',
+          border: `1px solid ${on ? 'rgba(167,139,250,0.5)' : 'var(--border)'}`, borderRadius: 3, opacity: on ? 1 : 0.5,
+        });
+        return (
+          <div className="mono" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 9, marginTop: 6, padding: '5px 11px',
+            background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4,
+            fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
+          }}>
+            <span style={{ color: '#a78bfa', fontSize: 12, fontWeight: 800, letterSpacing: 0.5 }}>TAPE</span>
+            {ALL_KINDS.map((k) => {
+              const on = tapeKinds.has(k);
+              return (
+                <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <button onClick={() => toggleKind(k)} title={`Toggle ${KIND_META[k].label} markers`}
+                    style={{
+                      padding: '2px 7px', fontSize: 12, fontWeight: 700, cursor: 'pointer', borderRadius: 3,
+                      border: `1px solid ${on ? '#a78bfa' : 'var(--border)'}`,
+                      background: on ? 'rgba(167,139,250,0.15)' : 'transparent',
+                      color: on ? LUM : 'var(--text-2)',
+                    }}>
+                    {KIND_META[k].glyph} {KIND_META[k].label}
+                  </button>
+                  {hasLevels(k) && (
+                    <>
+                      <input type="number" min={floorLev(k)} step={1} value={tapeMinLevels[k] || ''}
+                        onChange={(e) => setLev(k, Number(e.target.value))} onBlur={() => clampLev(k)}
+                        title={`${KIND_META[k].label}: minimum consecutive price levels (floor ${floorLev(k)})`}
+                        disabled={!on} style={{ ...inp(on), width: 40 }} />
+                      <span style={lbl(11)}>lvl</span>
+                    </>
+                  )}
+                  {k === 'confluence' ? (
+                    <>
+                      <span style={lbl(11)} title="Show only the strongest N confluence stars in view (adaptive density)">top</span>
+                      <input type="number" min={1} step={1} value={confTopN || ''}
+                        onChange={(e) => setConfTopN(Math.max(1, Number(e.target.value) || 1))}
+                        title="Max confluence markers shown in view, ranked by score"
+                        disabled={!on} style={{ ...inp(on), width: 40 }} />
+                    </>
+                  ) : (
+                  <><span style={lbl(12)}>≥</span>
+                  <input type="number" min={TAPE_FLOORS[k].size} step={5} value={tapeMinSizes[k] || ''}
+                    onChange={(e) => setMin(k, Number(e.target.value))} onBlur={() => clampMin(k)}
+                    title={`${KIND_META[k].label}: min size in contracts (floor ${TAPE_FLOORS[k].size})`}
+                    disabled={!on} style={{ ...inp(on), width: 56 }} /></>
+                  )}
+                  {hasLevels(k) && <span style={lbl(11)}>ct</span>}
+                  {k === 'iceberg' && (
+                    <>
+                      <span style={lbl(11)} title="Roll up icebergs within ±N ticks into one diamond at the dominant tick">bkt</span>
+                      <input type="number" min={1} step={1} value={iceBucketTicks || ''}
+                        onChange={(e) => setIceBucketTicks(Math.max(1, Number(e.target.value) || 1))}
+                        title="Iceberg roll-up bucket size in ticks (1 = per exact tick, higher = wider zones)"
+                        disabled={!on} style={{ ...inp(on), width: 40 }} />
+                      <span style={lbl(11)}>tk</span>
+                    </>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+        );
+      })()}
       </div>
 
       {/* ── TRADE RULES — always-open quick reference, top-center.

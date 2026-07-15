@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsc -p .",
     "typecheck": "tsc --noEmit",
@@ -32,7 +32,11 @@
     "shadow:resolve": "tsx scripts/rs-shadow-resolve.ts",
     "l3:worker": "tsx scripts/l3-book-worker.ts",
     "l3:decider": "tsx scripts/l3-decision-worker.ts",
-    "l3:smoke": "tsx scripts/l3-book-smoke.ts"
+    "l3:smoke": "tsx scripts/l3-book-smoke.ts",
+    "heatmap:worker": "tsx watch scripts/heatmap-worker.ts",
+    "flow:worker": "tsx watch scripts/flow-worker.ts",
+    "tape:worker": "tsx watch scripts/tape-worker.ts",
+    "drift:worker": "tsx watch scripts/drift-worker.ts"
   },
   "dependencies": {
     "@duckdb/node-api": "1.5.3-r.3",

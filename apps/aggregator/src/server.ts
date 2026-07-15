@@ -16,7 +16,24 @@ import { saveContext, getContext } from './rs-context.js';
 import { scoreRSLevels } from './rules-v2/rs-level-scorer.js';
 import { classifyPockets } from './rules-v2/zone-pockets.js';
 import { discord } from './discord.js';
-import type { CockpitMessage, SourceName, TickTrade } from '@trading/contracts';
+import {
+  heatmapSnapshot, onHeatmapColumn, ingestColumn,
+  browserConnected, browserDisconnected, heatmapActive, onHeatmapActiveChange,
+} from './heatmap/heatmap-hub.js';
+import {
+  flowLatest, onFlow, ingestFlow,
+  flowBrowserConnected, flowBrowserDisconnected, flowActive, onFlowActiveChange,
+} from './flow/flow-hub.js';
+import {
+  driftLatest, onDrift, ingestDrift,
+  driftBrowserConnected, driftBrowserDisconnected, driftActive, onDriftActiveChange,
+} from './drift/drift-hub.js';
+import {
+  tapeSnapshot, onTapeEvent, ingestTapeEvent,
+  tapeBrowserConnected, tapeBrowserDisconnected, tapeActive, onTapeActiveChange,
+} from './tape/tape-hub.js';
+import { queryTapeEvents } from './tape/tape-store.js';
+import type { CockpitMessage, SourceName, TickTrade, Symbol as Sym } from '@trading/contracts';
 import { tradingDayFor } from '@trading/contracts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -322,28 +339,34 @@ export async function startServer(): Promise<FastifyInstance> {
     }
   });
 
-  // ── Size-down: control the trader's /tmp/trader.sizedown flag ────────────────
-  // Presence drops every signal to base 1× (trader's signalQty checks it per signal),
-  // independent of the halt switch. Lets the cockpit force-flatten sizing without a restart.
-  const TRADER_SIZEDOWN_FILE = '/tmp/trader.sizedown';
+  // ── Base position size: control the trader's /tmp/trader.basesize lever ───────
+  // The file holds an integer (1–MAX_BASE_QTY) that overrides config.qty as the BASE
+  // position count. The trader's signalQty() reads it per signal (NO restart); the
+  // differential 2× cohorts scale relative to it. Absent file → trader's config default.
+  const TRADER_BASESIZE_FILE = '/tmp/trader.basesize';
+  const MAX_BASE_QTY = 10;
 
-  app.get('/trader/sizedown', async () => ({ sizedown: fs.existsSync(TRADER_SIZEDOWN_FILE) }));
-
-  app.post('/trader/sizedown', async (_req, reply) => {
+  const readBase = (): number => {
     try {
-      fs.writeFileSync(TRADER_SIZEDOWN_FILE, `${new Date().toISOString()} — cockpit size-down\n`);
-      logger.warn('SIZE-DOWN armed — all signals forced to base 1×');
-      return { ok: true, sizedown: true };
-    } catch (err: any) {
-      return reply.code(500).send({ error: err?.message ?? 'failed' });
+      const n = parseInt(fs.readFileSync(TRADER_BASESIZE_FILE, 'utf8').trim(), 10);
+      if (Number.isFinite(n) && n >= 1) return Math.min(n, MAX_BASE_QTY);
+    } catch { /* absent → default */ }
+    return 1;
+  };
+
+  app.get('/trader/basesize', async () => ({ base: readBase() }));
+
+  app.post('/trader/basesize', async (req, reply) => {
+    const raw = (req.body as any)?.base;
+    const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+    if (!Number.isFinite(n) || n < 1 || n > MAX_BASE_QTY) {
+      return reply.code(400).send({ error: `base must be an integer 1–${MAX_BASE_QTY}` });
     }
-  });
-
-  app.delete('/trader/sizedown', async (_req, reply) => {
+    const base = Math.floor(n);
     try {
-      if (fs.existsSync(TRADER_SIZEDOWN_FILE)) fs.unlinkSync(TRADER_SIZEDOWN_FILE);
-      logger.warn('SIZE-DOWN cleared — differential 2× sizing restored');
-      return { ok: true, sizedown: false };
+      fs.writeFileSync(TRADER_BASESIZE_FILE, `${base}\n`);
+      logger.warn({ base }, 'BASE SIZE set — trader base position count updated');
+      return { ok: true, base };
     } catch (err: any) {
       return reply.code(500).send({ error: err?.message ?? 'failed' });
     }
@@ -497,6 +520,26 @@ export async function startServer(): Promise<FastifyInstance> {
       .sort((a, b) => a.ts - b.ts);
 
     return { symbol, minutes, interval: intervalMin, count: bars.length, bars };
+  });
+
+  // Durable TAPE-event backfill — returns persisted order-flow events (all kinds) for a symbol in
+  // a time range so the cockpit can render markers on historical candles and analyse what happened
+  // after each. `from`/`to` are epoch SECONDS (the TapeEvent time axis). Read-only; wrapped so a
+  // store hiccup can never perturb the aggregator.
+  app.get('/tape/history', async (req) => {
+    const q = req.query as { symbol?: string; from?: string; to?: string; limit?: string };
+    const symbol = (q.symbol === 'ES' ? 'ES' : 'NQ') as Sym;
+    const from = q.from ? Number(q.from) : NaN;
+    const to = q.to ? Number(q.to) : NaN;
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return { symbol, count: 0, events: [] };
+    const limit = Math.max(1, Math.min(100000, parseInt(q.limit ?? '100000', 10) || 100000));
+    try {
+      const events = queryTapeEvents(symbol, from, to, limit);
+      return { symbol, count: events.length, events };
+    } catch (err) {
+      logger.warn({ err }, 'tape/history query failed');
+      return { symbol, count: 0, events: [] };
+    }
   });
 
   // Returns the timestamps of signals that passed the quality gate (gold-tier,
@@ -741,6 +784,176 @@ export async function startServer(): Promise<FastifyInstance> {
       socket.on('error', (err: Error) => {
         logger.warn({ err }, 'cockpit socket error');
       });
+    });
+  });
+
+  // --- Live order-book heatmap subscriber endpoint ---
+  // /ws/heatmap?symbol=NQ|ES — sends a backfill snapshot, then streams live 100ms
+  // columns for the requested symbol only (client re-connects on symbol switch).
+  app.register(async (scope) => {
+    scope.get('/ws/heatmap', { websocket: true }, (socket, req) => {
+      const q = (req.query ?? {}) as { symbol?: string };
+      const symbol: Sym = q.symbol === 'ES' ? 'ES' : 'NQ';
+      logger.info({ symbol }, 'heatmap client connected');
+
+      const send = (msg: object) => {
+        try { socket.send(JSON.stringify(msg)); } catch { /* socket closing */ }
+      };
+
+      browserConnected();                                    // wake the worker if first viewer
+      send(heatmapSnapshot(symbol));                         // backfill
+      const unsub = onHeatmapColumn(symbol, (col) => send({ type: 'heatmap-column', symbol, col }));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string };
+          if (msg.type === 'ping') send({ type: 'pong' });
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); browserDisconnected(); logger.info({ symbol }, 'heatmap client disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'heatmap socket error'));
+    });
+
+    // Worker → hub ingest. The heatmap worker (separate process) connects here, is told
+    // whether any browser is watching (so it tails LAZILY), and streams built columns in.
+    scope.get('/ws/heatmap-ingest', { websocket: true }, (socket) => {
+      logger.info('heatmap worker connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+      send({ type: 'active', active: heatmapActive() });           // initial state
+      const unsub = onHeatmapActiveChange((active) => send({ type: 'active', active }));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string; symbol?: Sym; col?: any };
+          if (msg.type === 'col' && msg.symbol && msg.col) ingestColumn(msg.symbol, msg.col);
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); logger.info('heatmap worker disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'heatmap ingest socket error'));
+    });
+  });
+
+  // --- Live L3 order-flow HUD endpoint ---
+  // /ws/flow?symbol=NQ|ES — sends the latest snapshot, then streams live FlowSnapshots
+  // (~4/sec) for the requested symbol only (client re-connects on symbol switch).
+  app.register(async (scope) => {
+    scope.get('/ws/flow', { websocket: true }, (socket, req) => {
+      const q = (req.query ?? {}) as { symbol?: string };
+      const symbol: Sym = q.symbol === 'ES' ? 'ES' : 'NQ';
+      logger.info({ symbol }, 'flow client connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+
+      flowBrowserConnected();                                 // wake the worker if first viewer
+      const seed = flowLatest(symbol);
+      if (seed) send(seed);                                   // immediate seed if we have one
+      const unsub = onFlow(symbol, (snap) => send(snap));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string };
+          if (msg.type === 'ping') send({ type: 'pong' });
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); flowBrowserDisconnected(); logger.info({ symbol }, 'flow client disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'flow socket error'));
+    });
+
+    // Worker → hub ingest. The flow worker connects here, is told whether any browser is
+    // watching (so it tails LAZILY), and streams FlowSnapshots in.
+    scope.get('/ws/flow-ingest', { websocket: true }, (socket) => {
+      logger.info('flow worker connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+      send({ type: 'active', active: flowActive() });              // initial state
+      const unsub = onFlowActiveChange((active) => send({ type: 'active', active }));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string; symbol?: Sym; snap?: any };
+          if (msg.type === 'snap' && msg.symbol && msg.snap) ingestFlow(msg.symbol, msg.snap);
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); logger.info('flow worker disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'flow ingest socket error'));
+    });
+  });
+
+  // --- Live filtered NET-DRIFT HUD endpoint (SHADOW) ---
+  // /ws/drift?symbol=NQ|ES — latest DriftSnapshot for the mapped index (NQ→NDX, ES→SPX),
+  // then streams live ones (~1/min). Display of the NETDRIFT_FWD_PREREG.md signal; gates nothing.
+  app.register(async (scope) => {
+    scope.get('/ws/drift', { websocket: true }, (socket, req) => {
+      const q = (req.query ?? {}) as { symbol?: string };
+      const symbol: Sym = q.symbol === 'ES' ? 'ES' : 'NQ';
+      logger.info({ symbol }, 'drift client connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+
+      driftBrowserConnected();                                // wake the worker if first viewer
+      const seed = driftLatest(symbol);
+      if (seed) send(seed);
+      const unsub = onDrift(symbol, (snap) => send(snap));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string };
+          if (msg.type === 'ping') send({ type: 'pong' });
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); driftBrowserDisconnected(); logger.info({ symbol }, 'drift client disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'drift socket error'));
+    });
+
+    // Worker → hub ingest. The drift worker connects here, is told whether any browser is
+    // watching (so it polls LAZILY), and streams DriftSnapshots in.
+    scope.get('/ws/drift-ingest', { websocket: true }, (socket) => {
+      logger.info('drift worker connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+      send({ type: 'active', active: driftActive() });
+      const unsub = onDriftActiveChange((active) => send({ type: 'active', active }));
+
+      socket.on('message', (raw: Buffer) => {
+        try {
+          const msg = JSON.parse(raw.toString()) as { type?: string; symbol?: Sym; snap?: any };
+          if (msg.type === 'snap' && msg.symbol && msg.snap) ingestDrift(msg.symbol, msg.snap);
+        } catch { /* ignore malformed */ }
+      });
+      socket.on('close', () => { unsub(); logger.info('drift worker disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'drift ingest socket error'));
+    });
+  });
+
+  // --- Live L3 TAPE event endpoint ---
+  // /ws/tape?symbol=NQ|ES — sends a backfill of recent events, then streams live ones.
+  app.register(async (scope) => {
+    scope.get('/ws/tape', { websocket: true }, (socket, req) => {
+      const q = (req.query ?? {}) as { symbol?: string };
+      const symbol: Sym = q.symbol === 'ES' ? 'ES' : 'NQ';
+      logger.info({ symbol }, 'tape client connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+
+      tapeBrowserConnected();
+      send(tapeSnapshot(symbol));
+      const unsub = onTapeEvent(symbol, (ev) => send({ type: 'tape-event', symbol, ev }));
+
+      socket.on('message', (raw: Buffer) => {
+        try { const msg = JSON.parse(raw.toString()) as { type?: string }; if (msg.type === 'ping') send({ type: 'pong' }); }
+        catch { /* ignore */ }
+      });
+      socket.on('close', () => { unsub(); tapeBrowserDisconnected(); logger.info({ symbol }, 'tape client disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'tape socket error'));
+    });
+
+    scope.get('/ws/tape-ingest', { websocket: true }, (socket) => {
+      logger.info('tape worker connected');
+      const send = (msg: object) => { try { socket.send(JSON.stringify(msg)); } catch { /* closing */ } };
+      send({ type: 'active', active: tapeActive() });
+      const unsub = onTapeActiveChange((active) => send({ type: 'active', active }));
+
+      socket.on('message', (raw: Buffer) => {
+        try { const msg = JSON.parse(raw.toString()) as { type?: string; symbol?: Sym; ev?: any }; if (msg.type === 'ev' && msg.symbol && msg.ev) ingestTapeEvent(msg.symbol, msg.ev); }
+        catch { /* ignore */ }
+      });
+      socket.on('close', () => { unsub(); logger.info('tape worker disconnected'); });
+      socket.on('error', (err: Error) => logger.warn({ err }, 'tape ingest socket error'));
     });
   });
 

@@ -189,6 +189,10 @@ async function main() {
   // any open V3 trade at the latest tick price. No-op when V3 is 'off'.
   rthTimer.start();
 
+  // Live order-book heatmap: the heavy MBO tailing runs in a DEDICATED process
+  // (scripts/heatmap-worker.ts) — never here — and forwards columns to the hub via
+  // /ws/heatmap-ingest. This process only rings + fans them out. See heatmap-engine.ts.
+
   // Then the server (sources and cockpit can connect)
   const app = await startServer();
 

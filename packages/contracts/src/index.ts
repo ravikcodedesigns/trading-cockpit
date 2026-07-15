@@ -446,6 +446,164 @@ export interface TickBatch {
   events: TickEvent[];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Live order-book heatmap (Bookmap-style) wire contracts.
+//
+// A "column" is a single point-in-time snapshot of the resting book within a
+// price band around mid, plus the trades that executed in that column's interval
+// (the volume dots). Sizes and trades are sparse flat arrays to keep the stream
+// compact at a ~100ms cadence. All prices are expressed in integer ticks relative
+// to the column's anchor (price_int); the client maps back with `tick`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface HeatmapColumn {
+  t: number;   // column timestamp — real epoch SECONDS (aligns with candle time axis)
+  a: number;   // anchor price_int (band centre; a * tick = anchor price)
+  // Resting depth, sparse + flat: [offTicks, size, offTicks, size, …].
+  // offTicks = price_int − anchor (bids below anchor are negative, asks above positive).
+  s: number[];
+  // Trades (volume dots), sparse + flat: [offTicks, signedSize, …].
+  // sign of size = aggressor: >0 buy-aggressor (lifted ask), <0 sell-aggressor (hit bid).
+  x: number[];
+}
+
+export interface HeatmapSnapshot {
+  type: 'heatmap-snapshot';
+  symbol: Symbol;
+  tick: number;    // price per price_int unit (0.25 for NQ/ES)
+  band: number;    // half-width of the band in ticks (levels span anchor ± band)
+  colMs: number;   // column cadence in ms
+  cols: HeatmapColumn[];   // backfill, chronological
+}
+
+export interface HeatmapColumnPush {
+  type: 'heatmap-column';
+  symbol: Symbol;
+  col: HeatmapColumn;
+}
+
+export type HeatmapMessage = HeatmapSnapshot | HeatmapColumnPush;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live L3 order-flow HUD ("FLOW") — derived from the FULL MBO stream (order
+// add/cancel/replace + attributed trades), NOT just L2 depth. The same gauges are
+// computed over three trailing windows (1m / 5m / 15m) so the cockpit can render a
+// stacked grid for a multi-timeframe confluence read. Streamed ~1×/sec.
+export interface FlowWindow {
+  sec: number;      // CONTEXT window in seconds (60 / 300 / 900) — imb/tps/mps averaged over this
+  deltaSec: number; // the faster sub-window the aggressor delta is summed over (10 / 60 / 300)
+  imb: number;      // trailing-AVERAGE resting book imbalance over `sec` (contracts, >0 = bid-stacked)
+  delta: number;    // aggressor delta SUM over `deltaSec` (buy − sell, contracts) — the live momentum
+  tps: number;      // trades / sec, averaged over `sec`
+  mps: number;      // MBO messages / sec (adds+cancels+replaces) over `sec` — book churn/temperature
+}
+export interface FlowSnapshot {
+  type: 'flow';
+  symbol: Symbol;
+  ts: number;            // real epoch seconds
+  bestBid: number;       // price (current)
+  bestAsk: number;       // price (current)
+  spreadTicks: number;   // (bestAsk − bestBid) / tick (current)
+  cvd: number;           // session-cumulative true CVD (is_bid_aggressor attributed)
+  bandTicks: number;     // the ± band used for imbalance
+  windows: FlowWindow[]; // [1m, 5m, 15m]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live filtered NET-DRIFT ("DRIFT") — cumulative ABJ-filtered (0DTE/OTM/aggressor)
+// call-vs-put premium for the index that maps to the future (NDX→NQ, SPX→ES), plus its
+// 10-min slope (the signal) and a price-momentum(10m) slope (the placebo). SHADOW ONLY —
+// display of the forward-validation signal in NETDRIFT_FWD_PREREG.md; gates nothing.
+export interface DriftSnapshot {
+  type: 'drift';
+  symbol: Symbol;             // futures the index maps to: NQ | ES
+  index: 'SPX' | 'NDX';       // the index actually queried
+  ts: number;                 // epoch seconds of the latest bucket
+  session: string;            // YYYY-MM-DD (NY)
+  price: number;              // underlying index spot
+  netCum: number;             // cumulative net (call−put) premium $ — the drift value
+  netCallCum: number;         // cumulative net call premium $
+  netPutCum: number;          // cumulative net put premium $
+  slope10: number;            // 10-min LSQ slope of netCum ($/min) — the directional signal
+  priceSlope10: number;       // 10-min LSQ slope of spot — placebo yardstick
+  bias: 'bull' | 'bear';      // sign(netCum)
+  stale: boolean;             // true when the last print is old (no fresh flow)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live L3 TAPE events ("TAPE") — discrete order-flow events detected from the full
+// MBO stream and plotted as markers at the exact price/time they occur. Streamed
+// from the tape worker → aggregator → cockpit primitive.
+export type TapeKind =
+  | 'sweep' | 'block' | 'spoof' | 'iceberg' | 'absorption'
+  | 'stacked'     // stacked footprint imbalance (≥ N consecutive diagonally-imbalanced levels)
+  | 'wall'        // a large resting level that HELD (refilled + rejected) or BROKE (eaten through)
+  | 'unfinished'  // a swing extreme made on one-sided aggression (single print → revisit magnet)
+  | 'trapped'     // a burst of aggressors at an extreme that price immediately reversed through
+  | 'confluence'; // ≥2 distinct tape+flow signals aligning in one price zone + window (the synthesis)
+export interface TapeEvent {
+  t: number;          // epoch SECONDS (aligns with candle time axis)
+  kind: TapeKind;
+  price: number;
+  side: 'buy' | 'sell';  // buy = bid-side / buy-aggressor (green) · sell = ask-side / sell-aggressor (red)
+                         // absorption: the DEFENDER side — 'buy' = buyer absorbing sellers (support/bullish)
+                         // stacked:    'buy' = stacked buy imbalance (bullish continuation), 'sell' = sell
+                         // wall:       the side that DEFENDED (bid wall = 'buy', ask wall = 'sell')
+                         // unfinished: 'buy' = unfinished HIGH above (upside magnet), 'sell' = unfinished LOW
+                         // trapped:    the side that will PUKE ('sell' = trapped longs, 'buy' = trapped shorts)
+  size: number;       // contracts — sweep total / block size / spoofed size / iceberg cumulative refilled /
+                      // absorption: net absorbed flow (|ΣOFI|) / stacked: dominant-side volume across the stack /
+                      // wall: peak resting size / unfinished: volume at the extreme / trapped: trapped burst volume /
+                      // confluence: the SCORE (weighted sum of aligned distinct signals)
+  levels?: number;    // sweep / stacked: number of consecutive price levels involved / confluence: # aligned signals
+  signals?: string[]; // confluence: the distinct signal types that aligned (e.g. ['iceberg','absorption','flow'])
+  refills?: number;   // iceberg: FILL-CONFIRMED refill count (re-posts that later traded; pulled posts never count)
+  durMs?: number;     // iceberg: episode lifespan so far (→ contracts-per-time rate)
+  lifeMs?: number;    // spoof: how long the pulled order rested before cancel
+  lamRatio?: number;  // absorption: current λ / baseline λ (how collapsed the price-impact is; lower = stronger)
+  state?: 'hold' | 'break'             // wall: did the level hold or break
+        | 'active' | 'held' | 'broke'; // iceberg EPISODE: being defended NOW / price bounced away / traded through
+  native?: boolean;   // iceberg: true = order_id-NATIVE (one order's fills exceeded its displayed size —
+                      // real hidden qty); false/absent = SYNTHETIC episode (machine-latency fill-confirmed
+                      // refills; size = hidden reserve = traded − peak persistent displayed at the level)
+  epId?: string;      // iceberg episode id — provisional 'active' emits and the final held/broke emit share it,
+                      // so the store UPSERTs and the client REPLACES instead of accumulating duplicate markers
+  exec?: number;      // iceberg: TOTAL contracts executed at the level this episode (exec − size ≈ what was shown)
+  queueCt?: number;   // iceberg: contracts re-posted and WAITING to execute right now (0 once resolved) —
+                      //          the freshest "defender still committing" signal
+  lastFillT?: number; // iceberg: epoch seconds of the last fill/reload — render reload-age live from this
+}
+export interface TapeSnapshot {
+  type: 'tape-snapshot';
+  symbol: Symbol;
+  events: TapeEvent[];   // recent backfill, chronological
+}
+export interface TapeEventPush {
+  type: 'tape-event';
+  symbol: Symbol;
+  ev: TapeEvent;
+}
+export type TapeMessage = TapeSnapshot | TapeEventPush;
+
+// Per-kind detection FLOORS — the single source of truth shared by the tape engine (what it
+// even emits) and the cockpit UI (each counter's default AND its minimum). The UI cannot be
+// set below these (it'd be an impossible filter — the engine never emits below its floor); it
+// can only be raised. Change a value here and both sides move together.
+export const TAPE_FLOORS = {
+  block:      { size: 25 },              // a block = a single print ≥ N contracts
+  sweep:      { levels: 3, size: 5 },    // a sweep = took ≥ L price levels AND ≥ N contracts
+  spoof:      { size: 40 },              // a spoof = a pulled resting order ≥ N contracts
+  iceberg:    { size: 5 },               // an iceberg = ≥ N contracts of HIDDEN reserve (episode traded − peak displayed).
+                                         // LOW floor: the engine applies PER-SYMBOL minHidden (NQ≈8 / ES≈30 — book-relative);
+                                         // the UI dial raises display density from here.
+  absorption: { size: 30 },              // absorption = ≥ N units of net order flow whose impact collapsed
+  stacked:    { levels: 3, size: 10 },   // stacked imbalance = ≥ L consecutive levels, ≥ N dominant vol each
+  wall:       { size: 100 },             // a wall = a resting level whose peak size ≥ N contracts
+  unfinished: { size: 5 },               // unfinished auction = ≥ N one-sided contracts at the extreme
+  trapped:    { size: 30 },              // trapped = an aggressor burst ≥ N contracts caught offside
+  confluence: { size: 3 },               // confluence = aligned-signal SCORE ≥ N (engine floor; display uses top-N)
+} as const;
+
 // Re-export the standardized level color/style palette so cockpit + aggregator
 // share one source of truth.
 export * from './level-styles.js';

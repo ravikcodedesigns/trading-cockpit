@@ -1,14 +1,15 @@
 # Trading Cockpit — Handoff Document
 
 > ## ▶ START HERE — new session, read this first
-> **Latest state = §28** (2026-07-08: PHASE E EXECUTED END-TO-END — event-first discovery E0→E3 + the E0.2 shape batch all resolved; first EDGE found (sweep-continuation@1s) and proven NOT taker-tradable (E3); QI replication CONFIRMED; DISCOVERY ERA CLOSED). Orient in this order:
-> **1.** §28.1 (read-first — pickup points + do-NOTs) → **2.** `docs/cracker-ledger.md` from "market-book.ts" (2026-07-07) on + `docs/cracker-registrations.json` (resolutions + the OPEN forward family) → **3.** §28.3 (measured latency/slippage ground truth), §28.4 (asset inventory), §27.3 (frozen math — do not re-derive), `git log --oneline -20`, memory `project_cracker`.
+> **ACTIVE BUILD = §29** (2026-07-09→15: live L3 TAPE + FLOW cockpit tooling). The episodic synthetic iceberg is **BUILT + LIVE** (§29.6 design, §29.8 hardening + H/E/Q HUD + liveness gauge). **Next session's work order = §29.8 "THE AUDIT": (1) COMMIT the whole build (§29.7+§29.8 — still uncommitted!), (2) tranche-1 correctness fixes (broke-iceberg confluence direction bug · wall persistence gate + per-symbol floor · block by aggressor_order_id), (3) calibration wiring, (4) family-based confluence redesign.** Read §29.1 + §29.8 first. §29 is descriptive tooling, not a trade signal.
+> **Latest RESEARCH state = §28** (2026-07-08: PHASE E EXECUTED END-TO-END — event-first discovery E0→E3 + the E0.2 shape batch all resolved; first EDGE found (sweep-continuation@1s) and proven NOT taker-tradable (E3); QI replication CONFIRMED; DISCOVERY ERA CLOSED). Orient in this order:
+> **1.** §29.1 (active build) + §28.1 (research read-first — pickup points + do-NOTs) → **2.** `docs/cracker-ledger.md` from "market-book.ts" (2026-07-07) on + `docs/cracker-registrations.json` (resolutions + the OPEN forward family) → **3.** §28.3 (measured latency/slippage ground truth), §28.4 (asset inventory), §27.3 (frozen math — do not re-derive), `git log --oneline -20`, memory `project_cracker` + `project_flow_tape`.
 > **The state in one line:** every discovery avenue is measured — 17 single-signal nulls (incl. the canonical footprint stacked-imbalance at 44,966 events), 7 mirages killed, 3 confirmed mechanisms (**F5b** structure-scrambles-flow, **QI** seconds-scale predictability ES≫NQ, **sweep impact curve** — completes ≤250ms, untradable by taking), 1 confirmed tool (IV→range); predictability lives at seconds / in the book / in composition, not in single signals at minutes.
 > **Open threads:** (a) forward-lockbox family {F5b-fwd, F7b, NQ5M-THEME, F11c} resolves ~**2026-07-21** under BH q=0.10 (nightly job feeds it; wallcluster accrues alongside); (b) **Phase-5 composition** with the confirmed roster after that; (c) QI execution-overlay study for the live book (can run any time); (d) trader hot-path fixes + WS watchdog + parked FLIP/CONT fixes (§28.1 item 3); (e) Phase-8 sensitivity items registered — do NOT run early.
 > §27 = Cracker Phases 1–4 (the levels ladder). §26 = orderflow-rebuild design (superseded). §25 = options pivot + verdict. §24 = RS-feed pipeline (still current infra). §1–23 earlier layers — the stale-warning below applies to them.
 
 > **Author**: Session handoff originally as of 2026-06-07 (Sunday)
-> **Last updated**: 2026-07-08 (Wednesday) — latest state is **§28** (see START HERE above). **§27** = Cracker Phases 1–4; **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
+> **Last updated**: 2026-07-15 (Wednesday) — active build is **§29** (live L3 tape/flow tooling; episodic iceberg DONE §29.6+§29.8; next = commit + §29.8 audit tranches). Latest research state is **§28** (see START HERE above). **§27** = Cracker Phases 1–4; **§25** = options pivot + verdict; **§24** = RS-feed pipeline (current infra); **§23** = RS-framework / Lightspeed-L3 pivot; **§22** = 2026-06-08→06-16.
 > **Purpose**: Enable a new session to pick up the project without re-discovery
 > **Audience**: Engineer or AI assistant continuing the work
 >
@@ -2011,3 +2012,137 @@ Cracker's instrument is finished, calibrated, and self-feeding; the folklore hyp
 ### 28.6 The state in one paragraph
 
 Every discovery avenue the program defined — locations (F1–F10), hidden liquidity (F11), raw tape events at minutes (E2), tape events at milliseconds (E2b), and the user's own shape batch (E0.2) — has now been measured to a verdict at institutional rigor: 17 single-signal nulls, 3 confirmed mechanisms (F5b structure-scrambles-flow, QI seconds-scale predictability, the sweep impact curve), 1 confirmed forecasting tool (IV→range), and 1 edge that exists but cannot be harvested by aggression (sweep-continuation@1s — E3 proved the move completes within 250ms). The market's short-horizon direction is efficient against every single-variable read; what predictability exists lives at seconds, in the book, and in composition. Phase 5 (composition → Gate-2 → the ONE lockbox shot) begins when the forward family resolves ~07-21; the interim work is the QI execution overlay, the trader hot-path fixes, and the parked FLIP/CONT fixes. The instrument, the data, the confirmed mechanisms, and the discipline are the assets; nothing needs re-arguing, only extending.
+
+---
+
+## 29. 2026-07-09 → 07-14 — LIVE L3 TAPE + FLOW cockpit tooling; iceberg detection redesign (IN PROGRESS)
+
+> **This is a build/visualization initiative, NOT a research-verdict section.** It adds live L3 order-flow tooling to the cockpit chart (tape-event markers, a FLOW HUD, a confluence star, an iceberg readout). None of it is armed to trade — it is descriptive tooling for eyeballing/analyzing live tape. The one OPEN DESIGN DECISION (the synthetic-iceberg method) is in §29.6 — **that is where the next session picks up.**
+
+### 29.0 TL;DR — what this session built
+
+- **A 9-kind live TAPE-event marker system** on the cockpit chart, fed by a dedicated worker that tails the MBO firehose log (NOT in-process — the heatmap landmine) → `tape-engine.ts` detectors → `tape-hub.ts` → cockpit via WS + a durable store. Kinds: **block, sweep, spoof, iceberg (native + synthetic), absorption, stacked (footprint diagonal), wall (hold/break), unfinished-auction, trapped.**
+- **Durable always-on persistence** — `tape-store.ts` → `data/tape-events.db` (24 MB). Markers now survive refresh/restart and backfill via `/tape/history` so past events can be reviewed against subsequent price action (the user's explicit requirement). Client ring `MAX=150000`, `loadRange` limit `100000`.
+- **Native vs synthetic iceberg split** — native = true hidden order via `order_id` (rare, ~9–54/day NQ, ~46 ES, ≈0.2% of orders — CONFIRMED genuinely rare, not a reading bug). Synthetic = inferred from repeated posting/filling at a price. Native marker gets a **yellow luminescent border** (`NATIVE_GLOW='253,224,71'`); BUY/SELL fills are **cyan/magenta**.
+- **A CONFLUENCE marker** (FLOW+TAPE synthesis) — one scored star when ≥3 distinct aligned signals coincide in a price zone; magnitude-aware scoring planned (percentile tiers). Displayed as adaptive top-N by score, not a fixed threshold (fixed threshold was un-actionable: 3=flood, 8=nothing).
+- **A percentile CALIBRATION harness** — `scripts/calibrate_tape.ts` replays every detector over ~23 RTH days of order-level parquet (2026-06-16→07-13), per-symbol, roll-aware → `data/tape-calibration.json` (p20/p50/p80/p95/p99 per event kind). Magnitude tiers: `<p20` tiny ×0.4 … `>p95` huge ×2.5.
+- **CVD fixed to BMD/NQ** — the FLOW HUD was showing CQG/MNQ CVD (wrong contract). Now RTH-anchored BMD CVD replayed from the log (`flow-engine.ts hydrateRthCvd()`), exact value shown.
+- **Sweep detector fixed** (was firing 0) — Bookmap `execution_start/end` delimits single-price fills; redefined as a **run** across ≥3 price levels same-direction within a 100ms gap (`TAPE_SWEEP_GAP_MS`). Now ~18.7k/day.
+- **07-14 live op:** the aggregator degraded after 19h (memory bloat 0→3.2 GB → GC thrash → source-feed flapping → chart froze at RTH open). Restarted in place via `touch apps/aggregator/src/index.ts` (tsx-watch reload of ONLY the `agg` slot — no `dev:core` bounce, no data gap). RAM 3.2 GB→656 MB, `/health` 15s→1.2s, feeds reconnected, trader signal-gate reconnected. **Verified ZERO RTH data loss** (ticks/tape/capture/bars all contiguous from 09:30). See §29.5.
+- **NOTHING committed this session** — the entire tape/flow/iceberg build is uncommitted (see §29.7). Commit before or early in the next session.
+
+### 29.1 ⚠️ Read-first — where the next session picks up
+
+1. **The synthetic-iceberg redesign is DONE and LIVE** — §29.6 (design + calibration) and §29.8 (hardening, H/E/Q live HUD, liveness gauge, incident fixes). Do NOT redesign it; the open work is §29.8's AUDIT list.
+2. **Work order (user-approved 07-15): COMMIT FIRST** (§29.7 + §29.8 file lists — everything is still uncommitted; keep the unrelated research-script churn out), **then tranche-1 correctness fixes → calibration wiring → family-based confluence redesign** (full detail in §29.8).
+3. **Pending research item:** pre-register the iceberg held/broke forward study (post-HELD rejection persistence / post-BROKE continuation vs placebo levels) once ~2 weeks of episodic sample accrues — NOT registered yet. Check the forward-validation queue before arming anything.
+4. **Do NOT**: tail the MBO firehose in the aggregator process (starves the live hub — the 2026-07-09 heatmap landmine); VACUUM `tape-events.db` while the aggregator/worker holds it (use `PRAGMA wal_checkpoint(TRUNCATE)`); re-introduce the rolling-5m synthetic iceberg; delete the legacy iceberg rows without explicit sign-off (read-side filter already hides them, §29.8); treat any of this tooling as a trade signal (it's descriptive only).
+5. **Known follow-up (not urgent):** the aggregator has a slow memory leak (~170 MB/h → 3.2 GB/19h) that will re-degrade it roughly daily (restart in place: `touch apps/aggregator/src/index.ts`, only the agg slot reloads). A leak hunt is queued for when the user is flat. Base CPU ~88% at RTH is the normal tick-router+rules load, not the leak.
+
+### 29.2 Architecture (mirrors the heatmap/FLOW pattern)
+
+```
+MBO firehose .log (~/cockpit-mbo-capture, front-month NQU6/ESU6)
+   │  (tail -F the LOG — 20–60s flush lag, live-only; NEVER tail in aggregator process)
+   ▼
+scripts/tape-worker.ts  (dedicated process, dev:core slot "tp")
+   ▼  src/tape/tape-engine.ts  — all detectors, per-symbol
+   ▼  src/tape/tape-hub.ts     — fan-out + emit()
+   ├─► src/tape/tape-store.ts  → data/tape-events.db  (durable, buffered flush, additive ALTER migrations)
+   └─► WS /ws/cockpit → cockpit
+         tapePrimitive.ts (ISeriesPrimitive) draws markers; Chart.tsx controls; tape-feed.ts client ring + /tape/history backfill
+
+FLOW path (parallel): scripts/flow-worker.ts → src/flow/flow-engine.ts (RTH BMD CVD) → flow-hub.ts → FlowHud.tsx
+NET-DRIFT path: scripts/drift-worker.ts → DriftHud (shadow; committed 21c54c4 just before this session)
+```
+
+- **dev:core slots** (root `package.json`): `agg, bm(addon.py), ticks, trader(log-tail), deploy, fl(flow-worker), tp(tape-worker), dr(drift-worker)`. The aggregator IS the `agg` slot; restart it alone with `touch apps/aggregator/src/index.ts` (tsx-watch), NOT by bouncing dev:core.
+- **Calibration/replay** uses DuckDB via `src/lib/mbo-reader.ts` (`query(sql)`, views `mbo_trades/mbo_depth/mbo_events`). Must filter `contract` per-day across the roll (M6→U6). Node `@duckdb/node-api` (python duckdb unavailable).
+
+### 29.3 The detectors — `src/tape/tape-engine.ts` (all env-tunable, see the `TAPE_*` vars)
+
+| Kind | Definition (current) | Key knobs |
+|---|---|---|
+| **block** | single large print ≥ threshold | `TAPE_BLOCK_MIN` |
+| **sweep** | RUN across ≥`LEVELS`(3) prices, same dir, size ≥`MIN`(5), consecutive fills within `GAP_MS`(100). Emits on run close. **FIXED from 0-firing** | `TAPE_SWEEP_LEVELS/MIN/GAP_MS` |
+| **spoof** | large resting order pulled within `LIFE_MS` without filling | `TAPE_SPOOF_MIN/LIFE_MS` |
+| **iceberg (native)** | hidden qty revealed on ONE `order_id` (parquet reveals hidden on execution). Rare, kept as-is | `TAPE_ICE_NAT_CUM/NAT_HIDDEN` |
+| **iceberg (synthetic)** | ⚠️ CURRENTLY rolling-5m refill count (`WIN_MS`=300000, `EMIT_MS`=1000) — **BEING REPLACED, see §29.6** | `TAPE_ICE_WIN_MS/EMIT_MS/REFILLS/REFILL_MS/CUM` |
+| **absorption** | Kyle-λ / OFI divergence (price stalls vs signed flow) via `divergence.ts`; EWMA, change-only OFI sampling | `TAPE_ABS_*` |
+| **stacked** | footprint diagonal: ≥`LEVELS` consecutive prices with ≥`RATIO` bid/ask imbalance | `TAPE_STACK_*` |
+| **wall** | large resting level that HOLDS (`HOLD_FRAC`) or BREAKS (`BREAK_FRAC`) after ≥`HIT` taker hits | `TAPE_WALL_*` |
+| **unfinished** | auction leaves a level with no opposing print (currently NULL-ish) | `TAPE_UNF_*` |
+| **trapped** | burst of aggressors then immediate reversal ≥`TICKS` within `WIN_MS` (trapped longs/shorts; opposite-pointing arrow) | `TAPE_TRAP_*` |
+| **confluence** | see §29.4 | `TAPE_CONF_*` |
+
+### 29.4 Confluence marker (`feedConfluence()` in tape-engine.ts)
+
+- Collects distinct aligned signals (by side) within a `ZONE`(8-tick) window over `WIN_MS`(25s): the CONF_W-weighted tape kinds **+** a FLOW signal (delta ≥ `FLOW_MIN`=80) **+** a book-IMB signal (near-touch bid−ask ≥ `IMB_MIN`=150).
+- Fires `{kind:'confluence', size:score, levels:nKinds, signals:[…]}` when `score ≥ MIN` AND `nKinds ≥ MIN_KINDS`(3). `throttleMs`=20s.
+- Weights `CONF_W = {iceberg:2, absorption:2, wall:2, stacked:1.5, sweep:1.5, trapped:1.5, block:1}`; flow `FLOW_W`=1.5, imb `IMB_W`=1.
+- Displayed as **adaptive top-N stars by score** (`confTopN=8` in tapePrimitive.ts), NOT a fixed cutoff — the user found fixed thresholds un-actionable.
+- **PENDING:** replace flat per-kind weights with **magnitude-aware** scoring — multiply each kind's weight by its size-percentile tier (from `tape-calibration.json`). Thresholds must be DATA-DRIVEN from the full dataset (the user's standing rule: "only take the values I give as examples; scan and find the real multipliers").
+
+### 29.5 Calibration harness (`scripts/calibrate_tape.ts` → `data/tape-calibration.json`)
+
+- Replays detectors over ~23 RTH days of order-level parquet, RTH-only, per-symbol, `frontContract()` = max-trades contract per day (roll-aware). Emits p20/p50/p80/p95/p99 per kind.
+- **Iceberg (rolling-5m, the method being replaced):** NQ p50 138 / p95 354; ES p50 1859 / p95 5398. (ES ≫ NQ — thicker book.) Earlier fragmentation bugs (10s gap-reset dropped p50 to 59; snapshot-counting biased low) were fixed with a 20-min idle reset before the switch to rolling window — but the user has now rejected rolling entirely (§29.6).
+- **Native iceberg rarity CONFIRMED** (not a bug): 249/127,545 orders (0.2%) reveal hidden qty on one NQ RTH day → ~9–54 distinct/day NQ, ~46 ES. The user accepts this ("it is what it is").
+- Data spans: order-level parquet **2026-06-16→07-13** (~23 days, has `order_id`); trades-only `mbo-clean.db` spans ~2 months (contract-tagged).
+
+### 29.6 ⭐ Synthetic-iceberg redesign — BUILT 2026-07-14 (episodic; live + verified)
+
+**Problem (user, 07-14):** the rolling-5-minute synthetic iceberg was windowed absorption ≈ rolling CVD at a price — rejected. Wanted a discrete hidden-liquidity EVENT, not a rolling metric, not session-cumulative.
+
+**What was built (the hybrid — stronger than the L2-only industry method because we have order_ids):**
+- **Native (order_id):** unchanged; now emits with `epId` (= order_id) so re-fires REPLACE one marker instead of stacking.
+- **Synthetic = discrete EPISODE at (price, side), two independent tests both required:**
+  - **QUALIFY (the anti-churn/anti-flicker discriminator):** ≥4 **fill-confirmed machine-latency refills** — a fresh order posted at the level within 500ms (`TAPE_ICE_REFILL_MS`) of the fill that depleted it, which then **traded itself**. Posts pulled unfilled NEVER count (measured: 92% of NQ / 83% of ES refill posts are pulled unfilled — the flicker algos, correctly excluded; they route to the spoof detector).
+  - **SIZE:** hidden reserve = `traded during episode − PEAK PERSISTENT displayed` (display must rest ≥400ms `TAPE_ICE_PERSIST_MS` to count toward the peak — flashed size can't deflate the estimate). Rationale: traded−peak alone false-positives on sequential visible churn; refills alone never compare against what was shown; the hybrid needs both.
+  - **LIFECYCLE:** provisional `state:'active'` emits while defended (throttled 2s, anchored at episode-start bar so the marker never moves) → final **`held`** (price rejected ≥3 ticks away for 15s, or idle 120s with level standing) or **`broke`** (a print through the level). All emits share `epId` → store UPSERTs (partial unique index on `ep_id`), client replaces in place.
+- **PER-SYMBOL minHidden floors (the key calibration finding):** episode hidden sizes scale with book thickness — a global floor of 40 silences NQ entirely while ES floods. **Full 19-day episodic recalibration (07-14): NQ hidden p80=7/p95=20/p99=44 (4,684 episodes, ~246/day); ES p80=15/p95=54/p99=123 (123,828, ~6.5k/day); hidden p50=0 on BOTH (half of refill-qualified episodes are fully-visible churn — the hidden test is the real discriminator); episode duration p50 = 2–4s (machine-defense timescale); native ~31/day NQ, ~85/day ES.** Final defaults **NQ 12 / ES 30** (`TAPE_ICE_HIDDEN_NQ/_ES`, ≈p90); `TAPE_FLOORS.iceberg.size` dropped to 5 (UI dial floor). `data/tape-calibration.json` now carries the episodic iceberg tiers (+ `iceberg_dur_s`, `native_ct` separated from synthetic).
+- **Verified live 07-14:** episodes fire on both symbols with held/broke resolutions, one row per epId in the store, chart tooltip shows ACTIVE/HELD/BROKE + hidden + refills + duration; broke-diamonds get a diagonal slash.
+
+**Files:** tape-engine.ts (IceEp episodes replace refillRun; side-aware recentFill), tape-store.ts (ep_id + upsert), contracts (epId, state, floors), tape-feed.ts (in-place episode replace), tapePrimitive.ts (state passthrough + broke slash), Chart.tsx (tooltip, SYNTHETIC label). Debug harness: `scripts/ice_ep_debug.ts` (replays log tail with death-reason counters). Calibration: `scripts/calibrate_tape.ts` rewritten to episodic (reconstructs displayed depth from the order stream, 30-min pre-RTH warmup; needs `NODE_OPTIONS=--max-old-space-size=24576` — 23M-event days OOM the 4GB default).
+
+**Still pending:** percentile→multiplier magnitude scoring into confluence (§29.4) — the episodic iceberg tiers are now in `data/tape-calibration.json`; nightly recalibration job; Part-2 depth metrics for confluence (wall peak, book imbalance).
+
+### 29.7 Files touched (ALL UNCOMMITTED — commit next session)
+
+**Aggregator** — `src/tape/tape-engine.ts` (all detectors; sweep+iceberg rewrites), `src/tape/tape-hub.ts`, `src/tape/tape-store.ts` (NEW, → data/tape-events.db), `src/flow/flow-engine.ts` (RTH BMD CVD), `src/flow/flow-hub.ts` (removed CQG cvd override), `src/server.ts` (/tape/history, limit 100000), `scripts/tape-worker.ts` (NEW), `scripts/calibrate_tape.ts` (NEW), `src/lib/mbo-reader.ts`. **Cockpit** — `src/components/tapePrimitive.ts` (markers/rollup/hover/native-glow), `src/components/Chart.tsx` (controls: bkt input, confluence top-N, defaults tape/flow/tradable on), `src/lib/tape-feed.ts` (MAX 150000 / limit 100000), `src/components/FlowHud.tsx` (exact BMD CVD), `vite.config.ts` (`/tape` proxy — was missing → history 404'd as HTML). **Contracts** — `packages/contracts/src/index.ts` (`TapeKind` += `'confluence'`; `TapeEvent` += `signals?/native?/durMs?`; `TAPE_FLOORS`). **Artifacts** — `data/tape-events.db`, `data/tape-calibration.json` (gitignored).
+
+> Note: unrelated uncommitted churn also sits in the tree from prior sessions (FVG/AMN/MIG/cont research scripts, rs-feed/levels edits, quantdata-store, the `=80` stray file). Keep the tape/flow commit scoped to the §29.7 + §29.8 file lists; don't sweep the research scripts into it.
+
+### 29.8 2026-07-14 pm → 07-15 — episodic-iceberg HARDENING + live H/E/Q HUD + liveness gauge + the detector AUDIT (next session's work order)
+
+Everything below is BUILT, LIVE, VERIFIED — and still UNCOMMITTED (with §29.7).
+
+**Detection/semantics hardening (tape-engine.ts + calibrate_tape.ts kept in parity):**
+- **High-water hidden**: final held/broke emit reports the episode's PEAK hidden, not hidden-at-close (a late large display raises peakDisp and can drag current hidden below the floor it qualified at — the revealed reserve doesn't un-happen). Provisional emits were already high-water; marker size is now monotone.
+- **Confirmed-break rule** (user caught a real flaw: a sell iceberg labeled `broke` while price faded away). A single print through the level is a 1-tick sweep that often snaps back (= the defense WORKING). `broke` now requires ≥3 ticks beyond (`TAPE_ICE_BREAK_TICKS`) OR sustained beyond for 4s (`TAPE_ICE_BREAK_MS`); unconfirmed pierces keep the episode alive (pierceSince state). Post-fix live mix ES 13 broke / 2 held (was ~100% broke — one-tick technicalities inflated it).
+- **Live-emit mode**: ACTIVE episodes re-emit on ANY material change (executed grows / queue fills / queue drains / hidden high-water), throttle `TAPE_ICE_EMIT_MS` now **750ms** (was 2s, hidden-growth-only). Refill posts and pulls trigger emits too — Q updates as reloads happen. Verified: freshest ACTIVE store row 1s old mid-fight.
+
+**The five decision numbers (H/E/Q/reload-age/reloads) — wired end-to-end:**
+- `TapeEvent` += `exec` (total contracts executed at the level this episode), `queueCt` (contracts re-posted and WAITING to execute — the "next tranche in flight"; 0 once resolved), `lastFillT` (epoch s of last reload → render age live). Store cols `exec_ct/queue_ct/last_fill_t` (additive migrations + in upsert). Engine tracks pending as Map(order_id→size) so Q is contracts, not just count.
+- Semantics for the user (recorded after his what-do-these-mean grilling): **E** = plain count of fills at the level (NOT a formula). **H** = E − peak-persistent-displayed = the part never visible before it traded ("proven unseen" = invisible beforehand, proven by execution; H is history, NOT remaining reserve — remaining is unknowable, for Bookmap too). **E−H** = the peak tip they ever showed at once. **Q** = posted-not-yet-filled refills (drains in ~500ms; green flash = watching a reload in flight). Decision hierarchy (discussed + agreed): (1) H = magnitude filter (calibrated tiers), (2) state+reload-age+Q = timing, (3) E-vs-H = character (pure-stealth H≈E vs open absorber).
+- **Display**: marker labels `H62 E75 Q18 ×9` (E/Q hidden when 0); tooltip rows hidden/executed/queued/last-reload(live age)/reloads/duration/episode; TOP ICEBERGS panel columns `price · H · E · Q(green when live>0, HELD/BRK when resolved) · ×N`, resolved rows dimmed.
+
+**Chart visual language (tapePrimitive.ts):**
+- Diamond radius rebased for episodic sizes (old ×0.22 √-scale was tuned for rolling-cumulative thousands → everything <330ct pinned at the 4px floor): now `4+√ct×0.7`, 6–16px (12→6, 97→11).
+- Synthetic = WHITE luminescent border, native = intense YELLOW (kept). Episode states: **bright rim = ACTIVE · dim rim = resolved · horizontal shelf = HELD · diagonal slash = BROKE** (draw-order bug fixed: slash was clobbering the diamond path before the glow stroked it).
+- **Liveness gauge beside every ACTIVE diamond** (user-requested "timing gauge"): `RELOAD` green (Q>0 — tranche in flight NOW) → `LIVE` lime (<5s since fill) → `COOLING` amber (5–15s) → `STALE` red (>15s — reloader may have quit, break-watch). Drawn per-diamond + inside top-5 label boxes; Chart's 500ms topIce poll nudges `tapeRef.refresh()` so gauges AGE during quiet tape. Resolved episodes get no gauge (shelf/slash suffice).
+
+**Two production incidents (both user-reported, both fixed):**
+- **2Hz full-cockpit flashing**: TOP-ICEBERGS panel poll compared topIce by OBJECT REFERENCE; the primitive rebuilds those objects every canvas draw, and episodic updates made draws constant → setTopIce → full React re-render every 500ms. Fix: value-compare (t/price/size/side/refills/native/state/exec/queueCt). Lesson: any poll that mirrors primitive-rebuilt objects into React state MUST value-compare.
+- **Laggy crosshair/scroll**: (a) /tape/history still served the legacy rolling detector's ~32k rows/hr → scroll-back loaded 100k markers (NQ 4h window: 130k → 86 after read-side filter `kind != 'iceberg' OR ep_id IS NOT NULL OR native = 1` — rows NOT deleted, purge = pending user sign-off); (b) shadowBlur glow per synthetic diamond (canvas's priciest op) → replaced with two concentric ring strokes (native keeps true shadow glow — rare). Aggregator reloaded via touch (trader gate blipped + reconnected, standard).
+
+**Iceberg trading-interpretation notes (given to user, honest):** revealed-side sampling bias (up-moves reveal ask icebergs mechanically — positioning inference is a trap); broke-through icebergs during a rally = absorbed supply = buyer strength, not weakness; the falsifiable version = held/broke outcomes now accruing → forward study (post-HELD rejection persistence / post-BROKE continuation vs placebo levels) can be pre-registered once ~2wks of sample accrues. NOT registered yet.
+
+**### THE AUDIT — next session's work order (user asked for a full detector review; delivered 07-15, approved order: commit → tranche 1):**
+1. **COMMIT FIRST** (§29.7 + §29.8 files; keep research-script churn out).
+2. **Tranche 1 — correctness bugs:** (a) **confluence direction bug: a BROKE iceberg feeds the DEFENDER's side into confluence** — broke bid-iceberg counts as bullish; must flip on broke (held → defender dir, broke → flipped; wall already does this at emit); (b) **wall detector: no persistence gate** (flashed 150-lot registers — same flicker bug class we fixed for icebergs; gate registration on ≥persistMs rest) + **flat 100 floor across NQ/ES** (ES book 5–10× thicker; E0.2: ES has ZERO 5×-median walls — use K× median level depth per symbol); (c) **block under-detects: aggregate fills per `aggressor_order_id`** (a 100-lot market order prints as several fills; log + parquet both carry the id) — unifies block/sweep into one primitive (1 level = block, ≥3 = sweep).
+3. **Tranche 2 — calibration wiring:** percentile→multiplier magnitude tiers into confluence from `data/tape-calibration.json` (per-symbol; e.g. <p20 ×0.4 … >p95 ×2.5); calibrated floors for sweep/stacked/trapped/absorption/flow(80)/imb(150 — both guesses today); extend calibrate_tape.ts to depth metrics (wall K×median-level, near-touch imb distribution) via the reconstructed-book `agg` map already in the harness; nightly recalibration job (launchd, mirror §21 jobs).
+4. **Tranche 3 — confluence redesign:** FAMILY grouping — DEFENSE{iceberg,absorption,wall} / AGGRESSION{sweep,block,stacked} / EXHAUSTION{trapped} / FLOW{delta} / BOOK{imb}; require ≥2–3 distinct FAMILIES, each counted once (today iceberg+absorption+wall at one level = same phenomenon triple-counted = instant star); time-decay within the 25s window; research-informed weights (stacked = POWERED NULL standalone per E0.2 → weight down; trapped = validated FLIP-veto conditioning → keep; unfinished stays excluded).
+5. **Audit verdicts for reference:** sweep sound (needs tiers + outcome tracking); spoof needs near-touch proximity + repetition (currently the flicker bucket); absorption sound but redundant with iceberg at the touch (family fix handles); unfinished = settled null, visual-only (correctly excluded from confluence).
+
+**§29.8 files:** tape-engine.ts (break confirm, high-water, live emits, H/E/Q fields, per-symbol minHidden NQ12/ES30), tape-store.ts (3 new cols + upsert + legacy read filter), calibrate_tape.ts (episodic replay parity: high-water + confirmed-break; needs `NODE_OPTIONS=--max-old-space-size=24576`), contracts (exec/queueCt/lastFillT + state comment), tape-feed.ts (episode in-place replace incl. exec/queueCt), tapePrimitive.ts (scale/glow/states/gauge/labels), Chart.tsx (tooltip 5 numbers, panel columns, value-compare fix, refresh nudge). Debug: scripts/ice_ep_debug.ts.
