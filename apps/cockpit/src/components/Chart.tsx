@@ -3217,27 +3217,40 @@ export function Chart() {
       if (ev.durMs) rows.push(['confirmed', `held ${(ev.durMs / 1000).toFixed(1)}s before firing`]);
       if (ev.atStruct) rows.push(['context', 'AT STRUCTURE ⚠ (F5b: flow reverses at levels)']);
     } else if (ev.kind === 'iceberg') {
-      rows.push([ev.native ? 'contracts' : 'hidden', String(ev.size)]);
-      if (ev.exec) rows.push(['executed', String(ev.exec)]);
-      if (ev.state === 'active') rows.push(['queued', String(ev.queueCt ?? 0)]);   // waiting to execute — live episodes only
+      // side = the DEFENDER, always: buy = hidden buyer on the bid (support), sell = hidden
+      // seller on the ask (resistance). Direction of a break follows from that.
+      const bidIce = ev.side === 'buy';
+      rows.push(['iceberg', `${bidIce ? 'BID' : 'ASK'} — hidden ${bidIce ? 'BUYER defending (support)' : 'SELLER defending (resistance)'}${ev.native ? ' · NATIVE (one order, exchange-proven)' : ''}`]);
+      rows.push(['hidden', `${ev.size} ct filled that were NEVER displayed`]);
+      if (ev.exec) rows.push(['executed', `${ev.exec} ct total traded at the level`]);
+      if (ev.state === 'active') rows.push(['queued', `${ev.queueCt ?? 0} ct re-posted, waiting to fill`]);
       if (ev.lastFillT) {
         const age = Math.max(0, Date.now() / 1000 - ev.lastFillT);
         rows.push(['last reload', age < 60 ? age.toFixed(0) + 's ago' : (age / 60).toFixed(1) + 'm ago']);
       }
-      if (ev.refills != null) rows.push(['reloads', String(ev.refills)]);
+      if (ev.refills != null) rows.push(['reloads', `${ev.refills}× machine re-posts that then traded`]);
       if (ev.durMs) rows.push(['duration', (ev.durMs / 1000).toFixed(1) + 's']);
-      if (ev.state) rows.push(['episode', ev.state === 'active' ? 'ACTIVE — defending now' : ev.state === 'held' ? 'HELD — price rejected away' : 'BROKE — traded through']);
+      if (ev.state) rows.push(['episode', ev.state === 'active' ? 'ACTIVE — defending right now'
+        : ev.state === 'held' ? `HELD — attackers gave up, price rejected ${bidIce ? 'UP off the bid ▲' : 'DOWN off the ask ▼'}`
+        : bidIce ? 'BROKE — sellers punched through, price broke DOWN ▼' : 'BROKE — buyers punched through, price broke UP ▲']);
     } else if (ev.kind === 'stoprun') {
-      rows.push(['cascade', `${ev.size} ct / ${ev.levels ?? '?'} distinct aggressors`]);
-      if (ev.lamRatio != null) rows.push(['burst', `${ev.lamRatio}× baseline arrival rate (self-exciting)`]);
-      if (ev.signals?.length) rows.push(['swept ref', ev.signals[0] === 'session' ? 'session H/L' : ev.signals[0] === 'struct' ? 'daily level' : ev.signals[0] === 'round' ? 'round number' : 'swing extreme']);
-      rows.push(['state', ev.state === 'active' ? 'RUNNING — unresolved' : ev.state === 'reclaimed' ? 'RECLAIMED — sweep failed (spring)' : 'ACCEPTED — breakout held']);
+      const up = ev.side === 'buy';
+      rows.push(['stop run', up ? 'UPWARD cascade — buy stops above the level fired' : 'DOWNWARD cascade — sell stops below the level fired']);
+      rows.push(['cascade', `${ev.size} ct from ${ev.levels ?? '?'} DIFFERENT traders (independent stops, not one player)`]);
+      if (ev.lamRatio != null) rows.push(['burst', `arrivals ${ev.lamRatio}× the normal rate — self-feeding`]);
+      if (ev.signals?.length) rows.push(['swept ref', ev.signals[0] === 'session' ? 'session high/low' : ev.signals[0] === 'struct' ? 'daily level' : ev.signals[0] === 'round' ? 'round number' : 'recent swing extreme']);
+      rows.push(['state', ev.state === 'active' ? 'RUNNING — still unresolved, wait'
+        : ev.state === 'reclaimed' ? `RECLAIMED — price snapped back ${up ? 'BELOW' : 'ABOVE'} the level: the breakout FAILED, chasers trapped`
+        : `ACCEPTED — price held ${up ? 'ABOVE' : 'BELOW'} the level: genuine breakout`]);
       if (ev.durMs) rows.push(['resolved in', (ev.durMs / 1000).toFixed(1) + 's']);
     } else if (ev.kind === 'trapped') {
-      rows.push(['burst', `${ev.size} ct chased the extreme`]);
-      if (ev.levels != null) rows.push(['cohort', `${ev.levels} distinct traders offside`]);
-      if (ev.signals?.length) rows.push(['at ref', ev.signals[0] === 'session' ? 'session H/L' : ev.signals[0] === 'struct' ? 'daily level' : 'round number']);
-      rows.push(['state', ev.state === 'active' ? 'TRAPPED NOW — underwater' : ev.state === 'flushed' ? 'FLUSHED — their exits fired' : ev.state === 'recovered' ? 'RECOVERED — trap died' : '—']);
+      const longs = ev.side === 'sell';   // side = the puke direction
+      rows.push(['trapped', longs ? 'LONGS — bought the high, price reversed DOWN on them' : 'SHORTS — sold the low, price reversed UP on them']);
+      rows.push(['burst', `${ev.size} ct chased the extreme${ev.levels != null ? ` (${ev.levels} different traders)` : ''}`]);
+      if (ev.signals?.length) rows.push(['at ref', ev.signals[0] === 'session' ? 'session high/low' : ev.signals[0] === 'struct' ? 'daily level' : 'round number']);
+      rows.push(['state', ev.state === 'active' ? `UNDERWATER NOW — their ${longs ? 'selling' : 'buying'} exits are pending fuel`
+        : ev.state === 'flushed' ? `FLUSHED — they capitulated, move extended ${longs ? 'DOWN ▼' : 'UP ▲'}`
+        : ev.state === 'recovered' ? 'RECOVERED — price returned to their entries, trap died' : '—']);
       if (ev.durMs) rows.push(['resolved in', (ev.durMs / 1000).toFixed(0) + 's']);
     } else if (ev.kind === 'wall') {
       // side flips meaning by state (defender while standing/held, winner once broken/pulled) —
@@ -3250,16 +3263,76 @@ export function Chart() {
       rows.push(['state', ev.state === 'active' ? 'STANDING NOW — being defended' : ev.state === 'hold' ? 'HELD — rejected the test'
         : ev.state === 'break' ? (bidWall ? 'BROKE — sellers ate it, price broke DOWN ▼' : 'BROKE — buyers ate it, price broke UP ▲') : 'PULLED — owner walked it, not eaten']);
       if (ev.durMs) rows.push(['standing for', (ev.durMs / 1000).toFixed(0) + 's']);
+    } else if (ev.kind === 'sweep') {
+      rows.push(['sweep', ev.side === 'buy'
+        ? `aggressive BUYERS took ${ev.levels ?? '?'} price levels going UP ▲`
+        : `aggressive SELLERS took ${ev.levels ?? '?'} price levels going DOWN ▼`]);
+      rows.push(['size', `${ev.size} ct in one burst (one taker, or one chain within 100ms)`]);
+    } else if (ev.kind === 'block') {
+      rows.push(['block', ev.side === 'buy'
+        ? `one large aggressive BUY order — ${ev.size} ct hit the asks`
+        : `one large aggressive SELL order — ${ev.size} ct hit the bids`]);
+    } else if (ev.kind === 'spoof') {
+      const bidSpoof = ev.side === 'buy';
+      rows.push(['spoof', bidSpoof
+        ? `FAKE BID — big buy order flashed near the touch, pulled unfilled`
+        : `FAKE ASK — big sell order flashed near the touch, pulled unfilled`]);
+      rows.push(['size', `${ev.size} ct of advertised size that was never real`]);
+      if (ev.lifeMs != null) rows.push(['lived', (ev.lifeMs / 1000).toFixed(1) + 's before the pull']);
+      if (ev.repeats != null) rows.push(['repeats', `${ev.repeats} pulls in this zone / 60s — layering pattern`]);
+      rows.push(['read', `distrust displayed ${bidSpoof ? 'bid' : 'ask'} size here; they likely want the OTHER side filled`]);
+    } else if (ev.kind === 'absorption') {
+      const buyDef = ev.side === 'buy';   // side = the DEFENDER winning the fight
+      rows.push(['absorption', buyDef
+        ? 'BUYERS soaking up aggressive selling — price refuses to fall (support forming)'
+        : 'SELLERS soaking up aggressive buying — price refuses to rise (resistance forming)']);
+      rows.push(['flow eaten', `${ev.size} ct of net ${buyDef ? 'sell' : 'buy'} pressure, no price progress`]);
+      if (ev.lamRatio != null) rows.push(['price impact', `collapsed to ${ev.lamRatio.toFixed(2)}× normal (statistically confirmed)`]);
+    } else if (ev.kind === 'stacked') {
+      rows.push(['stacked', ev.side === 'buy'
+        ? `${ev.levels ?? '?'} consecutive levels of one-sided BUYING (footprint ladder up)`
+        : `${ev.levels ?? '?'} consecutive levels of one-sided SELLING (footprint ladder down)`]);
+      rows.push(['volume', `${ev.size} ct on the dominant side`]);
+      rows.push(['note', 'measured weak standalone — context only, low weight in stars']);
+    } else if (ev.kind === 'unfinished') {
+      rows.push(['unfinished', ev.side === 'buy'
+        ? 'HIGH made with no opposing prints — untested level above (possible revisit magnet)'
+        : 'LOW made with no opposing prints — untested level below (possible revisit magnet)']);
+      rows.push(['volume', `${ev.size} ct one-sided at the extreme`]);
+      rows.push(['note', 'settled NULL in backtests — visual context only, never scored']);
     } else {
       rows.push(['size', String(ev.size)]);
       if (ev.levels != null) rows.push(['levels', String(ev.levels)]);
-      if (ev.state) rows.push(['state', ev.state === 'pulled' ? 'PULLED — walked, not eaten' : ev.state]);
-      if (ev.lamRatio != null) rows.push(['λ ratio', ev.lamRatio.toFixed(2)]);
-      if (ev.lifeMs != null) rows.push(['life', (ev.lifeMs / 1000).toFixed(1) + 's']);
-      if (ev.repeats != null) rows.push(['repeats', String(ev.repeats) + ' pulls/60s']);
+      if (ev.state) rows.push(['state', String(ev.state)]);
     }
-    if (ev.kind !== 'confluence' && ev.atStruct) rows.push(['context', 'at structure']);
+    if (ev.kind !== 'confluence' && ev.atStruct) rows.push(['context', 'at a daily structural level']);
     return rows;
+  };
+
+  // Tooltip HEADER in market terms — the one-line read before any rows.
+  const tipTitle = (ev: TapeEvent): string => {
+    const p = ev.price.toFixed(2);
+    switch (ev.kind) {
+      case 'confluence': return `ACTION AREA · ${ev.side === 'buy' ? 'LONG evidence' : 'SHORT evidence'} @ ${p}`;
+      case 'wall': {
+        const bid = ev.state === 'break' || ev.state === 'pulled' ? ev.side === 'sell' : ev.side === 'buy';
+        return `${bid ? 'BID' : 'ASK'} WALL${ev.state === 'break' ? (ev.side === 'buy' ? ' · BROKE ▲' : ' · BROKE ▼') : ev.state === 'pulled' ? ' · PULLED' : ev.state === 'hold' ? ' · HELD' : ''} @ ${p}`;
+      }
+      case 'iceberg': {
+        const bid = ev.side === 'buy';
+        const st = ev.state === 'broke' ? (bid ? ' · BROKE ▼' : ' · BROKE ▲') : ev.state === 'held' ? ' · HELD' : ev.state === 'active' ? ' · LIVE' : '';
+        return `${bid ? 'BID' : 'ASK'} ICEBERG${ev.native ? ' ★' : ''}${st} @ ${p}`;
+      }
+      case 'stoprun': return `STOP RUN ${ev.side === 'buy' ? '▲' : '▼'}${ev.state === 'reclaimed' ? ' · FAILED' : ev.state === 'accepted' ? ' · HELD' : ''} @ ${p}`;
+      case 'trapped': return `TRAPPED ${ev.side === 'sell' ? 'LONGS' : 'SHORTS'} @ ${p}`;
+      case 'sweep': return `${ev.side === 'buy' ? 'BUY SWEEP ▲' : 'SELL SWEEP ▼'} @ ${p}`;
+      case 'block': return `${ev.side === 'buy' ? 'BUY' : 'SELL'} BLOCK @ ${p}`;
+      case 'spoof': return `${ev.side === 'buy' ? 'FAKE BID' : 'FAKE ASK'} @ ${p}`;
+      case 'absorption': return `${ev.side === 'buy' ? 'BUY ABSORPTION (support)' : 'SELL ABSORPTION (resistance)'} @ ${p}`;
+      case 'stacked': return `STACKED ${ev.side === 'buy' ? 'BUYING' : 'SELLING'} @ ${p}`;
+      case 'unfinished': return `UNFINISHED ${ev.side === 'buy' ? 'HIGH' : 'LOW'} @ ${p}`;
+      default: return `${(ev.kind as string).toUpperCase()} · ${ev.side} @ ${p}`;
+    }
   };
 
   return (
@@ -3300,7 +3373,6 @@ export function Chart() {
         const flipX = tapeTip.x > cw - 210;
         const sideCol = ev.side === 'buy' ? '#22d3ee' : '#f472b6';
         const isNative = ev.kind === 'iceberg' && ev.native;
-        const title = ev.kind === 'iceberg' ? `${ev.native ? 'NATIVE' : 'SYNTHETIC'} ICEBERG` : ev.kind.toUpperCase();
         const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
         return (
           <div style={{
@@ -3310,11 +3382,7 @@ export function Chart() {
             borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
           }}>
-            <div style={{ color: sideCol, marginBottom: 4 }}>
-              {ev.kind === 'confluence' ? `ACTION AREA · ${ev.side === 'buy' ? 'LONG evidence' : 'SHORT evidence'} @ ${ev.price.toFixed(2)}`
-                : ev.kind === 'wall' ? `${(ev.state === 'break' || ev.state === 'pulled' ? ev.side === 'sell' : ev.side === 'buy') ? 'BID' : 'ASK'} WALL${ev.state === 'break' ? (ev.side === 'buy' ? ' · BROKE ▲' : ' · BROKE ▼') : ''} @ ${ev.price.toFixed(2)}`
-                : `${title} · ${ev.side} @ ${ev.price.toFixed(2)}`}
-            </div>
+            <div style={{ color: sideCol, marginBottom: 4 }}>{tipTitle(ev)}</div>
             {fmtTipRows(ev).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
                 <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
