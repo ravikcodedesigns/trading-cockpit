@@ -607,6 +607,7 @@ export function Chart() {
   const [tapeMinLevels, setTapeMinLevels] = useState<Record<TapeKind, number>>(() => floorMinLevels());   // per-kind min price levels (sweep/stacked)
   const [iceBucketTicks, setIceBucketTicks] = useState(4);   // roll up icebergs within ±N ticks into one diamond
   const [confTopN, setConfTopN] = useState(8);               // show only top-N confluence stars in view
+  const [confMinTier, setConfMinTier] = useState(2);         // 1 prime · 2 prime+key (default) · 3 all
   const qualifiedTsRef    = useRef<Set<number>>(new Set());
   const tradableTsRef     = useRef<Set<number>>(new Set());
   const experimentalTsRef = useRef<Set<number>>(new Set());
@@ -739,6 +740,7 @@ export function Chart() {
     tapeRef.current.setBarSeconds(selectedTimeframe * 60);
     tapeRef.current.setIceBucketTicks(iceBucketTicks);
     tapeRef.current.setConfTopN(confTopN);
+    tapeRef.current.setConfMinTier(confMinTier);
     tapeRef.current.setEnabled(true);
     tapeFeedRef.current.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels });
 
@@ -763,6 +765,7 @@ export function Chart() {
   // Push the iceberg roll-up bucket size + confluence top-N live.
   useEffect(() => { tapeRef.current?.setIceBucketTicks(iceBucketTicks); }, [iceBucketTicks]);
   useEffect(() => { tapeRef.current?.setConfTopN(confTopN); }, [confTopN]);
+  useEffect(() => { tapeRef.current?.setConfMinTier(confMinTier); }, [confMinTier]);
 
   useEffect(() => () => { tapeFeedRef.current?.close(); tapeFeedRef.current = null; }, []);
 
@@ -3181,10 +3184,21 @@ export function Chart() {
   const fmtTipRows = (ev: TapeEvent): [string, string][] => {
     const rows: [string, string][] = [];
     if (ev.kind === 'confluence') {
+      const sigs = ev.signals ?? [];
+      const defExh = sigs.some((s) => s === 'iceberg' || s === 'wall' || s === 'absorption') && sigs.some((s) => s === 'trapped' || s === 'stoprun');
+      const famN = ev.levels ?? 0;
+      rows.push(['tier', defExh && famN >= 5 ? 'PRIME — defense + trapped opponents + broad agreement'
+        : (defExh && famN >= 4) || ev.flip ? 'KEY — defense+exhaustion cluster / zone flip' : 'standard']);
       rows.push(['score', String(ev.size)]);
-      if (ev.levels != null) rows.push(['# signals', String(ev.levels)]);
+      if (ev.families?.length) rows.push(['families', ev.families.join(', ')]);
+      else if (ev.levels != null) rows.push(['# signals', String(ev.levels)]);
       if (ev.signals?.length) rows.push(['aligned', ev.signals.join(', ')]);
-      rows.push(['bias', ev.side === 'buy' ? 'bullish ▲' : 'bearish ▼']);
+      // Color = evidence direction (user's informed pick 2026-07-15); trade meaning still measured.
+      rows.push(['evidence', ev.side === 'buy' ? 'LONG — buy-side dominance' : 'SHORT — sell-side dominance']);
+      rows.push(['note', 'color = evidence · follow-vs-fade resolves 2026-07-29']);
+      if (ev.flip) rows.push(['FLIP', 'reverses the zone\'s previous star — freshest read wins']);
+      if (ev.durMs) rows.push(['confirmed', `held ${(ev.durMs / 1000).toFixed(1)}s before firing`]);
+      if (ev.atStruct) rows.push(['context', 'AT STRUCTURE ⚠ (F5b: flow reverses at levels)']);
     } else if (ev.kind === 'iceberg') {
       rows.push([ev.native ? 'contracts' : 'hidden', String(ev.size)]);
       if (ev.exec) rows.push(['executed', String(ev.exec)]);
@@ -3196,13 +3210,33 @@ export function Chart() {
       if (ev.refills != null) rows.push(['reloads', String(ev.refills)]);
       if (ev.durMs) rows.push(['duration', (ev.durMs / 1000).toFixed(1) + 's']);
       if (ev.state) rows.push(['episode', ev.state === 'active' ? 'ACTIVE — defending now' : ev.state === 'held' ? 'HELD — price rejected away' : 'BROKE — traded through']);
+    } else if (ev.kind === 'stoprun') {
+      rows.push(['cascade', `${ev.size} ct / ${ev.levels ?? '?'} distinct aggressors`]);
+      if (ev.lamRatio != null) rows.push(['burst', `${ev.lamRatio}× baseline arrival rate (self-exciting)`]);
+      if (ev.signals?.length) rows.push(['swept ref', ev.signals[0] === 'session' ? 'session H/L' : ev.signals[0] === 'struct' ? 'daily level' : ev.signals[0] === 'round' ? 'round number' : 'swing extreme']);
+      rows.push(['state', ev.state === 'active' ? 'RUNNING — unresolved' : ev.state === 'reclaimed' ? 'RECLAIMED — sweep failed (spring)' : 'ACCEPTED — breakout held']);
+      if (ev.durMs) rows.push(['resolved in', (ev.durMs / 1000).toFixed(1) + 's']);
+    } else if (ev.kind === 'trapped') {
+      rows.push(['burst', `${ev.size} ct chased the extreme`]);
+      if (ev.levels != null) rows.push(['cohort', `${ev.levels} distinct traders offside`]);
+      if (ev.signals?.length) rows.push(['at ref', ev.signals[0] === 'session' ? 'session H/L' : ev.signals[0] === 'struct' ? 'daily level' : 'round number']);
+      rows.push(['state', ev.state === 'active' ? 'TRAPPED NOW — underwater' : ev.state === 'flushed' ? 'FLUSHED — their exits fired' : ev.state === 'recovered' ? 'RECOVERED — trap died' : '—']);
+      if (ev.durMs) rows.push(['resolved in', (ev.durMs / 1000).toFixed(0) + 's']);
+    } else if (ev.kind === 'wall') {
+      rows.push(['peak size', String(ev.size)]);
+      if (ev.state === 'active' && ev.levels != null) rows.push(['remaining', String(ev.levels)]);
+      if (ev.exec) rows.push(['absorbed', `${ev.exec} ct traded into it`]);
+      rows.push(['state', ev.state === 'active' ? 'STANDING NOW — being defended' : ev.state === 'hold' ? 'HELD — rejected the test' : ev.state === 'break' ? 'BROKE — eaten through' : 'PULLED — walked, not eaten']);
+      if (ev.durMs) rows.push(['standing for', (ev.durMs / 1000).toFixed(0) + 's']);
     } else {
       rows.push(['size', String(ev.size)]);
       if (ev.levels != null) rows.push(['levels', String(ev.levels)]);
-      if (ev.state) rows.push(['state', ev.state]);
+      if (ev.state) rows.push(['state', ev.state === 'pulled' ? 'PULLED — walked, not eaten' : ev.state]);
       if (ev.lamRatio != null) rows.push(['λ ratio', ev.lamRatio.toFixed(2)]);
       if (ev.lifeMs != null) rows.push(['life', (ev.lifeMs / 1000).toFixed(1) + 's']);
+      if (ev.repeats != null) rows.push(['repeats', String(ev.repeats) + ' pulls/60s']);
     }
+    if (ev.kind !== 'confluence' && ev.atStruct) rows.push(['context', 'at structure']);
     return rows;
   };
 
@@ -3254,7 +3288,9 @@ export function Chart() {
             borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
           }}>
-            <div style={{ color: sideCol, marginBottom: 4 }}>{title} · {ev.side} @ {ev.price.toFixed(2)}</div>
+            <div style={{ color: sideCol, marginBottom: 4 }}>
+              {ev.kind === 'confluence' ? `ACTION AREA · ${ev.side === 'buy' ? 'LONG evidence' : 'SHORT evidence'} @ ${ev.price.toFixed(2)}` : `${title} · ${ev.side} @ ${ev.price.toFixed(2)}`}
+            </div>
             {fmtTipRows(ev).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
                 <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
@@ -3508,7 +3544,8 @@ export function Chart() {
           iceberg: { label: 'Iceberg', glyph: '◆' }, spoof: { label: 'Spoof', glyph: '×' },
           absorption: { label: 'Absorb', glyph: '⊢⊣' }, stacked: { label: 'Stacked', glyph: '≡' },
           wall: { label: 'Wall', glyph: '▭' }, unfinished: { label: 'Unfin', glyph: '⌃' },
-          trapped: { label: 'Trapped', glyph: '▷◁' }, confluence: { label: 'Confluence', glyph: '★' },
+          trapped: { label: 'Trapped', glyph: '▷◁' }, stoprun: { label: 'StopRun', glyph: '»' },
+          confluence: { label: 'Confluence', glyph: '★' },
         };
         const hasLevels = (k: TapeKind) => 'levels' in (TAPE_FLOORS[k] as Record<string, unknown>);
         const floorLev = (k: TapeKind) => (hasLevels(k) ? (TAPE_FLOORS[k] as { levels: number }).levels : 0);
@@ -3559,10 +3596,17 @@ export function Chart() {
                   )}
                   {k === 'confluence' ? (
                     <>
+                      <select value={confMinTier} onChange={(e) => setConfMinTier(Number(e.target.value))}
+                        disabled={!on} style={{ ...inp(on), width: 74 }}
+                        title="Importance filter: PRIME = defense+exhaustion aligned (rare) · KEY = +4-family/flip stars · ALL = everything">
+                        <option value={1}>prime</option>
+                        <option value={2}>key+</option>
+                        <option value={3}>all</option>
+                      </select>
                       <span style={lbl(11)} title="Show only the strongest N confluence stars in view (adaptive density)">top</span>
                       <input type="number" min={1} step={1} value={confTopN || ''}
                         onChange={(e) => setConfTopN(Math.max(1, Number(e.target.value) || 1))}
-                        title="Max confluence markers shown in view, ranked by score"
+                        title="Max confluence markers shown in view, ranked tier-first"
                         disabled={!on} style={{ ...inp(on), width: 40 }} />
                     </>
                   ) : (

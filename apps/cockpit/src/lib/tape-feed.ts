@@ -12,7 +12,7 @@ const MAX = 150000;        // client-side event cap — hold a full session so a
                            // The primitive only draws events inside the visible window, so this is cheap.
 const RECONNECT_MS = 1500;
 
-export const ALL_KINDS: TapeKind[] = ['confluence', 'sweep', 'block', 'spoof', 'iceberg', 'absorption', 'stacked', 'wall', 'unfinished', 'trapped'];
+export const ALL_KINDS: TapeKind[] = ['confluence', 'sweep', 'block', 'spoof', 'iceberg', 'absorption', 'stacked', 'wall', 'unfinished', 'trapped', 'stoprun'];
 
 // Kinds that carry a consecutive-price-levels count (so the UI shows a `lvl` floor for them).
 const hasLevels = (k: TapeKind): boolean => 'levels' in (TAPE_FLOORS[k] as Record<string, unknown>);

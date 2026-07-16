@@ -123,11 +123,22 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.beginPath();
           for (let i = -1; i <= 1; i++) { const yy = y + i * r * 0.9; ctx.moveTo(x - w, yy); ctx.lineTo(x + w, yy); }
           ctx.stroke();
-        } else if (ev.kind === 'wall') { // brick: rectangle outline; a BREAK gets a diagonal crack
+        } else if (ev.kind === 'wall') { // brick: rectangle outline; a BREAK gets a diagonal crack;
+          // ACTIVE (standing RIGHT NOW — lean on it) = bright + filled, live-updating; resolved dims.
+          // PULLED (walked without a fight — spoof-adjacent) renders dashed with a small pull-away arrow
           const w = r * 1.5, h = r * 1.1;
-          ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
+          const live = ev.state === 'active';
+          if (live) { ctx.fillStyle = `rgba(${col},0.22)`; ctx.fillRect(x - w, y - h, w * 2, h * 2); }
+          ctx.lineWidth = (live ? 3 : 2.2) * hr; ctx.strokeStyle = `rgba(${col},${live ? 1 : 0.8})`;
+          if (ev.state === 'pulled') ctx.setLineDash([3 * hr, 2.5 * hr]);
           ctx.strokeRect(x - w, y - h, w * 2, h * 2);
+          ctx.setLineDash([]);
           if (ev.state === 'break') { ctx.beginPath(); ctx.moveTo(x - w, y + h); ctx.lineTo(x + w, y - h); ctx.stroke(); }
+          if (ev.state === 'pulled') { // arrow out of the brick: the owner left, nobody ate it
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h * 1.9);
+            ctx.moveTo(x - r * 0.45, y - h * 1.4); ctx.lineTo(x, y - h * 1.9); ctx.lineTo(x + r * 0.45, y - h * 1.4);
+            ctx.stroke();
+          }
         } else if (ev.kind === 'unfinished') { // hollow chevron pointing toward the magnet (buy=up / sell=down)
           const up = ev.side === 'buy'; const h = r * 1.4;
           ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
@@ -135,13 +146,47 @@ class Renderer implements IPrimitivePaneRenderer {
           if (up) { ctx.moveTo(x - r, y + r * 0.5); ctx.lineTo(x, y - h); ctx.lineTo(x + r, y + r * 0.5); }
           else    { ctx.moveTo(x - r, y - r * 0.5); ctx.lineTo(x, y + h); ctx.lineTo(x + r, y - r * 0.5); }
           ctx.stroke();
-        } else if (ev.kind === 'trapped') { // bowtie ▷◁ — aggressors caught offside, will puke `side`
-          ctx.fillStyle = `rgba(${col},1)`;
+        } else if (ev.kind === 'stoprun') { // double chevron » through the swept ref, pointing run
+          // direction; RECLAIMED adds a reversal hook (sweep failed → spring), ACCEPTED fills solid,
+          // active = bright hollow (still an open coin)
+          const up = ev.side === 'buy';
+          const h = r * 1.1, dy = up ? -1 : 1;
+          ctx.lineWidth = 2.2 * hr;
+          ctx.strokeStyle = `rgba(${col},${ev.state === 'active' ? 1 : 0.9})`;
+          ctx.beginPath();
+          for (let i = 0; i < 2; i++) {
+            const yy = y - dy * i * h * 0.8;
+            ctx.moveTo(x - r, yy); ctx.lineTo(x, yy + dy * h); ctx.lineTo(x + r, yy);
+          }
+          ctx.stroke();
+          if (ev.state === 'accepted') { ctx.fillStyle = `rgba(${col},0.35)`; ctx.fillRect(x - r, y - h * 1.6, r * 2, h * 3.2); }
+          if (ev.state === 'reclaimed') { // hook arrow AGAINST the run — the triggered cohort is offside
+            ctx.beginPath();
+            ctx.moveTo(x + r * 1.6, y + dy * h * 1.4); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6);
+            ctx.moveTo(x + r * 1.15, y - dy * h * 1.05); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6); ctx.lineTo(x + r * 2.05, y - dy * h * 1.05);
+            ctx.stroke();
+          }
+        } else if (ev.kind === 'trapped') { // bowtie ▷◁ — a cohort caught offside; expected to puke `side`
+          // lifecycle: ACTIVE = bright (cohort trapped NOW) · FLUSHED = extending arrow (they puked,
+          // reversal played) · RECOVERED = dim + strike (trap died, cohort freed)
+          const dead = ev.state === 'recovered';
+          ctx.fillStyle = `rgba(${col},${dead ? 0.35 : 1})`;
           ctx.beginPath();
           ctx.moveTo(x - r, y - r); ctx.lineTo(x, y); ctx.lineTo(x - r, y + r); ctx.closePath();
           ctx.moveTo(x + r, y - r); ctx.lineTo(x, y); ctx.lineTo(x + r, y + r); ctx.closePath();
           ctx.fill();
           ctx.lineWidth = 1 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.7)'; ctx.stroke();
+          if (ev.state === 'flushed') {   // the puke fired — arrow extending in the puke direction
+            const dy = ev.side === 'sell' ? 1 : -1;
+            ctx.beginPath(); ctx.lineWidth = 2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
+            ctx.moveTo(x, y + dy * r); ctx.lineTo(x, y + dy * r * 2.4);
+            ctx.moveTo(x - r * 0.5, y + dy * r * 1.9); ctx.lineTo(x, y + dy * r * 2.4); ctx.lineTo(x + r * 0.5, y + dy * r * 1.9);
+            ctx.stroke();
+          }
+          if (dead) {   // struck: the trap thesis failed
+            ctx.beginPath(); ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+            ctx.moveTo(x - r * 1.3, y + r * 1.3); ctx.lineTo(x + r * 1.3, y - r * 1.3); ctx.stroke();
+          }
         } else { // spoof — an ×
           ctx.lineWidth = 2 * hr; ctx.strokeStyle = `rgba(${AMBER},0.95)`;
           ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke();
@@ -267,20 +312,75 @@ class Renderer implements IPrimitivePaneRenderer {
 
       // ── Confluence ★: show only the TOP-N by score in view (adaptive density — market-activity
       //    independent). Drawn last so the key markers sit on top of everything.
-      const confTop = confDrawn.sort((a, b) => b.ev.size - a.ev.size).slice(0, Math.max(1, this.src.confTopN || 8));
+      // ── Star IMPORTANCE TIERS (display-only; engine/store/study untouched). Provisional
+      //    composition-based prioritization until the 2026-07-29 outcome review:
+      //    T1 PRIME — passive level-defense (iceberg/wall/absorption) AND exhaustion (trapped/
+      //       stop-run) aligned in one zone: rare, maps to the validated trap-conditioner pattern.
+      //    T2 KEY — ≥4 families agreed, or a FLIP (zone reversed its read).
+      //    T3 rest — incl. pure taker/flow/book stars (the whipsaw flavor). Hidden by default.
+      //    NOTE deliberately NOT ranked by raw score: genesis-day labels measured high score
+      //    ANTI-selecting at the 2m horizon (39% vs 56%) — score breaks ties only.
+      const tierOf = (ev: TapeEvent): number => {
+        const sigs = ev.signals ?? [];
+        const levelDef = sigs.some((s) => s === 'iceberg' || s === 'wall' || s === 'absorption');
+        const exh = sigs.some((s) => s === 'trapped' || s === 'stoprun');
+        const fam = ev.levels ?? 0;
+        if (levelDef && exh && fam >= 5) return 1;               // ~4/day across both symbols (genesis dist.)
+        if ((levelDef && exh && fam >= 4) || ev.flip) return 2;  // ~5/hour/symbol
+        return 3;
+      };
+      const confTop = confDrawn
+        .filter((c) => tierOf(c.ev) <= (this.src.confMinTier || 2))
+        .sort((a, b) => tierOf(a.ev) - tierOf(b.ev) || b.ev.size - a.ev.size)
+        .slice(0, Math.max(1, this.src.confTopN || 8));
       for (const c of confTop) {
         const x = c.xc * hr, y = c.yc * vr;
         if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
         this.src.hits.push({ x: c.xc, y: c.yc, ev: c.ev });
+        const tier = tierOf(c.ev);
+        // SUPERSEDED: a NEWER opposite star exists nearby → this one's read has been reversed.
+        // Drawn dimmed with a strike — history stays visible, the zone's current call is unambiguous.
+        const superseded = confDrawn.some((o) =>
+          o.ev.side !== c.ev.side && o.ev.t > c.ev.t && (o.ev.t - c.ev.t) * 1000 < 120_000 &&
+          Math.abs(o.ev.price - c.ev.price) <= 8 * 0.25);
+        // ── Star color = EVIDENCE direction (user decision 2026-07-15, made informed): cyan when
+        // the aggregated microstructure evidence points LONG (buy sweeps, held bid icebergs,
+        // broken ask icebergs/walls, buy flow…), pink when it points SHORT. The user explicitly
+        // chose this mapping knowing the follow-vs-fade trade meaning stays UNDER MEASUREMENT
+        // until the STAR_FADE_PREREG review (2026-07-29) — the tooltip carries that caveat; the
+        // review may re-map colors to trade space per confirmed cohort.
         const col = c.ev.side === 'buy' ? BUY : SELL;
-        const cr = Math.max(8 * hr, Math.min(18 * hr, (6 + c.ev.size * 1.5) * hr));   // size ∝ score
+        let cr = Math.max(8 * hr, Math.min(18 * hr, (6 + c.ev.size * 1.5) * hr));   // size ∝ score
+        if (tier === 1) cr *= 1.25;   // PRIME stars read bigger at a glance
+        if (tier === 3) cr *= 0.75;   // standard stars recede when shown at all
         const rin = cr * 0.44;
         ctx.save();
         ctx.beginPath();
         for (let i = 0; i < 10; i++) { const rad = i % 2 === 0 ? cr : rin; const a = -Math.PI / 2 + i * Math.PI / 5; const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
         ctx.closePath();
-        ctx.fillStyle = `rgba(${col},0.95)`; ctx.fill();
-        ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.stroke();   // bright edge = key marker
+        ctx.fillStyle = `rgba(${col},${superseded ? 0.3 : 0.95})`; ctx.fill();
+        ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = `rgba(255,255,255,${superseded ? 0.35 : 0.92})`; ctx.stroke();   // bright edge = key marker
+        if (superseded) {   // struck through: a newer opposite star reversed this zone's read
+          ctx.beginPath(); ctx.moveTo(x - cr - 3 * hr, y + cr + 3 * hr); ctx.lineTo(x + cr + 3 * hr, y - cr - 3 * hr);
+          ctx.lineWidth = 2 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.stroke();
+        }
+        if (c.ev.flip && !superseded) {   // FLIP badge: this star reversed the zone's previous read
+          ctx.beginPath(); ctx.arc(x, y, cr + 3.5 * hr, -Math.PI * 0.15, Math.PI * 1.15);
+          ctx.lineWidth = 1.6 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke();
+          ctx.beginPath();   // arrowhead on the arc = "reversed"
+          const ax = x + Math.cos(-Math.PI * 0.15) * (cr + 3.5 * hr), ay = y + Math.sin(-Math.PI * 0.15) * (cr + 3.5 * hr);
+          ctx.moveTo(ax - 4 * hr, ay - 3 * hr); ctx.lineTo(ax, ay); ctx.lineTo(ax - 1 * hr, ay + 5 * hr); ctx.stroke();
+        }
+        if (tier === 1) {   // PRIME double ring — defense + trapped opponents aligned in one zone
+          for (const rr of [3.5, 6]) {
+            ctx.beginPath(); ctx.arc(x, y, cr + rr * hr, 0, Math.PI * 2);
+            ctx.lineWidth = 1.3 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.stroke();
+          }
+        }
+        if (c.ev.atStruct) {   // AT-STRUCTURE halo — F5b: the same confluence means something different at a level
+          ctx.beginPath(); ctx.arc(x, y, cr + (tier === 1 ? 9 : c.ev.flip ? 6.5 : 3.5) * hr, 0, Math.PI * 2);
+          ctx.lineWidth = 1.4 * hr; ctx.strokeStyle = 'rgba(253,224,71,0.85)'; ctx.stroke();
+        }
         ctx.textBaseline = 'middle'; ctx.font = `800 ${12 * hr}px 'Geist Mono', monospace`;
         const t = `${c.ev.size}${c.ev.levels ? '·' + c.ev.levels : ''}`, pad = 4 * hr, tw = ctx.measureText(t).width, lx = x + cr + 5 * hr;
         ctx.fillStyle = 'rgba(8,8,12,0.92)'; ctx.fillRect(lx - pad, y - 9 * hr, tw + pad * 2, 18 * hr);
@@ -308,7 +408,8 @@ export class TapePrimitive implements ISeriesPrimitive<Time> {
   hits: { x: number; y: number; ev: TapeEvent }[] = [];   // CSS-coord marker positions (for hover)
   topIce: TapeEvent[] = [];   // top-N iceberg buckets currently ON SCREEN (ranked) — mirrored to the corner panel
   iceBucketTicks = 4;         // roll up icebergs within ±this many ticks into one diamond at the dominant tick
-  confTopN = 8;               // show only the top-N confluence stars (by score) in view — adaptive density
+  confTopN = 8;               // show only the top-N confluence stars in view — adaptive density
+  confMinTier = 2;            // 1 = PRIME only · 2 = prime+key (default) · 3 = all stars
   private _view: View;
   private _requestUpdate?: () => void;
 
@@ -331,5 +432,6 @@ export class TapePrimitive implements ISeriesPrimitive<Time> {
   setBarSeconds(sec: number) { if (sec > 0 && sec !== this.barSeconds) { this.barSeconds = sec; this._requestUpdate?.(); } }
   setIceBucketTicks(n: number) { const v = Math.max(1, Math.round(n)); if (v !== this.iceBucketTicks) { this.iceBucketTicks = v; this._requestUpdate?.(); } }
   setConfTopN(n: number) { const v = Math.max(1, Math.round(n)); if (v !== this.confTopN) { this.confTopN = v; this._requestUpdate?.(); } }
+  setConfMinTier(n: number) { const v = Math.min(3, Math.max(1, Math.round(n))); if (v !== this.confMinTier) { this.confMinTier = v; this._requestUpdate?.(); } }
   refresh() { this._requestUpdate?.(); }
 }
