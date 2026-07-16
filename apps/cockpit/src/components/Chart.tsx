@@ -3240,10 +3240,15 @@ export function Chart() {
       rows.push(['state', ev.state === 'active' ? 'TRAPPED NOW — underwater' : ev.state === 'flushed' ? 'FLUSHED — their exits fired' : ev.state === 'recovered' ? 'RECOVERED — trap died' : '—']);
       if (ev.durMs) rows.push(['resolved in', (ev.durMs / 1000).toFixed(0) + 's']);
     } else if (ev.kind === 'wall') {
-      rows.push(['peak size', String(ev.size)]);
+      // side flips meaning by state (defender while standing/held, winner once broken/pulled) —
+      // spell BOTH out so the tooltip never needs decoding
+      const brokenLike = ev.state === 'break' || ev.state === 'pulled';
+      const bidWall = brokenLike ? ev.side === 'sell' : ev.side === 'buy';
+      rows.push(['wall', bidWall ? `BID wall — ${ev.size} ct resting to BUY (support)` : `ASK wall — ${ev.size} ct resting to SELL (resistance)`]);
       if (ev.state === 'active' && ev.levels != null) rows.push(['remaining', String(ev.levels)]);
       if (ev.exec) rows.push(['absorbed', `${ev.exec} ct traded into it`]);
-      rows.push(['state', ev.state === 'active' ? 'STANDING NOW — being defended' : ev.state === 'hold' ? 'HELD — rejected the test' : ev.state === 'break' ? 'BROKE — eaten through' : 'PULLED — walked, not eaten']);
+      rows.push(['state', ev.state === 'active' ? 'STANDING NOW — being defended' : ev.state === 'hold' ? 'HELD — rejected the test'
+        : ev.state === 'break' ? (bidWall ? 'BROKE — sellers ate it, price broke DOWN ▼' : 'BROKE — buyers ate it, price broke UP ▲') : 'PULLED — owner walked it, not eaten']);
       if (ev.durMs) rows.push(['standing for', (ev.durMs / 1000).toFixed(0) + 's']);
     } else {
       rows.push(['size', String(ev.size)]);
@@ -3306,7 +3311,9 @@ export function Chart() {
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
           }}>
             <div style={{ color: sideCol, marginBottom: 4 }}>
-              {ev.kind === 'confluence' ? `ACTION AREA · ${ev.side === 'buy' ? 'LONG evidence' : 'SHORT evidence'} @ ${ev.price.toFixed(2)}` : `${title} · ${ev.side} @ ${ev.price.toFixed(2)}`}
+              {ev.kind === 'confluence' ? `ACTION AREA · ${ev.side === 'buy' ? 'LONG evidence' : 'SHORT evidence'} @ ${ev.price.toFixed(2)}`
+                : ev.kind === 'wall' ? `${(ev.state === 'break' || ev.state === 'pulled' ? ev.side === 'sell' : ev.side === 'buy') ? 'BID' : 'ASK'} WALL${ev.state === 'break' ? (ev.side === 'buy' ? ' · BROKE ▲' : ' · BROKE ▼') : ''} @ ${ev.price.toFixed(2)}`
+                : `${title} · ${ev.side} @ ${ev.price.toFixed(2)}`}
             </div>
             {fmtTipRows(ev).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
