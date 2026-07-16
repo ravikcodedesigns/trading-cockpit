@@ -21,6 +21,56 @@ export interface TapeFilter {
   kinds: Set<TapeKind>;              // which event kinds to draw
   minSize: Record<TapeKind, number>; // per-kind min size floor (contracts) — dial each independently
   minLevels: Record<TapeKind, number>; // per-kind min consecutive levels (only sweep/stacked use it)
+  // ── percentile mode: "show ≥ p80" instead of an absolute number. Resolves PER EVENT against
+  //    the event's own session (overnight vs RTH) from the nightly-recalibrated tables, so "big"
+  //    means the same thing at 3am and 10am and never needs manual retuning.
+  pctMode?: boolean;
+  minPct?: Partial<Record<TapeKind, 0 | 50 | 80 | 95>>;   // 0 = all (floor only)
+  cal?: CalDoc | null;               // /tape/calibration payload
+  symbol?: string;                   // calibration is per-symbol
+}
+
+// Calibration doc shape (subset we read): cal[sym][metric] = whole-RTH pctls; tod.overnight = night set.
+export interface CalPctls { n: number; p50: number; p80: number; p95: number; }
+export type CalDoc = Record<string, Record<string, CalPctls> & { tod?: Record<string, Record<string, CalPctls>> }>;
+
+// Which calibrated distribution grades each kind's size (mirrors the engine's tier metrics).
+// Absent kinds (spoof/unfinished/absorption/confluence) have no usable distribution — their
+// counters stay absolute even in percentile mode.
+const PCT_METRIC: Partial<Record<TapeKind, string>> = {
+  block: 'block_ct', sweep: 'sweep_size', stacked: 'stacked_vol', trapped: 'trapped_ct',
+  iceberg: 'iceberg_ct', wall: 'wall_peak', stoprun: 'stoprun_ct',
+};
+
+// RTH bounds cache (UTC ms) — Intl per event would wreck the draw loop; one lookup per day.
+const _rthCache = new Map<number, { open: number; close: number }>();
+function rthBoundsForSec(tSec: number): { open: number; close: number } {
+  const dayKey = Math.floor(tSec / 86_400);
+  let b = _rthCache.get(dayKey);
+  if (!b) {
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(tSec * 1000));
+    const [y, m, d] = date.split('-').map(Number);
+    b = { open: Date.UTC(y!, m! - 1, d!, 13, 30) / 1000, close: Date.UTC(y!, m! - 1, d!, 20, 0) / 1000 };  // EDT
+    _rthCache.set(dayKey, b);
+    if (_rthCache.size > 400) _rthCache.clear();
+  }
+  return b;
+}
+
+/** Percentile display floor for an event: its session's distribution (overnight vs whole-RTH),
+ *  null when no calibration applies (caller falls back to the absolute counter). */
+export function pctFloor(cal: CalDoc | null | undefined, symbol: string | undefined, kind: TapeKind, pct: number | undefined, tSec: number): number | null {
+  if (!cal || !symbol || !pct) return null;
+  const metric = PCT_METRIC[kind];
+  if (!metric) return null;
+  const sym = cal[symbol];
+  if (!sym) return null;
+  const b = rthBoundsForSec(tSec);
+  const overnight = tSec < b.open || tSec >= b.close;
+  const p = (overnight ? sym.tod?.overnight?.[metric] : undefined) ?? sym[metric];
+  if (!p || typeof p !== 'object' || !('p50' in p) || (p as CalPctls).n < 100) return null;
+  const pc = p as CalPctls;
+  return pct >= 95 ? pc.p95 : pct >= 80 ? pc.p80 : pc.p50;
 }
 
 // Per-kind size floors (= defaults = minimums) from the shared TAPE_FLOORS.

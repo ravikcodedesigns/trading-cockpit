@@ -21,7 +21,10 @@ import { HeatmapFeed } from '../lib/heatmap-feed';
 import { FlowHud } from './FlowHud';
 import { DriftHud } from './DriftHud';
 import { TapePrimitive } from './tapePrimitive';
-import { TapeFeed, ALL_KINDS, floorMinSize, floorMinLevels } from '../lib/tape-feed';
+import { TapeFeed, ALL_KINDS, floorMinSize, floorMinLevels, type CalDoc } from '../lib/tape-feed';
+
+// kinds with a calibrated size distribution — eligible for percentile display dials
+const PCT_KINDS = new Set<TapeKind>(['block', 'sweep', 'stacked', 'trapped', 'iceberg', 'wall', 'stoprun']);
 import { TAPE_FLOORS, type TapeKind, type TapeEvent } from '@trading/contracts';
 import { SignalChartCard } from './SignalFeed';
 
@@ -605,6 +608,10 @@ export function Chart() {
   const [tapeKinds, setTapeKinds] = useState<Set<TapeKind>>(() => new Set(ALL_KINDS));
   const [tapeMinSizes, setTapeMinSizes] = useState<Record<TapeKind, number>>(() => floorMinSize());
   const [tapeMinLevels, setTapeMinLevels] = useState<Record<TapeKind, number>>(() => floorMinLevels());   // per-kind min price levels (sweep/stacked)
+  // percentile display mode: dials become session-aware percentiles (RTH vs overnight per event)
+  const [tapePctMode, setTapePctMode] = useState(false);
+  const [tapeMinPct, setTapeMinPct] = useState<Partial<Record<TapeKind, 0 | 50 | 80 | 95>>>({ sweep: 80, block: 80, stacked: 80 });
+  const [tapeCal, setTapeCal] = useState<CalDoc | null>(null);   // /tape/calibration payload (nightly-refreshed)
   const [iceBucketTicks, setIceBucketTicks] = useState(4);   // roll up icebergs within ±N ticks into one diamond
   const [confTopN, setConfTopN] = useState(8);               // show only top-N confluence stars in view
   const [confMinTier, setConfMinTier] = useState(2);         // 1 prime · 2 prime+key (default) · 3 all
@@ -742,7 +749,7 @@ export function Chart() {
     tapeRef.current.setConfTopN(confTopN);
     tapeRef.current.setConfMinTier(confMinTier);
     tapeRef.current.setEnabled(true);
-    tapeFeedRef.current.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels });
+    tapeFeedRef.current.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels, pctMode: tapePctMode, minPct: tapeMinPct, cal: tapeCal, symbol: selectedSymbol });
 
     // Durable backfill: load persisted markers for the currently-visible range so they persist
     // across reload/scroll/toggle. Scrolling into older history refetches via the sub below.
@@ -759,8 +766,18 @@ export function Chart() {
 
   // Push filter changes to the live feed (redraws with the new density) without reconnecting.
   useEffect(() => {
-    tapeFeedRef.current?.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels });
-  }, [tapeKinds, tapeMinSizes, tapeMinLevels]);
+    tapeFeedRef.current?.setFilter({ kinds: tapeKinds, minSize: tapeMinSizes, minLevels: tapeMinLevels, pctMode: tapePctMode, minPct: tapeMinPct, cal: tapeCal, symbol: selectedSymbol });
+  }, [tapeKinds, tapeMinSizes, tapeMinLevels, tapePctMode, tapeMinPct, tapeCal, selectedSymbol]);
+
+  // calibration tables for percentile mode — fetch on mount, refresh every 30 min (the nightly
+  // recalibration rewrites the file; the aggregator caches it 5 min)
+  useEffect(() => {
+    let dead = false;
+    const load = () => fetch('/tape/calibration').then((r) => r.json()).then((j) => { if (!dead && j && typeof j === 'object') setTapeCal(j as CalDoc); }).catch(() => { /* keep last */ });
+    load();
+    const id = setInterval(load, 30 * 60_000);
+    return () => { dead = true; clearInterval(id); };
+  }, []);
 
   // Push the iceberg roll-up bucket size + confluence top-N live.
   useEffect(() => { tapeRef.current?.setIceBucketTicks(iceBucketTicks); }, [iceBucketTicks]);
@@ -3572,6 +3589,18 @@ export function Chart() {
             fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
           }}>
             <span style={{ color: '#a78bfa', fontSize: 12, fontWeight: 800, letterSpacing: 0.5 }}>TAPE</span>
+            <button onClick={() => setTapePctMode((v) => !v)}
+              title={tapePctMode
+                ? 'PERCENTILE mode: size dials are percentiles of each event\'s OWN session (RTH vs overnight, per-symbol, recalibrated nightly) — "big" self-adjusts by clock. Click for absolute contracts.'
+                : 'ABSOLUTE mode: size dials are fixed contract counts (a daytime-tuned number over-filters the overnight session). Click for percentile mode.'}
+              style={{
+                padding: '2px 7px', fontSize: 11, fontWeight: 800, cursor: 'pointer', borderRadius: 3,
+                border: `1px solid ${tapePctMode ? '#34d399' : 'var(--border)'}`,
+                background: tapePctMode ? 'rgba(52,211,153,0.15)' : 'transparent',
+                color: tapePctMode ? '#34d399' : 'var(--text-2)', letterSpacing: 0.5,
+              }}>
+              {tapePctMode ? 'PCT' : 'ABS'}
+            </button>
             {ALL_KINDS.map((k) => {
               const on = tapeKinds.has(k);
               return (
@@ -3609,11 +3638,22 @@ export function Chart() {
                         title="Max confluence markers shown in view, ranked tier-first"
                         disabled={!on} style={{ ...inp(on), width: 40 }} />
                     </>
+                  ) : tapePctMode && PCT_KINDS.has(k) ? (
+                  <><span style={lbl(12)}>≥</span>
+                  <select value={tapeMinPct[k] ?? 0}
+                    onChange={(e) => setTapeMinPct((prev) => ({ ...prev, [k]: Number(e.target.value) as 0 | 50 | 80 | 95 }))}
+                    title={`${KIND_META[k].label}: show events at/above this percentile of their own session's distribution (all = engine floor only)`}
+                    disabled={!on} style={{ ...inp(on), width: 60 }}>
+                    <option value={0}>all</option>
+                    <option value={50}>p50</option>
+                    <option value={80}>p80</option>
+                    <option value={95}>p95</option>
+                  </select></>
                   ) : (
                   <><span style={lbl(12)}>≥</span>
                   <input type="number" min={TAPE_FLOORS[k].size} step={5} value={tapeMinSizes[k] || ''}
                     onChange={(e) => setMin(k, Number(e.target.value))} onBlur={() => clampMin(k)}
-                    title={`${KIND_META[k].label}: min size in contracts (floor ${TAPE_FLOORS[k].size})`}
+                    title={`${KIND_META[k].label}: min size in contracts (floor ${TAPE_FLOORS[k].size})${tapePctMode ? ' — no calibrated distribution for this kind, absolute even in PCT mode' : ''}`}
                     disabled={!on} style={{ ...inp(on), width: 56 }} /></>
                   )}
                   {hasLevels(k) && <span style={lbl(11)}>ct</span>}

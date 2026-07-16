@@ -17,7 +17,9 @@ import type {
   SeriesAttachedParameter, Time, IChartApi,
 } from 'lightweight-charts';
 import type { TapeFeed } from '../lib/tape-feed';
+import { pctFloor } from '../lib/tape-feed';
 import type { TapeEvent } from '@trading/contracts';
+import { TAPE_FLOORS } from '@trading/contracts';
 
 const AMBER = '245,158,11';
 const NATIVE_GLOW = '253,224,71';    // yellow luminescent border for NATIVE icebergs
@@ -74,7 +76,15 @@ class Renderer implements IPrimitivePaneRenderer {
 
       for (const ev of feed.events) {
         if (ev.t < visFrom || ev.t > visTo) continue;   // off-screen → skip cheaply
-        if (!kinds.has(ev.kind) || ev.size < (minSize[ev.kind] ?? 0)) continue;
+        // percentile mode: the floor is the event's own session's distribution (overnight vs RTH),
+        // so "show the big ones" self-adjusts by clock; kinds without a calibrated distribution
+        // (and any calibration gap) fall back to the absolute counter.
+        let minSz = minSize[ev.kind] ?? 0;
+        if (feed.filter.pctMode) {
+          const pf = pctFloor(feed.filter.cal, feed.filter.symbol, ev.kind, feed.filter.minPct?.[ev.kind], ev.t);
+          if (pf != null) minSz = Math.max(TAPE_FLOORS[ev.kind]?.size ?? 0, pf);
+        }
+        if (!kinds.has(ev.kind) || ev.size < minSz) continue;
         if (ev.levels != null && ev.levels < (minLevels[ev.kind] ?? 0)) continue;
         // Event time → bar boundary → x (timeToCoordinate resolves exact bar times only).
         const barTime = Math.floor(ev.t / barSec) * barSec;

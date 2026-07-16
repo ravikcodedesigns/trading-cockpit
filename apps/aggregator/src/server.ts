@@ -522,6 +522,36 @@ export async function startServer(): Promise<FastifyInstance> {
     return { symbol, minutes, interval: intervalMin, count: bars.length, bars };
   });
 
+  // Raw trades for a bounded window — powers the session-replay's tick-by-tick candle
+  // forming (the CURRENT candle builds trade-by-trade, exactly like a live session).
+  // Read-only via the tick-store client (cached). Hard-capped at a 30-min window so a
+  // replay can never request the whole day (2.6M+ trades) and choke the browser / store.
+  app.get('/history/trades', async (req) => {
+    const q = req.query as { symbol?: string; from?: string; to?: string };
+    const symbol = q.symbol ?? 'NQ';
+    const from = parseInt(q.from ?? '0', 10);
+    const to   = parseInt(q.to   ?? '0', 10);
+    if (!from || !to || to <= from) return { symbol, from, to, count: 0, trades: [] };
+    if (to - from > 30 * 60_000) return { symbol, from, to, error: 'window too wide (max 30m)', count: 0, trades: [] };
+    const raw = await getTradesInRange(symbol, from, to);
+    const trades = raw.map((t) => ({ ts: t.ts, price: t.price, size: t.size }));
+    return { symbol, from, to, count: trades.length, trades };
+  });
+
+  // Calibration tables for the cockpit's percentile-based display counters — the same
+  // data/tape-calibration.json the engine reads (per-symbol, per-session percentiles, refreshed
+  // nightly). Cached 5 min; {} when the file doesn't exist yet (cockpit falls back to absolute).
+  let _calCache: { at: number; doc: unknown } | null = null;
+  app.get('/tape/calibration', async () => {
+    const now = Date.now();
+    if (_calCache && now - _calCache.at < 5 * 60_000) return _calCache.doc;
+    try {
+      const raw = await fs.promises.readFile(path.resolve(__dirname, '../../../data/tape-calibration.json'), 'utf8');
+      _calCache = { at: now, doc: JSON.parse(raw) };
+    } catch { _calCache = { at: now, doc: {} }; }
+    return _calCache.doc;
+  });
+
   // Durable TAPE-event backfill — returns persisted order-flow events (all kinds) for a symbol in
   // a time range so the cockpit can render markers on historical candles and analyse what happened
   // after each. `from`/`to` are epoch SECONDS (the TapeEvent time axis). Read-only; wrapped so a
