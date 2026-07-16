@@ -36,6 +36,9 @@
     "heatmap:worker": "tsx watch scripts/heatmap-worker.ts",
     "flow:worker": "tsx watch scripts/flow-worker.ts",
     "tape:worker": "tsx watch scripts/tape-worker.ts",
+    "tape:test": "tsx scripts/tape_unit_tests.ts",
+    "tape:label": "tsx scripts/label_tape_outcomes.ts",
+    "tape:calibrate": "NODE_OPTIONS=--max-old-space-size=24576 tsx scripts/calibrate_tape.ts",
     "drift:worker": "tsx watch scripts/drift-worker.ts"
   },
   "dependencies": {
