@@ -494,6 +494,8 @@ export interface FlowWindow {
   deltaSec: number; // the faster sub-window the aggressor delta is summed over (10 / 60 / 300)
   imb: number;      // trailing-AVERAGE resting book imbalance over `sec` (contracts, >0 = bid-stacked)
   delta: number;    // aggressor delta SUM over `deltaSec` (buy − sell, contracts) — the live momentum
+  deltaPct?: number;// delta / total volume over `deltaSec` (−1..+1) — regime-comparable normalized delta
+  vol?: number;     // total aggressor volume over `deltaSec` (buy + sell) — the deltaPct denominator
   tps: number;      // trades / sec, averaged over `sec`
   mps: number;      // MBO messages / sec (adds+cancels+replaces) over `sec` — book churn/temperature
 }
@@ -540,6 +542,10 @@ export type TapeKind =
   | 'wall'        // a large resting level that HELD (refilled + rejected) or BROKE (eaten through)
   | 'unfinished'  // a swing extreme made on one-sided aggression (single print → revisit magnet)
   | 'trapped'     // a burst of aggressors at an extreme that price immediately reversed through
+  | 'stoprun'     // a print through a stop-pool reference (session H/L, swing extreme, daily level)
+                  //   followed by a CASCADE of many DISTINCT aggressor orders — triggered stops, not
+                  //   one player (only MBO data can tell these apart). Resolves reclaimed (sweep
+                  //   failed → spring) or accepted (breakout held).
   | 'confluence'; // ≥2 distinct tape+flow signals aligning in one price zone + window (the synthesis)
 export interface TapeEvent {
   t: number;          // epoch SECONDS (aligns with candle time axis)
@@ -555,14 +561,21 @@ export interface TapeEvent {
                       // absorption: net absorbed flow (|ΣOFI|) / stacked: dominant-side volume across the stack /
                       // wall: peak resting size / unfinished: volume at the extreme / trapped: trapped burst volume /
                       // confluence: the SCORE (weighted sum of aligned distinct signals)
-  levels?: number;    // sweep / stacked: number of consecutive price levels involved / confluence: # aligned signals
+  levels?: number;    // sweep / stacked: number of consecutive price levels involved / confluence: # aligned
+                      // FAMILIES / stoprun: DISTINCT aggressors in the cascade / wall (active): remaining size
   signals?: string[]; // confluence: the distinct signal types that aligned (e.g. ['iceberg','absorption','flow'])
   refills?: number;   // iceberg: FILL-CONFIRMED refill count (re-posts that later traded; pulled posts never count)
   durMs?: number;     // iceberg: episode lifespan so far (→ contracts-per-time rate)
   lifeMs?: number;    // spoof: how long the pulled order rested before cancel
   lamRatio?: number;  // absorption: current λ / baseline λ (how collapsed the price-impact is; lower = stronger)
-  state?: 'hold' | 'break'             // wall: did the level hold or break
-        | 'active' | 'held' | 'broke'; // iceberg EPISODE: being defended NOW / price bounced away / traded through
+  state?: 'hold' | 'break' | 'pulled'  // wall: held / eaten through (CONSUMED by trades) / PULLED
+                                       //   ('pulled' = depleted without proportionate traded volume — the
+                                       //    owner walked it, spoof-adjacent; distinct signal from a real break)
+        | 'active' | 'held' | 'broke'  // iceberg EPISODE: being defended NOW / price bounced away / traded through
+        | 'reclaimed' | 'accepted'     // stoprun: price back through the swept ref (sweep FAILED → spring) /
+                                       //   held-or-extended beyond it (genuine breakout)
+        | 'flushed' | 'recovered';     // trapped: the offside cohort's adverse move EXTENDED (their stops/pukes
+                                       //   fired — reversal confirmed) / price returned to their entries (trap dead)
   native?: boolean;   // iceberg: true = order_id-NATIVE (one order's fills exceeded its displayed size —
                       // real hidden qty); false/absent = SYNTHETIC episode (machine-latency fill-confirmed
                       // refills; size = hidden reserve = traded − peak persistent displayed at the level)
@@ -572,6 +585,16 @@ export interface TapeEvent {
   queueCt?: number;   // iceberg: contracts re-posted and WAITING to execute right now (0 once resolved) —
                       //          the freshest "defender still committing" signal
   lastFillT?: number; // iceberg: epoch seconds of the last fill/reload — render reload-age live from this
+  families?: string[];// confluence: the distinct signal FAMILIES that aligned (DEFENSE / AGGRESSION /
+                      //   EXHAUSTION / FLOW / BOOK) — each family counts once toward the score
+  atStruct?: boolean; // fired within the structural-proximity band of a daily structural level.
+                      //   ANNOTATION ONLY (F5b: flow-following reverses at real structure — the same
+                      //   confluence means something different at a level vs mid-range)
+  repeats?: number;   // spoof: qualifying pulls by this side near this zone inside the repetition window —
+                      //   layering/flicker repetition is part of the spoofing definition, one-off pulls are not
+  flip?: boolean;     // confluence: this star REVERSES a recent opposite star in the same zone — the newest
+                      //   evidence supersedes the old (which the chart dims/strikes); never suppressed, the
+                      //   flip itself is information and the labeler scores flip vs unopposed stars separately
 }
 export interface TapeSnapshot {
   type: 'tape-snapshot';
@@ -598,9 +621,13 @@ export const TAPE_FLOORS = {
                                          // the UI dial raises display density from here.
   absorption: { size: 30 },              // absorption = ≥ N units of net order flow whose impact collapsed
   stacked:    { levels: 3, size: 10 },   // stacked imbalance = ≥ L consecutive levels, ≥ N dominant vol each
-  wall:       { size: 100 },             // a wall = a resting level whose peak size ≥ N contracts
+  wall:       { size: 30 },              // a wall = a resting level whose peak size ≥ N contracts.
+                                         // LOW floor (was flat 100): the engine applies a PER-SYMBOL K×median-
+                                         // level-depth floor (book-relative — flat 100 ≈ noise on ES, unreachable
+                                         // on NQ); the UI dial raises display density from here.
   unfinished: { size: 5 },               // unfinished auction = ≥ N one-sided contracts at the extreme
   trapped:    { size: 30 },              // trapped = an aggressor burst ≥ N contracts caught offside
+  stoprun:    { size: 25 },              // stop run = cascade volume ≥ N contracts through a stop-pool ref
   confluence: { size: 3 },               // confluence = aligned-signal SCORE ≥ N (engine floor; display uses top-N)
 } as const;
 

@@ -38,6 +38,43 @@ export function ofiSeries(quotes: Quote[]): number[] {
   return out;
 }
 
+// ── Multi-level OFI (Cont–Cucuringu–Zhang 2021) ───────────────────────────────
+// The CKS per-level rule applied at each of the top K levels per side and summed. Depth beyond
+// the touch adds real explanatory power for Δmid on index futures — best-quote-only OFI misses
+// flow that queues behind the touch. Levels are positional (m-th best), matching the paper.
+export interface BookLevel { px: number; sz: number; }
+
+/** One side's level-m contribution (bid: same sign rule as L1; ask handled by caller). */
+function levelStep(prev: BookLevel | undefined, cur: BookLevel | undefined, isBid: boolean): number {
+  if (!prev && !cur) return 0;
+  if (!prev) return isBid ? cur!.sz : -cur!.sz;       // level appeared = liquidity added
+  if (!cur) return isBid ? -prev.sz : prev.sz;        // level vanished = liquidity removed
+  if (isBid) {
+    if (cur.px > prev.px) return cur.sz;
+    if (cur.px < prev.px) return -prev.sz;
+    return cur.sz - prev.sz;
+  }
+  if (cur.px < prev.px) return -cur.sz;
+  if (cur.px > prev.px) return prev.sz;
+  return -(cur.sz - prev.sz);
+}
+
+/**
+ * OFI step integrated over the top K levels per side. `prevBids`/`curBids` sorted best-first
+ * (bids descending, asks ascending). +ve = net buy pressure, same convention as ofiStep.
+ */
+export function ofiStepDeep(
+  prevBids: BookLevel[], prevAsks: BookLevel[],
+  curBids: BookLevel[], curAsks: BookLevel[], K: number,
+): number {
+  let sum = 0;
+  for (let m = 0; m < K; m++) {
+    sum += levelStep(prevBids[m], curBids[m], true);
+    sum += levelStep(prevAsks[m], curAsks[m], false);
+  }
+  return sum;
+}
+
 const mid = (q: Quote) => (q.bidPx + q.askPx) / 2;
 
 // ── Kyle's λ : Δmid = α + λ·OFI ───────────────────────────────────────────────
