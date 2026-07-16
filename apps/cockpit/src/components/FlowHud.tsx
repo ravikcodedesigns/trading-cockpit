@@ -109,7 +109,14 @@ function FlowRow({ w }: { w: import('@trading/contracts').FlowWindow }) {
     <>
       <span style={{ color: WIN, fontSize: 12, fontWeight: 800 }}>{winLabel(w.sec)}</span>
       <span style={{ ...val, color: signColor(w.imb) }}>{w.imb > 0 ? '+' : ''}{kfmt(w.imb)}</span>
-      <span style={{ ...val, color: signColor(w.delta) }}>{w.delta > 0 ? '+' : ''}{kfmt(w.delta)} {arrow(w.delta)}<span style={{ fontSize: 9, color: MUTE, fontWeight: 600 }}> {winLabel(w.deltaSec)}</span></span>
+      <span style={{ ...val, color: signColor(w.delta) }}>
+        {w.delta > 0 ? '+' : ''}{kfmt(w.delta)} {arrow(w.delta)}
+        <span style={{ fontSize: 9, color: MUTE, fontWeight: 600 }}> {winLabel(w.deltaSec)}</span>
+        {/* deltaPct = delta / total volume: the regime-comparable read (+300 at the open ≠ +300 at lunch) */}
+        {w.deltaPct != null && w.vol != null && w.vol > 0 && (
+          <span style={{ fontSize: 9, color: MUTE, fontWeight: 600 }} title="Δ as % of total aggressor volume in the sub-window"> {(w.deltaPct * 100).toFixed(0)}%</span>
+        )}
+      </span>
       <span style={{ ...val, color: 'var(--text-1)' }}>{w.tps.toFixed(1)}<span style={{ fontSize: 9, color: MUTE }}>/s</span></span>
       <span style={{ ...val, color: w.mps > 400 ? '#f59e0b' : w.mps > 150 ? '#eab308' : 'var(--text-1)' }}>{kfmt(w.mps)}<span style={{ fontSize: 9, color: MUTE }}>/s</span></span>
     </>

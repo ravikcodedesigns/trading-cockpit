@@ -20,7 +20,14 @@ export const FLOW_MS = 1000;                  // emit cadence — 1/sec (windowe
 // context window; the aggressor delta sums over the faster sub-window so it stays live.
 export const FLOW_WINDOWS: Array<[number, number]> = [[60, 10], [300, 60], [900, 300]];
 const MAX_WINDOW_SEC = 900;                   // retain this many seconds of buckets
-export const FLOW_BAND_TICKS = 20;            // ± band for book imbalance (±5.0 pts on NQ/ES)
+// ± band for book imbalance, PER SYMBOL — the ES book is 5–10× thicker than NQ, so one flat band
+// makes the two imbalance numbers incomparable. Same default until calibration says otherwise;
+// env-tunable per symbol (FLOW_BAND_TICKS_NQ / FLOW_BAND_TICKS_ES).
+const bandNum = (k: string, d: number): number => (process.env[k] != null ? Number(process.env[k]) : d);
+export const FLOW_BAND_TICKS: Record<Sym, number> = {
+  NQ: bandNum('FLOW_BAND_TICKS_NQ', 20),
+  ES: bandNum('FLOW_BAND_TICKS_ES', 20),
+};
 const TICK = 0.25;                            // NQ + ES both 0.25
 
 const CAPTURE_DIR = process.env.HEATMAP_CAPTURE_DIR ?? path.join(os.homedir(), 'cockpit-mbo-capture');
@@ -155,7 +162,14 @@ function aggregate(e: SymEngine, nowSec: number, ctxSec: number, deltaSec: numbe
     trades += b.trades; msgs += b.msgs; imbSum += b.imbSum; imbN += b.imbN;
     if (b.sec > dCut) { dBuy += b.buy; dSell += b.sell; }   // delta only over the faster sub-window
   }
-  return { sec: ctxSec, deltaSec, imb: imbN ? imbSum / imbN : 0, delta: dBuy - dSell, tps: trades / ctxSec, mps: msgs / ctxSec };
+  // deltaPct = delta / total volume over the delta sub-window (−1..+1): the regime-comparable
+  // read — a +300 delta means something different at the open (2% of tape) vs lunch (30%).
+  const vol = dBuy + dSell;
+  return {
+    sec: ctxSec, deltaSec, imb: imbN ? imbSum / imbN : 0, delta: dBuy - dSell,
+    deltaPct: vol > 0 ? (dBuy - dSell) / vol : 0, vol,
+    tps: trades / ctxSec, mps: msgs / ctxSec,
+  };
 }
 
 function tick(): void {
@@ -168,13 +182,14 @@ function tick(): void {
     // Sample the current book imbalance into this second's bucket (so the per-window imb is a
     // trailing average, not the instantaneous flicker).
     const mid = Math.round((bbI + baI) / 2);
-    const imbNet = e.book.depthNear(mid, FLOW_BAND_TICKS, 'bid').size - e.book.depthNear(mid, FLOW_BAND_TICKS, 'ask').size;
+    const band = FLOW_BAND_TICKS[e.sym];
+    const imbNet = e.book.depthNear(mid, band, 'bid').size - e.book.depthNear(mid, band, 'ask').size;
     const b = bucketFor(e, nowSec); b.imbSum += imbNet; b.imbN++;
 
     sink(e.sym, {
       type: 'flow', symbol: e.sym, ts: now / 1000,
       bestBid: bbI * TICK, bestAsk: baI * TICK, spreadTicks: Math.round(baI - bbI),
-      cvd: e.rthCvd, bandTicks: FLOW_BAND_TICKS,
+      cvd: e.rthCvd, bandTicks: band,
       windows: FLOW_WINDOWS.map(([ctx, dlt]) => aggregate(e, nowSec, ctx, dlt)),
     });
   }
