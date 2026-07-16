@@ -51,18 +51,31 @@ function getDb(): Database.Database {
   try { db.exec('ALTER TABLE tape_events ADD COLUMN exec_ct INTEGER'); } catch { /* already present */ }
   try { db.exec('ALTER TABLE tape_events ADD COLUMN queue_ct INTEGER'); } catch { /* already present */ }
   try { db.exec('ALTER TABLE tape_events ADD COLUMN last_fill_t REAL'); } catch { /* already present */ }
+  // 2026-07-15 audit rebuild: structural proximity + confluence families + spoof repetition,
+  // and the outcome-labeler columns (fixed-horizon signed tick moves, stamped nightly by
+  // scripts/label_tape_outcomes.ts — the falsifiability layer for every detector)
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN at_struct INTEGER'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN families TEXT'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN repeats INTEGER'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN flip INTEGER'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN out_30s REAL'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN out_2m REAL'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN out_5m REAL'); } catch { /* already present */ }
+  try { db.exec('ALTER TABLE tape_events ADD COLUMN labeled_at REAL'); } catch { /* already present */ }
   // iceberg EPISODES re-emit under one ep_id (provisional 'active' → final held/broke) — upsert so
   // the store keeps exactly ONE row per episode, updated in place. Non-episode rows (ep_id NULL)
   // never hit the partial index and insert as before.
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_tape_ep ON tape_events(ep_id) WHERE ep_id IS NOT NULL');
   _db = db;
   _insert = db.prepare(`
-    INSERT INTO tape_events (symbol, t, kind, price, side, size, levels, refills, life_ms, lam_ratio, state, native, dur_ms, signals, ep_id, exec_ct, queue_ct, last_fill_t)
-    VALUES (@symbol, @t, @kind, @price, @side, @size, @levels, @refills, @life_ms, @lam_ratio, @state, @native, @dur_ms, @signals, @ep_id, @exec_ct, @queue_ct, @last_fill_t)
+    INSERT INTO tape_events (symbol, t, kind, price, side, size, levels, refills, life_ms, lam_ratio, state, native, dur_ms, signals, ep_id, exec_ct, queue_ct, last_fill_t, at_struct, families, repeats, flip)
+    VALUES (@symbol, @t, @kind, @price, @side, @size, @levels, @refills, @life_ms, @lam_ratio, @state, @native, @dur_ms, @signals, @ep_id, @exec_ct, @queue_ct, @last_fill_t, @at_struct, @families, @repeats, @flip)
     ON CONFLICT(ep_id) WHERE ep_id IS NOT NULL DO UPDATE SET
       t = excluded.t, price = excluded.price, size = excluded.size, refills = excluded.refills,
       state = excluded.state, dur_ms = excluded.dur_ms,
-      exec_ct = excluded.exec_ct, queue_ct = excluded.queue_ct, last_fill_t = excluded.last_fill_t`);
+      exec_ct = excluded.exec_ct, queue_ct = excluded.queue_ct, last_fill_t = excluded.last_fill_t,
+      at_struct = excluded.at_struct,
+      labeled_at = NULL, out_30s = NULL, out_2m = NULL, out_5m = NULL`);
   return db;
 }
 
@@ -87,6 +100,10 @@ function flush(): void {
         signals: ev.signals ? ev.signals.join(',') : null,
         ep_id: ev.epId ?? null,
         exec_ct: ev.exec ?? null, queue_ct: ev.queueCt ?? null, last_fill_t: ev.lastFillT ?? null,
+        at_struct: ev.atStruct == null ? null : (ev.atStruct ? 1 : 0),
+        families: ev.families ? ev.families.join(',') : null,
+        repeats: ev.repeats ?? null,
+        flip: ev.flip == null ? null : (ev.flip ? 1 : 0),
       });
     }
   });
@@ -116,7 +133,7 @@ export function queryTapeEvents(sym: Sym, fromSec: number, toSec: number, limit 
   // at read, not deleted).
   const rows = getDb().prepare(`
     SELECT t, kind, price, side, size, levels, refills, life_ms AS lifeMs, lam_ratio AS lamRatio, state, native, dur_ms AS durMs, signals, ep_id AS epId,
-           exec_ct AS exec, queue_ct AS queueCt, last_fill_t AS lastFillT
+           exec_ct AS exec, queue_ct AS queueCt, last_fill_t AS lastFillT, at_struct AS atStruct, families, repeats, flip
     FROM tape_events WHERE symbol = ? AND t >= ? AND t <= ?
       AND (kind != 'iceberg' OR ep_id IS NOT NULL OR native = 1)
     ORDER BY t ASC LIMIT ?
@@ -135,6 +152,10 @@ export function queryTapeEvents(sym: Sym, fromSec: number, toSec: number, limit 
     if (r.exec != null) ev.exec = r.exec as number;
     if (r.queueCt != null) ev.queueCt = r.queueCt as number;
     if (r.lastFillT != null) ev.lastFillT = r.lastFillT as number;
+    if (r.atStruct != null) ev.atStruct = !!r.atStruct;
+    if (r.families != null) ev.families = String(r.families).split(',');
+    if (r.repeats != null) ev.repeats = r.repeats as number;
+    if (r.flip != null) ev.flip = !!r.flip;
     return ev;
   });
 }
