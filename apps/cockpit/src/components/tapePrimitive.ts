@@ -40,6 +40,10 @@ function iceGauge(state: TapeEvent['state'], queueCt: number, lastFillT: number,
 // (a green marker on a green candle reads as "hidden behind" it). Cyan = buy-side, magenta = sell-side.
 const BUY = '34,211,238';    // cyan
 const SELL = '244,114,182';  // magenta
+// Markers are DELIBERATELY translucent (user 2026-07-20): price action must stay readable
+// behind them. Glyphs draw at MARKER_ALPHA; text labels stay at LABEL_ALPHA for legibility.
+const MARKER_ALPHA = 0.55;
+const LABEL_ALPHA = 0.9;
 const ICE_BUY = BUY;
 const ICE_SELL = SELL;
 
@@ -124,6 +128,7 @@ class Renderer implements IPrimitivePaneRenderer {
         const r = Math.max(3 * hr, Math.min(11 * hr, Math.sqrt(ev.size) * 1.6 * hr));
 
         ctx.save();
+        ctx.globalAlpha = MARKER_ALPHA;   // candles stay readable behind every glyph
         if (ev.kind === 'block') {
           ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
@@ -253,6 +258,7 @@ class Renderer implements IPrimitivePaneRenderer {
         // 12ct→6px · 26→8 · 50→9 · 97→11 · 400+→16 cap
         const r = Math.max(6 * hr, Math.min(16 * hr, (4 + Math.sqrt(b.total) * 0.7) * hr));
         ctx.save();
+        ctx.globalAlpha = MARKER_ALPHA;
         ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath();
         ctx.fillStyle = `rgba(${ic},0.95)`; ctx.fill();
         ctx.lineWidth = 1.5 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.9)'; ctx.stroke();
@@ -291,6 +297,7 @@ class Renderer implements IPrimitivePaneRenderer {
       const gaugeFont = `700 ${9 * hr}px 'Geist Mono', monospace`;
       ctx.textBaseline = 'middle';
       ctx.save();
+      ctx.globalAlpha = LABEL_ALPHA;   // H/E/Q labels + gauges keep full legibility
       ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 3 * hr;
       for (const d of drawn) {
         if (topSet.has(d)) continue;
@@ -381,6 +388,7 @@ class Renderer implements IPrimitivePaneRenderer {
         if (tier === 3) cr *= 0.75;   // standard stars recede when shown at all
         const rin = cr * 0.44;
         ctx.save();
+        ctx.globalAlpha = MARKER_ALPHA + 0.1;   // stars slightly stronger — they're the deciders
         ctx.beginPath();
         for (let i = 0; i < 10; i++) { const rad = i % 2 === 0 ? cr : rin; const a = -Math.PI / 2 + i * Math.PI / 5; const px = x + Math.cos(a) * rad, py = y + Math.sin(a) * rad; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
         ctx.closePath();
@@ -407,6 +415,7 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.beginPath(); ctx.arc(x, y, cr + (tier === 1 ? 9 : c.ev.flip ? 6.5 : 3.5) * hr, 0, Math.PI * 2);
           ctx.lineWidth = 1.4 * hr; ctx.strokeStyle = 'rgba(253,224,71,0.85)'; ctx.stroke();
         }
+        ctx.globalAlpha = LABEL_ALPHA;   // score label stays readable even with translucent glyphs
         ctx.textBaseline = 'middle'; ctx.font = `800 ${12 * hr}px 'Geist Mono', monospace`;
         const t = `${c.ev.size}${c.ev.levels ? '·' + c.ev.levels : ''}`, pad = 4 * hr, tw = ctx.measureText(t).width, lx = x + cr + 5 * hr;
         ctx.fillStyle = 'rgba(8,8,12,0.92)'; ctx.fillRect(lx - pad, y - 9 * hr, tw + pad * 2, 18 * hr);
