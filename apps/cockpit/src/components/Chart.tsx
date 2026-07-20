@@ -3422,14 +3422,17 @@ export function Chart() {
         const shown = tapeTip.evs.slice(0, 4);
         const extra = tapeTip.evs.length - shown.length;
         const cw = containerRef.current?.clientWidth ?? 9999;
-        const flipX = tapeTip.x > cw - 230;
+        const flipX = tapeTip.x > cw - 560;
         const first = shown[0]!;
         const firstCol = first.side === 'buy' ? '#22d3ee' : '#a78bfa';
         const borderCol = first.kind === 'iceberg' && first.native ? '#fde047' : firstCol;
         return (
           <div style={{
-            position: 'absolute', left: flipX ? tapeTip.x - 220 : tapeTip.x + 14, top: tapeTip.y + 14,
-            zIndex: 50, pointerEvents: 'none', minWidth: 172, maxWidth: 340,
+            // width: max-content + nowrap = box grows to fit the LONGEST row, so every label/value
+            // pair renders on exactly ONE line (user: detail yes, wrapping no). Near the right
+            // edge it anchors via `right` so the wide box stays on screen.
+            position: 'absolute', left: flipX ? undefined : tapeTip.x + 14, right: flipX ? cw - tapeTip.x + 14 : undefined, top: tapeTip.y + 14,
+            zIndex: 50, pointerEvents: 'none', width: 'max-content', maxWidth: 700, whiteSpace: 'nowrap',
             background: 'rgba(10,10,15,0.96)', border: `1px solid ${borderCol}`,
             borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
