@@ -28,6 +28,9 @@ html, body, #root {
   width: 100%;
   background: var(--bg-0);
   color: var(--text-0);
+  /* two-finger horizontal scroll on the chart must PAN, never trigger the browser's
+     swipe-back/forward page navigation (macOS gesture hijack at scroll edges) */
+  overscroll-behavior: none;
   font-family: var(--font-sans);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
