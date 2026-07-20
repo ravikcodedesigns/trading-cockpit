@@ -475,6 +475,20 @@ export class TapePrimitive implements ISeriesPrimitive<Time> {
     return best;
   }
 
+  /** ALL markers under the cursor (stacked/overlapping spots), nearest first, deduped. */
+  hitTestAll(px: number, py: number, radius = 10): TapeEvent[] {
+    const r2 = radius * radius;
+    const found: { d: number; ev: TapeEvent }[] = [];
+    for (const h of this.hits) {
+      const dx = h.x - px, dy = h.y - py, d = dx * dx + dy * dy;
+      if (d <= r2) found.push({ d, ev: h.ev });
+    }
+    found.sort((a, b) => a.d - b.d);
+    const out: TapeEvent[] = [];
+    for (const f of found) if (!out.includes(f.ev)) out.push(f.ev);
+    return out;
+  }
+
   constructor(feed: TapeFeed) { this.feed = feed; this._view = new View(this); feed.onUpdate(() => this._requestUpdate?.()); }
   attached(p: SeriesAttachedParameter<Time>) { this.series = p.series as any; this.chart = p.chart as any; this._requestUpdate = p.requestUpdate; }
   detached() { this.series = null; this.chart = null; }

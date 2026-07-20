@@ -492,8 +492,8 @@ export function Chart() {
   const tapeRef = useRef<TapePrimitive | null>(null);
   const tapeOnRef = useRef(false);                                  // TAPE state, readable from the scroll sub
   const tapeLoadedRef = useRef<{ from: number; to: number }>({ from: Infinity, to: 0 });  // loaded history window (sec)
-  const [tapeTip, setTapeTip] = useState<{ ev: TapeEvent; x: number; y: number } | null>(null);  // hover tooltip
-  const tapeTipEvRef = useRef<TapeEvent | null>(null);              // guards tooltip setState churn
+  const [tapeTip, setTapeTip] = useState<{ evs: TapeEvent[]; x: number; y: number } | null>(null);  // hover tooltip — ALL markers at the spot
+  const tapeTipEvRef = useRef<TapeEvent | null>(null);              // guards tooltip setState churn (nearest ev identity)
   const [topIce, setTopIce] = useState<TapeEvent[]>([]);           // ranked "top icebergs in view" readout
   const [priceScaleW, setPriceScaleW] = useState(64);             // right price-axis width → panel offset
   // Per-level label entries for today's levels, drawn as SVG text in the
@@ -1043,12 +1043,12 @@ export function Chart() {
     // Hover tooltip for TAPE markers — hit-test the crosshair against drawn marker positions.
     chart.subscribeCrosshairMove((param) => {
       const pt = param.point;
-      const ev = (tapeOnRef.current && tapeRef.current && pt)
-        ? tapeRef.current.hitTest(pt.x as number, pt.y as number)
-        : null;
-      if (!ev) { if (tapeTipEvRef.current) { tapeTipEvRef.current = null; setTapeTip(null); } return; }
-      tapeTipEvRef.current = ev;
-      setTapeTip({ ev, x: pt!.x as number, y: pt!.y as number });
+      const evs = (tapeOnRef.current && tapeRef.current && pt)
+        ? tapeRef.current.hitTestAll(pt.x as number, pt.y as number)
+        : [];
+      if (!evs.length) { if (tapeTipEvRef.current) { tapeTipEvRef.current = null; setTapeTip(null); } return; }
+      tapeTipEvRef.current = evs[0]!;
+      setTapeTip({ evs, x: pt!.x as number, y: pt!.y as number });
     });
 
     // Canvas + webfont race: lightweight-charts paints the axis/labels before
@@ -3417,27 +3417,39 @@ export function Chart() {
       {/* TAPE marker hover tooltip — details for the marker under the crosshair (iceberg: contracts,
           refills, duration, contracts/time rate — so persistent icebergs can be compared). */}
       {tapeTip && (() => {
-        const ev = tapeTip.ev;
+        // STACKED tooltip: every marker under the cursor gets its own section (nearest first,
+        // capped at 4) — overlapping markers were previously one-at-a-time and unreachable.
+        const shown = tapeTip.evs.slice(0, 4);
+        const extra = tapeTip.evs.length - shown.length;
         const cw = containerRef.current?.clientWidth ?? 9999;
-        const flipX = tapeTip.x > cw - 210;
-        const sideCol = ev.side === 'buy' ? '#22d3ee' : '#a78bfa';
-        const isNative = ev.kind === 'iceberg' && ev.native;
-        const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+        const flipX = tapeTip.x > cw - 230;
+        const first = shown[0]!;
+        const firstCol = first.side === 'buy' ? '#22d3ee' : '#a78bfa';
+        const borderCol = first.kind === 'iceberg' && first.native ? '#fde047' : firstCol;
         return (
           <div style={{
-            position: 'absolute', left: flipX ? tapeTip.x - 200 : tapeTip.x + 14, top: tapeTip.y + 14,
-            zIndex: 50, pointerEvents: 'none', minWidth: 172,
-            background: 'rgba(10,10,15,0.96)', border: `1px solid ${isNative ? '#fde047' : sideCol}`,
+            position: 'absolute', left: flipX ? tapeTip.x - 220 : tapeTip.x + 14, top: tapeTip.y + 14,
+            zIndex: 50, pointerEvents: 'none', minWidth: 172, maxWidth: 340,
+            background: 'rgba(10,10,15,0.96)', border: `1px solid ${borderCol}`,
             borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
           }}>
-            <div style={{ color: sideCol, marginBottom: 4 }}>{tipTitle(ev)}</div>
-            {fmtTipRows(ev).map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
-                <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
-              </div>
-            ))}
-            <div style={{ color: '#6b7280', marginTop: 4, fontSize: 11 }}>{et} ET</div>
+            {shown.map((ev, i) => {
+              const sideCol = ev.side === 'buy' ? '#22d3ee' : '#a78bfa';
+              const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+              return (
+                <div key={i} style={i > 0 ? { borderTop: '1px solid #2a2a33', marginTop: 6, paddingTop: 6 } : undefined}>
+                  <div style={{ color: sideCol, marginBottom: 4 }}>{tipTitle(ev)}</div>
+                  {fmtTipRows(ev).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
+                      <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
+                    </div>
+                  ))}
+                  <div style={{ color: '#6b7280', marginTop: 3, fontSize: 11 }}>{et} ET</div>
+                </div>
+              );
+            })}
+            {extra > 0 && <div style={{ color: '#9ca3af', marginTop: 6, fontSize: 11 }}>+{extra} more marker{extra > 1 ? 's' : ''} here — zoom in to separate</div>}
           </div>
         );
       })()}
