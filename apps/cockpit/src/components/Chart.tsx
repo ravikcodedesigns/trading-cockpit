@@ -3358,6 +3358,55 @@ export function Chart() {
     return rows;
   };
 
+  // ONE-LINE tooltip per marker (user 2026-07-20: no multi-row sections) — title + the
+  // decision-relevant numbers, inline.
+  const tipStats = (ev: TapeEvent): string => {
+    const s: string[] = [];
+    switch (ev.kind) {
+      case 'iceberg':
+        s.push(`H${ev.size}`); if (ev.exec) s.push(`E${ev.exec}`);
+        if (ev.state === 'active' && ev.queueCt) s.push(`Q${ev.queueCt}`);
+        if (ev.refills != null) s.push(`×${ev.refills}`);
+        if (ev.durMs) s.push(`${(ev.durMs / 1000).toFixed(0)}s`);
+        break;
+      case 'wall':
+        s.push(`peak ${ev.size}`);
+        if (ev.state === 'active' && ev.levels != null) s.push(`left ${ev.levels}`);
+        if (ev.exec) s.push(`ate ${ev.exec}`);
+        if (ev.durMs) s.push(`${(ev.durMs / 1000).toFixed(0)}s`);
+        break;
+      case 'stoprun':
+        s.push(`${ev.size}ct/${ev.levels ?? '?'} traders`);
+        if (ev.lamRatio != null) s.push(`burst ${ev.lamRatio}×`);
+        if (ev.signals?.length) s.push(ev.signals[0] === 'session' ? 'sess H/L' : ev.signals[0] === 'struct' ? 'daily lvl' : ev.signals[0] === 'round' ? 'round#' : 'swing');
+        break;
+      case 'trapped':
+        s.push(`${ev.size}ct${ev.levels != null ? `/${ev.levels} traders` : ''}`);
+        if (ev.state) s.push(ev.state === 'active' ? 'UNDERWATER' : ev.state === 'flushed' ? 'FLUSHED' : 'RECOVERED');
+        if (ev.signals?.length) s.push(`@${ev.signals[0]}`);
+        break;
+      case 'sweep': s.push(`${ev.size}ct / ${ev.levels ?? '?'} lvls`); break;
+      case 'block': s.push(`${ev.size}ct one aggressor`); break;
+      case 'spoof':
+        s.push(`${ev.size}ct fake`); if (ev.lifeMs != null) s.push(`${(ev.lifeMs / 1000).toFixed(1)}s`);
+        if (ev.repeats != null) s.push(`×${ev.repeats} pulls`);
+        break;
+      case 'absorption': s.push(`${ev.size}ct eaten`); if (ev.lamRatio != null) s.push(`impact ${ev.lamRatio.toFixed(2)}×`); break;
+      case 'stacked': s.push(`${ev.size}ct / ${ev.levels ?? '?'} lvls`, 'weak standalone'); break;
+      case 'unfinished': s.push(`${ev.size}ct one-sided`, 'null — visual only'); break;
+      case 'confluence': {
+        s.push(`score ${ev.size}`);
+        if (ev.families?.length) s.push(ev.families.join('+'));
+        if (ev.flip) s.push('FLIP');
+        if (ev.durMs) s.push(`held ${(ev.durMs / 1000).toFixed(1)}s`);
+        break;
+      }
+    }
+    if (ev.atStruct && ev.kind !== 'confluence') s.push('@struct');
+    if (ev.atStruct && ev.kind === 'confluence') s.push('AT STRUCT ⚠');
+    return s.join(' · ');
+  };
+
   // Tooltip HEADER in market terms — the one-line read before any rows.
   const tipTitle = (ev: TapeEvent): string => {
     const p = ev.price.toFixed(2);
@@ -3428,28 +3477,24 @@ export function Chart() {
         const borderCol = first.kind === 'iceberg' && first.native ? '#fde047' : firstCol;
         return (
           <div style={{
-            position: 'absolute', left: flipX ? tapeTip.x - 220 : tapeTip.x + 14, top: tapeTip.y + 14,
-            zIndex: 50, pointerEvents: 'none', minWidth: 172, maxWidth: 340,
+            position: 'absolute', left: flipX ? tapeTip.x - 480 : tapeTip.x + 14, top: tapeTip.y + 14,
+            zIndex: 50, pointerEvents: 'none', maxWidth: 640, whiteSpace: 'nowrap',
             background: 'rgba(10,10,15,0.96)', border: `1px solid ${borderCol}`,
-            borderRadius: 4, padding: '6px 9px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
+            borderRadius: 4, padding: '6px 10px', fontFamily: 'Geist Mono, monospace', fontSize: 12, fontWeight: 700,
             color: '#e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
           }}>
             {shown.map((ev, i) => {
               const sideCol = ev.side === 'buy' ? '#22d3ee' : '#a78bfa';
               const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
               return (
-                <div key={i} style={i > 0 ? { borderTop: '1px solid #2a2a33', marginTop: 6, paddingTop: 6 } : undefined}>
-                  <div style={{ color: sideCol, marginBottom: 4 }}>{tipTitle(ev)}</div>
-                  {fmtTipRows(ev).map(([k, v]) => (
-                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
-                      <span style={{ color: '#9ca3af' }}>{k}</span><span>{v}</span>
-                    </div>
-                  ))}
-                  <div style={{ color: '#6b7280', marginTop: 3, fontSize: 11 }}>{et} ET</div>
+                <div key={i} style={{ lineHeight: 1.75, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <span style={{ color: sideCol }}>{tipTitle(ev)}</span>
+                  <span style={{ color: '#e5e7eb' }}> — {tipStats(ev)}</span>
+                  <span style={{ color: '#6b7280', fontSize: 11 }}> · {et}</span>
                 </div>
               );
             })}
-            {extra > 0 && <div style={{ color: '#9ca3af', marginTop: 6, fontSize: 11 }}>+{extra} more marker{extra > 1 ? 's' : ''} here — zoom in to separate</div>}
+            {extra > 0 && <div style={{ color: '#9ca3af', fontSize: 11 }}>+{extra} more here — zoom in to separate</div>}
           </div>
         );
       })()}
