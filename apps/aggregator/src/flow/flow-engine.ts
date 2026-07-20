@@ -53,6 +53,8 @@ interface SymEngine {
   lastTs: number;      // last event ts (real epoch ms)
   // RTH-anchored session CVD from the SAME BMD capture Bookmap uses (matches its Session CVD widget)
   rthCvd: number;      // net aggressor delta since 09:30 ET
+  lastPrice: number;   // last trade price (the cockpit's fast live-candle feed)
+  lastPriceTs: number; // its epoch ms
   rthDate: string;     // ET date of the current session (YYYY-MM-DD)
   rthOpenMs: number;   // cached RTH window bounds (UTC ms)
   rthCloseMs: number;
@@ -137,6 +139,7 @@ function dispatch(e: SymEngine, ev: LogEvent): void {
       e.book.applyTrade(d);
       const size = d.size as number;
       if (size > 0) {
+        e.lastPrice = d.price as number; e.lastPriceTs = ev.ts_ms;
         const b = bucketFor(e, sec); b.trades++; if (d.is_bid_aggressor) b.buy += size; else b.sell += size;
         // RTH-anchored BMD session CVD (matches Bookmap): recompute bounds only when we leave the
         // cached window, reset on a new ET day, then accumulate aggressor delta inside RTH.
@@ -191,6 +194,7 @@ function tick(): void {
       bestBid: bbI * TICK, bestAsk: baI * TICK, spreadTicks: Math.round(baI - bbI),
       cvd: e.rthCvd, bandTicks: band,
       windows: FLOW_WINDOWS.map(([ctx, dlt]) => aggregate(e, nowSec, ctx, dlt)),
+      last: e.lastPrice || undefined, lastT: e.lastPriceTs ? e.lastPriceTs / 1000 : undefined,
     });
   }
 }
@@ -211,7 +215,7 @@ export function startFlowEngine(onSnapshot: OnSnapshot): void {
   for (const sym of SYMBOLS) {
     engines.set(sym, {
       sym, suffix: SUFFIX[sym], book: new OrderBook(sym, TICK),
-      buckets: [], lastTs: Date.now(), rthCvd: 0, rthDate: '', rthOpenMs: 0, rthCloseMs: 0, tail: null, logPath: null,
+      buckets: [], lastTs: Date.now(), rthCvd: 0, lastPrice: 0, lastPriceTs: 0, rthDate: '', rthOpenMs: 0, rthCloseMs: 0, tail: null, logPath: null,
     });
     ensureTail(engines.get(sym)!);
   }

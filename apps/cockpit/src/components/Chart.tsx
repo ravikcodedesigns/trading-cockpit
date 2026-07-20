@@ -1538,6 +1538,55 @@ export function Chart() {
     };
   }, [selectedSymbol, selectedTimeframe]);
 
+  // ── FAST live-price path (2026-07-20): the addon 'bar' events lag 30-45s behind the market —
+  // unusable for managing a position. The flow worker tails the BMD log sub-second and snapshots
+  // 1/s; its `last` trade price drives the live candle here, so the chart is ≤~1.5s behind the
+  // exchange. The slow bar events still arrive behind it and reconcile OHLC/volume; any stale
+  // close they write is re-corrected by the next flow tick within a second. Independent of the
+  // FLOW HUD toggle — this connection exists purely to keep the price fresh.
+  useEffect(() => {
+    let sock: WebSocket | null = null;
+    let ping: ReturnType<typeof setInterval> | null = null;
+    let retry: ReturnType<typeof setTimeout> | null = null;
+    let dead = false;
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const connect = () => {
+      if (dead) return;
+      try { sock = new WebSocket(`${proto}://${location.host}/ws/flow?symbol=${selectedSymbol}`); } catch { retry = setTimeout(connect, 3000); return; }
+      sock.onopen = () => { ping = setInterval(() => { try { sock && sock.readyState === WebSocket.OPEN && sock.send(JSON.stringify({ type: 'ping' })); } catch { /* noop */ } }, 15000); };
+      sock.onclose = () => { if (ping) { clearInterval(ping); ping = null; } if (!dead) retry = setTimeout(connect, 3000); };
+      sock.onmessage = (m) => {
+        let snap: import('@trading/contracts').FlowSnapshot;
+        try { snap = JSON.parse(m.data as string); } catch { return; }
+        if (snap.type !== 'flow' || snap.symbol !== selectedSymbol || !snap.last || !snap.lastT) return;
+        const series = seriesRef.current;
+        if (!series || !historyLoadedRef.current[selectedSymbol]) return;
+        const intervalMs = selectedTimeframe * 60_000;
+        const t = Math.floor((snap.lastT * 1000) / intervalMs) * (intervalMs / 1000);
+        const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+        barHistoryRef.current[selectedSymbol] = history;
+        const px = snap.last;
+        const ex = history.get(t);
+        const bar = ex
+          ? { open: ex.open, high: Math.max(ex.high, px), low: Math.min(ex.low, px), close: px, volume: ex.volume }
+          : { open: px, high: px, low: px, close: px, volume: 0 };
+        history.set(t, bar);
+        const prevMax = lastLiveSecRef.current[selectedSymbol];
+        if (prevMax === undefined || t < prevMax) return;   // pre-history or stale — the bulk path owns it
+        try {
+          const tsApi = chartRef.current?.timeScale();
+          const pinned = tsApi ? (tsApi.scrollPosition() ?? 5) >= 4.5 : true;
+          const keep = !pinned && t > prevMax && tsApi ? tsApi.getVisibleLogicalRange() : null;
+          series.update({ time: t as UTCTimestamp, open: bar.open, high: bar.high, low: bar.low, close: bar.close });
+          if (t > prevMax) { lastLiveSecRef.current[selectedSymbol] = t; setBarsVersion((v) => v + 1); }
+          if (keep && tsApi) { try { tsApi.setVisibleLogicalRange(keep); } catch { /* disposed */ } }
+        } catch { /* out-of-order vs series state — the bulk path will reconcile */ }
+      };
+    };
+    connect();
+    return () => { dead = true; if (ping) clearInterval(ping); if (retry) clearTimeout(retry); try { sock?.close(); } catch { /* noop */ } };
+  }, [selectedSymbol, selectedTimeframe]);
+
   // When recentEvents updates, push new bar events for the selected symbol into the chart.
   useEffect(() => {
     const series = seriesRef.current;

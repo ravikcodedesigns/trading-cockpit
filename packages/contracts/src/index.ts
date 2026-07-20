@@ -509,6 +509,8 @@ export interface FlowSnapshot {
   cvd: number;           // session-cumulative true CVD (is_bid_aggressor attributed)
   bandTicks: number;     // the ± band used for imbalance
   windows: FlowWindow[]; // [1m, 5m, 15m]
+  last?: number;         // last trade PRICE from the sub-second log tail — the cockpit's FAST live-
+  lastT?: number;        // candle feed (epoch sec). The addon 'bar' events lag 30-45s; this doesn't.
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
