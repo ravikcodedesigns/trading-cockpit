@@ -144,7 +144,7 @@ const ABSORPTION_PALETTE = [
   '#fb923c', // orange
   '#a78bfa', // violet
   '#22d3ee', // cyan
-  '#f472b6', // pink
+  '#a78bfa', // violet
   '#818cf8', // indigo
   '#fde047', // yellow
 ];
@@ -3397,7 +3397,7 @@ export function Chart() {
         }}>
           <div style={{ color: '#7dd3fc', fontSize: 12, letterSpacing: 0.5, marginBottom: 5 }}>TOP ICEBERGS · in view · H hidden E executed Q queued</div>
           {topIce.map((ev, i) => {
-            const col = ev.side === 'buy' ? '#22d3ee' : '#f472b6';
+            const col = ev.side === 'buy' ? '#22d3ee' : '#a78bfa';
             const live = ev.state === 'active';
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, lineHeight: 1.6, opacity: live || !ev.state ? 1 : 0.65 }}>
@@ -3420,7 +3420,7 @@ export function Chart() {
         const ev = tapeTip.ev;
         const cw = containerRef.current?.clientWidth ?? 9999;
         const flipX = tapeTip.x > cw - 210;
-        const sideCol = ev.side === 'buy' ? '#22d3ee' : '#f472b6';
+        const sideCol = ev.side === 'buy' ? '#22d3ee' : '#a78bfa';
         const isNative = ev.kind === 'iceberg' && ev.native;
         const et = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
         return (

@@ -39,11 +39,17 @@ function iceGauge(state: TapeEvent['state'], queueCt: number, lastFillT: number,
 // ALL markers use this non-candle palette so they never blend into the green/red candle bodies
 // (a green marker on a green candle reads as "hidden behind" it). Cyan = buy-side, magenta = sell-side.
 const BUY = '34,211,238';    // cyan
-const SELL = '244,114,182';  // magenta
+const SELL = '167,139,250';  // VIOLET (was magenta — indistinguishable from red candle bodies)
 // Markers are DELIBERATELY translucent (user 2026-07-20): price action must stay readable
 // behind them. Glyphs draw at MARKER_ALPHA; text labels stay at LABEL_ALPHA for legibility.
+// Every glyph also carries a LUMINOUS bright edge (light tint, near-opaque) so it stays crisp
+// over solid candle bodies — translucent core, glowing outline. Ring strokes, never shadowBlur
+// (the 2026-07-14 perf lesson).
 const MARKER_ALPHA = 0.55;
 const LABEL_ALPHA = 0.9;
+const BUY_L = '165,243,252';   // luminous cyan edge
+const SELL_L = '221,214,254';  // luminous violet edge
+const AMBER_L = '253,230,138'; // luminous amber edge (spoof)
 const ICE_BUY = BUY;
 const ICE_SELL = SELL;
 
@@ -125,78 +131,83 @@ class Renderer implements IPrimitivePaneRenderer {
         if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
 
         const col = ev.kind === 'spoof' ? AMBER : ev.side === 'buy' ? BUY : SELL;
+        const colL = ev.kind === 'spoof' ? AMBER_L : ev.side === 'buy' ? BUY_L : SELL_L;
         const r = Math.max(3 * hr, Math.min(11 * hr, Math.sqrt(ev.size) * 1.6 * hr));
 
         ctx.save();
-        ctx.globalAlpha = MARKER_ALPHA;   // candles stay readable behind every glyph
+        // translucent CORE (fills at MARKER_ALPHA via globalAlpha) + LUMINOUS edge: strokes jump
+        // to near-opaque light tints via lum() so glyphs stay crisp over solid candle bodies
+        ctx.globalAlpha = MARKER_ALPHA;
+        const lum = (fn: () => void): void => { const a = ctx.globalAlpha; ctx.globalAlpha = 0.95; fn(); ctx.globalAlpha = a; };
         if (ev.kind === 'block') {
           ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          ctx.lineWidth = 1.2 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.85)'; ctx.stroke();  // dark edge = crisp on any candle
+          lum(() => { ctx.lineWidth = 1.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'sweep') {
           const up = ev.side === 'buy'; const h = r * 1.5;
           ctx.beginPath();
           if (up) { ctx.moveTo(x, y - h); ctx.lineTo(x - r, y + r * 0.6); ctx.lineTo(x + r, y + r * 0.6); }
           else    { ctx.moveTo(x, y + h); ctx.lineTo(x - r, y - r * 0.6); ctx.lineTo(x + r, y - r * 0.6); }
           ctx.closePath(); ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          ctx.lineWidth = 1 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.7)'; ctx.stroke();
+          lum(() => { ctx.lineWidth = 1.3 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'absorption') { // I-beam "held wall": heavy flow, price pinned
           const w = r * 1.7, cap = r * 0.9;
-          ctx.lineWidth = 2.4 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
           ctx.beginPath();
           ctx.moveTo(x - w, y); ctx.lineTo(x + w, y);                       // the wall
           ctx.moveTo(x - w, y - cap); ctx.lineTo(x - w, y + cap);           // left cap
           ctx.moveTo(x + w, y - cap); ctx.lineTo(x + w, y + cap);           // right cap
-          ctx.stroke();
+          lum(() => { ctx.lineWidth = 2.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'stacked') { // three stacked dashes ≡ — a ladder of imbalanced levels
           const w = r * 1.4;
-          ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
           ctx.beginPath();
           for (let i = -1; i <= 1; i++) { const yy = y + i * r * 0.9; ctx.moveTo(x - w, yy); ctx.lineTo(x + w, yy); }
-          ctx.stroke();
+          lum(() => { ctx.lineWidth = 2.4 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'wall') { // brick: rectangle outline; a BREAK gets a diagonal crack;
           // ACTIVE (standing RIGHT NOW — lean on it) = bright + filled, live-updating; resolved dims.
           // PULLED (walked without a fight — spoof-adjacent) renders dashed with a small pull-away arrow
           const w = r * 1.5, h = r * 1.1;
           const live = ev.state === 'active';
-          if (live) { ctx.fillStyle = `rgba(${col},0.22)`; ctx.fillRect(x - w, y - h, w * 2, h * 2); }
-          ctx.lineWidth = (live ? 3 : 2.2) * hr; ctx.strokeStyle = `rgba(${col},${live ? 1 : 0.8})`;
-          if (ev.state === 'pulled') ctx.setLineDash([3 * hr, 2.5 * hr]);
-          ctx.strokeRect(x - w, y - h, w * 2, h * 2);
-          ctx.setLineDash([]);
-          if (ev.state === 'break') { ctx.beginPath(); ctx.moveTo(x - w, y + h); ctx.lineTo(x + w, y - h); ctx.stroke(); }
-          if (ev.state === 'pulled') { // arrow out of the brick: the owner left, nobody ate it
-            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h * 1.9);
-            ctx.moveTo(x - r * 0.45, y - h * 1.4); ctx.lineTo(x, y - h * 1.9); ctx.lineTo(x + r * 0.45, y - h * 1.4);
-            ctx.stroke();
-          }
+          if (live) { ctx.fillStyle = `rgba(${col},0.4)`; ctx.fillRect(x - w, y - h, w * 2, h * 2); }
+          lum(() => {
+            ctx.lineWidth = (live ? 3 : 2.4) * hr; ctx.strokeStyle = `rgba(${colL},${live ? 1 : 0.85})`;
+            if (ev.state === 'pulled') ctx.setLineDash([3 * hr, 2.5 * hr]);
+            ctx.strokeRect(x - w, y - h, w * 2, h * 2);
+            ctx.setLineDash([]);
+            if (ev.state === 'break') { ctx.beginPath(); ctx.moveTo(x - w, y + h); ctx.lineTo(x + w, y - h); ctx.stroke(); }
+            if (ev.state === 'pulled') { // arrow out of the brick: the owner left, nobody ate it
+              ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h * 1.9);
+              ctx.moveTo(x - r * 0.45, y - h * 1.4); ctx.lineTo(x, y - h * 1.9); ctx.lineTo(x + r * 0.45, y - h * 1.4);
+              ctx.stroke();
+            }
+          });
         } else if (ev.kind === 'unfinished') { // hollow chevron pointing toward the magnet (buy=up / sell=down)
           const up = ev.side === 'buy'; const h = r * 1.4;
-          ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
           ctx.beginPath();
           if (up) { ctx.moveTo(x - r, y + r * 0.5); ctx.lineTo(x, y - h); ctx.lineTo(x + r, y + r * 0.5); }
           else    { ctx.moveTo(x - r, y - r * 0.5); ctx.lineTo(x, y + h); ctx.lineTo(x + r, y - r * 0.5); }
-          ctx.stroke();
+          lum(() => { ctx.lineWidth = 2.4 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'stoprun') { // double chevron » through the swept ref, pointing run
           // direction; RECLAIMED adds a reversal hook (sweep failed → spring), ACCEPTED fills solid,
           // active = bright hollow (still an open coin)
           const up = ev.side === 'buy';
           const h = r * 1.1, dy = up ? -1 : 1;
-          ctx.lineWidth = 2.2 * hr;
-          ctx.strokeStyle = `rgba(${col},${ev.state === 'active' ? 1 : 0.9})`;
-          ctx.beginPath();
-          for (let i = 0; i < 2; i++) {
-            const yy = y - dy * i * h * 0.8;
-            ctx.moveTo(x - r, yy); ctx.lineTo(x, yy + dy * h); ctx.lineTo(x + r, yy);
-          }
-          ctx.stroke();
-          if (ev.state === 'accepted') { ctx.fillStyle = `rgba(${col},0.35)`; ctx.fillRect(x - r, y - h * 1.6, r * 2, h * 3.2); }
-          if (ev.state === 'reclaimed') { // hook arrow AGAINST the run — the triggered cohort is offside
+          if (ev.state === 'accepted') { ctx.fillStyle = `rgba(${col},0.5)`; ctx.fillRect(x - r, y - h * 1.6, r * 2, h * 3.2); }
+          lum(() => {
+            ctx.lineWidth = 2.6 * hr;
+            ctx.strokeStyle = `rgba(${colL},1)`;
             ctx.beginPath();
-            ctx.moveTo(x + r * 1.6, y + dy * h * 1.4); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6);
-            ctx.moveTo(x + r * 1.15, y - dy * h * 1.05); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6); ctx.lineTo(x + r * 2.05, y - dy * h * 1.05);
+            for (let i = 0; i < 2; i++) {
+              const yy = y - dy * i * h * 0.8;
+              ctx.moveTo(x - r, yy); ctx.lineTo(x, yy + dy * h); ctx.lineTo(x + r, yy);
+            }
             ctx.stroke();
-          }
+            if (ev.state === 'reclaimed') { // hook arrow AGAINST the run — the triggered cohort is offside
+              ctx.beginPath();
+              ctx.moveTo(x + r * 1.6, y + dy * h * 1.4); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6);
+              ctx.moveTo(x + r * 1.15, y - dy * h * 1.05); ctx.lineTo(x + r * 1.6, y - dy * h * 1.6); ctx.lineTo(x + r * 2.05, y - dy * h * 1.05);
+              ctx.stroke();
+            }
+          });
         } else if (ev.kind === 'trapped') { // bowtie ▷◁ — a cohort caught offside; expected to puke `side`
           // lifecycle: ACTIVE = bright (cohort trapped NOW) · FLUSHED = extending arrow (they puked,
           // reversal played) · RECOVERED = dim + strike (trap died, cohort freed)
@@ -206,21 +217,27 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.moveTo(x - r, y - r); ctx.lineTo(x, y); ctx.lineTo(x - r, y + r); ctx.closePath();
           ctx.moveTo(x + r, y - r); ctx.lineTo(x, y); ctx.lineTo(x + r, y + r); ctx.closePath();
           ctx.fill();
-          ctx.lineWidth = 1 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.7)'; ctx.stroke();
+          lum(() => { ctx.lineWidth = 1.3 * hr; ctx.strokeStyle = `rgba(${colL},${dead ? 0.5 : 1})`; ctx.stroke(); });
           if (ev.state === 'flushed') {   // the puke fired — arrow extending in the puke direction
             const dy = ev.side === 'sell' ? 1 : -1;
-            ctx.beginPath(); ctx.lineWidth = 2 * hr; ctx.strokeStyle = `rgba(${col},0.95)`;
-            ctx.moveTo(x, y + dy * r); ctx.lineTo(x, y + dy * r * 2.4);
-            ctx.moveTo(x - r * 0.5, y + dy * r * 1.9); ctx.lineTo(x, y + dy * r * 2.4); ctx.lineTo(x + r * 0.5, y + dy * r * 1.9);
-            ctx.stroke();
+            lum(() => {
+              ctx.beginPath(); ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${colL},1)`;
+              ctx.moveTo(x, y + dy * r); ctx.lineTo(x, y + dy * r * 2.4);
+              ctx.moveTo(x - r * 0.5, y + dy * r * 1.9); ctx.lineTo(x, y + dy * r * 2.4); ctx.lineTo(x + r * 0.5, y + dy * r * 1.9);
+              ctx.stroke();
+            });
           }
           if (dead) {   // struck: the trap thesis failed
-            ctx.beginPath(); ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-            ctx.moveTo(x - r * 1.3, y + r * 1.3); ctx.lineTo(x + r * 1.3, y - r * 1.3); ctx.stroke();
+            lum(() => {
+              ctx.beginPath(); ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+              ctx.moveTo(x - r * 1.3, y + r * 1.3); ctx.lineTo(x + r * 1.3, y - r * 1.3); ctx.stroke();
+            });
           }
         } else { // spoof — an ×
-          ctx.lineWidth = 2 * hr; ctx.strokeStyle = `rgba(${AMBER},0.95)`;
-          ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke();
+          lum(() => {
+            ctx.lineWidth = 2.2 * hr; ctx.strokeStyle = `rgba(${AMBER_L},1)`;
+            ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke();
+          });
         }
         ctx.restore();
       }
