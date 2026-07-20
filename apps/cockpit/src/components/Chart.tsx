@@ -1574,12 +1574,11 @@ export function Chart() {
         const prevMax = lastLiveSecRef.current[selectedSymbol];
         if (prevMax === undefined || t < prevMax) return;   // pre-history or stale — the bulk path owns it
         try {
-          const tsApi = chartRef.current?.timeScale();
-          const pinned = tsApi ? (tsApi.scrollPosition() ?? 5) >= 4.5 : true;
-          const keep = !pinned && t > prevMax && tsApi ? tsApi.getVisibleLogicalRange() : null;
+          // series.update() NEVER moves the view — no capture/restore here. (Restore-after-update
+          // was the 2026-07-20 auto-scroll bug: it snapped the chart to a stale range every cycle,
+          // fighting the user's drag.)
           series.update({ time: t as UTCTimestamp, open: bar.open, high: bar.high, low: bar.low, close: bar.close });
           if (t > prevMax) { lastLiveSecRef.current[selectedSymbol] = t; setBarsVersion((v) => v + 1); }
-          if (keep && tsApi) { try { tsApi.setVisibleLogicalRange(keep); } catch { /* disposed */ } }
         } catch { /* out-of-order vs series state — the bulk path will reconcile */ }
       };
     };
@@ -1666,14 +1665,10 @@ export function Chart() {
       series.setData(data);
       lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : 0;
     } else {
-      // Only auto-follow live appends when the user is PINNED to the live edge.
-      // scrollPosition() ≈ rightOffset (5) when truly at realtime; any scroll-back
-      // to analyze drops it below that. If they've scrolled back at all, snapshot
-      // their exact visible range and restore it after the update — so a new bar
-      // (or the setData fallback) can NEVER drag the chart while they're analyzing.
-      const ts = chartRef.current?.timeScale();
-      const pinnedToLive = ts ? (ts.scrollPosition() ?? 5) >= 4.5 : true; // 5 = chart rightOffset
-      const keepRange = pinnedToLive ? null : ts!.getVisibleLogicalRange();
+      // series.update() never moves the view, so the update loop needs NO capture/restore.
+      // (The old restore-after-every-batch snapped the chart to a stale range while the user was
+      // dragging — the 2026-07-20 auto-scroll bug.) Only the rare setData fallback rebuilds the
+      // series, so only IT preserves the range, and only when the user isn't at the live edge.
       try {
         let curMax = prevMax;
         for (const bar of data) {
@@ -1684,10 +1679,13 @@ export function Chart() {
         }
         lastLiveSecRef.current[selectedSymbol] = curMax;
       } catch {
+        const ts = chartRef.current?.timeScale();
+        const pinnedToLive = ts ? (ts.scrollPosition() ?? 5) >= 4.5 : true; // 5 = chart rightOffset
+        const keepRange = pinnedToLive || !ts ? null : ts.getVisibleLogicalRange();
         series.setData(data);               // defensive: out-of-order bar → full redraw
         lastLiveSecRef.current[selectedSymbol] = data.length ? (data[data.length - 1]!.time as number) : prevMax;
+        if (keepRange && ts) { try { ts.setVisibleLogicalRange(keepRange); } catch { /* disposed */ } }
       }
-      if (keepRange && ts) { try { ts.setVisibleLogicalRange(keepRange); } catch { /* disposed */ } }
     }
 
     // 2026-06-04 fix: when a new minute bucket appears, bump barsVersion so
@@ -1743,11 +1741,8 @@ export function Chart() {
 
         const history = barHistoryRef.current[selectedSymbol] ?? new Map();
         barHistoryRef.current[selectedSymbol] = history;
-        // Preserve the user's view unless they're pinned to the live edge (mirrors
-        // the WS live-update path so a caught-up tail poll can't yank the chart).
-        const tsScale = chartRef.current?.timeScale();
-        const pinnedToLive = tsScale ? (tsScale.scrollPosition() ?? 5) >= 4.5 : true;
-        const keepRange = pinnedToLive ? null : tsScale!.getVisibleLogicalRange();
+        // update()-only path — no view capture/restore (restore-after-update was the auto-scroll
+        // bug: it yanked the chart to a stale range on every 20s poll while the user dragged).
 
         let curMax = prevMax;
         let appended = false;
@@ -1766,7 +1761,6 @@ export function Chart() {
         } catch {
           // Out-of-order rejection — leave recovery to the WS/init paths.
         }
-        if (keepRange && tsScale) { try { tsScale.setVisibleLogicalRange(keepRange); } catch { /* disposed */ } }
         if (appended && !cancelled) setBarsVersion(v => v + 1);
       } catch {
         // Best-effort — the WS path is still the primary live source.
