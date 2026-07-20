@@ -53,6 +53,7 @@ class Renderer implements IPrimitivePaneRenderer {
     const ts = chart.timeScale();
     const barSec = this.src.barSeconds || 60;
     const { kinds, minSize, minLevels } = feed.filter;
+    const barSpacing = (ts.options().barSpacing as number) ?? 6;   // px per candle — for replay sub-minute spread
 
     target.useBitmapCoordinateSpace((scope: any) => {
       const ctx = scope.context as CanvasRenderingContext2D;
@@ -67,25 +68,37 @@ class Renderer implements IPrimitivePaneRenderer {
       const iceExact = new Map<string, { xc: number; priceInt: number; side: TapeEvent['side']; size: number; refills: number; native: boolean; durMs: number; barTime: number; state?: TapeEvent['state']; exec: number; queueCt: number; lastFillT: number }>();
       const confDrawn: { xc: number; yc: number; ev: TapeEvent }[] = [];   // confluence events in view → top-N drawn after
 
-      // Only process events inside the VISIBLE time range — the feed can hold 20k+ events and
-      // recomputing coordinates for all of them every scroll/zoom frame drops frames (markers flicker).
-      // Cheap numeric pre-filter before the expensive timeToCoordinate/priceToCoordinate lookups.
+      // Only process events inside the VISIBLE time range. The feed can hold 100k+ events after a
+      // multi-day scroll — a full-array scan per frame froze scroll/zoom (2026-07-20). The array
+      // is kept SORTED by t (feed maintains the invariant), so binary-search the visible slice
+      // and touch nothing outside it. ±300s margin covers episode markers anchored before their
+      // first emit (t0 lag).
       const vis = ts.getVisibleRange();
-      const visFrom = vis && typeof vis.from === 'number' ? (vis.from as number) - barSec * 2 : -Infinity;
+      const visFrom = vis && typeof vis.from === 'number' ? (vis.from as number) - Math.max(barSec * 2, 300) : -Infinity;
       const visTo = vis && typeof vis.to === 'number' ? (vis.to as number) + barSec * 2 : Infinity;
+      const evs = feed.events;
+      let lo = 0, hi = evs.length;
+      if (visFrom !== -Infinity) { let a = 0, b = evs.length; while (a < b) { const m = (a + b) >> 1; if (evs[m]!.t < visFrom) a = m + 1; else b = m; } lo = a; }
+      if (visTo !== Infinity) { let a = lo, b = evs.length; while (a < b) { const m = (a + b) >> 1; if (evs[m]!.t <= visTo) a = m + 1; else b = m; } hi = a; }
+      // extreme zoom-out guard: beyond ~12k in-view markers nothing is readable — stride-sample
+      // the ATOMIC kinds so the chart stays interactive; episodes (epId) + stars never skipped.
+      const inView = hi - lo;
+      const stride = inView > 12_000 ? Math.ceil(inView / 12_000) : 1;
 
-      for (const ev of feed.events) {
-        if (ev.t < visFrom || ev.t > visTo) continue;   // off-screen → skip cheaply
-        // percentile mode: the floor is the event's own session's distribution (overnight vs RTH),
-        // so "show the big ones" self-adjusts by clock; kinds without a calibrated distribution
-        // (and any calibration gap) fall back to the absolute counter.
+      for (let i = lo; i < hi; i++) {
+        const ev = evs[i]!;
+        if (feed.maxT != null && ev.t > feed.maxT) continue;   // replay: reveal only up to the virtual clock
+        if (!kinds.has(ev.kind)) continue;                     // cheapest filter first
+        if (stride > 1 && (i - lo) % stride !== 0 && !ev.epId && ev.kind !== 'confluence') continue;
+        if (ev.levels != null && ev.levels < (minLevels[ev.kind] ?? 0)) continue;
+        // size floor last — percentile mode does map lookups, so only reached by survivors.
+        // (pct: the floor is the event's own session's distribution, overnight vs RTH.)
         let minSz = minSize[ev.kind] ?? 0;
         if (feed.filter.pctMode) {
           const pf = pctFloor(feed.filter.cal, feed.filter.symbol, ev.kind, feed.filter.minPct?.[ev.kind], ev.t);
           if (pf != null) minSz = Math.max(TAPE_FLOORS[ev.kind]?.size ?? 0, pf);
         }
-        if (!kinds.has(ev.kind) || ev.size < minSz) continue;
-        if (ev.levels != null && ev.levels < (minLevels[ev.kind] ?? 0)) continue;
+        if (ev.size < minSz) continue;
         // Event time → bar boundary → x (timeToCoordinate resolves exact bar times only).
         const barTime = Math.floor(ev.t / barSec) * barSec;
         const xc = ts.timeToCoordinate(barTime as unknown as Time);
@@ -100,8 +113,11 @@ class Renderer implements IPrimitivePaneRenderer {
           continue;
         }
         if (ev.kind === 'confluence') { confDrawn.push({ xc, yc, ev }); continue; }   // top-N drawn after the loop
-        this.src.hits.push({ x: xc, y: yc, ev });
-        const x = xc * hr, y = yc * vr;
+        // Replay: offset within the candle by the event's sub-minute time so events pop up spread
+        // across the candle at their exact ts instead of piling at the bar boundary. Live: spread=false → xc.
+        const xDraw = feed.spread ? xc + (((ev.t - barTime) / barSec) - 0.5) * barSpacing : xc;
+        this.src.hits.push({ x: xDraw, y: yc, ev });
+        const x = xDraw * hr, y = yc * vr;
         if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
 
         const col = ev.kind === 'spoof' ? AMBER : ev.side === 'buy' ? BUY : SELL;

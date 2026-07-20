@@ -84,6 +84,9 @@ export const floorMinLevels = (): Record<TapeKind, number> =>
 export class TapeFeed {
   events: TapeEvent[] = [];
   filter: TapeFilter = { kinds: new Set(ALL_KINDS), minSize: floorMinSize(), minLevels: floorMinLevels() };
+  // Replay-only knobs (live leaves these at the defaults, so live rendering is unchanged):
+  maxT: number | null = null;   // reveal only events with t <= maxT (the virtual clock, in seconds)
+  spread = false;               // spread events horizontally within their candle by sub-minute time
   private keys = new Set<string>();          // dedup: (t|kind|price|side) — history + live overlap
   private eps = new Map<string, TapeEvent>(); // iceberg episodes by epId — updates REPLACE in place
   private ws: WebSocket | null = null;
@@ -94,9 +97,12 @@ export class TapeFeed {
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private loadSeq = 0;                        // guards against out-of-order loadRange responses
 
-  constructor(symbol: Sym) { this.symbol = symbol; this.connect(); }
+  // opts.replay: skip the live /ws/tape connection — session replay populates events via
+  // loadRange() over the recorded day instead of streaming today's live tape.
+  constructor(symbol: Sym, opts?: { replay?: boolean }) { this.symbol = symbol; if (!opts?.replay) this.connect(); }
 
   onUpdate(cb: () => void): void { this.updateCb = cb; }
+  requestRedraw(): void { this.updateCb?.(); }   // replay: force a primitive repaint as the clock advances
   setFilter(f: TapeFilter): void { this.filter = f; this.updateCb?.(); }
 
   private keyOf(ev: TapeEvent): string { return `${ev.t}|${ev.kind}|${ev.price}|${ev.side}`; }
@@ -114,6 +120,10 @@ export class TapeFeed {
       }
       this.eps.set(ev.epId, ev);
       this.events.push(ev);
+      // episode markers are anchored at their START (t0) but arrive when they QUALIFY — the first
+      // emit can land seconds late. The draw loop binary-searches this array by t, so keep the
+      // sort invariant on the rare out-of-order push (cheap: sorted-array sort is near-linear).
+      if (this.events.length > 1 && this.events[this.events.length - 2]!.t > ev.t) this.events.sort((a, b) => a.t - b.t);
       return true;
     }
     const k = this.keyOf(ev);
