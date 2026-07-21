@@ -25,6 +25,27 @@ import { TapeFeed, ALL_KINDS, floorMinSize, floorMinLevels, type CalDoc } from '
 
 // kinds with a calibrated size distribution — eligible for percentile display dials
 const PCT_KINDS = new Set<TapeKind>(['block', 'sweep', 'stacked', 'trapped', 'iceberg', 'wall', 'stoprun']);
+
+// Persisted TAPE-bar settings (localStorage). Parsed once per page load and cached — several
+// useState initializers read it.
+const TAPE_PREFS_KEY = 'cockpit.tapePrefs.v1';
+interface TapePrefs {
+  kinds?: string[];
+  minSizes?: Partial<Record<TapeKind, number>>;
+  minLevels?: Partial<Record<TapeKind, number>>;
+  pctMode?: boolean;
+  minPct?: Partial<Record<TapeKind, number>>;
+  iceBucketTicks?: number;
+  confTopN?: number;
+  confMinTier?: number;
+}
+let _tapePrefsCache: TapePrefs | null | undefined;
+function loadTapePrefs(): TapePrefs | null {
+  if (_tapePrefsCache !== undefined) return _tapePrefsCache;
+  try { _tapePrefsCache = JSON.parse(localStorage.getItem(TAPE_PREFS_KEY) ?? 'null'); }
+  catch { _tapePrefsCache = null; }
+  return _tapePrefsCache;
+}
 import { TAPE_FLOORS, type TapeKind, type TapeEvent } from '@trading/contracts';
 import { SignalChartCard } from './SignalFeed';
 
@@ -605,16 +626,45 @@ export function Chart() {
   const [driftOn, setDriftOn] = useState(false);
   const [tapeOn, setTapeOn] = useState(true);
   // Live TAPE display filter — which event kinds to draw + a min-size floor (dial density here).
-  const [tapeKinds, setTapeKinds] = useState<Set<TapeKind>>(() => new Set(ALL_KINDS));
-  const [tapeMinSizes, setTapeMinSizes] = useState<Record<TapeKind, number>>(() => floorMinSize());
-  const [tapeMinLevels, setTapeMinLevels] = useState<Record<TapeKind, number>>(() => floorMinLevels());   // per-kind min price levels (sweep/stacked)
+  // All bar settings PERSIST to localStorage (user 2026-07-21: no resets on refresh); floors and
+  // enums are re-validated on load so a stale blob can never wedge the controls illegal.
+  const [tapeKinds, setTapeKinds] = useState<Set<TapeKind>>(() => {
+    const p = loadTapePrefs();
+    return p?.kinds ? new Set(p.kinds.filter((k): k is TapeKind => (ALL_KINDS as string[]).includes(k))) : new Set(ALL_KINDS);
+  });
+  const [tapeMinSizes, setTapeMinSizes] = useState<Record<TapeKind, number>>(() => {
+    const base = floorMinSize(); const p = loadTapePrefs();
+    if (p?.minSizes) for (const k of ALL_KINDS) if (typeof p.minSizes[k] === 'number') base[k] = Math.max(TAPE_FLOORS[k].size, p.minSizes[k]!);
+    return base;
+  });
+  const [tapeMinLevels, setTapeMinLevels] = useState<Record<TapeKind, number>>(() => {
+    const base = floorMinLevels(); const p = loadTapePrefs();
+    if (p?.minLevels) for (const k of ALL_KINDS) if (typeof p.minLevels[k] === 'number') base[k] = Math.max(base[k], p.minLevels[k]!);
+    return base;
+  });
   // percentile display mode: dials become session-aware percentiles (RTH vs overnight per event)
-  const [tapePctMode, setTapePctMode] = useState(false);
-  const [tapeMinPct, setTapeMinPct] = useState<Partial<Record<TapeKind, 0 | 50 | 80 | 95>>>({ sweep: 80, block: 80, stacked: 80 });
+  const [tapePctMode, setTapePctMode] = useState(() => loadTapePrefs()?.pctMode ?? false);
+  const [tapeMinPct, setTapeMinPct] = useState<Partial<Record<TapeKind, 0 | 50 | 80 | 95>>>(() => {
+    const p = loadTapePrefs();
+    const out: Partial<Record<TapeKind, 0 | 50 | 80 | 95>> = { sweep: 80, block: 80, stacked: 80 };
+    if (p?.minPct) for (const k of ALL_KINDS) { const v = p.minPct[k]; if (v === 0 || v === 50 || v === 80 || v === 95) out[k] = v; }
+    return out;
+  });
   const [tapeCal, setTapeCal] = useState<CalDoc | null>(null);   // /tape/calibration payload (nightly-refreshed)
-  const [iceBucketTicks, setIceBucketTicks] = useState(4);   // roll up icebergs within ±N ticks into one diamond
-  const [confTopN, setConfTopN] = useState(8);               // show only top-N confluence stars in view
-  const [confMinTier, setConfMinTier] = useState(2);         // 1 prime · 2 prime+key (default) · 3 all
+  const [iceBucketTicks, setIceBucketTicks] = useState(() => Math.max(1, loadTapePrefs()?.iceBucketTicks ?? 4));
+  const [confTopN, setConfTopN] = useState(() => Math.max(1, loadTapePrefs()?.confTopN ?? 8));
+  const [confMinTier, setConfMinTier] = useState(() => { const v = loadTapePrefs()?.confMinTier; return v === 1 || v === 2 || v === 3 ? v : 2; });
+
+  // persist on any change (tiny blob, no debounce needed)
+  useEffect(() => {
+    try {
+      localStorage.setItem(TAPE_PREFS_KEY, JSON.stringify({
+        kinds: [...tapeKinds], minSizes: tapeMinSizes, minLevels: tapeMinLevels,
+        pctMode: tapePctMode, minPct: tapeMinPct,
+        iceBucketTicks, confTopN, confMinTier,
+      }));
+    } catch { /* storage full/blocked — settings just won't persist */ }
+  }, [tapeKinds, tapeMinSizes, tapeMinLevels, tapePctMode, tapeMinPct, iceBucketTicks, confTopN, confMinTier]);
   const qualifiedTsRef    = useRef<Set<number>>(new Set());
   const tradableTsRef     = useRef<Set<number>>(new Set());
   const experimentalTsRef = useRef<Set<number>>(new Set());
