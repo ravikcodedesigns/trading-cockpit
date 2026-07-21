@@ -3717,11 +3717,11 @@ export function Chart() {
         });
         return (
           <div className="mono" style={{
-            // responsive: ONE row always — on narrow windows the bar scrolls horizontally instead
-            // of wrapping/crushing (user 2026-07-21). flex (not inline-flex) + minWidth 0 so the
-            // parent can't squeeze it into a wrap; children keep natural size via nowrap.
-            display: 'flex', alignItems: 'center', gap: 9, marginTop: 6, padding: '5px 11px',
-            maxWidth: '100%', minWidth: 0, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'thin',
+            // responsive: wraps into CLEAN stacked rows on narrow windows (user preference
+            // 2026-07-21 — over horizontal scrolling). Each kind group is flexShrink:0 so controls
+            // keep their natural size and whole groups wrap as units, never mid-group.
+            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px 9px', marginTop: 6, padding: '5px 11px',
+            maxWidth: '100%',
             background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4,
             fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
           }}>
