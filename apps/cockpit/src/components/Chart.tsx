@@ -1609,31 +1609,55 @@ export function Chart() {
         let snap: import('@trading/contracts').FlowSnapshot;
         try { snap = JSON.parse(m.data as string); } catch { return; }
         if (snap.type !== 'flow' || snap.symbol !== selectedSymbol || !snap.last || !snap.lastT) return;
-        const series = seriesRef.current;
-        if (!series || !historyLoadedRef.current[selectedSymbol]) return;
-        const intervalMs = selectedTimeframe * 60_000;
-        const t = Math.floor((snap.lastT * 1000) / intervalMs) * (intervalMs / 1000);
-        const history = barHistoryRef.current[selectedSymbol] ?? new Map();
-        barHistoryRef.current[selectedSymbol] = history;
-        const px = snap.last;
-        const ex = history.get(t);
-        const bar = ex
-          ? { open: ex.open, high: Math.max(ex.high, px), low: Math.min(ex.low, px), close: px, volume: ex.volume }
-          : { open: px, high: px, low: px, close: px, volume: 0 };
-        history.set(t, bar);
-        const prevMax = lastLiveSecRef.current[selectedSymbol];
-        if (prevMax === undefined || t < prevMax) return;   // pre-history or stale — the bulk path owns it
-        try {
-          // series.update() NEVER moves the view — no capture/restore here. (Restore-after-update
-          // was the 2026-07-20 auto-scroll bug: it snapped the chart to a stale range every cycle,
-          // fighting the user's drag.)
-          series.update({ time: t as UTCTimestamp, open: bar.open, high: bar.high, low: bar.low, close: bar.close });
-          if (t > prevMax) { lastLiveSecRef.current[selectedSymbol] = t; setBarsVersion((v) => v + 1); }
-        } catch { /* out-of-order vs series state — the bulk path will reconcile */ }
+        applyLivePx(snap.last, snap.lastT * 1000);
+      };
+    };
+    // shared live-candle updater — fed by BOTH price sources (tick-store px = primary,
+    // flow snapshots = fallback); last write wins, both are the same instrument
+    const applyLivePx = (px: number, tsMs: number): void => {
+      const series = seriesRef.current;
+      if (!series || !historyLoadedRef.current[selectedSymbol]) return;
+      const intervalMs = selectedTimeframe * 60_000;
+      const t = Math.floor(tsMs / intervalMs) * (intervalMs / 1000);
+      const history = barHistoryRef.current[selectedSymbol] ?? new Map();
+      barHistoryRef.current[selectedSymbol] = history;
+      const ex = history.get(t);
+      const bar = ex
+        ? { open: ex.open, high: Math.max(ex.high, px), low: Math.min(ex.low, px), close: px, volume: ex.volume }
+        : { open: px, high: px, low: px, close: px, volume: 0 };
+      history.set(t, bar);
+      const prevMax = lastLiveSecRef.current[selectedSymbol];
+      if (prevMax === undefined || t < prevMax) return;   // pre-history or stale — the bulk path owns it
+      try {
+        // series.update() NEVER moves the view — no capture/restore here (the 2026-07-20 bug).
+        series.update({ time: t as UTCTimestamp, open: bar.open, high: bar.high, low: bar.low, close: bar.close });
+        if (t > prevMax) { lastLiveSecRef.current[selectedSymbol] = t; setBarsVersion((v) => v + 1); }
+      } catch { /* out-of-order vs series state — the bulk path will reconcile */ }
+    };
+    // ── REAL-TIME px lane (2026-07-21): the tick-store gets every trade the instant the addon
+    // relays it (no Bookmap log-flush buffering — that path measured p80 2s+ delivery in quiet
+    // tape). ≤80ms server throttle + this socket ≈ sub-150ms chart latency.
+    let pxSock: WebSocket | null = null;
+    let pxRetry: ReturnType<typeof setTimeout> | null = null;
+    const pxConnect = () => {
+      if (dead) return;
+      try { pxSock = new WebSocket(`${proto}://${location.host}/tickstream?symbol=${selectedSymbol}`); } catch { pxRetry = setTimeout(pxConnect, 3000); return; }
+      pxSock.onclose = () => { if (!dead) pxRetry = setTimeout(pxConnect, 3000); };
+      pxSock.onmessage = (m) => {
+        let msg: { type?: string; symbol?: string; ts?: number; price?: number };
+        try { msg = JSON.parse(m.data as string); } catch { return; }
+        if (msg.type !== 'px' || msg.symbol !== selectedSymbol || !msg.price || !msg.ts) return;
+        applyLivePx(msg.price, msg.ts);
       };
     };
     connect();
-    return () => { dead = true; if (ping) clearInterval(ping); if (retry) clearTimeout(retry); try { sock?.close(); } catch { /* noop */ } };
+    pxConnect();
+    return () => {
+      dead = true;
+      if (ping) clearInterval(ping); if (retry) clearTimeout(retry); if (pxRetry) clearTimeout(pxRetry);
+      try { sock?.close(); } catch { /* noop */ }
+      try { pxSock?.close(); } catch { /* noop */ }
+    };
   }, [selectedSymbol, selectedTimeframe]);
 
   // When recentEvents updates, push new bar events for the selected symbol into the chart.

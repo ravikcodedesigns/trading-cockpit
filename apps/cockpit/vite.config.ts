@@ -32,6 +32,10 @@ export default defineConfig({
     port: 5173,
     host: '127.0.0.1',
     proxy: {
+      // real-time price lane from the TICK-STORE (8788, not the aggregator): the addon delivers
+      // every trade to 8788 instantly, so this is the lowest-latency price source available.
+      // Rewritten to /ws/live because '/ws' below owns the aggregator's websocket namespace.
+      '/tickstream': { target: 'ws://127.0.0.1:8788', ws: true, changeOrigin: true, configure, rewrite: (p) => p.replace(/^\/tickstream/, '/ws/live') },
       '/ws':         { target: AGG_WS, ws: true, changeOrigin: true, configure },
       '/context':    { target: AGG, changeOrigin: true, configure },
       '/history':    { target: AGG, changeOrigin: true, configure },

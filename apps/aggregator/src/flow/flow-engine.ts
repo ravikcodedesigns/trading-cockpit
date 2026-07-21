@@ -15,7 +15,11 @@ import { tailLog, type TailHandle, type LogEvent } from '../l3/log-tailer.js';
 import { OrderBook } from '../l3/order-book.js';
 import type { Symbol as Sym, FlowSnapshot, FlowWindow } from '@trading/contracts';
 
-export const FLOW_MS = 1000;                  // emit cadence — 1/sec (windowed values are smooth)
+// Emit cadence. 150ms (was 1000): the FlowSnapshot's `last` price drives the cockpit's LIVE
+// CANDLE (2026-07-20 fast-price path) and 1s of added display lag was unacceptable for position
+// management (user 2026-07-21). Aggregation cost per tick is trivial (≤900 buckets × 3 windows);
+// the HUD just updates faster. Env-tunable.
+export const FLOW_MS = process.env.FLOW_MS != null ? Number(process.env.FLOW_MS) : 150;
 // Each strip: [context window, delta sub-window] in seconds. imb/tps/mps average over the
 // context window; the aggressor delta sums over the faster sub-window so it stays live.
 export const FLOW_WINDOWS: Array<[number, number]> = [[60, 10], [300, 60], [900, 300]];
@@ -205,7 +209,8 @@ function ensureTail(e: SymEngine): void {
   const firstAttach = e.logPath === null;
   if (e.tail) e.tail.stop();
   e.logPath = latest;
-  e.tail = tailLog(latest, (ev) => dispatch(e, ev), { fromStart: !firstAttach });
+  // 50ms tail poll (default 200): this stream feeds the live candle — poll lag is display lag
+  e.tail = tailLog(latest, (ev) => dispatch(e, ev), { fromStart: !firstAttach, pollMs: 50 });
   if (firstAttach) hydrateRthCvd(e, latest);   // seed today's RTH BMD CVD (log has 09:30 ET → now)
 }
 
