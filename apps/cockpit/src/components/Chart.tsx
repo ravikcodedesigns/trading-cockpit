@@ -3717,7 +3717,11 @@ export function Chart() {
         });
         return (
           <div className="mono" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 9, marginTop: 6, padding: '5px 11px',
+            // responsive: ONE row always — on narrow windows the bar scrolls horizontally instead
+            // of wrapping/crushing (user 2026-07-21). flex (not inline-flex) + minWidth 0 so the
+            // parent can't squeeze it into a wrap; children keep natural size via nowrap.
+            display: 'flex', alignItems: 'center', gap: 9, marginTop: 6, padding: '5px 11px',
+            maxWidth: '100%', minWidth: 0, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'thin',
             background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4,
             fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
           }}>
@@ -3737,7 +3741,7 @@ export function Chart() {
             {ALL_KINDS.map((k) => {
               const on = tapeKinds.has(k);
               return (
-                <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
                   <button onClick={() => toggleKind(k)} title={`Toggle ${KIND_META[k].label} markers`}
                     style={{
                       padding: '2px 7px', fontSize: 12, fontWeight: 700, cursor: 'pointer', borderRadius: 3,
