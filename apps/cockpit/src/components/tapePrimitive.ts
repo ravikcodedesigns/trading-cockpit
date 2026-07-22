@@ -153,8 +153,8 @@ class Renderer implements IPrimitivePaneRenderer {
           // DeepDOM/DeepCharts-style aggressor BUBBLE: a big TRANSLUCENT circle with the contract
           // count centered inside (user 2026-07-22, ref image). Radius scales with the block's
           // contracts so a large single print visually dominates; translucent so candles show through.
-          const sc = Math.max(1, Math.min(2.6, Math.sqrt(ev.size) / 3.2));
-          const rad = 14 * hr * sc;
+          const sc = Math.max(0.8, Math.min(1.7, Math.sqrt(ev.size) / 4.5));
+          const rad = 10 * hr * sc;
           const num = String(ev.size);
           ctx.globalAlpha = 1;
           ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2);
