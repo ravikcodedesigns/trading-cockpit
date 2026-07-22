@@ -150,37 +150,20 @@ class Renderer implements IPrimitivePaneRenderer {
         ctx.globalAlpha = MARKER_ALPHA;
         const lum = (fn: () => void): void => { const a = ctx.globalAlpha; ctx.globalAlpha = 0.95; fn(); ctx.globalAlpha = a; };
         if (ev.kind === 'block') {
-          // DeepDOM/DeepCharts-style aggressor BADGE: a large rounded pill with the contract
-          // count inside + a directional chevron on the leading edge (user 2026-07-22). Size
-          // scales with the block's contracts so a big single print visually dominates.
-          const up = ev.side === 'buy';
-          const sc = Math.max(1.1, Math.min(2.3, Math.sqrt(ev.size) / 3.6));
-          const bh = 19 * hr * sc;
+          // DeepDOM/DeepCharts-style aggressor BUBBLE: a big TRANSLUCENT circle with the contract
+          // count centered inside (user 2026-07-22, ref image). Radius scales with the block's
+          // contracts so a large single print visually dominates; translucent so candles show through.
+          const sc = Math.max(1, Math.min(2.6, Math.sqrt(ev.size) / 3.2));
+          const rad = 14 * hr * sc;
           const num = String(ev.size);
-          ctx.font = `800 ${12 * hr * sc}px 'Geist Mono', monospace`;
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          const tw = ctx.measureText(num).width;
-          const bw = Math.max(bh * 1.25, tw + 13 * hr);
-          const left = x - bw / 2, topY = y - bh / 2, rad = 4 * hr * sc;
-          const chW = bh * 0.34, chH = bh * 0.42;
-          const rr = (ctx as unknown as { roundRect?: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect;
-          const pill = (): void => { ctx.beginPath(); if (rr) rr.call(ctx, left, topY, bw, bh, rad); else ctx.rect(left, topY, bw, bh); };
-          ctx.globalAlpha = 0.85;
-          pill();
-          ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          // directional chevron tab: above the pill for a BUY block, below for a SELL block
-          ctx.beginPath();
-          if (up) { ctx.moveTo(x, topY - chH); ctx.lineTo(x - chW, topY + 0.5 * hr); ctx.lineTo(x + chW, topY + 0.5 * hr); }
-          else    { ctx.moveTo(x, topY + bh + chH); ctx.lineTo(x - chW, topY + bh - 0.5 * hr); ctx.lineTo(x + chW, topY + bh - 0.5 * hr); }
-          ctx.closePath(); ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          lum(() => {
-            ctx.lineWidth = 1.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`;
-            pill(); ctx.stroke();
-          });
-          // ct number inside — near-white with a dark halo so it reads on either side's fill
           ctx.globalAlpha = 1;
-          ctx.lineWidth = 3 * hr; ctx.strokeStyle = 'rgba(8,8,12,0.9)'; ctx.strokeText(num, x, y + 0.5 * hr);
-          ctx.fillStyle = 'rgba(255,255,255,0.98)'; ctx.fillText(num, x, y + 0.5 * hr);
+          ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${col},0.4)`; ctx.fill();
+          lum(() => { ctx.lineWidth = 1.4 * hr; ctx.strokeStyle = `rgba(${colL},0.85)`; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.stroke(); });
+          ctx.font = `700 ${11 * hr * sc}px 'Geist Mono', monospace`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.lineWidth = 3 * hr; ctx.strokeStyle = 'rgba(8,8,12,0.75)'; ctx.strokeText(num, x, y);
+          ctx.fillStyle = 'rgba(255,255,255,0.98)'; ctx.fillText(num, x, y);
           ctx.textAlign = 'start';   // restore default for downstream text
         } else if (ev.kind === 'sweep') {
           const up = ev.side === 'buy'; const h = r * 1.5;
