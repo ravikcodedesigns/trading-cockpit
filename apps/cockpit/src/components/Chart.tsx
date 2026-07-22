@@ -3499,7 +3499,9 @@ export function Chart() {
       {tapeOn && topIce.length > 0 && (
         <div style={{
           position: 'absolute', top: 8, right: priceScaleW + 2, zIndex: 20, pointerEvents: 'none',
-          background: 'rgba(10,10,15,0.94)', border: '1px solid #3a3a44', borderRadius: 4,
+          // no background box (user 2026-07-22) — floats transparent over the chart; text shadow
+          // keeps the rows legible over candles.
+          background: 'transparent', textShadow: '0 1px 3px rgba(0,0,0,0.95)',
           padding: '7px 11px', fontFamily: 'Geist Mono, monospace', fontSize: 13, fontWeight: 700,
         }}>
           <div style={{ color: '#7dd3fc', fontSize: 12, letterSpacing: 0.5, marginBottom: 5 }}>TOP ICEBERGS · in view · H hidden E executed Q queued</div>
