@@ -22,6 +22,7 @@ import { FlowHud } from './FlowHud';
 import { DriftHud } from './DriftHud';
 import { TapePrimitive } from './tapePrimitive';
 import { TapeFeed, ALL_KINDS, floorMinSize, floorMinLevels, type CalDoc } from '../lib/tape-feed';
+import { classifyRegime, type RegimeRead } from '../lib/regime';
 
 // kinds with a calibrated size distribution — eligible for percentile display dials
 const PCT_KINDS = new Set<TapeKind>(['block', 'sweep', 'stacked', 'trapped', 'iceberg', 'wall', 'stoprun']);
@@ -625,6 +626,9 @@ export function Chart() {
   const [flowOn, setFlowOn] = useState(true);
   const [driftOn, setDriftOn] = useState(false);
   const [tapeOn, setTapeOn] = useState(true);
+  // LIVE TAPE READ badge — collapses the marker storm into ROTATION / EDGE-HELD / EDGE-BROKE.
+  const [readOn, setReadOn] = useState(() => { try { return localStorage.getItem('cockpit.tapeReadOn') !== '0'; } catch { return true; } });
+  const [tapeRead, setTapeRead] = useState<RegimeRead | null>(null);
   // Live TAPE display filter — which event kinds to draw + a min-size floor (dial density here).
   // All bar settings PERSIST to localStorage (user 2026-07-21: no resets on refresh); floors and
   // enums are re-validated on load so a stale blob can never wedge the controls illegal.
@@ -851,6 +855,13 @@ export function Chart() {
         p.refills === q.refills && p.native === q.native && p.state === q.state &&
         p.exec === q.exec && p.queueCt === q.queueCt;
       setTopIce((prev) => (prev.length === t.length && prev.every((p, i) => same(p, t[i]!)) ? prev : [...t]));
+      // LIVE TAPE READ — classify the recent marker stream into one glanceable state. Cheap:
+      // scans only events inside the classifier's window. Skip re-render when the read is unchanged.
+      const ev = tapeFeedRef.current?.events;
+      if (ev && ev.length) {
+        const rd = classifyRegime(ev, Date.now() / 1000);
+        setTapeRead((prev) => (prev && prev.regime === rd.regime && prev.dir === rd.dir && prev.detail === rd.detail ? prev : rd));
+      } else setTapeRead(null);
       // keep the on-chart liveness gauges aging during quiet tape — the primitive draws
       // RELOAD/LIVE/COOLING/STALE from wall-clock reload age, so nudge a repaint each poll
       tapeRef.current?.refresh();
@@ -3461,6 +3472,29 @@ export function Chart() {
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--bg-0)' }} />
 
+      {/* LIVE TAPE READ badge — the marker storm collapsed into ONE call, top-center. */}
+      {tapeOn && readOn && tapeRead && (() => {
+        const rd = tapeRead;
+        // colour by lean, not by held/broke: cyan = bullish lean, violet = bearish, amber = rotation
+        const c = rd.regime === 'ROTATION' ? '#fbbf24' : rd.dir > 0 ? '#22d3ee' : '#a78bfa';
+        const arrow = rd.dir > 0 ? '▲' : rd.dir < 0 ? '▼' : '⇄';
+        const title = rd.regime === 'ROTATION' ? 'ROTATION' : rd.regime === 'EDGE_HELD' ? `EDGE HELD ${arrow}` : `EDGE BROKE ${arrow}`;
+        return (
+          <div style={{
+            position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 22, pointerEvents: 'none',
+            background: 'rgba(10,10,15,0.94)', border: `1px solid ${c}`, borderRadius: 5,
+            padding: '5px 13px', fontFamily: 'Geist Mono, monospace', textAlign: 'center',
+            boxShadow: `0 0 14px ${c}44`, minWidth: 168,
+          }}>
+            <div style={{ color: c, fontSize: 15, fontWeight: 800, letterSpacing: 1 }}>{title}</div>
+            <div style={{ color: '#e5e7eb', fontSize: 12, fontWeight: 700, marginTop: 2 }}>
+              {rd.action}{rd.ageSec != null ? <span style={{ color: '#6b7280' }}> · {rd.ageSec}s</span> : null}
+            </div>
+            <div style={{ color: '#9ca3af', fontSize: 11, fontWeight: 600, marginTop: 1 }}>{rd.detail}</div>
+          </div>
+        );
+      })()}
+
       {/* Ranked TOP ICEBERGS in view — dominant resting hidden size at a glance (contracts + rate). */}
       {tapeOn && topIce.length > 0 && (
         <div style={{
@@ -3657,6 +3691,15 @@ export function Chart() {
                 </div>
               )}
             </div>
+
+            {/* ── TAPE READ — the live regime badge (ROTATION / EDGE-HELD / EDGE-BROKE) ── */}
+            <button
+              onClick={() => setReadOn((v) => { const nv = !v; try { localStorage.setItem('cockpit.tapeReadOn', nv ? '1' : '0'); } catch { /* noop */ } return nv; })}
+              title="Toggle the LIVE TAPE READ badge — collapses the marker storm into one call: ROTATION (stand aside), EDGE-HELD (fade the edge), or EDGE-BROKE (go with the break). Reads passive defence (iceberg/wall/absorption) over exhaustion (stop-run/trapped); flags two-sided stop harvests as rotation. Needs TAPE on."
+              style={ctrlBtn('#22d3ee', readOn)}
+            >
+              TAPE READ
+            </button>
 
             {/* ── MEASURE — toggles the TradingView-style measuring tool ── */}
             <button
