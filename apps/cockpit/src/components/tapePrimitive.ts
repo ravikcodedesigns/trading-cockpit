@@ -298,7 +298,9 @@ class Renderer implements IPrimitivePaneRenderer {
         // 12ct→6px · 26→8 · 50→9 · 97→11 · 400+→16 cap
         const r = Math.max(6 * hr, Math.min(16 * hr, (4 + Math.sqrt(b.total) * 0.7) * hr));
         ctx.save();
-        ctx.globalAlpha = MARKER_ALPHA;
+        // icebergs draw ABOVE the general MARKER_ALPHA — hidden liquidity is a primary read and
+        // the 0.55 wash made bid/ask diamonds + held/broke states hard to pick out (user 2026-07-22)
+        ctx.globalAlpha = 0.78;
         ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath();
         ctx.fillStyle = `rgba(${ic},0.95)`; ctx.fill();
         ctx.lineWidth = 1.5 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.9)'; ctx.stroke();
@@ -313,15 +315,23 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.stroke(); ctx.stroke();
         } else {
           const live = b.state === 'active';
-          ctx.lineWidth = 3 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},${live ? 0.28 : 0.12})`; ctx.stroke();   // outer halo
-          ctx.lineWidth = 1.4 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},${live ? 0.95 : 0.4})`; ctx.stroke();  // rim: bright = live
+          ctx.lineWidth = 3 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},${live ? 0.35 : 0.2})`; ctx.stroke();   // outer halo
+          ctx.lineWidth = 1.6 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},${live ? 1 : 0.7})`; ctx.stroke();    // rim: bright = live
         }
+        // state glyphs at FULL opacity — the resolution is the read, never let it wash out
+        ctx.globalAlpha = 1;
         if (b.state === 'broke') {   // diagonal slash = defense failed (same language as wall break)
-          ctx.shadowBlur = 0; ctx.lineWidth = 1.5 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.9)';
-          ctx.beginPath(); ctx.moveTo(x - r, y + r); ctx.lineTo(x + r, y - r); ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 3.2 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.95)';                       // dark underlay
+          ctx.beginPath(); ctx.moveTo(x - r * 1.25, y + r * 1.25); ctx.lineTo(x + r * 1.25, y - r * 1.25); ctx.stroke();
+          ctx.lineWidth = 1.8 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},0.98)`;                  // bright slash
+          ctx.stroke();
         } else if (b.state === 'held') {   // horizontal shelf = level held firm
-          ctx.shadowBlur = 0; ctx.lineWidth = 1.5 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},0.9)`;
-          ctx.beginPath(); ctx.moveTo(x - r * 1.5, y); ctx.lineTo(x + r * 1.5, y); ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 3.4 * hr; ctx.strokeStyle = 'rgba(10,10,15,0.95)';                       // dark underlay
+          ctx.beginPath(); ctx.moveTo(x - r * 1.6, y); ctx.lineTo(x + r * 1.6, y); ctx.stroke();
+          ctx.lineWidth = 2 * hr; ctx.strokeStyle = `rgba(${SYNTH_GLOW},0.98)`;                    // bright shelf
+          ctx.stroke();
         }
         ctx.restore();
         drawn.push({ x, y, r, b });
@@ -342,8 +352,10 @@ class Renderer implements IPrimitivePaneRenderer {
       for (const d of drawn) {
         if (topSet.has(d)) continue;
         ctx.font = mainFont;
-        ctx.fillStyle = 'rgba(255,255,255,0.96)';
-        const num = String(d.b.total);
+        // B/A prefix (user 2026-07-22): instant bid-vs-ask decode without hovering — "B 54" =
+        // bid iceberg (support), "A 12" = ask iceberg (resistance) — tinted the side's color
+        ctx.fillStyle = `rgba(${d.b.side === 'buy' ? BUY_L : SELL_L},0.98)`;
+        const num = `${d.b.side === 'buy' ? 'B' : 'A'} ${d.b.total}`;
         ctx.fillText(num, d.x + d.r + 4 * hr, d.y);
         const g = iceGauge(d.b.state, d.b.queueCt, d.b.lastFillT, nowSec);   // timing word beside every live diamond
         if (g) {
@@ -358,8 +370,9 @@ class Renderer implements IPrimitivePaneRenderer {
       ctx.font = mainFont;
       for (const d of top) {
         const b = d.b;
-        // H = hidden · E = executed total · Q = queued to execute (live episodes only) · ×reloads
-        const txt = `H${b.total}${b.exec ? ` E${b.exec}` : ''}${b.queueCt ? ` Q${b.queueCt}` : ''} ×${b.refills}`;
+        // B/A = bid or ask iceberg · H = hidden · E = executed total · Q = queued to execute
+        // (live episodes only) · ×reloads
+        const txt = `${b.side === 'buy' ? 'B' : 'A'} H${b.total}${b.exec ? ` E${b.exec}` : ''}${b.queueCt ? ` Q${b.queueCt}` : ''} ×${b.refills}`;
         const g = iceGauge(b.state, b.queueCt, b.lastFillT, nowSec);
         const tcol = b.native ? NATIVE_GLOW : (b.side === 'buy' ? ICE_BUY : ICE_SELL);
         ctx.font = mainFont;
