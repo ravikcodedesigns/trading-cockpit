@@ -3844,7 +3844,10 @@ export function Chart() {
             // keep their natural size and whole groups wrap as units, never mid-group.
             display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px 9px', marginTop: 6, padding: '5px 11px',
             maxWidth: '100%',
-            background: 'var(--bg-1)', border: '1px solid var(--border)', borderRadius: 4,
+            // translucent + blur so the price action behind the bar stays visible (user 2026-07-22)
+            // while the labels keep enough contrast to read.
+            background: 'rgba(10,10,15,0.4)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)',
+            border: '1px solid var(--border)', borderRadius: 4,
             fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
           }}>
             <span style={{ color: '#a78bfa', fontSize: 12, fontWeight: 800, letterSpacing: 0.5 }}>TAPE</span>
