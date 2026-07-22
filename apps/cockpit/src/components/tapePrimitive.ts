@@ -167,11 +167,15 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.moveTo(x - w, y - cap); ctx.lineTo(x - w, y + cap);           // left cap
           ctx.moveTo(x + w, y - cap); ctx.lineTo(x + w, y + cap);           // right cap
           lum(() => { ctx.lineWidth = 2.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
-        } else if (ev.kind === 'stacked') { // three stacked dashes ≡ — a ladder of imbalanced levels
-          const w = r * 1.4;
+        } else if (ev.kind === 'stacked') { // ladder of imbalanced levels — a directional WEDGE of
+          // three rungs: BID stack widens UPWARD (support-ladder pushing up), ASK stack widens
+          // DOWNWARD (supply-ladder pushing down). Shape + color make the two sides unmistakable.
+          const w = r * 1.5;
+          const up = ev.side === 'buy';
+          const scale = up ? [1.35, 0.95, 0.55] : [0.55, 0.95, 1.35];   // rung widths top->bottom
           ctx.beginPath();
-          for (let i = -1; i <= 1; i++) { const yy = y + i * r * 0.9; ctx.moveTo(x - w, yy); ctx.lineTo(x + w, yy); }
-          lum(() => { ctx.lineWidth = 2.4 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
+          for (let i = -1; i <= 1; i++) { const yy = y + i * r * 0.95; const ww = w * scale[i + 1]!; ctx.moveTo(x - ww, yy); ctx.lineTo(x + ww, yy); }
+          lum(() => { ctx.lineWidth = 2.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'wall') { // brick: rectangle outline; a BREAK gets a diagonal crack;
           // ACTIVE (standing RIGHT NOW — lean on it) = bright + filled, live-updating; resolved dims.
           // PULLED (walked without a fight — spoof-adjacent) renders dashed with a small pull-away arrow.
