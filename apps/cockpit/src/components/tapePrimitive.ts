@@ -150,21 +150,17 @@ class Renderer implements IPrimitivePaneRenderer {
         ctx.globalAlpha = MARKER_ALPHA;
         const lum = (fn: () => void): void => { const a = ctx.globalAlpha; ctx.globalAlpha = 0.95; fn(); ctx.globalAlpha = a; };
         if (ev.kind === 'block') {
-          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          lum(() => { ctx.lineWidth = 1.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
-        } else if (ev.kind === 'sweep') {
           // DeepDOM/DeepCharts-style aggressor BADGE: a large rounded pill with the contract
           // count inside + a directional chevron on the leading edge (user 2026-07-22). Size
-          // scales with the swept contracts so a big sweep visually dominates.
+          // scales with the block's contracts so a big single print visually dominates.
           const up = ev.side === 'buy';
-          const sc = Math.max(1, Math.min(2, Math.sqrt(ev.size) / 4.2));
-          const bh = 18 * hr * sc;
+          const sc = Math.max(1.1, Math.min(2.3, Math.sqrt(ev.size) / 3.6));
+          const bh = 19 * hr * sc;
           const num = String(ev.size);
-          ctx.font = `800 ${11 * hr * sc}px 'Geist Mono', monospace`;
+          ctx.font = `800 ${12 * hr * sc}px 'Geist Mono', monospace`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           const tw = ctx.measureText(num).width;
-          const bw = Math.max(bh * 1.2, tw + 12 * hr);
+          const bw = Math.max(bh * 1.25, tw + 13 * hr);
           const left = x - bw / 2, topY = y - bh / 2, rad = 4 * hr * sc;
           const chW = bh * 0.34, chH = bh * 0.42;
           const rr = (ctx as unknown as { roundRect?: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect;
@@ -172,7 +168,7 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.globalAlpha = 0.85;
           pill();
           ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
-          // directional chevron tab: above the pill for a BUY sweep, below for a SELL sweep
+          // directional chevron tab: above the pill for a BUY block, below for a SELL block
           ctx.beginPath();
           if (up) { ctx.moveTo(x, topY - chH); ctx.lineTo(x - chW, topY + 0.5 * hr); ctx.lineTo(x + chW, topY + 0.5 * hr); }
           else    { ctx.moveTo(x, topY + bh + chH); ctx.lineTo(x - chW, topY + bh - 0.5 * hr); ctx.lineTo(x + chW, topY + bh - 0.5 * hr); }
@@ -186,6 +182,13 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.lineWidth = 3 * hr; ctx.strokeStyle = 'rgba(8,8,12,0.9)'; ctx.strokeText(num, x, y + 0.5 * hr);
           ctx.fillStyle = 'rgba(255,255,255,0.98)'; ctx.fillText(num, x, y + 0.5 * hr);
           ctx.textAlign = 'start';   // restore default for downstream text
+        } else if (ev.kind === 'sweep') {
+          const up = ev.side === 'buy'; const h = r * 1.5;
+          ctx.beginPath();
+          if (up) { ctx.moveTo(x, y - h); ctx.lineTo(x - r, y + r * 0.6); ctx.lineTo(x + r, y + r * 0.6); }
+          else    { ctx.moveTo(x, y + h); ctx.lineTo(x - r, y - r * 0.6); ctx.lineTo(x + r, y - r * 0.6); }
+          ctx.closePath(); ctx.fillStyle = `rgba(${col},1)`; ctx.fill();
+          lum(() => { ctx.lineWidth = 1.3 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'absorption') { // I-beam "held wall": heavy flow, price pinned
           const w = r * 1.7, cap = r * 0.9;
           ctx.beginPath();
