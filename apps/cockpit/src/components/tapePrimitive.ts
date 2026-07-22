@@ -81,10 +81,11 @@ class Renderer implements IPrimitivePaneRenderer {
       // Only process events inside the VISIBLE time range. The feed can hold 100k+ events after a
       // multi-day scroll — a full-array scan per frame froze scroll/zoom (2026-07-20). The array
       // is kept SORTED by t (feed maintains the invariant), so binary-search the visible slice
-      // and touch nothing outside it. ±300s margin covers episode markers anchored before their
-      // first emit (t0 lag).
+      // and touch nothing outside it. Left margin 1260s: walls anchor at BIRTH but render their
+      // lifeline/brick up to orderTtlMs (20min) later — a wall born before the view must still
+      // draw its resolution inside it. Also covers episode t0 lag.
       const vis = ts.getVisibleRange();
-      const visFrom = vis && typeof vis.from === 'number' ? (vis.from as number) - Math.max(barSec * 2, 300) : -Infinity;
+      const visFrom = vis && typeof vis.from === 'number' ? (vis.from as number) - Math.max(barSec * 2, 1260) : -Infinity;
       const visTo = vis && typeof vis.to === 'number' ? (vis.to as number) + barSec * 2 : Infinity;
       const evs = feed.events;
       let lo = 0, hi = evs.length;
@@ -126,9 +127,18 @@ class Renderer implements IPrimitivePaneRenderer {
         // Replay: offset within the candle by the event's sub-minute time so events pop up spread
         // across the candle at their exact ts instead of piling at the bar boundary. Live: spread=false → xc.
         const xDraw = feed.spread ? xc + (((ev.t - barTime) / barSec) - 0.5) * barSpacing : xc;
-        this.src.hits.push({ x: xDraw, y: yc, ev });
+        // WALL lifespan anchor (user 2026-07-22): the brick renders at the RESOLUTION candle —
+        // where price actually reached the level (break/hold/pulled), or the live edge while
+        // still standing — with a lifeline back to its birth candle. Hover follows the brick.
+        let xWallEnd: number | null = null;
+        if (ev.kind === 'wall' && ev.durMs) {
+          const endBar = Math.floor((ev.t + ev.durMs / 1000) / barSec) * barSec;
+          xWallEnd = endBar === barTime ? xDraw : (ts.timeToCoordinate(endBar as unknown as Time) as number | null);
+        }
+        this.src.hits.push({ x: xWallEnd ?? xDraw, y: yc, ev });
         const x = xDraw * hr, y = yc * vr;
-        if (x < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
+        const xR = xWallEnd != null ? xWallEnd * hr : x;   // rightmost extent (wall lifeline end)
+        if (xR < -20 || x > width + 20 || y < -20 || y > height + 20) continue;
 
         const col = ev.kind === 'spoof' ? AMBER : ev.side === 'buy' ? BUY : SELL;
         const colL = ev.kind === 'spoof' ? AMBER_L : ev.side === 'buy' ? BUY_L : SELL_L;
@@ -164,19 +174,32 @@ class Renderer implements IPrimitivePaneRenderer {
           lum(() => { ctx.lineWidth = 2.4 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'wall') { // brick: rectangle outline; a BREAK gets a diagonal crack;
           // ACTIVE (standing RIGHT NOW — lean on it) = bright + filled, live-updating; resolved dims.
-          // PULLED (walked without a fight — spoof-adjacent) renders dashed with a small pull-away arrow
+          // PULLED (walked without a fight — spoof-adjacent) renders dashed with a small pull-away arrow.
+          // The brick sits at the wall's RESOLUTION candle (bx) — where price actually met it —
+          // with a dashed lifeline back to the birth candle at the wall's price, so BROKE/HOLD
+          // never floats on a candle that never touched the level (user 2026-07-22).
           const w = r * 1.5, h = r * 1.1;
           const live = ev.state === 'active';
-          if (live) { ctx.fillStyle = `rgba(${col},0.4)`; ctx.fillRect(x - w, y - h, w * 2, h * 2); }
+          const bx = xR;
+          if (bx - x > w * 2.2) {
+            lum(() => {
+              ctx.lineWidth = 1.2 * hr; ctx.strokeStyle = `rgba(${colL},0.8)`;
+              ctx.setLineDash([4 * hr, 3 * hr]);
+              ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(bx - w, y); ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.beginPath(); ctx.moveTo(x, y - h * 0.7); ctx.lineTo(x, y + h * 0.7); ctx.stroke();  // birth tick
+            });
+          }
+          if (live) { ctx.fillStyle = `rgba(${col},0.4)`; ctx.fillRect(bx - w, y - h, w * 2, h * 2); }
           lum(() => {
             ctx.lineWidth = (live ? 3 : 2.4) * hr; ctx.strokeStyle = `rgba(${colL},${live ? 1 : 0.85})`;
             if (ev.state === 'pulled') ctx.setLineDash([3 * hr, 2.5 * hr]);
-            ctx.strokeRect(x - w, y - h, w * 2, h * 2);
+            ctx.strokeRect(bx - w, y - h, w * 2, h * 2);
             ctx.setLineDash([]);
-            if (ev.state === 'break') { ctx.beginPath(); ctx.moveTo(x - w, y + h); ctx.lineTo(x + w, y - h); ctx.stroke(); }
+            if (ev.state === 'break') { ctx.beginPath(); ctx.moveTo(bx - w, y + h); ctx.lineTo(bx + w, y - h); ctx.stroke(); }
             if (ev.state === 'pulled') { // arrow out of the brick: the owner left, nobody ate it
-              ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - h * 1.9);
-              ctx.moveTo(x - r * 0.45, y - h * 1.4); ctx.lineTo(x, y - h * 1.9); ctx.lineTo(x + r * 0.45, y - h * 1.4);
+              ctx.beginPath(); ctx.moveTo(bx, y); ctx.lineTo(bx, y - h * 1.9);
+              ctx.moveTo(bx - r * 0.45, y - h * 1.4); ctx.lineTo(bx, y - h * 1.9); ctx.lineTo(bx + r * 0.45, y - h * 1.4);
               ctx.stroke();
             }
           });

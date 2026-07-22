@@ -3379,7 +3379,12 @@ export function Chart() {
       if (ev.exec) rows.push(['absorbed', `${ev.exec} ct traded into it`]);
       rows.push(['state', ev.state === 'active' ? 'STANDING NOW — being defended' : ev.state === 'hold' ? 'HELD — rejected the test'
         : ev.state === 'break' ? (bidWall ? 'BROKE — sellers ate it, price broke DOWN ▼' : 'BROKE — buyers ate it, price broke UP ▲') : 'PULLED — owner walked it, not eaten']);
-      if (ev.durMs) rows.push(['standing for', (ev.durMs / 1000).toFixed(0) + 's']);
+      // the brick renders at the RESOLUTION candle with a lifeline back to birth — spell out
+      // when it appeared so the hover time never reads as "the break happened at birth"
+      if (ev.durMs) {
+        const born = new Date(ev.t * 1000).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+        rows.push(['stood', `${(ev.durMs / 1000).toFixed(0)}s — appeared ${born} ET`]);
+      }
     } else if (ev.kind === 'sweep') {
       rows.push(['sweep', ev.side === 'buy'
         ? `aggressive BUYERS took ${ev.levels ?? '?'} price levels going UP ▲`
