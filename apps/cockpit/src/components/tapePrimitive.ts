@@ -168,11 +168,12 @@ class Renderer implements IPrimitivePaneRenderer {
           ctx.moveTo(x + w, y - cap); ctx.lineTo(x + w, y + cap);           // right cap
           lum(() => { ctx.lineWidth = 2.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
         } else if (ev.kind === 'stacked') { // ladder of imbalanced levels — a directional WEDGE of
-          // three rungs: BID stack widens UPWARD (support-ladder pushing up), ASK stack widens
-          // DOWNWARD (supply-ladder pushing down). Shape + color make the two sides unmistakable.
+          // three rungs: BID stack widens at the BOTTOM (base of support sitting under price), ASK
+          // stack widens at the TOP (cap of supply sitting over price). Shape + color make the two
+          // sides unmistakable.
           const w = r * 1.5;
           const up = ev.side === 'buy';
-          const scale = up ? [1.35, 0.95, 0.55] : [0.55, 0.95, 1.35];   // rung widths top->bottom
+          const scale = up ? [0.55, 0.95, 1.35] : [1.35, 0.95, 0.55];   // rung widths top->bottom
           ctx.beginPath();
           for (let i = -1; i <= 1; i++) { const yy = y + i * r * 0.95; const ww = w * scale[i + 1]!; ctx.moveTo(x - ww, yy); ctx.lineTo(x + ww, yy); }
           lum(() => { ctx.lineWidth = 2.6 * hr; ctx.strokeStyle = `rgba(${colL},1)`; ctx.stroke(); });
