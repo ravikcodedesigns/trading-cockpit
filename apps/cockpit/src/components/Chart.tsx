@@ -3633,36 +3633,33 @@ export function Chart() {
       {(() => {
         // TIME-AND-WR + TRADE/NO-TRADE buttons retired 2026-06-06 — info now lives
         // in the always-on TRADE RULES box at top-center.
+        // Modern glassy PILL CHIP (2026-07-22, replacing the old bordered buttons). Fully rounded,
+        // translucent + blurred so it reads as a floating control, not a solid button. Active: the
+        // feature colour fills softly with a colour ring + soft glow; inactive: neutral, recedes.
+        // Footprint is identical on/off (border stays 1px) so the row never reflows on toggle.
         const ctrlBtn = (color: string, active: boolean) => ({
-          padding: '6px 14px',
-          fontSize: 13,
+          padding: '6px 15px',
+          fontSize: 12.5,
           fontWeight: 700,
-          letterSpacing: 0.6,
+          letterSpacing: 0.5,
           cursor: 'pointer' as const,
-          // Border color shifts from faint (33 = 20% alpha) when off → full
-          // saturation when on. Border WIDTH stays 1px so the button doesn't
-          // change footprint and the row never jumps when toggled.
-          border: `1px solid ${active ? color : `${color}33`}`,
-          borderRadius: 3,
-          // Active: tinted fill (33 ≈ 20% alpha) so the body of the button
-          // reads as colored. Inactive: matches the chart background.
-          background: active ? `${color}33` : 'rgba(10,10,12,0.85)',
-          // Active: full-saturation label. Inactive: dimmed (80 = 50% alpha)
-          // so off-buttons clearly recede.
-          color: active ? color : `${color}b0`,
-          // Active: outer glow + inset border doubles the visual weight without
-          // changing pixel dimensions. Inactive: no shadow.
+          border: `1px solid ${active ? `${color}cc` : 'rgba(255,255,255,0.10)'}`,
+          borderRadius: 999,
+          background: active ? `${color}22` : 'rgba(22,22,28,0.55)',
+          backdropFilter: 'blur(7px)',
+          WebkitBackdropFilter: 'blur(7px)',
+          color: active ? color : 'rgba(226,232,240,0.72)',
           boxShadow: active
-            ? `0 0 12px ${color}55, inset 0 0 0 1px ${color}`
-            : 'none',
+            ? `0 0 0 1px ${color}55, 0 2px 12px ${color}33`
+            : 'inset 0 1px 0 rgba(255,255,255,0.05)',
           fontFamily: 'Geist Mono, monospace',
-          transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s',
+          transition: 'background 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, color 0.16s ease',
           whiteSpace: 'nowrap' as const,
           pointerEvents: 'auto' as const,
         });
 
         return (
-          <div ref={panelWrapRef} style={{ display: 'flex', flexDirection: 'row', gap: 4 }}>
+          <div ref={panelWrapRef} style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
             {/* ── OPENING BIAS — expands the opening-bias table (gap / bar1 / CVD3 / bias) ── */}
             <div style={{ position: 'relative' }}>
               <button
