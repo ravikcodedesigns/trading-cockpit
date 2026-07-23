@@ -621,7 +621,9 @@ export function Chart() {
   // Default: QUALIFIED + TRADABLE + FLOW + TAPE on; EXPERIMENTAL / HEAT / DRIFT off.
   const [showQualified,    setShowQualified]    = useState(true);
   const [showTradable,     setShowTradable]     = useState(true);
-  const [showExperimental, setShowExperimental] = useState(false);
+  // EXPERIMENTAL (force-shadow) marker layer retired from the UI 2026-07-23 (chip removed);
+  // the read path stays but is permanently off, so those markers never render.
+  const showExperimental = false;
   const [heatOn, setHeatOn] = useState(false);
   const [flowOn, setFlowOn] = useState(true);
   const [driftOn, setDriftOn] = useState(false);
@@ -3738,15 +3740,6 @@ export function Chart() {
               style={ctrlBtn('#a855f7', showTradable)}
             >
               TRADABLE
-            </button>
-
-            {/* ── EXPERIMENTAL — markers for force-shadow rules (expl, etc.) ── */}
-            <button
-              onClick={() => setShowExperimental(!showExperimental)}
-              title="Toggle markers for force-shadow rules — these are signals from rules that are logged but never traded (independent of QUALIFIED/TRADABLE)"
-              style={ctrlBtn('#f59e0b', showExperimental)}
-            >
-              EXP
             </button>
 
             {/* ── HEAT — live Bookmap-style order-book heatmap + volume dots ──
