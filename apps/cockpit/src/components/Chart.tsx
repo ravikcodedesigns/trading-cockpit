@@ -626,6 +626,9 @@ export function Chart() {
   const [flowOn, setFlowOn] = useState(true);
   const [driftOn, setDriftOn] = useState(false);
   const [tapeOn, setTapeOn] = useState(true);
+  // VALUE = visibility of the tape events+parameters settings bar (split from the TAPE chip
+  // 2026-07-22). TAPE toggles the markers; VALUE toggles the settings component independently.
+  const [valueOn, setValueOn] = useState(() => { try { return localStorage.getItem('cockpit.tapeValueOn') !== '0'; } catch { return true; } });
   // LIVE TAPE READ badge — collapses the marker storm into ROTATION / EDGE-HELD / EDGE-BROKE.
   const [readOn, setReadOn] = useState(() => { try { return localStorage.getItem('cockpit.tapeReadOn') !== '0'; } catch { return true; } });
   const [tapeRead, setTapeRead] = useState<RegimeRead | null>(null);
@@ -3768,14 +3771,34 @@ export function Chart() {
               FLOW
             </button>
 
-            {/* ── TAPE — live L3 event markers (sweeps / blocks / spoofs / icebergs / absorption) on the chart ── */}
-            <button
-              onClick={() => setTapeOn(!tapeOn)}
-              title="Toggle live tape-event markers on the chart — sweeps (▲▼), blocks (●), icebergs (◆), spoofs (×) and absorption (⊢⊣ heavy flow, price pinned), from the full L3 stream over /ws/tape. Use the controls to dial density."
-              style={ctrlBtn('#a78bfa', tapeOn)}
-            >
-              TAPE
-            </button>
+            {/* ── TAPE | VALUE — one segmented chip, two halves (2026-07-22).
+                 TAPE  = live L3 event MARKERS on the chart.
+                 VALUE = visibility of the events + parameter-settings bar below. Independent. */}
+            {(() => {
+              const seg = (color: string, active: boolean, side: 'l' | 'r') => ({
+                ...ctrlBtn(color, active),
+                borderRadius: side === 'l' ? '999px 0 0 999px' : '0 999px 999px 0',
+                ...(side === 'r' ? { borderLeft: `1px solid ${active || tapeOn ? `${color}55` : 'rgba(255,255,255,0.10)'}` } : {}),
+              });
+              return (
+                <div style={{ display: 'inline-flex' }}>
+                  <button
+                    onClick={() => setTapeOn(!tapeOn)}
+                    title="TAPE — toggle live tape-event markers on the chart (sweeps ▲▼, blocks ●, icebergs ◆, spoofs ×, absorption ⊢⊣, walls, stop-runs…) from the full L3 stream over /ws/tape."
+                    style={seg('#a78bfa', tapeOn, 'l')}
+                  >
+                    TAPE
+                  </button>
+                  <button
+                    onClick={() => setValueOn((v) => { const nv = !v; try { localStorage.setItem('cockpit.tapeValueOn', nv ? '1' : '0'); } catch { /* noop */ } return nv; })}
+                    title="VALUE — show/hide the tape events + parameter-settings bar (per-kind toggles and size/level/percentile floors). Hiding it keeps your current filters active on the markers; it just declutters the chart."
+                    style={seg('#a78bfa', valueOn, 'r')}
+                  >
+                    VALUE
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* ── DRIFT — live filtered net-drift HUD (SHADOW; 0DTE/OTM/aggressor, 10m slope vs price-momentum placebo) ── */}
             <button
@@ -3799,7 +3822,7 @@ export function Chart() {
           <DriftHud symbol={selectedSymbol} />
         </div>
       )}
-      {tapeOn && (() => {
+      {valueOn && (() => {
         const KIND_META: Record<TapeKind, { label: string; glyph: string }> = {
           sweep: { label: 'Sweep', glyph: '▲▼' }, block: { label: 'Block', glyph: '●' },
           iceberg: { label: 'Iceberg', glyph: '◆' }, spoof: { label: 'Spoof', glyph: '×' },
