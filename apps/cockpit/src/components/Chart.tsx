@@ -3665,6 +3665,19 @@ export function Chart() {
 
         return (
           <div ref={panelWrapRef} style={{ display: 'flex', flexDirection: 'row', gap: 6 }}>
+            {/* ── MEASURE — first in the row (user 2026-07-23); TradingView-style measuring tool ── */}
+            <button
+              onClick={() => setDrawMode(drawMode === 'measure' ? null : 'measure')}
+              title="Measure: click start, click end (ESC to cancel)"
+              style={{
+                ...ctrlBtn('#5a9bff', drawMode === 'measure'),
+                fontSize: 16,
+                padding: '4px 10px',
+              }}
+            >
+              📏
+            </button>
+
             {/* ── OPENING BIAS — expands the opening-bias table (gap / bar1 / CVD3 / bias) ── */}
             <div style={{ position: 'relative' }}>
               <button
@@ -3703,19 +3716,6 @@ export function Chart() {
               style={ctrlBtn('#22d3ee', readOn)}
             >
               TAPE READ
-            </button>
-
-            {/* ── MEASURE — toggles the TradingView-style measuring tool ── */}
-            <button
-              onClick={() => setDrawMode(drawMode === 'measure' ? null : 'measure')}
-              title="Measure: click start, click end (ESC to cancel)"
-              style={{
-                ...ctrlBtn('#5a9bff', drawMode === 'measure'),
-                fontSize: 16,
-                padding: '4px 10px',
-              }}
-            >
-              📏
             </button>
 
             {/* QUALIFIED, TRADABLE and EXPERIMENTAL are all INDEPENDENT layers (user 2026-07-22):
