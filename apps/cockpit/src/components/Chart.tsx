@@ -3713,22 +3713,15 @@ export function Chart() {
               📏
             </button>
 
-            {/* QUALIFIED and TRADABLE are mutually exclusive AND independently
-                dismissible. EXPERIMENTAL is an independent layer that can
-                show on top of either. Four states for the primary pair:
-                  - QUALIFIED selected → all gold-tier markers (broad view)
-                  - TRADABLE selected  → only markers the new pipeline would OPEN
-                  - Neither selected   → no primary markers
-                Clicking the active button turns it off. Clicking the inactive
-                one turns it on and the other off. EXPERIMENTAL toggles on/off
-                independently. */}
+            {/* QUALIFIED, TRADABLE and EXPERIMENTAL are all INDEPENDENT layers (user 2026-07-22):
+                each toggles on/off on its own and any combination can be shown at once.
+                  - QUALIFIED → all gold-tier markers (broad view)
+                  - TRADABLE  → only markers the new pipeline would OPEN
+                  - EXP       → force-shadow rules, logged never traded */}
 
             {/* ── QUALIFIED — markers for signals that passed quality gate ── */}
             <button
-              onClick={() => {
-                if (showQualified) { setShowQualified(false); }
-                else               { setShowQualified(true); setShowTradable(false); }
-              }}
+              onClick={() => setShowQualified((v) => !v)}
               title="Toggle markers for quality-gated (qualified_signals) signals"
               style={ctrlBtn('#22c55e', showQualified)}
             >
@@ -3737,10 +3730,7 @@ export function Chart() {
 
             {/* ── TRADABLE — markers for what the new pipeline would OPEN ── */}
             <button
-              onClick={() => {
-                if (showTradable) { setShowTradable(false); }
-                else              { setShowTradable(true); setShowQualified(false); }
-              }}
+              onClick={() => setShowTradable((v) => !v)}
               title="Toggle markers for tradable_signals where action='OPEN' (what the trader auto-takes when pipeline.activeMode='live')"
               style={ctrlBtn('#a855f7', showTradable)}
             >
